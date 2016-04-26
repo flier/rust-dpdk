@@ -11,6 +11,12 @@ fn main() {
     let include_dir = format!("{}/include", base_dir);
     let lib_dir = format!("{}/lib", base_dir);
 
+    let libs = vec!["rte_eal", "rte_mempool", "rte_ring"];
+
+    for lib in libs {
+        println!("cargo:rustc-link-lib=static={}", lib);
+    }
+
     println!("cargo:rustc-link-search=native={}", lib_dir);
     println!("cargo:include={}", include_dir);
 }

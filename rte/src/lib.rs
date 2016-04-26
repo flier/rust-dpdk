@@ -1,6 +1,12 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-    }
-}
+#[macro_use]
+extern crate log;
+extern crate libc;
+extern crate rte_sys as ffi;
+
+mod errors;
+mod memzone;
+mod eal;
+
+pub use errors::*;
+pub use eal::*;
+pub use memzone::RteMemoryZone;

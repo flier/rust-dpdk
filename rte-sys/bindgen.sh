@@ -12,4 +12,13 @@ if [ -z "$RTE_TARGET" ]; then
     exit 1
 fi
 
-bindgen src/rte.h -o src/raw.rs -I $RTE_SDK/$RTE_TARGET/include
+bindgen -builtins src/rte.h -o src/raw.rs -I $RTE_SDK/$RTE_TARGET/include
+
+attrs="\
+#![allow(dead_code)]\n\
+#![allow(non_camel_case_types)]\n\
+#![allow(non_snake_case)]\n\
+#![allow(non_upper_case_globals)]\n\
+"
+
+sed -i "1i$attrs" src/raw.rs

@@ -3,10 +3,12 @@ name = "rte"
 version = "0.1.0"
 authors = ["Flier Lu <flier.lu@gmail.com>"]
 description = "Rust bindings to DPDK"
+build = "build.rs"
 
 [dependencies]
 log = "0.3"
+libc = "0.2"
 rte-sys = { version = "0.1", path = "../rte-sys" }
 
-[dev-dependencies]
-
+[build-dependencies]
+gcc = "0.3"
