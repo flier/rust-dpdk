@@ -1,0 +1,12 @@
+[package]
+name = "rte"
+version = "0.1.0"
+authors = ["Flier Lu <flier.lu@gmail.com>"]
+description = "Rust bindings to DPDK"
+
+[dependencies]
+log = "0.3"
+rte-sys = { version = "0.1", path = "../rte-sys" }
+
+[dev-dependencies]
+
