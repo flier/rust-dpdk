@@ -1,13 +1,14 @@
 extern crate gcc;
 
 use std::env;
+use std::env::consts::*;
 use std::path::PathBuf;
 
 fn main() {
     let root_dir = env::var("RTE_SDK")
                        .expect("RTE_SDK - Points to the DPDK installation directory.");
     let target = env::var("RTE_TARGET")
-                     .expect("RTE_TARGET - Points to the DPDK target environment directory.");
+                     .unwrap_or(String::from(format!("{}-native-{}app-gcc", ARCH, OS)));
 
     let mut include_dir = PathBuf::from(root_dir);
 
