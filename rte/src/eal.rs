@@ -11,7 +11,7 @@ use memzone::RteMemoryZone;
 pub struct RteMemoryConfig(*mut Struct_rte_mem_config);
 
 impl RteMemoryConfig {
-    pub fn from_ptr(cfg: *mut Struct_rte_mem_config) -> RteMemoryConfig {
+    fn from_ptr(cfg: *mut Struct_rte_mem_config) -> RteMemoryConfig {
         RteMemoryConfig(cfg)
     }
 
@@ -36,15 +36,27 @@ impl RteMemoryConfig {
     }
 }
 
-pub type RteProcType = Enum_rte_proc_type_t;
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(i32)]
+pub enum RteProcType {
+    Auto = -1, // RTE_PROC_AUTO
+    Primary = 0, // RTE_PROC_PRIMARY
+    Secondary = 1, // RTE_PROC_SECONDARY
+    Invalid = 2, // RTE_PROC_INVALID
+}
 
-pub type RteLcoreRole = Enum_rte_lcore_role_t;
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(u32)]
+pub enum RteLcoreRole {
+    Rte = 0, // ROLE_RTE
+    Off = 1, // ROLE_OFF
+}
 
 /// The global RTE configuration structure.
 pub struct RteConfig(*mut Struct_rte_config);
 
 impl RteConfig {
-    pub fn from_ptr(cfg: *mut Struct_rte_config) -> RteConfig {
+    fn from_ptr(cfg: *mut Struct_rte_config) -> RteConfig {
         RteConfig(cfg)
     }
 
@@ -60,17 +72,17 @@ impl RteConfig {
 
     /// Primary or secondary configuration
     fn process_type(&self) -> RteProcType {
-        unsafe { (*self.0).process_type as RteProcType }
+        unsafe { mem::transmute((*self.0).process_type) }
     }
 
     /// State of cores.
     fn lcore_roles(&self) -> &'static [RteLcoreRole] {
-        unsafe { &(*self.0).lcore_role[..(*self.0).lcore_count as usize] }
+        unsafe { mem::transmute(&(*self.0).lcore_role[..(*self.0).lcore_count as usize]) }
     }
 
     /// Memory configuration, which may be shared across multiple DPDK instances
     fn memory_config(&self) -> RteMemoryConfig {
-        unsafe { RteMemoryConfig((*self.0).mem_config) }
+        RteMemoryConfig::from_ptr(unsafe { (*self.0).mem_config })
     }
 }
 
@@ -102,17 +114,17 @@ pub fn eal_exit(code: i32, msg: &str) {
 
 /// Get the global configuration structure.
 pub fn eal_config() -> RteConfig {
-    unsafe { RteConfig(rte_eal_get_configuration()) }
+    unsafe { RteConfig::from_ptr(rte_eal_get_configuration()) }
 }
 
 /// Get the process type in a multi-process setup
 pub fn process_type() -> RteProcType {
-    unsafe { rte_eal_process_type() }
+    unsafe { mem::transmute(rte_eal_process_type()) }
 }
 
 /// Get a lcore's role.
 pub fn lcore_role(lcore_id: u32) -> RteLcoreRole {
-    unsafe { rte_eal_lcore_role(lcore_id) }
+    unsafe { mem::transmute(rte_eal_lcore_role(lcore_id)) }
 }
 
 /// Check if a primary process is currently alive
@@ -152,15 +164,39 @@ pub fn lcore_to_socket_id(lcore_id: u32) -> u32 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    extern crate num_cpus;
 
-    use ffi::raw::*;
+    use super::*;
 
     #[test]
     fn test_eal() {
-        assert_eq!(eal_init(&vec![""]).unwrap(), 0);
+        assert_eq!(eal_init(&vec!["-n 2", "-r 4"]).unwrap(), 0);
 
-        assert_eq!(process_type() as u32,
-                   Enum_rte_proc_type_t::RTE_PROC_PRIMARY as u32);
+        assert_eq!(process_type(), RteProcType::Primary);
+        assert!(!primary_proc_alive());
+        assert!(has_hugepages());
+        assert_eq!(lcore_role(lcore_id()), RteLcoreRole::Rte);
+        assert_eq!(lcore_id(), 0);
+        assert_eq!(master_lcore(), 0);
+        assert_eq!(lcore_count(), num_cpus::get());
+        assert_eq!(socket_id(), 0);
+        assert_eq!(lcore_to_socket_id(lcore_id()), 0);
+
+        let eal_cfg = eal_config();
+
+        assert_eq!(eal_cfg.master_lcore(), 0);
+        assert_eq!(eal_cfg.lcore_count(), num_cpus::get());
+        assert_eq!(eal_cfg.process_type(), RteProcType::Primary);
+        assert_eq!(eal_cfg.lcore_roles(),
+                   &[RteLcoreRole::Rte, RteLcoreRole::Rte, RteLcoreRole::Rte, RteLcoreRole::Rte]);
+
+        let mem_cfg = eal_cfg.memory_config();
+
+        assert_eq!(mem_cfg.nchannel(), 2);
+        assert_eq!(mem_cfg.nrank(), 4);
+
+        let memzones = mem_cfg.memzones();
+
+        assert_eq!(memzones.len(), 2);
     }
 }
