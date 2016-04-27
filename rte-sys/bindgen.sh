@@ -8,8 +8,7 @@ if [ -z "$RTE_SDK" ]; then
 fi
 
 if [ -z "$RTE_TARGET" ]; then
-    echo "RTE_TARGET - Points to the DPDK target environment directory."
-    exit 1
+    RTE_TARGET=`uname -m`"-native-"`uname -s | tr '[:upper:]' '[:lower:]'`"app-gcc"
 fi
 
 bindgen -builtins src/rte.h -o src/raw.rs -I $RTE_SDK/$RTE_TARGET/include

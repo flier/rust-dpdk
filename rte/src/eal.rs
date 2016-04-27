@@ -1,36 +1,37 @@
 use std::mem;
+use std::ptr;
 use std::ffi::CString;
 use std::os::raw::c_char;
 
 use ffi::raw::*;
 
-use errors::*;
-use memzone::RteMemoryZone;
+use errors::{Error, Result};
+use memzone;
 
 /// the structure for the memory configuration for the RTE.
-pub struct RteMemoryConfig(*mut Struct_rte_mem_config);
+pub struct MemoryConfig(*mut Struct_rte_mem_config);
 
-impl RteMemoryConfig {
-    fn from_ptr(cfg: *mut Struct_rte_mem_config) -> RteMemoryConfig {
-        RteMemoryConfig(cfg)
+impl MemoryConfig {
+    fn from_ptr(cfg: *mut Struct_rte_mem_config) -> MemoryConfig {
+        MemoryConfig(cfg)
     }
 
     /// Number of channels (0 if unknown).
-    fn nchannel(&self) -> u32 {
+    pub fn nchannel(&self) -> u32 {
         unsafe { (*self.0).nchannel }
     }
 
     /// Number of ranks (0 if unknown).
-    fn nrank(&self) -> u32 {
+    pub fn nrank(&self) -> u32 {
         unsafe { (*self.0).nrank }
     }
 
     /// Memzone descriptors.
-    fn memzones(&self) -> Vec<RteMemoryZone> {
+    pub fn memzones(&self) -> Vec<memzone::MemoryZone> {
         unsafe {
             Vec::from(&(*self.0).memzone[..(*self.0).memzone_cnt as usize])
                 .iter()
-                .map(|zone| RteMemoryZone::from_ptr(zone))
+                .map(|zone| memzone::from_raw(zone))
                 .collect()
         }
     }
@@ -38,7 +39,7 @@ impl RteMemoryConfig {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(i32)]
-pub enum RteProcType {
+pub enum ProcType {
     Auto = -1, // RTE_PROC_AUTO
     Primary = 0, // RTE_PROC_PRIMARY
     Secondary = 1, // RTE_PROC_SECONDARY
@@ -47,7 +48,7 @@ pub enum RteProcType {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(u32)]
-pub enum RteLcoreRole {
+pub enum LcoreRole {
     Rte = 0, // ROLE_RTE
     Off = 1, // ROLE_OFF
 }
@@ -61,28 +62,28 @@ impl RteConfig {
     }
 
     /// Id of the master lcore
-    fn master_lcore(&self) -> u32 {
+    pub fn master_lcore(&self) -> u32 {
         unsafe { (*self.0).master_lcore }
     }
 
     /// Number of available logical cores.
-    fn lcore_count(&self) -> usize {
+    pub fn lcore_count(&self) -> usize {
         unsafe { (*self.0).lcore_count as usize }
     }
 
     /// Primary or secondary configuration
-    fn process_type(&self) -> RteProcType {
+    pub fn process_type(&self) -> ProcType {
         unsafe { mem::transmute((*self.0).process_type) }
     }
 
     /// State of cores.
-    fn lcore_roles(&self) -> &'static [RteLcoreRole] {
+    pub fn lcore_roles(&self) -> &'static [LcoreRole] {
         unsafe { mem::transmute(&(*self.0).lcore_role[..(*self.0).lcore_count as usize]) }
     }
 
     /// Memory configuration, which may be shared across multiple DPDK instances
-    fn memory_config(&self) -> RteMemoryConfig {
-        RteMemoryConfig::from_ptr(unsafe { (*self.0).mem_config })
+    pub fn memory_config(&self) -> MemoryConfig {
+        MemoryConfig::from_ptr(unsafe { (*self.0).mem_config })
     }
 }
 
@@ -91,14 +92,14 @@ extern "C" {
 }
 
 /// Initialize the Environment Abstraction Layer (EAL).
-pub fn eal_init(args: &Vec<&str>) -> RteResult<usize> {
+pub fn eal_init(args: &Vec<&str>) -> Result<usize> {
     let cstrs = args.iter().map(|&s| CString::new(s).unwrap());
     let mut ptrs: Vec<*mut c_char> = cstrs.map(|s| s.as_ptr() as *mut c_char).collect();
 
     let parsed = unsafe { rte_eal_init(args.len() as i32, ptrs.as_mut_ptr()) };
 
     if parsed < 0 {
-        Err(RteError::Init)
+        Err(Error::rte_error())
     } else {
         Ok(parsed as usize)
     }
@@ -118,18 +119,18 @@ pub fn eal_config() -> RteConfig {
 }
 
 /// Get the process type in a multi-process setup
-pub fn process_type() -> RteProcType {
+pub fn process_type() -> ProcType {
     unsafe { mem::transmute(rte_eal_process_type()) }
 }
 
 /// Get a lcore's role.
-pub fn lcore_role(lcore_id: u32) -> RteLcoreRole {
+pub fn lcore_role(lcore_id: u32) -> LcoreRole {
     unsafe { mem::transmute(rte_eal_lcore_role(lcore_id)) }
 }
 
 /// Check if a primary process is currently alive
 pub fn primary_proc_alive() -> bool {
-    unsafe { rte_eal_primary_proc_alive(mem::zeroed()) != 0 }
+    unsafe { rte_eal_primary_proc_alive(ptr::null()) != 0 }
 }
 
 /// Whether EAL is using huge pages (disabled by --no-huge option).
@@ -170,12 +171,12 @@ mod tests {
 
     #[test]
     fn test_eal() {
-        assert_eq!(eal_init(&vec!["-n 2", "-r 4"]).unwrap(), 0);
+        assert_eq!(eal_init(&vec![""]).unwrap(), 0);
 
-        assert_eq!(process_type(), RteProcType::Primary);
+        assert_eq!(process_type(), ProcType::Primary);
         assert!(!primary_proc_alive());
         assert!(has_hugepages());
-        assert_eq!(lcore_role(lcore_id()), RteLcoreRole::Rte);
+        assert_eq!(lcore_role(lcore_id()), LcoreRole::Rte);
         assert_eq!(lcore_id(), 0);
         assert_eq!(master_lcore(), 0);
         assert_eq!(lcore_count(), num_cpus::get());
@@ -186,14 +187,14 @@ mod tests {
 
         assert_eq!(eal_cfg.master_lcore(), 0);
         assert_eq!(eal_cfg.lcore_count(), num_cpus::get());
-        assert_eq!(eal_cfg.process_type(), RteProcType::Primary);
+        assert_eq!(eal_cfg.process_type(), ProcType::Primary);
         assert_eq!(eal_cfg.lcore_roles(),
-                   &[RteLcoreRole::Rte, RteLcoreRole::Rte, RteLcoreRole::Rte, RteLcoreRole::Rte]);
+                   &[LcoreRole::Rte, LcoreRole::Rte, LcoreRole::Rte, LcoreRole::Rte]);
 
         let mem_cfg = eal_cfg.memory_config();
 
-        assert_eq!(mem_cfg.nchannel(), 2);
-        assert_eq!(mem_cfg.nrank(), 4);
+        assert_eq!(mem_cfg.nchannel(), 0);
+        assert_eq!(mem_cfg.nrank(), 0);
 
         let memzones = mem_cfg.memzones();
 

@@ -882,6 +882,14 @@ impl ::std::default::Default for Struct___pthread_cleanup_frame {
 pub enum Struct___jmp_buf_tag { }
 #[derive(Clone, Copy)]
 #[repr(u32)]
+pub enum Enum_Unnamed34 {
+    RTE_MIN_ERRNO = 1000,
+    E_RTE_SECONDARY = 1001,
+    E_RTE_NO_CONFIG = 1002,
+    RTE_MAX_ERRNO = 1003,
+}
+#[derive(Clone, Copy)]
+#[repr(u32)]
 pub enum Enum_rte_lcore_role_t { ROLE_RTE = 0, ROLE_OFF = 1, }
 #[derive(Clone, Copy)]
 #[repr(i32)]
@@ -945,22 +953,22 @@ pub type FILE = Struct__IO_FILE;
 pub type __FILE = Struct__IO_FILE;
 #[repr(C)]
 #[derive(Copy)]
-pub struct Struct_Unnamed34 {
+pub struct Struct_Unnamed35 {
     pub __count: ::std::os::raw::c_int,
-    pub __value: Union_Unnamed35,
+    pub __value: Union_Unnamed36,
 }
-impl ::std::clone::Clone for Struct_Unnamed34 {
+impl ::std::clone::Clone for Struct_Unnamed35 {
     fn clone(&self) -> Self { *self }
 }
-impl ::std::default::Default for Struct_Unnamed34 {
+impl ::std::default::Default for Struct_Unnamed35 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 #[repr(C)]
 #[derive(Copy)]
-pub struct Union_Unnamed35 {
+pub struct Union_Unnamed36 {
     pub _bindgen_data_: [u32; 1usize],
 }
-impl Union_Unnamed35 {
+impl Union_Unnamed36 {
     pub unsafe fn __wch(&mut self) -> *mut ::std::os::raw::c_uint {
         let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
         ::std::mem::transmute(raw.offset(0))
@@ -970,30 +978,17 @@ impl Union_Unnamed35 {
         ::std::mem::transmute(raw.offset(0))
     }
 }
-impl ::std::clone::Clone for Union_Unnamed35 {
+impl ::std::clone::Clone for Union_Unnamed36 {
     fn clone(&self) -> Self { *self }
 }
-impl ::std::default::Default for Union_Unnamed35 {
+impl ::std::default::Default for Union_Unnamed36 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type __mbstate_t = Struct_Unnamed34;
-#[repr(C)]
-#[derive(Copy)]
-pub struct Struct_Unnamed36 {
-    pub __pos: __off_t,
-    pub __state: __mbstate_t,
-}
-impl ::std::clone::Clone for Struct_Unnamed36 {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_Unnamed36 {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-pub type _G_fpos_t = Struct_Unnamed36;
+pub type __mbstate_t = Struct_Unnamed35;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_Unnamed37 {
-    pub __pos: __off64_t,
+    pub __pos: __off_t,
     pub __state: __mbstate_t,
 }
 impl ::std::clone::Clone for Struct_Unnamed37 {
@@ -1002,7 +997,20 @@ impl ::std::clone::Clone for Struct_Unnamed37 {
 impl ::std::default::Default for Struct_Unnamed37 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type _G_fpos64_t = Struct_Unnamed37;
+pub type _G_fpos_t = Struct_Unnamed37;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed38 {
+    pub __pos: __off64_t,
+    pub __state: __mbstate_t,
+}
+impl ::std::clone::Clone for Struct_Unnamed38 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed38 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type _G_fpos64_t = Struct_Unnamed38;
 pub type va_list = __gnuc_va_list;
 pub type __gnuc_va_list = __builtin_va_list;
 pub enum Struct__IO_jump_t { }
@@ -1088,7 +1096,7 @@ pub type fpos_t = _G_fpos_t;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_rte_tailq_entry {
-    pub next: Struct_Unnamed38,
+    pub next: Struct_Unnamed39,
     pub data: *mut ::std::os::raw::c_void,
 }
 impl ::std::clone::Clone for Struct_rte_tailq_entry {
@@ -1099,14 +1107,14 @@ impl ::std::default::Default for Struct_rte_tailq_entry {
 }
 #[repr(C)]
 #[derive(Copy)]
-pub struct Struct_Unnamed38 {
+pub struct Struct_Unnamed39 {
     pub tqe_next: *mut Struct_rte_tailq_entry,
     pub tqe_prev: *mut *mut Struct_rte_tailq_entry,
 }
-impl ::std::clone::Clone for Struct_Unnamed38 {
+impl ::std::clone::Clone for Struct_Unnamed39 {
     fn clone(&self) -> Self { *self }
 }
-impl ::std::default::Default for Struct_Unnamed38 {
+impl ::std::default::Default for Struct_Unnamed39 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 #[repr(C)]
@@ -1137,7 +1145,7 @@ impl ::std::default::Default for Struct_rte_tailq_head {
 #[derive(Copy)]
 pub struct Struct_rte_tailq_elem {
     pub head: *mut Struct_rte_tailq_head,
-    pub next: Struct_Unnamed39,
+    pub next: Struct_Unnamed40,
     pub name: [::std::os::raw::c_char; 32usize],
 }
 impl ::std::clone::Clone for Struct_rte_tailq_elem {
@@ -1148,14 +1156,14 @@ impl ::std::default::Default for Struct_rte_tailq_elem {
 }
 #[repr(C)]
 #[derive(Copy)]
-pub struct Struct_Unnamed39 {
+pub struct Struct_Unnamed40 {
     pub tqe_next: *mut Struct_rte_tailq_elem,
     pub tqe_prev: *mut *mut Struct_rte_tailq_elem,
 }
-impl ::std::clone::Clone for Struct_Unnamed39 {
+impl ::std::clone::Clone for Struct_Unnamed40 {
     fn clone(&self) -> Self { *self }
 }
-impl ::std::default::Default for Struct_Unnamed39 {
+impl ::std::default::Default for Struct_Unnamed40 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 #[repr(C)]
@@ -1271,22 +1279,8 @@ impl ::std::default::Default for Struct_rte_memzone {
 }
 #[repr(C)]
 #[derive(Copy)]
-pub struct Struct_Unnamed40 {
-    pub locked: ::std::os::raw::c_int,
-}
-impl ::std::clone::Clone for Struct_Unnamed40 {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_Unnamed40 {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-pub type rte_spinlock_t = Struct_Unnamed40;
-#[repr(C)]
-#[derive(Copy)]
 pub struct Struct_Unnamed41 {
-    pub sl: rte_spinlock_t,
-    pub user: ::std::os::raw::c_int,
-    pub count: ::std::os::raw::c_int,
+    pub locked: ::std::os::raw::c_int,
 }
 impl ::std::clone::Clone for Struct_Unnamed41 {
     fn clone(&self) -> Self { *self }
@@ -1294,7 +1288,21 @@ impl ::std::clone::Clone for Struct_Unnamed41 {
 impl ::std::default::Default for Struct_Unnamed41 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type rte_spinlock_recursive_t = Struct_Unnamed41;
+pub type rte_spinlock_t = Struct_Unnamed41;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed42 {
+    pub sl: rte_spinlock_t,
+    pub user: ::std::os::raw::c_int,
+    pub count: ::std::os::raw::c_int,
+}
+impl ::std::clone::Clone for Struct_Unnamed42 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed42 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type rte_spinlock_recursive_t = Struct_Unnamed42;
 #[derive(Clone, Copy)]
 #[repr(u32)]
 pub enum Enum_rte_cpu_flag_t {
@@ -1390,7 +1398,7 @@ pub enum Struct_malloc_elem { }
 #[derive(Copy)]
 pub struct Struct_malloc_heap {
     pub lock: rte_spinlock_t,
-    pub free_head: [Struct_Unnamed42; 13usize],
+    pub free_head: [Struct_Unnamed43; 13usize],
     pub alloc_count: ::std::os::raw::c_uint,
     pub total_size: size_t,
 }
@@ -1402,19 +1410,8 @@ impl ::std::default::Default for Struct_malloc_heap {
 }
 #[repr(C)]
 #[derive(Copy)]
-pub struct Struct_Unnamed42 {
-    pub lh_first: *mut Struct_malloc_elem,
-}
-impl ::std::clone::Clone for Struct_Unnamed42 {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_Unnamed42 {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-#[repr(C)]
-#[derive(Copy)]
 pub struct Struct_Unnamed43 {
-    pub cnt: int16_t,
+    pub lh_first: *mut Struct_malloc_elem,
 }
 impl ::std::clone::Clone for Struct_Unnamed43 {
     fn clone(&self) -> Self { *self }
@@ -1422,11 +1419,10 @@ impl ::std::clone::Clone for Struct_Unnamed43 {
 impl ::std::default::Default for Struct_Unnamed43 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type rte_atomic16_t = Struct_Unnamed43;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_Unnamed44 {
-    pub cnt: int32_t,
+    pub cnt: int16_t,
 }
 impl ::std::clone::Clone for Struct_Unnamed44 {
     fn clone(&self) -> Self { *self }
@@ -1434,11 +1430,11 @@ impl ::std::clone::Clone for Struct_Unnamed44 {
 impl ::std::default::Default for Struct_Unnamed44 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type rte_atomic32_t = Struct_Unnamed44;
+pub type rte_atomic16_t = Struct_Unnamed44;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_Unnamed45 {
-    pub cnt: int64_t,
+    pub cnt: int32_t,
 }
 impl ::std::clone::Clone for Struct_Unnamed45 {
     fn clone(&self) -> Self { *self }
@@ -1446,11 +1442,11 @@ impl ::std::clone::Clone for Struct_Unnamed45 {
 impl ::std::default::Default for Struct_Unnamed45 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type rte_atomic64_t = Struct_Unnamed45;
+pub type rte_atomic32_t = Struct_Unnamed45;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_Unnamed46 {
-    pub cnt: int32_t,
+    pub cnt: int64_t,
 }
 impl ::std::clone::Clone for Struct_Unnamed46 {
     fn clone(&self) -> Self { *self }
@@ -1458,7 +1454,19 @@ impl ::std::clone::Clone for Struct_Unnamed46 {
 impl ::std::default::Default for Struct_Unnamed46 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type rte_rwlock_t = Struct_Unnamed46;
+pub type rte_atomic64_t = Struct_Unnamed46;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed47 {
+    pub cnt: int32_t,
+}
+impl ::std::clone::Clone for Struct_Unnamed47 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed47 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type rte_rwlock_t = Struct_Unnamed47;
 #[repr(C, packed)]
 #[derive(Copy)]
 pub struct Struct_rte_mem_config {
@@ -1479,6 +1487,320 @@ impl ::std::clone::Clone for Struct_rte_mem_config {
     fn clone(&self) -> Self { *self }
 }
 impl ::std::default::Default for Struct_rte_mem_config {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type __gwchar_t = ::std::os::raw::c_int;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed48 {
+    pub quot: ::std::os::raw::c_long,
+    pub rem: ::std::os::raw::c_long,
+}
+impl ::std::clone::Clone for Struct_Unnamed48 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed48 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type imaxdiv_t = Struct_Unnamed48;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_rte_logs {
+    pub _type: uint32_t,
+    pub level: uint32_t,
+    pub file: *mut FILE,
+}
+impl ::std::clone::Clone for Struct_rte_logs {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_rte_logs {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[derive(Clone, Copy)]
+#[repr(u32)]
+pub enum Enum_rte_ring_queue_behavior {
+    RTE_RING_QUEUE_FIXED = 0,
+    RTE_RING_QUEUE_VARIABLE = 1,
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_rte_ring {
+    pub name: [::std::os::raw::c_char; 32usize],
+    pub flags: ::std::os::raw::c_int,
+    pub memzone: *const Struct_rte_memzone,
+    pub prod: Struct_prod,
+    pub cons: Struct_cons,
+    pub ring: [*mut ::std::os::raw::c_void; 0usize],
+}
+impl ::std::clone::Clone for Struct_rte_ring {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_rte_ring {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_prod {
+    pub watermark: uint32_t,
+    pub sp_enqueue: uint32_t,
+    pub size: uint32_t,
+    pub mask: uint32_t,
+    pub head: uint32_t,
+    pub tail: uint32_t,
+}
+impl ::std::clone::Clone for Struct_prod {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_prod {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cons {
+    pub sc_dequeue: uint32_t,
+    pub size: uint32_t,
+    pub mask: uint32_t,
+    pub head: uint32_t,
+    pub tail: uint32_t,
+}
+impl ::std::clone::Clone for Struct_cons {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cons {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_rte_mempool_cache {
+    pub len: ::std::os::raw::c_uint,
+    pub objs: [*mut ::std::os::raw::c_void; 1536usize],
+}
+impl ::std::clone::Clone for Struct_rte_mempool_cache {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_rte_mempool_cache {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_rte_mempool_objsz {
+    pub elt_size: uint32_t,
+    pub header_size: uint32_t,
+    pub trailer_size: uint32_t,
+    pub total_size: uint32_t,
+}
+impl ::std::clone::Clone for Struct_rte_mempool_objsz {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_rte_mempool_objsz {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_rte_mempool_objhdr {
+    pub mp: *mut Struct_rte_mempool,
+}
+impl ::std::clone::Clone for Struct_rte_mempool_objhdr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_rte_mempool_objhdr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_rte_mempool_objtlr {
+}
+impl ::std::clone::Clone for Struct_rte_mempool_objtlr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_rte_mempool_objtlr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_rte_mempool {
+    pub name: [::std::os::raw::c_char; 32usize],
+    pub ring: *mut Struct_rte_ring,
+    pub phys_addr: phys_addr_t,
+    pub flags: ::std::os::raw::c_int,
+    pub size: uint32_t,
+    pub cache_size: uint32_t,
+    pub cache_flushthresh: uint32_t,
+    pub elt_size: uint32_t,
+    pub header_size: uint32_t,
+    pub trailer_size: uint32_t,
+    pub private_data_size: ::std::os::raw::c_uint,
+    pub local_cache: [Struct_rte_mempool_cache; 128usize],
+    pub pg_num: uint32_t,
+    pub pg_shift: uint32_t,
+    pub pg_mask: uintptr_t,
+    pub elt_va_start: uintptr_t,
+    pub elt_va_end: uintptr_t,
+    pub elt_pa: [phys_addr_t; 1usize],
+}
+impl ::std::clone::Clone for Struct_rte_mempool {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_rte_mempool {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type rte_mempool_obj_iter_t =
+    ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                   *mut ::std::os::raw::c_void,
+                                               arg2:
+                                                   *mut ::std::os::raw::c_void,
+                                               arg3:
+                                                   *mut ::std::os::raw::c_void,
+                                               arg4: uint32_t)>;
+pub type rte_mempool_obj_ctor_t =
+    unsafe extern "C" fn(arg1: *mut Struct_rte_mempool,
+                         arg2: *mut ::std::os::raw::c_void,
+                         arg3: *mut ::std::os::raw::c_void,
+                         arg4: ::std::os::raw::c_uint);
+pub type rte_mempool_ctor_t =
+    unsafe extern "C" fn(arg1: *mut Struct_rte_mempool,
+                         arg2: *mut ::std::os::raw::c_void);
+pub type MARKER = [*mut ::std::os::raw::c_void; 0usize];
+pub type MARKER8 = [uint8_t; 0usize];
+pub type MARKER64 = [uint64_t; 0usize];
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_rte_mbuf {
+    pub cacheline0: MARKER,
+    pub buf_addr: *mut ::std::os::raw::c_void,
+    pub buf_physaddr: phys_addr_t,
+    pub buf_len: uint16_t,
+    pub rearm_data: MARKER8,
+    pub data_off: uint16_t,
+    pub _bindgen_data_1_: [u16; 1usize],
+    pub nb_segs: uint8_t,
+    pub port: uint8_t,
+    pub ol_flags: uint64_t,
+    pub rx_descriptor_fields1: MARKER,
+    pub _bindgen_data_2_: [u32; 1usize],
+    pub pkt_len: uint32_t,
+    pub data_len: uint16_t,
+    pub vlan_tci: uint16_t,
+    pub hash: Union_Unnamed49,
+    pub seqn: uint32_t,
+    pub vlan_tci_outer: uint16_t,
+    pub cacheline1: MARKER,
+    pub _bindgen_data_3_: [u64; 1usize],
+    pub pool: *mut Struct_rte_mempool,
+    pub next: *mut Struct_rte_mbuf,
+    pub _bindgen_data_4_: [u64; 1usize],
+    pub priv_size: uint16_t,
+    pub timesync: uint16_t,
+}
+impl Struct_rte_mbuf {
+    pub unsafe fn refcnt_atomic(&mut self) -> *mut rte_atomic16_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_1_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn refcnt(&mut self) -> *mut uint16_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_1_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn packet_type(&mut self) -> *mut uint32_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_2_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn userdata(&mut self) -> *mut *mut ::std::os::raw::c_void {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_3_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn udata64(&mut self) -> *mut uint64_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_3_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn tx_offload(&mut self) -> *mut uint64_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_4_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+}
+impl ::std::clone::Clone for Struct_rte_mbuf {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_rte_mbuf {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Union_Unnamed49 {
+    pub _bindgen_data_: [u32; 2usize],
+}
+impl Union_Unnamed49 {
+    pub unsafe fn rss(&mut self) -> *mut uint32_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn fdir(&mut self) -> *mut Struct_Unnamed50 {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn sched(&mut self) -> *mut Struct_Unnamed51 {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn usr(&mut self) -> *mut uint32_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+}
+impl ::std::clone::Clone for Union_Unnamed49 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Union_Unnamed49 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed50 {
+    pub _bindgen_data_1_: [u32; 1usize],
+    pub hi: uint32_t,
+}
+impl Struct_Unnamed50 {
+    pub unsafe fn hash(&mut self) -> *mut uint16_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_1_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn id(&mut self) -> *mut uint16_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_1_);
+        ::std::mem::transmute(raw.offset(2))
+    }
+    pub unsafe fn lo(&mut self) -> *mut uint32_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_1_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+}
+impl ::std::clone::Clone for Struct_Unnamed50 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed50 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed51 {
+    pub lo: uint32_t,
+    pub hi: uint32_t,
+}
+impl ::std::clone::Clone for Struct_Unnamed51 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed51 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_rte_pktmbuf_pool_private {
+    pub mbuf_data_room_size: uint16_t,
+    pub mbuf_priv_size: uint16_t,
+}
+impl ::std::clone::Clone for Struct_rte_pktmbuf_pool_private {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_rte_pktmbuf_pool_private {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 pub type __va_list_tag = Struct___va_list_tag;
@@ -1503,6 +1825,7 @@ extern "C" {
     pub static mut tzname: [*mut ::std::os::raw::c_char; 2usize];
     pub static mut daylight: ::std::os::raw::c_int;
     pub static mut timezone: ::std::os::raw::c_long;
+    pub static mut per_lcore__rte_errno: ::std::os::raw::c_void;
     pub static mut lcore_config: [Struct_lcore_config; 128usize];
     pub static mut per_lcore__lcore_id: ::std::os::raw::c_void;
     pub static mut per_lcore__cpuset: ::std::os::raw::c_void;
@@ -1514,6 +1837,8 @@ extern "C" {
     pub static mut stderr: *mut Struct__IO_FILE;
     pub static mut sys_nerr: ::std::os::raw::c_int;
     pub static mut sys_errlist: *const *const ::std::os::raw::c_char;
+    pub static mut rte_logs: Struct_rte_logs;
+    pub static mut eal_default_log_stream: *mut FILE;
 }
 extern "C" {
     pub fn __ctype_get_mb_cur_max() -> size_t;
@@ -2194,6 +2519,8 @@ extern "C" {
                           __parent: ::std::option::Option<extern "C" fn()>,
                           __child: ::std::option::Option<extern "C" fn()>)
      -> ::std::os::raw::c_int;
+    pub fn rte_strerror(errnum: ::std::os::raw::c_int)
+     -> *const ::std::os::raw::c_char;
     pub fn rte_eal_get_configuration() -> *mut Struct_rte_config;
     pub fn rte_eal_lcore_role(lcore_id: ::std::os::raw::c_uint)
      -> Enum_rte_lcore_role_t;
@@ -2462,4 +2789,147 @@ extern "C" {
     pub fn rte_cpu_get_flag_enabled(feature: Enum_rte_cpu_flag_t)
      -> ::std::os::raw::c_int;
     pub fn rte_cpu_check_supported();
+    pub fn imaxabs(__n: intmax_t) -> intmax_t;
+    pub fn imaxdiv(__numer: intmax_t, __denom: intmax_t) -> imaxdiv_t;
+    pub fn strtoimax(__nptr: *const ::std::os::raw::c_char,
+                     __endptr: *mut *mut ::std::os::raw::c_char,
+                     __base: ::std::os::raw::c_int) -> intmax_t;
+    pub fn strtoumax(__nptr: *const ::std::os::raw::c_char,
+                     __endptr: *mut *mut ::std::os::raw::c_char,
+                     __base: ::std::os::raw::c_int) -> uintmax_t;
+    pub fn wcstoimax(__nptr: *const __gwchar_t,
+                     __endptr: *mut *mut __gwchar_t,
+                     __base: ::std::os::raw::c_int) -> intmax_t;
+    pub fn wcstoumax(__nptr: *const __gwchar_t,
+                     __endptr: *mut *mut __gwchar_t,
+                     __base: ::std::os::raw::c_int) -> uintmax_t;
+    pub fn rte_openlog_stream(f: *mut FILE) -> ::std::os::raw::c_int;
+    pub fn rte_set_log_level(level: uint32_t);
+    pub fn rte_get_log_level() -> uint32_t;
+    pub fn rte_set_log_type(_type: uint32_t, enable: ::std::os::raw::c_int);
+    pub fn rte_get_log_type() -> uint32_t;
+    pub fn rte_log_cur_msg_loglevel() -> ::std::os::raw::c_int;
+    pub fn rte_log_cur_msg_logtype() -> ::std::os::raw::c_int;
+    pub fn rte_log_set_history(enable: ::std::os::raw::c_int);
+    pub fn rte_log_dump_history(f: *mut FILE);
+    pub fn rte_log_add_in_history(buf: *const ::std::os::raw::c_char,
+                                  size: size_t) -> ::std::os::raw::c_int;
+    pub fn rte_log(level: uint32_t, logtype: uint32_t,
+                   format: *const ::std::os::raw::c_char, ...)
+     -> ::std::os::raw::c_int;
+    pub fn rte_vlog(level: uint32_t, logtype: uint32_t,
+                    format: *const ::std::os::raw::c_char, ap: va_list)
+     -> ::std::os::raw::c_int;
+    pub fn rte_ring_get_memsize(count: ::std::os::raw::c_uint) -> ssize_t;
+    pub fn rte_ring_init(r: *mut Struct_rte_ring,
+                         name: *const ::std::os::raw::c_char,
+                         count: ::std::os::raw::c_uint,
+                         flags: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn rte_ring_create(name: *const ::std::os::raw::c_char,
+                           count: ::std::os::raw::c_uint,
+                           socket_id: ::std::os::raw::c_int,
+                           flags: ::std::os::raw::c_uint)
+     -> *mut Struct_rte_ring;
+    pub fn rte_ring_free(r: *mut Struct_rte_ring);
+    pub fn rte_ring_set_water_mark(r: *mut Struct_rte_ring,
+                                   count: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn rte_ring_dump(f: *mut FILE, r: *const Struct_rte_ring);
+    pub fn rte_ring_list_dump(f: *mut FILE);
+    pub fn rte_ring_lookup(name: *const ::std::os::raw::c_char)
+     -> *mut Struct_rte_ring;
+    pub fn rte_mempool_obj_iter(vaddr: *mut ::std::os::raw::c_void,
+                                elt_num: uint32_t, elt_sz: size_t,
+                                align: size_t, paddr: *const phys_addr_t,
+                                pg_num: uint32_t, pg_shift: uint32_t,
+                                obj_iter: rte_mempool_obj_iter_t,
+                                obj_iter_arg: *mut ::std::os::raw::c_void)
+     -> uint32_t;
+    pub fn rte_mempool_create(name: *const ::std::os::raw::c_char,
+                              n: ::std::os::raw::c_uint,
+                              elt_size: ::std::os::raw::c_uint,
+                              cache_size: ::std::os::raw::c_uint,
+                              private_data_size: ::std::os::raw::c_uint,
+                              mp_init: *mut rte_mempool_ctor_t,
+                              mp_init_arg: *mut ::std::os::raw::c_void,
+                              obj_init: *mut rte_mempool_obj_ctor_t,
+                              obj_init_arg: *mut ::std::os::raw::c_void,
+                              socket_id: ::std::os::raw::c_int,
+                              flags: ::std::os::raw::c_uint)
+     -> *mut Struct_rte_mempool;
+    pub fn rte_mempool_xmem_create(name: *const ::std::os::raw::c_char,
+                                   n: ::std::os::raw::c_uint,
+                                   elt_size: ::std::os::raw::c_uint,
+                                   cache_size: ::std::os::raw::c_uint,
+                                   private_data_size: ::std::os::raw::c_uint,
+                                   mp_init: *mut rte_mempool_ctor_t,
+                                   mp_init_arg: *mut ::std::os::raw::c_void,
+                                   obj_init: *mut rte_mempool_obj_ctor_t,
+                                   obj_init_arg: *mut ::std::os::raw::c_void,
+                                   socket_id: ::std::os::raw::c_int,
+                                   flags: ::std::os::raw::c_uint,
+                                   vaddr: *mut ::std::os::raw::c_void,
+                                   paddr: *const phys_addr_t,
+                                   pg_num: uint32_t, pg_shift: uint32_t)
+     -> *mut Struct_rte_mempool;
+    pub fn rte_dom0_mempool_create(name: *const ::std::os::raw::c_char,
+                                   n: ::std::os::raw::c_uint,
+                                   elt_size: ::std::os::raw::c_uint,
+                                   cache_size: ::std::os::raw::c_uint,
+                                   private_data_size: ::std::os::raw::c_uint,
+                                   mp_init: *mut rte_mempool_ctor_t,
+                                   mp_init_arg: *mut ::std::os::raw::c_void,
+                                   obj_init: *mut rte_mempool_obj_ctor_t,
+                                   obj_init_arg: *mut ::std::os::raw::c_void,
+                                   socket_id: ::std::os::raw::c_int,
+                                   flags: ::std::os::raw::c_uint)
+     -> *mut Struct_rte_mempool;
+    pub fn rte_mempool_dump(f: *mut FILE, mp: *const Struct_rte_mempool);
+    pub fn rte_mempool_count(mp: *const Struct_rte_mempool)
+     -> ::std::os::raw::c_uint;
+    pub fn rte_mempool_audit(mp: *const Struct_rte_mempool);
+    pub fn rte_mempool_list_dump(f: *mut FILE);
+    pub fn rte_mempool_lookup(name: *const ::std::os::raw::c_char)
+     -> *mut Struct_rte_mempool;
+    pub fn rte_mempool_calc_obj_size(elt_size: uint32_t, flags: uint32_t,
+                                     sz: *mut Struct_rte_mempool_objsz)
+     -> uint32_t;
+    pub fn rte_mempool_xmem_size(elt_num: uint32_t, elt_sz: size_t,
+                                 pg_shift: uint32_t) -> size_t;
+    pub fn rte_mempool_xmem_usage(vaddr: *mut ::std::os::raw::c_void,
+                                  elt_num: uint32_t, elt_sz: size_t,
+                                  paddr: *const phys_addr_t, pg_num: uint32_t,
+                                  pg_shift: uint32_t) -> ssize_t;
+    pub fn rte_mempool_walk(func:
+                                ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                               *const Struct_rte_mempool,
+                                                                           arg:
+                                                                               *mut ::std::os::raw::c_void)>,
+                            arg: *mut ::std::os::raw::c_void);
+    pub fn rte_get_rx_ol_flag_name(mask: uint64_t)
+     -> *const ::std::os::raw::c_char;
+    pub fn rte_get_tx_ol_flag_name(mask: uint64_t)
+     -> *const ::std::os::raw::c_char;
+    pub fn rte_mbuf_sanity_check(m: *const Struct_rte_mbuf,
+                                 is_header: ::std::os::raw::c_int);
+    pub fn rte_ctrlmbuf_init(mp: *mut Struct_rte_mempool,
+                             opaque_arg: *mut ::std::os::raw::c_void,
+                             m: *mut ::std::os::raw::c_void,
+                             i: ::std::os::raw::c_uint);
+    pub fn rte_pktmbuf_init(mp: *mut Struct_rte_mempool,
+                            opaque_arg: *mut ::std::os::raw::c_void,
+                            m: *mut ::std::os::raw::c_void,
+                            i: ::std::os::raw::c_uint);
+    pub fn rte_pktmbuf_pool_init(mp: *mut Struct_rte_mempool,
+                                 opaque_arg: *mut ::std::os::raw::c_void);
+    pub fn rte_pktmbuf_pool_create(name: *const ::std::os::raw::c_char,
+                                   n: ::std::os::raw::c_uint,
+                                   cache_size: ::std::os::raw::c_uint,
+                                   priv_size: uint16_t,
+                                   data_room_size: uint16_t,
+                                   socket_id: ::std::os::raw::c_int)
+     -> *mut Struct_rte_mempool;
+    pub fn rte_pktmbuf_dump(f: *mut FILE, m: *const Struct_rte_mbuf,
+                            dump_len: ::std::os::raw::c_uint);
 }
