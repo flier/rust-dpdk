@@ -7,7 +7,7 @@ use std::os::unix::io::AsRawFd;
 use ffi::*;
 
 use errors::{Error, Result};
-use common::*;
+use cfile::CFile;
 
 bitflags! {
     pub flags MemoryPoolFlags: u32 {

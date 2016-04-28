@@ -1,3 +1,4 @@
+use std::io;
 use std::fmt;
 use std::error;
 use std::result;
@@ -11,10 +12,11 @@ extern "C" {
     fn _rte_errno() -> i32;
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug)]
 pub enum Error {
     RteError(i32),
     OsError(Errno),
+    IoError(io::Error),
     NulError(ffi::NulError),
 }
 
@@ -37,6 +39,7 @@ impl fmt::Display for Error {
                        unsafe { ffi::CStr::from_ptr(rte_strerror(errno)).to_str().unwrap() })
             }
             &Error::OsError(ref errno) => write!(f, "OS error, {}", errno),
+            &Error::IoError(ref err) => write!(f, "IO error, {}", err),
             _ => write!(f, "{}", error::Error::description(self)),
         }
     }
@@ -47,8 +50,15 @@ impl error::Error for Error {
         match self {
             &Error::RteError(_) => "RTE error",
             &Error::OsError(_) => "OS error",
+            &Error::IoError(ref err) => error::Error::description(err),
             &Error::NulError(ref err) => error::Error::description(err),
         }
+    }
+}
+
+impl From<io::Error> for Error {
+    fn from(err: io::Error) -> Error {
+        Error::IoError(err)
     }
 }
 

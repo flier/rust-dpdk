@@ -10,6 +10,7 @@ extern crate rte_sys as ffi;
 
 mod errors;
 pub mod common;
+pub mod cfile;
 pub mod memzone;
 pub mod mempool;
 pub mod mbuf;
