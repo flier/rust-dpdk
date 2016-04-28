@@ -44,8 +44,11 @@ impl CFile {
 
 impl Drop for CFile {
     fn drop(&mut self) {
-        unsafe {
-            libc::fclose(self.0);
+        match self.as_raw_fd() {
+            libc::STDIN_FILENO | libc::STDOUT_FILENO | libc::STDERR_FILENO => {}
+            _ => unsafe {
+                libc::fclose(self.0);
+            },
         }
     }
 }
@@ -148,6 +151,8 @@ impl io::Seek for CFile {
 
 #[cfg(test)]
 mod tests {
+    extern crate env_logger;
+
     use std::io;
     use std::io::{Read, Write, Seek, SeekFrom};
     use std::os::unix::io::AsRawFd;
@@ -156,6 +161,8 @@ mod tests {
 
     #[test]
     fn test_cfile() {
+        let _ = env_logger::init();
+
         let mut f = CFile::open_tmpfile().unwrap();
 
         assert!(!(*f).is_null());

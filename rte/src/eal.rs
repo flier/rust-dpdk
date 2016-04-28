@@ -169,11 +169,14 @@ pub fn lcore_to_socket_id(lcore_id: u32) -> u32 {
 #[cfg(test)]
 mod tests {
     extern crate num_cpus;
+    extern crate env_logger;
 
     use super::*;
 
     #[test]
     fn test_eal() {
+        let _ = env_logger::init();
+
         assert!(eal_init(&vec![""]));
 
         assert_eq!(process_type(), ProcType::Primary);

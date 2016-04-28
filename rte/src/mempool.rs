@@ -340,16 +340,23 @@ impl MemoryPoolDebug for RawMemoryPool {
 
 #[cfg(test)]
 mod tests {
+    extern crate env_logger;
+
     use std::mem;
     use std::os::raw::c_void;
 
-    use super::*;
-    use super::super::eal_init;
+    use log::LogLevel::Debug;
 
     use ffi::SOCKET_ID_ANY;
 
+    use super::*;
+    use super::super::eal_init;
+    use super::super::cfile::*;
+
     #[test]
     fn test_mempool() {
+        let _ = env_logger::init();
+
         assert!(eal_init(&vec![""]));
 
         let p = RawMemoryPool::create::<c_void, c_void>("test", // name
@@ -385,6 +392,12 @@ mod tests {
 
         p.audit();
 
+        if log_enabled!(Debug) {
+            let stdout = CFile::open_stdout().unwrap();
+
+            p.dump(&stdout);
+        }
+
         let mut elements: Vec<(u32, usize)> = Vec::new();
 
         fn walk_element(elements: Option<&mut Vec<(u32, usize)>>,
@@ -415,5 +428,11 @@ mod tests {
         RawMemoryPool::walk(Some(walk_mempool), Some(&mut pools));
 
         assert!(pools.iter().find(|pool| **pool == *p).is_some());
+
+        if log_enabled!(Debug) {
+            let stdout = CFile::open_stdout().unwrap();
+
+            RawMemoryPool::list_dump(&stdout);
+        }
     }
 }
