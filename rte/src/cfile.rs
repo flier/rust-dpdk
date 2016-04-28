@@ -1,7 +1,8 @@
 use std::io;
+use std::mem::forget;
 use std::ops::Drop;
 use std::ops::Deref;
-use std::os::unix::io::{AsRawFd, RawFd};
+use std::os::unix::io::{AsRawFd, IntoRawFd, RawFd};
 
 use libc;
 
@@ -60,6 +61,16 @@ impl Deref for CFile {
 impl AsRawFd for CFile {
     fn as_raw_fd(&self) -> RawFd {
         unsafe { libc::fileno(self.0) }
+    }
+}
+
+impl IntoRawFd for CFile {
+    fn into_raw_fd(self) -> RawFd {
+        let fd = unsafe { libc::fileno(self.0) };
+
+        forget(self);
+
+        fd
     }
 }
 
