@@ -210,7 +210,7 @@ impl RawMemoryPool {
 
     /// Dump the status of all mempools on the console
     pub fn list_dump<S: AsRawFd>(s: &S) {
-        if let Ok(f) = CFile::open_fd(s, "w") {
+        if let Ok(f) = CFile::open_stream(s, "w") {
             unsafe {
                 rte_mempool_list_dump(*f as *mut FILE);
             }
@@ -309,7 +309,7 @@ impl MemoryPoolDebug for RawMemoryPool {
     }
 
     fn dump<S: AsRawFd>(&self, s: &S) {
-        if let Ok(f) = CFile::open_fd(s, "w") {
+        if let Ok(f) = CFile::open_stream(s, "w") {
             unsafe {
                 rte_mempool_dump(*f as *mut FILE, self.0);
             }

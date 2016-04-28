@@ -16,12 +16,28 @@ impl CFile {
         }
     }
 
-    pub fn open_fd<S: AsRawFd>(s: &S, mode: &str) -> io::Result<CFile> {
-        CFile::from_raw(unsafe { libc::fdopen(s.as_raw_fd(), mode.as_ptr() as *const i8) })
+    pub fn open_stream<S: AsRawFd>(s: &S, mode: &str) -> io::Result<CFile> {
+        Self::open_fd(s.as_raw_fd(), mode)
     }
 
-    pub fn new_tmpfile() -> io::Result<CFile> {
-        CFile::from_raw(unsafe { libc::tmpfile() })
+    pub fn open_fd(fd: RawFd, mode: &str) -> io::Result<CFile> {
+        Self::from_raw(unsafe { libc::fdopen(fd, mode.as_ptr() as *const i8) })
+    }
+
+    pub fn open_stdin() -> io::Result<CFile> {
+        Self::open_fd(libc::STDIN_FILENO, "r")
+    }
+
+    pub fn open_stdout() -> io::Result<CFile> {
+        Self::open_fd(libc::STDOUT_FILENO, "w")
+    }
+
+    pub fn open_stderr() -> io::Result<CFile> {
+        Self::open_fd(libc::STDERR_FILENO, "w")
+    }
+
+    pub fn open_tmpfile() -> io::Result<CFile> {
+        Self::from_raw(unsafe { libc::tmpfile() })
     }
 }
 
@@ -129,7 +145,7 @@ mod tests {
 
     #[test]
     fn test_cfile() {
-        let mut f = CFile::new_tmpfile().unwrap();
+        let mut f = CFile::open_tmpfile().unwrap();
 
         assert!(!(*f).is_null());
         assert!(f.as_raw_fd() > 2);
