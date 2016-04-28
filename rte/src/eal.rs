@@ -2,10 +2,11 @@ use std::mem;
 use std::ptr;
 use std::ffi::CString;
 use std::os::raw::c_char;
+use std::sync::{Once, ONCE_INIT};
 
-use ffi::raw::*;
+use ffi::*;
 
-use errors::{Error, Result};
+use common::*;
 use memzone;
 
 /// the structure for the memory configuration for the RTE.
@@ -87,21 +88,23 @@ impl RteConfig {
     }
 }
 
-extern "C" {
-    fn _rte_lcore_id() -> u32;
-}
-
 /// Initialize the Environment Abstraction Layer (EAL).
-pub fn eal_init(args: &Vec<&str>) -> Result<usize> {
-    let cstrs = args.iter().map(|&s| CString::new(s).unwrap());
-    let mut ptrs: Vec<*mut c_char> = cstrs.map(|s| s.as_ptr() as *mut c_char).collect();
+pub fn eal_init(args: &Vec<&str>) -> bool {
+    static mut INITIALIZED: bool = false;
+    static ONCE: Once = ONCE_INIT;
 
-    let parsed = unsafe { rte_eal_init(args.len() as i32, ptrs.as_mut_ptr()) };
+    unsafe {
+        ONCE.call_once(|| {
+            let cstrs = args.iter().map(|&s| CString::new(s).unwrap());
 
-    if parsed < 0 {
-        Err(Error::rte_error())
-    } else {
-        Ok(parsed as usize)
+            let mut ptrs: Vec<*mut c_char> = cstrs.map(|s| s.as_ptr() as *mut c_char).collect();
+
+            let parsed = rte_eal_init(args.len() as i32, ptrs.as_mut_ptr());
+
+            INITIALIZED = parsed >= 0;
+        });
+
+        INITIALIZED
     }
 }
 
@@ -154,8 +157,8 @@ pub fn lcore_count() -> usize {
 }
 
 /// Return the ID of the physical socket of the logical core we are running on.
-pub fn socket_id() -> u32 {
-    unsafe { rte_socket_id() }
+pub fn socket_id() -> i32 {
+    unsafe { rte_socket_id() as i32 }
 }
 
 /// Get the ID of the physical socket of the specified lcore
@@ -171,7 +174,7 @@ mod tests {
 
     #[test]
     fn test_eal() {
-        assert_eq!(eal_init(&vec![""]).unwrap(), 0);
+        assert!(eal_init(&vec![""]));
 
         assert_eq!(process_type(), ProcType::Primary);
         assert!(!primary_proc_alive());
@@ -198,6 +201,6 @@ mod tests {
 
         let memzones = mem_cfg.memzones();
 
-        assert_eq!(memzones.len(), 2);
+        assert!(memzones.len() > 0);
     }
 }

@@ -5,16 +5,7 @@ use std::ffi;
 
 use errno::{Errno, errno};
 
-use ffi::raw::rte_strerror;
-
-#[derive(Clone, Copy)]
-#[repr(u32)]
-pub enum RteErrno {
-    MinErrno = 1000, // RTE_MIN_ERRNO
-    Secondary = 1001, // E_RTE_SECONDARY
-    NoConfig = 1002, // E_RTE_NO_CONFIG
-    MaxErrno = 1003, // RTE_MAX_ERRNO
-}
+use ffi::rte_strerror;
 
 extern "C" {
     fn _rte_errno() -> i32;
@@ -45,8 +36,8 @@ impl fmt::Display for Error {
                        "RTE error, {}",
                        unsafe { ffi::CStr::from_ptr(rte_strerror(errno)).to_str().unwrap() })
             }
-            &Error::OsError(err) => write!(f, "OS error, {}", err),
-            _ => write!(f, "{}", error::Error::description(self).to_string()),
+            &Error::OsError(ref errno) => write!(f, "OS error, {}", errno),
+            _ => write!(f, "{}", error::Error::description(self)),
         }
     }
 }
@@ -54,8 +45,8 @@ impl fmt::Display for Error {
 impl error::Error for Error {
     fn description(&self) -> &str {
         match self {
-            &Error::RteError(_) => "RTE error.",
-            &Error::OsError(ref err) => "OS error.",
+            &Error::RteError(_) => "RTE error",
+            &Error::OsError(_) => "OS error",
             &Error::NulError(ref err) => error::Error::description(err),
         }
     }

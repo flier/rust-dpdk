@@ -1,6 +1,6 @@
 use std::ffi::CString;
 
-use ffi::raw::*;
+use ffi::rte_pktmbuf_pool_create;
 
 use errors::{Error, Result};
 use mempool::RawMemoryPool;
@@ -17,11 +17,12 @@ pub fn pktmbuf_pool_create(name: &str,
                            data_room_size: usize,
                            socket_id: usize)
                            -> Result<RawMemoryPool> {
+    let name = try!(CString::new(name))
+                   .as_bytes_with_nul()
+                   .as_ptr() as *const i8;
 
     let p = unsafe {
-        rte_pktmbuf_pool_create(try!(CString::new(name))
-                                    .as_bytes_with_nul()
-                                    .as_ptr() as *const i8,
+        rte_pktmbuf_pool_create(name,
                                 n as u32,
                                 cache_size as u32,
                                 priv_size as u16,

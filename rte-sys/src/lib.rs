@@ -1,4 +1,7 @@
 extern crate libc;
 
-pub mod raw;
-pub mod consts;
+mod raw;
+mod consts;
+
+pub use raw::*;
+pub use consts::*;

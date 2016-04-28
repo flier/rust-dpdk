@@ -1,4 +1,4 @@
-use ffi::raw::*;
+use ffi::Struct_rte_memzone;
 
 /// RTE Memzone
 ///

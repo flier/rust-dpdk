@@ -1,5 +1,9 @@
 #[macro_use]
 extern crate log;
+#[macro_use]
+extern crate bitflags;
+#[macro_use]
+extern crate lazy_static;
 extern crate libc;
 extern crate errno;
 extern crate rte_sys as ffi;

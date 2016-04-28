@@ -18,7 +18,7 @@ fn main() {
             .args(&["install",
                     format!("T={}", target).as_str(),
                     "CONFIG_RTE_BUILD_COMBINE_LIBS=y",
-                    "EXTRA_CFLAGS='-fPIC'",
+                    "EXTRA_CFLAGS='-fPIC -g -ggdb'",
                     "-j 4"])
             .current_dir(root_dir)
             .status()

@@ -7,6 +7,8 @@ build = "build.rs"
 
 [dependencies]
 log = "0.3"
+bitflags = "0.6"
+lazy_static = "0.1"
 libc = "0.2"
 errno = "0.1"
 rte-sys = { version = "0.1", path = "../rte-sys" }
