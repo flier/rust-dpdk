@@ -1,9 +1,20 @@
 use std::ffi::CString;
 
-use ffi::rte_pktmbuf_pool_create;
+use ffi::*;
 
 use errors::{Error, Result};
 use mempool::RawMemoryPool;
+
+
+/**
+ * Some NICs need at least 2KB buffer to RX standard Ethernet frame without
+ * splitting it into multiple segments.
+ * So, for mbufs that planned to be involved into RX/TX, the recommended
+ * minimal buffer length is 2KB + RTE_PKTMBUF_HEADROOM.
+ */
+pub const RTE_MBUF_DEFAULT_DATAROOM: u32 = 2048;
+pub const RTE_MBUF_DEFAULT_BUF_SIZE: u32 = RTE_MBUF_DEFAULT_DATAROOM + RTE_PKTMBUF_HEADROOM;
+
 
 /// Create a mbuf pool.
 ///

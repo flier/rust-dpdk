@@ -7,7 +7,7 @@ use std::os::unix::io::AsRawFd;
 use ffi::*;
 
 use errors::{Error, Result};
-use cfile::CFile;
+use cfile::{Stream, CFile};
 
 bitflags! {
     pub flags MemoryPoolFlags: u32 {
@@ -212,7 +212,7 @@ impl RawMemoryPool {
     pub fn list_dump<S: AsRawFd>(s: &S) {
         if let Ok(f) = CFile::open_stream(s, "w") {
             unsafe {
-                rte_mempool_list_dump(*f as *mut FILE);
+                rte_mempool_list_dump(f.stream() as *mut FILE);
             }
         }
     }
@@ -311,7 +311,7 @@ impl MemoryPoolDebug for RawMemoryPool {
     fn dump<S: AsRawFd>(&self, s: &S) {
         if let Ok(f) = CFile::open_stream(s, "w") {
             unsafe {
-                rte_mempool_dump(*f as *mut FILE, self.0);
+                rte_mempool_dump(f.stream() as *mut FILE, self.0);
             }
         }
     }
@@ -346,18 +346,18 @@ mod tests {
     use std::os::raw::c_void;
 
     use log::LogLevel::Debug;
+    use cfile::CFile;
 
     use ffi::SOCKET_ID_ANY;
 
     use super::*;
     use super::super::eal_init;
-    use super::super::cfile::*;
 
     #[test]
     fn test_mempool() {
         let _ = env_logger::init();
 
-        assert!(eal_init(&vec![""]));
+        assert!(eal_init(&vec![String::from("test")]));
 
         let p = RawMemoryPool::create::<c_void, c_void>("test", // name
                                       16, // nll

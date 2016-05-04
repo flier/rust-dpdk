@@ -6,11 +6,11 @@ extern crate bitflags;
 extern crate lazy_static;
 extern crate libc;
 extern crate errno;
+extern crate cfile;
 extern crate rte_sys as ffi;
 
 mod errors;
 pub mod common;
-pub mod cfile;
 pub mod memzone;
 pub mod mempool;
 pub mod mbuf;

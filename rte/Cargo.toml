@@ -11,6 +11,7 @@ bitflags = "0.6"
 lazy_static = "0.1"
 libc = "0.2"
 errno = "0.1"
+cfile = "0.1"
 rte-sys = { version = "0.1", path = "../rte-sys" }
 
 [build-dependencies]
@@ -19,3 +20,13 @@ gcc = "0.3"
 [dev-dependencies]
 num_cpus = "0.2"
 env_logger = "0.3"
+getopts = "0.2"
+
+[lib]
+name = "rte"
+
+[[example]]
+name = "l2fwd"
+path = "examples/l2fwd.rs"
+test = false
+bench = false
