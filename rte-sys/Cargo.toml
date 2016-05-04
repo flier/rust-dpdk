@@ -12,3 +12,8 @@ libc = "0.2"
 
 [dev-dependencies]
 
+
+[build-dependencies]
+log = "0.3"
+env_logger = "0.3"
+gcc = "0.3"
