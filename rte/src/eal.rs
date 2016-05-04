@@ -89,17 +89,33 @@ impl RteConfig {
 }
 
 /// Initialize the Environment Abstraction Layer (EAL).
-pub fn eal_init(args: &Vec<&str>) -> bool {
+///
+/// This function is to be executed on the MASTER lcore only,
+/// as soon as possible in the application's main() function.
+///
+/// The function finishes the initialization process before main() is called.
+/// It puts the SLAVE lcores in the WAIT state.
+///
+pub fn eal_init(args: &Vec<String>) -> bool {
     static mut INITIALIZED: bool = false;
     static ONCE: Once = ONCE_INIT;
 
     unsafe {
         ONCE.call_once(|| {
-            let cstrs = args.iter().map(|&s| CString::new(s).unwrap());
+            let mut ptrs: Vec<*mut c_char> = args.iter()
+                                                 .map(|s| {
+                                                     let mut v: Vec<u8> = Vec::from(s.as_bytes());
+                                                     v.push(0);
+                                                     v
+                                                 })
+                                                 .map(|s| s.as_ptr() as *mut c_char)
+                                                 .collect();
 
-            let mut ptrs: Vec<*mut c_char> = cstrs.map(|s| s.as_ptr() as *mut c_char).collect();
-
-            let parsed = rte_eal_init(args.len() as i32, ptrs.as_mut_ptr());
+            let parsed = if args.is_empty() {
+                rte_eal_init(0, ptr::null_mut())
+            } else {
+                rte_eal_init(args.len() as i32, ptrs.as_mut_ptr())
+            };
 
             INITIALIZED = parsed >= 0;
         });
@@ -177,7 +193,7 @@ mod tests {
     fn test_eal() {
         let _ = env_logger::init();
 
-        assert!(eal_init(&vec![""]));
+        assert!(eal_init(&vec![String::from("test")]));
 
         assert_eq!(process_type(), ProcType::Primary);
         assert!(!primary_proc_alive());
