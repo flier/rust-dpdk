@@ -12,8 +12,8 @@ use mempool::RawMemoryPool;
  * So, for mbufs that planned to be involved into RX/TX, the recommended
  * minimal buffer length is 2KB + RTE_PKTMBUF_HEADROOM.
  */
-pub const RTE_MBUF_DEFAULT_DATAROOM: u32 = 2048;
-pub const RTE_MBUF_DEFAULT_BUF_SIZE: u32 = RTE_MBUF_DEFAULT_DATAROOM + RTE_PKTMBUF_HEADROOM;
+pub const RTE_MBUF_DEFAULT_DATAROOM: u16 = 2048;
+pub const RTE_MBUF_DEFAULT_BUF_SIZE: u16 = RTE_MBUF_DEFAULT_DATAROOM + RTE_PKTMBUF_HEADROOM as u16;
 
 
 /// Create a mbuf pool.
@@ -22,23 +22,18 @@ pub const RTE_MBUF_DEFAULT_BUF_SIZE: u32 = RTE_MBUF_DEFAULT_DATAROOM + RTE_PKTMB
 /// It is a wrapper to rte_mempool_create() with the proper packet constructor
 /// and mempool constructor.
 pub fn pktmbuf_pool_create(name: &str,
-                           n: usize,
-                           cache_size: usize,
-                           priv_size: usize,
-                           data_room_size: usize,
-                           socket_id: usize)
+                           n: u32,
+                           cache_size: u32,
+                           priv_size: u16,
+                           data_room_size: u16,
+                           socket_id: i32)
                            -> Result<RawMemoryPool> {
     let name = try!(CString::new(name))
                    .as_bytes_with_nul()
                    .as_ptr() as *const i8;
 
     let p = unsafe {
-        rte_pktmbuf_pool_create(name,
-                                n as u32,
-                                cache_size as u32,
-                                priv_size as u16,
-                                data_room_size as u16,
-                                socket_id as i32)
+        rte_pktmbuf_pool_create(name, n, cache_size, priv_size, data_room_size, socket_id)
     };
 
     if p.is_null() {

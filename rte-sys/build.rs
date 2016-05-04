@@ -71,7 +71,7 @@ fn gen_rte_config(base_dir: &PathBuf) {
 }
 
 fn gen_cargo_config(base_dir: &PathBuf) {
-    let libs = vec!["rte_eal", "rte_mempool", "rte_ring"];
+    let libs = vec!["rte_eal", "rte_mempool", "rte_ring", "rte_mbuf"];
 
     for lib in libs {
         println!("cargo:rustc-link-lib=static={}", lib);

@@ -117,10 +117,10 @@ fn main() {
     rte::eal_init(&Vec::from(eal_args));
 
     // create the mbuf pool
-    let l2fwd_pktmbuf_pool = rte::pktmbuf_pool_create("mbuf_pool",
-                                                      NB_MBUF,
-                                                      32,
-                                                      0,
-                                                      RTE_MBUF_DEFAULT_BUF_SIZE,
-                                                      rte::socket_id());
+    let l2fwd_pktmbuf_pool = rte::mbuf::pktmbuf_pool_create("mbuf_pool",
+                                                            NB_MBUF,
+                                                            32,
+                                                            0,
+                                                            rte::mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
+                                                            rte::socket_id());
 }
