@@ -1,7 +1,6 @@
 use std::ffi::CString;
 
-use ffi::consts::*;
-use ffi::rte_pktmbuf_pool_create;
+use ffi;
 
 use errors::{Error, Result};
 use mempool::RawMemoryPool;
@@ -14,7 +13,7 @@ use mempool::RawMemoryPool;
  * minimal buffer length is 2KB + RTE_PKTMBUF_HEADROOM.
  */
 pub const RTE_MBUF_DEFAULT_BUF_SIZE: u16 =
-    (RTE_MBUF_DEFAULT_DATAROOM + RTE_PKTMBUF_HEADROOM) as u16;
+    (ffi::RTE_MBUF_DEFAULT_DATAROOM + ffi::RTE_PKTMBUF_HEADROOM) as u16;
 
 
 /// Create a mbuf pool.
@@ -34,7 +33,7 @@ pub fn pktmbuf_pool_create(name: &str,
                    .as_ptr() as *const i8;
 
     let p = unsafe {
-        rte_pktmbuf_pool_create(name, n, cache_size, priv_size, data_room_size, socket_id)
+        ffi::rte_pktmbuf_pool_create(name, n, cache_size, priv_size, data_room_size, socket_id)
     };
 
     if p.is_null() {

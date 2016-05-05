@@ -11,6 +11,10 @@ use std::str::FromStr;
 use std::time::Duration;
 use std::path::Path;
 
+use rte::eal;
+use rte::mbuf;
+use rte::ethdev;
+
 const MAX_RX_QUEUE_PER_LCORE: u32 = 16;
 
 const MAX_TIMER_PERIOD: u32 = 86400; /* 1 day max */
@@ -114,14 +118,22 @@ fn main() {
         l2fwd_parse_args(&program, &Vec::from(opt_args));
 
     // init EAL
-    rte::eal_init(&Vec::from(eal_args));
+    eal::init(&Vec::from(eal_args));
 
     // create the mbuf pool
-    let l2fwd_pktmbuf_pool = rte::mbuf::pktmbuf_pool_create("mbuf_pool",
-                                                            NB_MBUF,
-                                                            32,
-                                                            0,
-                                                            rte::mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
-                                                            rte::socket_id())
+    let l2fwd_pktmbuf_pool = mbuf::pktmbuf_pool_create("mbuf_pool",
+                                                       NB_MBUF,
+                                                       32,
+                                                       0,
+                                                       mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
+                                                       eal::socket_id())
                                  .expect("Cannot init mbuf pool");
+
+    let nb_ports = ethdev::count();
+
+    if nb_ports == 0 {
+        println!("No Ethernet ports - bye");
+
+        exit(0);
+    }
 }

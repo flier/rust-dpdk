@@ -4,7 +4,7 @@ use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 use std::os::unix::io::AsRawFd;
 
-use ffi::*;
+use ffi;
 
 use errors::{Error, Result};
 use cfile::{Stream, CFile};
@@ -22,7 +22,7 @@ bitflags! {
     }
 }
 
-pub type RawMemoryPoolPtr = *mut Struct_rte_mempool;
+pub type RawMemoryPoolPtr = *mut ffi::Struct_rte_mempool;
 
 /// A mempool constructor callback function.
 pub type MemoryPoolConstructor<T> = fn(pool: RawMemoryPoolPtr, arg: Option<&mut T>);
@@ -57,7 +57,7 @@ pub trait MemoryPool {
     fn size(&self) -> u32;
 
     /// Phys. addr. of mempool struct.
-    fn phys_addr(&self) -> phys_addr_t;
+    fn phys_addr(&self) -> ffi::phys_addr_t;
 
     /// Size of per-lcore local cache.
     fn cache_size(&self) -> u32;
@@ -78,13 +78,13 @@ pub trait MemoryPool {
     fn private_data_size(&self) -> u32;
 
     /// Virtual address of the first mempool object.
-    fn elt_va_start(&self) -> uintptr_t;
+    fn elt_va_start(&self) -> ffi::uintptr_t;
 
     // Virtual address of the <size + 1> mempool object.
-    fn elt_va_end(&self) -> uintptr_t;
+    fn elt_va_end(&self) -> ffi::uintptr_t;
 
     /// Array of physical page addresses for the mempool objects buffer.
-    fn elt_pa(&self) -> &[phys_addr_t];
+    fn elt_pa(&self) -> &[ffi::phys_addr_t];
 }
 
 pub trait MemoryPoolDebug: MemoryPool {
@@ -169,17 +169,17 @@ impl RawMemoryPool {
 
 
         let p = unsafe {
-            rte_mempool_create(name,
-                               n,
-                               elt_size,
-                               cache_size,
-                               private_data_size,
-                               mem::transmute(mp_init),
-                               mem::transmute(mp_init_arg),
-                               mem::transmute(obj_init),
-                               mem::transmute(obj_init_arg),
-                               socket_id,
-                               flags.bits)
+            ffi::rte_mempool_create(name,
+                                    n,
+                                    elt_size,
+                                    cache_size,
+                                    private_data_size,
+                                    mem::transmute(mp_init),
+                                    mem::transmute(mp_init_arg),
+                                    mem::transmute(obj_init),
+                                    mem::transmute(obj_init_arg),
+                                    socket_id,
+                                    flags.bits)
         };
 
         if p.is_null() {
@@ -195,10 +195,10 @@ impl RawMemoryPool {
 
     pub fn lookup(name: &str) -> Option<RawMemoryPool> {
         let p = unsafe {
-            rte_mempool_lookup(CString::new(name)
-                                   .unwrap()
-                                   .as_bytes_with_nul()
-                                   .as_ptr() as *const i8)
+            ffi::rte_mempool_lookup(CString::new(name)
+                                        .unwrap()
+                                        .as_bytes_with_nul()
+                                        .as_ptr() as *const i8)
         };
 
         if p.is_null() {
@@ -212,7 +212,7 @@ impl RawMemoryPool {
     pub fn list_dump<S: AsRawFd>(s: &S) {
         if let Ok(f) = CFile::open_stream(s, "w") {
             unsafe {
-                rte_mempool_list_dump(f.stream() as *mut FILE);
+                ffi::rte_mempool_list_dump(f.stream() as *mut ffi::FILE);
             }
         }
     }
@@ -220,7 +220,7 @@ impl RawMemoryPool {
     /// Walk list of all memory pools
     pub fn walk<T>(callback: Option<MemoryPoolWalkCallback<T>>, arg: Option<&T>) {
         unsafe {
-            rte_mempool_walk(mem::transmute(callback), mem::transmute(arg));
+            ffi::rte_mempool_walk(mem::transmute(callback), mem::transmute(arg));
         }
     }
 }
@@ -249,7 +249,7 @@ impl MemoryPool for RawMemoryPool {
     }
 
     #[inline]
-    fn phys_addr(&self) -> phys_addr_t {
+    fn phys_addr(&self) -> ffi::phys_addr_t {
         unsafe { (*self.0).phys_addr }
     }
 
@@ -284,34 +284,34 @@ impl MemoryPool for RawMemoryPool {
     }
 
     #[inline]
-    fn elt_va_start(&self) -> uintptr_t {
+    fn elt_va_start(&self) -> ffi::uintptr_t {
         unsafe { (*self.0).elt_va_start }
     }
 
     #[inline]
-    fn elt_va_end(&self) -> uintptr_t {
+    fn elt_va_end(&self) -> ffi::uintptr_t {
         unsafe { (*self.0).elt_va_end }
     }
 
     #[inline]
-    fn elt_pa(&self) -> &[phys_addr_t] {
+    fn elt_pa(&self) -> &[ffi::phys_addr_t] {
         unsafe { &(*self.0).elt_pa[..(*self.0).pg_num as usize] }
     }
 }
 
 impl MemoryPoolDebug for RawMemoryPool {
     fn count(&self) -> u32 {
-        unsafe { rte_mempool_count(self.0) }
+        unsafe { ffi::rte_mempool_count(self.0) }
     }
 
     fn audit(&self) {
-        unsafe { rte_mempool_audit(self.0) }
+        unsafe { ffi::rte_mempool_audit(self.0) }
     }
 
     fn dump<S: AsRawFd>(&self, s: &S) {
         if let Ok(f) = CFile::open_stream(s, "w") {
             unsafe {
-                rte_mempool_dump(f.stream() as *mut FILE, self.0);
+                ffi::rte_mempool_dump(f.stream() as *mut ffi::FILE, self.0);
             }
         }
     }
@@ -323,17 +323,17 @@ impl MemoryPoolDebug for RawMemoryPool {
                   -> u32 {
         unsafe {
             let p = *self.0;
-            let elt_sz = (p.header_size + p.elt_size + p.trailer_size) as size_t;
+            let elt_sz = (p.header_size + p.elt_size + p.trailer_size) as ffi::size_t;
 
-            rte_mempool_obj_iter(mem::transmute(p.elt_va_start),
-                                 elt_num,
-                                 elt_sz,
-                                 1,
-                                 p.elt_pa.as_ptr(),
-                                 p.pg_num,
-                                 p.pg_shift,
-                                 mem::transmute(obj_iter),
-                                 mem::transmute(obj_iter_arg))
+            ffi::rte_mempool_obj_iter(mem::transmute(p.elt_va_start),
+                                      elt_num,
+                                      elt_sz,
+                                      1,
+                                      p.elt_pa.as_ptr(),
+                                      p.pg_num,
+                                      p.pg_shift,
+                                      mem::transmute(obj_iter),
+                                      mem::transmute(obj_iter_arg))
         }
     }
 }
@@ -348,16 +348,16 @@ mod tests {
     use log::LogLevel::Debug;
     use cfile::CFile;
 
-    use ffi::SOCKET_ID_ANY;
+    use ffi;
 
     use super::*;
-    use super::super::eal_init;
+    use super::super::eal;
 
     #[test]
     fn test_mempool() {
         let _ = env_logger::init();
 
-        assert!(eal_init(&vec![String::from("test")]));
+        assert!(eal::init(&vec![String::from("test")]));
 
         let p = RawMemoryPool::create::<c_void, c_void>("test", // name
                                       16, // nll
@@ -368,7 +368,7 @@ mod tests {
                                       None, // mp_init_arg
                                       None, // obj_init
                                       None, // obj_init_arg
-                                      SOCKET_ID_ANY, // socket_id
+                                      ffi::SOCKET_ID_ANY, // socket_id
                                       MEMPOOL_F_SP_PUT | MEMPOOL_F_SC_GET) // flags
                     .unwrap();
 
