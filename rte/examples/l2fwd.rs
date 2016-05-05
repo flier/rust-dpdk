@@ -31,8 +31,9 @@ fn l2fwd_usage(program: &String, opts: getopts::Options) -> ! {
 }
 
 // Parse the argument given in the command line of the application
-fn l2fwd_parse_args(program: &String, args: &Vec<String>) -> (u32, u32, Duration) {
+fn l2fwd_parse_args(args: &Vec<String>) -> (u32, u32, Duration) {
     let mut opts = getopts::Options::new();
+    let program = args[0].clone();
 
     opts.optopt("p",
                 "",
@@ -49,7 +50,7 @@ fn l2fwd_parse_args(program: &String, args: &Vec<String>) -> (u32, u32, Duration
                 "PERIOD");
     opts.optflag("h", "help", "print this help menu");
 
-    let matches = match opts.parse(args) {
+    let matches = match opts.parse(&args[1..]) {
         Ok(m) => m,
         Err(err) => {
             println!("Invalid L2FWD arguments, {}", err);
@@ -105,20 +106,26 @@ fn l2fwd_parse_args(program: &String, args: &Vec<String>) -> (u32, u32, Duration
 fn main() {
     env_logger::init().unwrap();
 
-    let args: Vec<String> = env::args().collect();
+    let mut args: Vec<String> = env::args().collect();
     let program = String::from(Path::new(&args[0]).file_name().unwrap().to_str().unwrap());
 
     let (eal_args, opt_args) = if let Some(pos) = args.iter().position(|arg| arg == "--") {
-        args.split_at(pos)
+        let (eal_args, opt_args) = args.split_at_mut(pos);
+
+        opt_args[0] = program;
+
+        (eal_args.to_vec(), opt_args.to_vec())
     } else {
-        (&args[..1], &args[1..])
+        (args[..1].to_vec(), args.clone())
     };
 
+    debug!("eal args: {:?}, l2fwd args: {:?}", eal_args, opt_args);
+
     let (l2fwd_enabled_port_mask, l2fwd_rx_queue_per_lcore, timer_period) =
-        l2fwd_parse_args(&program, &Vec::from(opt_args));
+        l2fwd_parse_args(&opt_args);
 
     // init EAL
-    eal::init(&Vec::from(eal_args));
+    eal::init(&eal_args);
 
     // create the mbuf pool
     let l2fwd_pktmbuf_pool = mbuf::pktmbuf_pool_create("mbuf_pool",
@@ -139,5 +146,31 @@ fn main() {
 
     if nb_ports > rte::RTE_MAX_ETHPORTS {
         nb_ports = rte::RTE_MAX_ETHPORTS;
+    }
+
+    // list of enabled ports
+    let mut l2fwd_dst_ports = [0u8; rte::RTE_MAX_ETHPORTS as usize];
+    let mut last_port = 0;
+    let mut nb_ports_in_mask = 0;
+
+    // Each logical core is assigned a dedicated TX queue on each port.
+    for port_id in 0..nb_ports as u8 {
+        // skip ports that are not enabled
+        if (l2fwd_enabled_port_mask & (1 << port_id)) == 0 {
+            continue;
+        }
+
+        if (nb_ports_in_mask % 2) != 0 {
+            l2fwd_dst_ports[port_id as usize] = last_port;
+            l2fwd_dst_ports[last_port as usize] = port_id;
+        } else {
+            last_port = port_id;
+        }
+
+        nb_ports_in_mask += 1;
+
+        let info = ethdev::dev_info(port_id);
+
+        debug!("port #{} -> {:?}", port_id, info);
     }
 }
