@@ -1,6 +1,7 @@
 use std::ffi::CString;
 
-use ffi::*;
+use ffi::consts::*;
+use ffi::rte_pktmbuf_pool_create;
 
 use errors::{Error, Result};
 use mempool::RawMemoryPool;
@@ -12,8 +13,8 @@ use mempool::RawMemoryPool;
  * So, for mbufs that planned to be involved into RX/TX, the recommended
  * minimal buffer length is 2KB + RTE_PKTMBUF_HEADROOM.
  */
-pub const RTE_MBUF_DEFAULT_DATAROOM: u16 = 2048;
-pub const RTE_MBUF_DEFAULT_BUF_SIZE: u16 = RTE_MBUF_DEFAULT_DATAROOM + RTE_PKTMBUF_HEADROOM as u16;
+pub const RTE_MBUF_DEFAULT_BUF_SIZE: u16 =
+    (RTE_MBUF_DEFAULT_DATAROOM + RTE_PKTMBUF_HEADROOM) as u16;
 
 
 /// Create a mbuf pool.

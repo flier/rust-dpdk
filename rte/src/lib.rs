@@ -18,3 +18,4 @@ mod eal;
 
 pub use errors::{Error, Result};
 pub use eal::*;
+pub use ffi::consts::*;

@@ -122,5 +122,6 @@ fn main() {
                                                             32,
                                                             0,
                                                             rte::mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
-                                                            rte::socket_id());
+                                                            rte::socket_id())
+                                 .expect("Cannot init mbuf pool");
 }
