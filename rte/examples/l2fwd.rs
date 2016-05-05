@@ -129,11 +129,15 @@ fn main() {
                                                        eal::socket_id())
                                  .expect("Cannot init mbuf pool");
 
-    let nb_ports = ethdev::count();
+    let mut nb_ports = ethdev::count();
 
     if nb_ports == 0 {
         println!("No Ethernet ports - bye");
 
         exit(0);
+    }
+
+    if nb_ports > rte::RTE_MAX_ETHPORTS {
+        nb_ports = rte::RTE_MAX_ETHPORTS;
     }
 }

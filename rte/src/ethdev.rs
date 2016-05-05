@@ -11,6 +11,6 @@ pub struct RawDevice(u8);
 /// can be operated on by network applications immediately after invoking rte_eal_init().
 /// If the application unplugs a port using hotplug function, The enabled port numbers may be noncontiguous.
 /// In the case, the applications need to manage enabled port by themselves.
-pub fn count() -> usize {
-    unsafe { rte_eth_dev_count() as usize }
+pub fn count() -> u32 {
+    unsafe { rte_eth_dev_count() as u32 }
 }

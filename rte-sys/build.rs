@@ -131,7 +131,28 @@ fn gen_rte_config(base_dir: &PathBuf) {
 }
 
 fn gen_cargo_config(base_dir: &PathBuf) {
-    let libs = vec!["rte_eal", "rte_mempool", "rte_ring", "rte_mbuf", "ethdev"];
+    let libs = vec!["ethdev",
+                    "rte_acl",
+                    "rte_cfgfile",
+                    "rte_cmdline",
+                    "rte_cryptodev",
+                    "rte_distributor",
+                    "rte_eal",
+                    "rte_hash",
+                    "rte_ip_frag",
+                    "rte_jobstats",
+                    "rte_kni",
+                    "rte_kvargs",
+                    "rte_lpm",
+                    "rte_mbuf",
+                    "rte_mempool",
+                    "rte_meter",
+                    "rte_pipeline",
+                    "rte_port",
+                    "rte_ring",
+                    "rte_table",
+                    "rte_timer",
+                    "rte_vhost"];
 
     for lib in libs {
         println!("cargo:rustc-link-lib=static={}", lib);
@@ -146,13 +167,12 @@ fn gen_cargo_config(base_dir: &PathBuf) {
 fn main() {
     env_logger::init().unwrap();
 
-    let root_dir = PathBuf::from(env::var("RTE_SDK")
-                                     .expect("RTE_SDK - Points to the DPDK installation \
-                                              directory."));
+    let root_dir = env::var("RTE_SDK")
+                       .expect("RTE_SDK - Points to the DPDK installation directory.");
     let target = env::var("RTE_TARGET")
                      .unwrap_or(String::from(format!("{}-native-{}app-gcc", ARCH, OS)));
 
-    let base_dir = root_dir.join(target);
+    let base_dir = PathBuf::from(root_dir).join(target);
 
     if !base_dir.exists() {
         build_dpdk(&base_dir);

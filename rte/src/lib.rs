@@ -7,6 +7,7 @@ extern crate lazy_static;
 extern crate libc;
 extern crate errno;
 extern crate cfile;
+
 extern crate rte_sys as ffi;
 
 mod errors;
