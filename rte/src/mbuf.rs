@@ -3,7 +3,7 @@ use std::ffi::CString;
 use ffi;
 
 use errors::{Error, Result};
-use mempool::RawMemoryPool;
+use mempool;
 
 
 /**
@@ -27,7 +27,7 @@ pub fn pktmbuf_pool_create(name: &str,
                            priv_size: u16,
                            data_room_size: u16,
                            socket_id: i32)
-                           -> Result<RawMemoryPool> {
+                           -> Result<mempool::RawMemoryPool> {
     let name = try!(CString::new(name))
                    .as_bytes_with_nul()
                    .as_ptr() as *const i8;
@@ -39,6 +39,6 @@ pub fn pktmbuf_pool_create(name: &str,
     if p.is_null() {
         Err(Error::rte_error())
     } else {
-        Ok(RawMemoryPool::from_raw(p))
+        Ok(mempool::from_raw(p))
     }
 }

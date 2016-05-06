@@ -143,85 +143,83 @@ pub trait MemoryPoolDebug: MemoryPool {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct RawMemoryPool(RawMemoryPoolPtr);
 
-impl RawMemoryPool {
-    /// Create a new mempool named name in memory.
-    ///
-    /// This function uses memzone_reserve() to allocate memory.
-    /// The pool contains n elements of elt_size. Its size is set to n.
-    /// All elements of the mempool are allocated together with the mempool header,
-    /// in one physically continuous chunk of memory.
-    ///
-    pub fn create<T, O>(name: &str,
-                        n: u32,
-                        elt_size: u32,
-                        cache_size: u32,
-                        private_data_size: u32,
-                        mp_init: Option<MemoryPoolConstructor<T>>,
-                        mp_init_arg: Option<&T>,
-                        obj_init: Option<MemoryPoolObjectContructor<O>>,
-                        obj_init_arg: Option<&O>,
-                        socket_id: i32,
-                        flags: MemoryPoolFlags)
-                        -> Result<RawMemoryPool> {
-        let name = try!(CString::new(name))
-                       .as_bytes_with_nul()
-                       .as_ptr() as *const i8;
+/// Create a new mempool named name in memory.
+///
+/// This function uses memzone_reserve() to allocate memory.
+/// The pool contains n elements of elt_size. Its size is set to n.
+/// All elements of the mempool are allocated together with the mempool header,
+/// in one physically continuous chunk of memory.
+///
+pub fn create<T, O>(name: &str,
+                    n: u32,
+                    elt_size: u32,
+                    cache_size: u32,
+                    private_data_size: u32,
+                    mp_init: Option<MemoryPoolConstructor<T>>,
+                    mp_init_arg: Option<&T>,
+                    obj_init: Option<MemoryPoolObjectContructor<O>>,
+                    obj_init_arg: Option<&O>,
+                    socket_id: i32,
+                    flags: MemoryPoolFlags)
+                    -> Result<RawMemoryPool> {
+    let name = try!(CString::new(name))
+                   .as_bytes_with_nul()
+                   .as_ptr() as *const i8;
 
 
-        let p = unsafe {
-            ffi::rte_mempool_create(name,
-                                    n,
-                                    elt_size,
-                                    cache_size,
-                                    private_data_size,
-                                    mem::transmute(mp_init),
-                                    mem::transmute(mp_init_arg),
-                                    mem::transmute(obj_init),
-                                    mem::transmute(obj_init_arg),
-                                    socket_id,
-                                    flags.bits)
-        };
+    let p = unsafe {
+        ffi::rte_mempool_create(name,
+                                n,
+                                elt_size,
+                                cache_size,
+                                private_data_size,
+                                mem::transmute(mp_init),
+                                mem::transmute(mp_init_arg),
+                                mem::transmute(obj_init),
+                                mem::transmute(obj_init_arg),
+                                socket_id,
+                                flags.bits)
+    };
 
-        if p.is_null() {
-            Err(Error::rte_error())
-        } else {
-            Ok(RawMemoryPool(p))
-        }
+    if p.is_null() {
+        Err(Error::rte_error())
+    } else {
+        Ok(RawMemoryPool(p))
     }
+}
 
-    pub fn from_raw(p: RawMemoryPoolPtr) -> RawMemoryPool {
-        RawMemoryPool(p)
+pub fn from_raw(p: RawMemoryPoolPtr) -> RawMemoryPool {
+    RawMemoryPool(p)
+}
+
+pub fn lookup(name: &str) -> Option<RawMemoryPool> {
+    let p = unsafe {
+        ffi::rte_mempool_lookup(CString::new(name)
+                                    .unwrap()
+                                    .as_bytes_with_nul()
+                                    .as_ptr() as *const i8)
+    };
+
+    if p.is_null() {
+        None
+    } else {
+        Some(RawMemoryPool(p))
     }
+}
 
-    pub fn lookup(name: &str) -> Option<RawMemoryPool> {
-        let p = unsafe {
-            ffi::rte_mempool_lookup(CString::new(name)
-                                        .unwrap()
-                                        .as_bytes_with_nul()
-                                        .as_ptr() as *const i8)
-        };
-
-        if p.is_null() {
-            None
-        } else {
-            Some(RawMemoryPool(p))
-        }
-    }
-
-    /// Dump the status of all mempools on the console
-    pub fn list_dump<S: AsRawFd>(s: &S) {
-        if let Ok(f) = CFile::open_stream(s, "w") {
-            unsafe {
-                ffi::rte_mempool_list_dump(f.stream() as *mut ffi::FILE);
-            }
-        }
-    }
-
-    /// Walk list of all memory pools
-    pub fn walk<T>(callback: Option<MemoryPoolWalkCallback<T>>, arg: Option<&T>) {
+/// Dump the status of all mempools on the console
+pub fn list_dump<S: AsRawFd>(s: &S) {
+    if let Ok(f) = CFile::open_stream(s, "w") {
         unsafe {
-            ffi::rte_mempool_walk(mem::transmute(callback), mem::transmute(arg));
+            ffi::rte_mempool_list_dump(f.stream() as *mut ffi::FILE);
         }
+    }
+}
+
+/// Walk list of all memory pools
+pub fn walk<T>(callback: Option<MemoryPoolWalkCallback<T>>, arg: Option<&T>) {
+    unsafe {
+        ffi::rte_mempool_walk(mem::transmute(callback), mem::transmute(arg));
     }
 }
 
@@ -334,105 +332,6 @@ impl MemoryPoolDebug for RawMemoryPool {
                                       p.pg_shift,
                                       mem::transmute(obj_iter),
                                       mem::transmute(obj_iter_arg))
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    extern crate env_logger;
-
-    use std::mem;
-    use std::os::raw::c_void;
-
-    use log::LogLevel::Debug;
-    use cfile::CFile;
-
-    use ffi;
-
-    use super::*;
-    use super::super::eal;
-
-    #[test]
-    fn test_mempool() {
-        let _ = env_logger::init();
-
-        assert!(eal::init(&vec![String::from("test")]));
-
-        let p = RawMemoryPool::create::<c_void, c_void>("test", // name
-                                      16, // nll
-                                      128, // elt_size
-                                      0, // cache_size
-                                      32, // private_data_size
-                                      None, // mp_init
-                                      None, // mp_init_arg
-                                      None, // obj_init
-                                      None, // obj_init_arg
-                                      ffi::SOCKET_ID_ANY, // socket_id
-                                      MEMPOOL_F_SP_PUT | MEMPOOL_F_SC_GET) // flags
-                    .unwrap();
-
-        assert_eq!(p.name(), "test");
-        assert_eq!(p.size(), 16);
-        assert!(p.phys_addr() != 0);
-        assert_eq!(p.cache_size(), 0);
-        assert_eq!(p.cache_flushthresh(), 0);
-        assert_eq!(p.elt_size(), 128);
-        assert_eq!(p.header_size(), 64);
-        assert_eq!(p.trailer_size(), 0);
-        assert_eq!(p.private_data_size(), 64);
-        assert_eq!((p.elt_va_end() - p.elt_va_start()) as u32,
-                   (p.header_size() + p.elt_size()) * p.size());
-        assert_eq!(p.elt_pa().len(), 1);
-
-        assert_eq!(p.count(), 16);
-        assert_eq!(p.free_count(), 0);
-        assert!(p.full());
-        assert!(!p.empty());
-
-        p.audit();
-
-        if log_enabled!(Debug) {
-            let stdout = CFile::open_stdout().unwrap();
-
-            p.dump(&stdout);
-        }
-
-        let mut elements: Vec<(u32, usize)> = Vec::new();
-
-        fn walk_element(elements: Option<&mut Vec<(u32, usize)>>,
-                        obj_start: *mut c_void,
-                        obj_end: *mut c_void,
-                        obj_index: u32) {
-            unsafe {
-                let obj_addr: usize = mem::transmute(obj_start);
-                let obj_end: usize = mem::transmute(obj_end);
-
-                elements.unwrap()
-                        .push((obj_index, obj_end - obj_addr));
-            }
-        }
-
-        assert_eq!(p.walk(4, Some(walk_element), Some(&mut elements)), 4);
-
-        assert_eq!(elements.len(), 4);
-
-        assert_eq!(p, RawMemoryPool::lookup("test").unwrap());
-
-        let mut pools: Vec<RawMemoryPoolPtr> = Vec::new();
-
-        fn walk_mempool(pool: RawMemoryPoolPtr, pools: Option<&mut Vec<RawMemoryPoolPtr>>) {
-            pools.unwrap().push(pool);
-        }
-
-        RawMemoryPool::walk(Some(walk_mempool), Some(&mut pools));
-
-        assert!(pools.iter().find(|pool| **pool == *p).is_some());
-
-        if log_enabled!(Debug) {
-            let stdout = CFile::open_stdout().unwrap();
-
-            RawMemoryPool::list_dump(&stdout);
         }
     }
 }

@@ -12,11 +12,16 @@ extern crate rte_sys as ffi;
 
 mod errors;
 pub mod common;
+pub mod config;
 pub mod memzone;
 pub mod mempool;
 pub mod mbuf;
 pub mod ethdev;
+pub mod lcore;
 pub mod eal;
 
 pub use errors::{Error, Result};
 pub use ffi::consts::*;
+
+#[cfg(test)]
+mod tests;
