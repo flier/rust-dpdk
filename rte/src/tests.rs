@@ -2,6 +2,7 @@ extern crate env_logger;
 extern crate num_cpus;
 
 use std::mem;
+use std::sync::{Arc, Mutex};
 use std::os::raw::c_void;
 
 use log::LogLevel::Debug;
@@ -16,7 +17,11 @@ use super::mempool::{MemoryPool, MemoryPoolDebug};
 fn test_eal() {
     let _ = env_logger::init();
 
-    assert!(eal::init(&vec![String::from("test")]));
+    assert!(eal::init(&vec![String::from("test"),
+                            String::from("-c"),
+                            format!("{:x}", (1 << num_cpus::get()) - 1),
+                            String::from("--log-level"),
+                            String::from("8")]));
 
     assert_eq!(eal::process_type(), eal::ProcType::Primary);
     assert!(!eal::primary_proc_alive());
@@ -26,6 +31,8 @@ fn test_eal() {
     test_config();
 
     test_lcore();
+
+    test_launch();
 
     test_mempool();
 
@@ -60,6 +67,76 @@ fn test_lcore() {
     assert_eq!(lcore::master(), 0);
     assert_eq!(lcore::count(), num_cpus::get());
     assert_eq!(lcore::socket_id(lcore_id), 0);
+    assert!(lcore::is_enabled(lcore_id));
+    assert_eq!(lcore::enabled_lcores().len(), num_cpus::get());
+
+    assert_eq!(lcore::index(256), None);
+    assert_eq!(lcore::index(-1), Some(lcore_id));
+    assert_eq!(lcore::index(0), Some(lcore_id));
+}
+
+fn test_launch() {
+    fn slave_main(mutext: &Arc<Mutex<usize>>) -> i32 {
+        debug!("lcore {} is running", lcore::id().unwrap());
+
+        let mut data = mutext.lock().unwrap();
+
+        *data += 1;
+
+        debug!("lcore {} finished, data={}", lcore::id().unwrap(), *data);
+
+        0
+    }
+
+    let mutex = Arc::new(Mutex::new(0));
+    let slave_id: u32 = 1;
+
+    assert_eq!(launch::LcoreState::Wait, launch::get_lcore_state(slave_id));
+
+    {
+        let data = mutex.lock().unwrap();
+
+        assert_eq!(*data, 0);
+
+        debug!("remote launch lcore {}", slave_id);
+
+        launch::remote_launch(Some(slave_main), Some(&mutex.clone()), slave_id).unwrap();
+
+        assert_eq!(launch::LcoreState::Running,
+                   launch::get_lcore_state(slave_id));
+    }
+
+    debug!("waiting lcore {} ...", slave_id);
+
+    assert!(launch::wait_lcore(slave_id));
+
+    {
+        let data = mutex.lock().unwrap();
+
+        assert_eq!(*data, 1);
+
+        debug!("remote lcore {} finished", slave_id);
+
+        assert_eq!(launch::LcoreState::Wait, launch::get_lcore_state(slave_id));
+    }
+
+    {
+        let _ = mutex.lock().unwrap();
+
+        debug!("remote launch lcores");
+
+        launch::mp_remote_launch(Some(slave_main), Some(&mutex.clone()), true).unwrap();
+    }
+
+    launch::mp_wait_lcore();
+
+    {
+        let data = mutex.lock().unwrap();
+
+        debug!("remote lcores finished");
+
+        assert_eq!(*data, num_cpus::get());
+    }
 }
 
 fn test_mempool() {

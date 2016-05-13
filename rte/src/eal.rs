@@ -9,6 +9,7 @@ use ffi;
 pub use common::*;
 pub use config::*;
 pub use cycles::*;
+pub use launch::*;
 
 extern "C" {
     fn devinitfn_pmd_af_packet_drv();

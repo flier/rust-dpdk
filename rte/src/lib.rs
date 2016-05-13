@@ -22,6 +22,7 @@ pub mod net;
 pub mod ethdev;
 pub mod lcore;
 pub mod cycles;
+pub mod launch;
 pub mod eal;
 
 pub use errors::{Error, Result};
