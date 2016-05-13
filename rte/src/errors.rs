@@ -4,7 +4,7 @@ use std::error;
 use std::result;
 use std::ffi;
 
-use errno::{Errno, errno};
+use errno::errno;
 
 use ffi::rte_strerror;
 
@@ -25,7 +25,7 @@ macro_rules! rte_check {
 #[derive(Debug)]
 pub enum Error {
     RteError(i32),
-    OsError(Errno),
+    OsError(i32),
     IoError(io::Error),
     NulError(ffi::NulError),
 }
@@ -36,7 +36,7 @@ impl Error {
     }
 
     pub fn os_error() -> Error {
-        Error::OsError(errno())
+        Error::OsError(errno().0 as i32)
     }
 }
 

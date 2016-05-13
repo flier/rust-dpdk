@@ -18,6 +18,8 @@ use rte::*;
 const EXIT_FAILURE: i32 = 1;
 const EXIT_SUCCESS: i32 = 0;
 
+const MAX_PKT_BURST: usize = 32;
+
 const MAX_RX_QUEUE_PER_LCORE: u32 = 16;
 
 const MAX_TIMER_PERIOD: u32 = 86400; /* 1 day max */
@@ -245,6 +247,8 @@ fn main() {
     }
 
     let port_conf = ethdev::EthConfigBuilder::default().build();
+    let mut tx_buffers: [Option<ethdev::TxBuffer>; RTE_MAX_ETHPORTS as usize] =
+        [None; RTE_MAX_ETHPORTS as usize];
 
     // Initialise each port
     for dev in enabled_devices.as_slice() {
@@ -269,6 +273,13 @@ fn main() {
            .expect(format!("fail to setup device tx queue: port={}", portid).as_str());
 
         // Initialize TX buffers
+        let buf = ethdev::TxBuffer::new(MAX_PKT_BURST, dev.socket_id())
+                      .expect(format!("fail to allocate buffer for tx: port={}", portid).as_str());
+
+        buf.count_err_packets()
+           .expect(format!("failt to set error callback for tx buffer: port={}", portid).as_str());
+
+        tx_buffers[portid] = Some(buf);
 
         // Start device
         dev.start().expect(format!("fail to start device: port={}", portid).as_str());

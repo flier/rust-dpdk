@@ -18,7 +18,7 @@ size_t _rte_cache_line_size() {
     return RTE_CACHE_LINE_SIZE;
 }
 
-struct rte_eth_conf* rte_eth_conf_new() {
+struct rte_eth_conf* _rte_eth_conf_new() {
     struct rte_eth_conf *conf = malloc(sizeof(struct rte_eth_conf));
 
     memset(conf, 0, sizeof(struct rte_eth_conf));
@@ -26,11 +26,11 @@ struct rte_eth_conf* rte_eth_conf_new() {
     return conf;
 }
 
-void rte_eth_conf_free(struct rte_eth_conf *conf) {
+void _rte_eth_conf_free(struct rte_eth_conf *conf) {
     free(conf);
 }
 
-void rte_eth_conf_set_rx_mode(struct rte_eth_conf *conf,
+void _rte_eth_conf_set_rx_mode(struct rte_eth_conf *conf,
     enum rte_eth_rx_mq_mode mq_mode,
     uint16_t split_hdr_size,
     uint8_t hw_ip_checksum,
@@ -56,13 +56,13 @@ void rte_eth_conf_set_rx_mode(struct rte_eth_conf *conf,
     conf->rxmode.enable_lro = enable_lro;          /**< Enable LRO */
 }
 
-void rte_eth_conf_set_rss_conf(struct rte_eth_conf *conf, uint8_t *rss_key, uint8_t rss_key_len, uint64_t rss_hf) {
+void _rte_eth_conf_set_rss_conf(struct rte_eth_conf *conf, uint8_t *rss_key, uint8_t rss_key_len, uint64_t rss_hf) {
     conf->rx_adv_conf.rss_conf.rss_key = rss_key;
     conf->rx_adv_conf.rss_conf.rss_key_len = rss_key_len;
     conf->rx_adv_conf.rss_conf.rss_hf = rss_hf;
 }
 
-void rte_eth_conf_set_tx_mode(struct rte_eth_conf *conf,
+void _rte_eth_conf_set_tx_mode(struct rte_eth_conf *conf,
     enum rte_eth_tx_mq_mode mq_mode,
     uint8_t hw_vlan_reject_tagged,
     uint8_t hw_vlan_reject_untagged,
@@ -73,3 +73,8 @@ void rte_eth_conf_set_tx_mode(struct rte_eth_conf *conf,
     conf->txmode.hw_vlan_reject_untagged = hw_vlan_reject_untagged;
     conf->txmode.hw_vlan_insert_pvid = hw_vlan_insert_pvid;
 }
+
+size_t _rte_eth_tx_buffer_size(size_t size) {
+    return RTE_ETH_TX_BUFFER_SIZE(size);
+}
+

@@ -2,6 +2,7 @@ use std::fmt;
 use std::ptr;
 use std::mem;
 use std::ffi::CStr;
+use std::os::raw::c_void;
 
 use libc;
 
@@ -9,8 +10,10 @@ use ffi;
 
 use errors::{Error, Result};
 use mempool;
+use malloc;
 use net::EtherAddr;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct EthDevice(u8);
 
 impl From<u8> for EthDevice {
@@ -328,28 +331,28 @@ impl Default for EthConfigBuilder {
 impl EthConfigBuilder {
     pub fn build(&self) -> EthConfig {
         unsafe {
-            let conf = rte_eth_conf_new();
+            let conf = _rte_eth_conf_new();
 
             if let Some(ref rxmode) = self.rxmode {
-                rte_eth_conf_set_rx_mode(conf,
-                                         rxmode.mq_mode.bits,
-                                         rxmode.split_hdr_size,
-                                         rxmode.hw_ip_checksum as u8,
-                                         rxmode.hw_vlan_filter as u8,
-                                         rxmode.hw_vlan_strip as u8,
-                                         rxmode.hw_vlan_extend as u8,
-                                         rxmode.max_rx_pkt_len,
-                                         rxmode.hw_strip_crc as u8,
-                                         rxmode.enable_scatter as u8,
-                                         rxmode.enable_lro as u8);
+                _rte_eth_conf_set_rx_mode(conf,
+                                          rxmode.mq_mode.bits,
+                                          rxmode.split_hdr_size,
+                                          rxmode.hw_ip_checksum as u8,
+                                          rxmode.hw_vlan_filter as u8,
+                                          rxmode.hw_vlan_strip as u8,
+                                          rxmode.hw_vlan_extend as u8,
+                                          rxmode.max_rx_pkt_len,
+                                          rxmode.hw_strip_crc as u8,
+                                          rxmode.enable_scatter as u8,
+                                          rxmode.enable_lro as u8);
             }
 
             if let Some(ref txmode) = self.txmode {
-                rte_eth_conf_set_tx_mode(conf,
-                                         txmode.mq_mode as u32,
-                                         txmode.hw_vlan_reject_tagged as u8,
-                                         txmode.hw_vlan_reject_untagged as u8,
-                                         txmode.hw_vlan_insert_pvid as u8);
+                _rte_eth_conf_set_tx_mode(conf,
+                                          txmode.mq_mode as u32,
+                                          txmode.hw_vlan_reject_tagged as u8,
+                                          txmode.hw_vlan_reject_untagged as u8,
+                                          txmode.hw_vlan_insert_pvid as u8);
             }
 
             if let Some(ref adv_conf) = self.rx_adv_conf {
@@ -359,7 +362,7 @@ impl EthConfigBuilder {
                                                              (key.as_ptr(), key.len() as u8)
                                                          });
 
-                    rte_eth_conf_set_rss_conf(conf, rss_key, rss_key_len, rss_conf.hash.bits);
+                    _rte_eth_conf_set_rss_conf(conf, rss_key, rss_key_len, rss_conf.hash.bits);
                 }
             }
 
@@ -374,35 +377,119 @@ pub struct EthConfig(RawEthConfigPtr);
 
 impl Drop for EthConfig {
     fn drop(&mut self) {
-        unsafe { rte_eth_conf_free(self.0) }
+        unsafe { _rte_eth_conf_free(self.0) }
+    }
+}
+
+pub type RawTxBufferPtr = *mut ffi::Struct_rte_eth_dev_tx_buffer;
+
+///  Structure used to buffer packets for future TX
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TxBuffer(RawTxBufferPtr);
+
+pub type TxBufferErrorCallback<T> = fn(unsent: *mut *mut ffi::Struct_rte_mbuf,
+                                       count: u16,
+                                       userdata: &T);
+
+impl From<RawTxBufferPtr> for TxBuffer {
+    fn from(p: RawTxBufferPtr) -> Self {
+        TxBuffer(p)
+    }
+}
+
+impl TxBuffer {
+    /// Initialize default values for buffered transmitting
+    pub fn new(size: usize, socket_id: i32) -> Result<TxBuffer> {
+        unsafe {
+            let p = malloc::zmalloc_socket("tx_buffer",
+                                           _rte_eth_tx_buffer_size(size),
+                                           0,
+                                           socket_id) as RawTxBufferPtr;
+
+            if p.is_null() {
+                Err(Error::OsError(libc::ENOMEM))
+            } else {
+                let ret = ffi::rte_eth_tx_buffer_init(p, size as u16);
+
+                if ret != 0 {
+                    Err(Error::OsError(ret))
+                } else {
+                    Ok(TxBuffer(p))
+                }
+            }
+        }
+    }
+
+    pub fn as_raw(&self) -> RawTxBufferPtr {
+        return self.0;
+    }
+
+    pub fn free(&mut self) {
+        if !self.0.is_null() {
+            malloc::free(self.0 as *mut c_void);
+
+            self.0 = ptr::null_mut();
+        }
+    }
+
+    /// Configure a callback for buffered packets which cannot be sent
+    pub fn set_err_callback<T>(&self,
+                               callback: Option<TxBufferErrorCallback<T>>,
+                               userdata: Option<&T>)
+                               -> Result<()> {
+        rte_check!(unsafe {
+            ffi::rte_eth_tx_buffer_set_err_callback(self.0,
+                                                    mem::transmute(callback),
+                                                    mem::transmute(userdata))
+        })
+    }
+
+    /// Silently dropping unsent buffered packets.
+    pub fn drop_err_packets(&self) -> Result<()> {
+        rte_check!(unsafe {
+            ffi::rte_eth_tx_buffer_set_err_callback(self.0,
+                                                    Some(ffi::rte_eth_tx_buffer_drop_callback),
+                                                    ptr::null_mut())
+        })
+    }
+
+    /// Tracking unsent buffered packets.
+    pub fn count_err_packets(&self) -> Result<()> {
+        rte_check!(unsafe {
+            ffi::rte_eth_tx_buffer_set_err_callback(self.0,
+                                                    Some(ffi::rte_eth_tx_buffer_count_callback),
+                                                    ptr::null_mut())
+        })
     }
 }
 
 extern "C" {
-    fn rte_eth_conf_new() -> RawEthConfigPtr;
+    fn _rte_eth_conf_new() -> RawEthConfigPtr;
 
-    fn rte_eth_conf_free(conf: RawEthConfigPtr);
+    fn _rte_eth_conf_free(conf: RawEthConfigPtr);
 
-    fn rte_eth_conf_set_rx_mode(conf: RawEthConfigPtr,
-                                mq_mode: libc::uint32_t,
-                                split_hdr_size: libc::uint16_t,
-                                hw_ip_checksum: libc::uint8_t,
-                                hw_vlan_filter: libc::uint8_t,
-                                hw_vlan_strip: libc::uint8_t,
-                                hw_vlan_extend: libc::uint8_t,
-                                max_rx_pkt_len: libc::uint32_t,
-                                hw_strip_crc: libc::uint8_t,
-                                enable_scatter: libc::uint8_t,
-                                enable_lro: libc::uint8_t);
+    fn _rte_eth_conf_set_rx_mode(conf: RawEthConfigPtr,
+                                 mq_mode: libc::uint32_t,
+                                 split_hdr_size: libc::uint16_t,
+                                 hw_ip_checksum: libc::uint8_t,
+                                 hw_vlan_filter: libc::uint8_t,
+                                 hw_vlan_strip: libc::uint8_t,
+                                 hw_vlan_extend: libc::uint8_t,
+                                 max_rx_pkt_len: libc::uint32_t,
+                                 hw_strip_crc: libc::uint8_t,
+                                 enable_scatter: libc::uint8_t,
+                                 enable_lro: libc::uint8_t);
 
-    fn rte_eth_conf_set_tx_mode(conf: RawEthConfigPtr,
-                                mq_mode: libc::uint32_t,
-                                hw_vlan_reject_tagged: libc::uint8_t,
-                                hw_vlan_reject_untagged: libc::uint8_t,
-                                hw_vlan_insert_pvid: libc::uint8_t);
+    fn _rte_eth_conf_set_tx_mode(conf: RawEthConfigPtr,
+                                 mq_mode: libc::uint32_t,
+                                 hw_vlan_reject_tagged: libc::uint8_t,
+                                 hw_vlan_reject_untagged: libc::uint8_t,
+                                 hw_vlan_insert_pvid: libc::uint8_t);
 
-    fn rte_eth_conf_set_rss_conf(conf: RawEthConfigPtr,
-                                 rss_key: *const libc::uint8_t,
-                                 rss_key_len: libc::uint8_t,
-                                 rss_hf: libc::uint64_t);
+    fn _rte_eth_conf_set_rss_conf(conf: RawEthConfigPtr,
+                                  rss_key: *const libc::uint8_t,
+                                  rss_key_len: libc::uint8_t,
+                                  rss_hf: libc::uint64_t);
+
+    fn _rte_eth_tx_buffer_size(size: libc::size_t) -> libc::size_t;
 }
