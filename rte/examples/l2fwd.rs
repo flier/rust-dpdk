@@ -163,7 +163,7 @@ fn main() {
                                                        eal::socket_id())
                                  .expect("Cannot init mbuf pool");
 
-    let mut nb_ports = ethdev::Device::count();
+    let mut nb_ports = ethdev::EthDevice::count();
 
     if nb_ports == 0 {
         println!("No Ethernet ports - bye");
@@ -176,7 +176,7 @@ fn main() {
     }
 
     // ethernet addresses of ports
-    let mut l2fwd_ports_eth_addr: [Option<ethdev::EtherAddr>; RTE_MAX_ETHPORTS as usize] =
+    let mut l2fwd_ports_eth_addr: [Option<net::EtherAddr>; RTE_MAX_ETHPORTS as usize] =
         Default::default();
 
     // list of enabled ports
@@ -185,9 +185,9 @@ fn main() {
     let mut last_port = 0;
     let mut nb_ports_in_mask = 0;
 
-    let enabled_devices : Vec<ethdev::Device> = (0..nb_ports as u8)
+    let enabled_devices : Vec<ethdev::EthDevice> = (0..nb_ports as u8)
                             .filter(|portid| (l2fwd_enabled_port_mask & (1 << portid) as u32) != 0) // skip ports that are not enabled
-                            .map(|portid| ethdev::Device::from(portid))
+                            .map(|portid| ethdev::EthDevice::from(portid))
                             .collect();
 
     if enabled_devices.is_empty() {
@@ -244,7 +244,7 @@ fn main() {
         println!("Lcore {}: RX port {}", rx_lcore_id, portid);
     }
 
-    let port_conf = ethdev::ConfigBuilder::default().build();
+    let port_conf = ethdev::EthConfigBuilder::default().build();
 
     // Initialise each port
     for dev in enabled_devices.as_slice() {

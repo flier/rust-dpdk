@@ -11,15 +11,15 @@ use errors::{Error, Result};
 use mempool;
 use net::EtherAddr;
 
-pub struct Device(u8);
+pub struct EthDevice(u8);
 
-impl From<u8> for Device {
+impl From<u8> for EthDevice {
     fn from(portid: u8) -> Self {
-        Device(portid)
+        EthDevice(portid)
     }
 }
 
-impl Device {
+impl EthDevice {
     pub fn portid(&self) -> u8 {
         self.0
     }
@@ -40,17 +40,17 @@ impl Device {
     /// This function must be invoked first before any other function in the Ethernet API.
     /// This function can also be re-invoked when a device is in the stopped state.
     ///
-    pub fn configure(&self, nb_rx_queue: u16, nb_tx_queue: u16, conf: &RawEthConfig) -> Result<()> {
+    pub fn configure(&self, nb_rx_queue: u16, nb_tx_queue: u16, conf: &EthConfig) -> Result<()> {
         rte_check!(unsafe { ffi::rte_eth_dev_configure(self.0, nb_rx_queue, nb_tx_queue, conf.0) })
     }
 
     /// Retrieve the contextual information of an Ethernet device.
-    pub fn info(&self) -> DeviceInfo {
+    pub fn info(&self) -> EthDeviceInfo {
         let mut info: Box<ffi::Struct_rte_eth_dev_info> = Box::new(Default::default());
 
         unsafe { ffi::rte_eth_dev_info_get(self.0, info.as_mut()) }
 
-        DeviceInfo(info)
+        EthDeviceInfo(info)
     }
 
     /// Retrieve the Ethernet address of an Ethernet device.
@@ -148,18 +148,18 @@ impl Device {
     }
 }
 
-pub struct DeviceInfo(Box<ffi::Struct_rte_eth_dev_info>);
+pub struct EthDeviceInfo(Box<ffi::Struct_rte_eth_dev_info>);
 
-impl fmt::Debug for DeviceInfo {
+impl fmt::Debug for EthDeviceInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f,
-               "DeviceInfo {{ driver_name: \"{}\", if_index: {} }}",
+               "EthDeviceInfo {{ driver_name: \"{}\", if_index: {} }}",
                self.driver_name(),
                self.if_index())
     }
 }
 
-impl DeviceInfo {
+impl EthDeviceInfo {
     /// Device Driver name.
     pub fn driver_name(&self) -> &str {
         unsafe { CStr::from_ptr((*self.0).driver_name).to_str().unwrap() }
@@ -291,7 +291,7 @@ pub enum TxAdvConf {
 
 }
 
-pub struct ConfigBuilder {
+pub struct EthConfigBuilder {
     /// bitmap of ETH_LINK_SPEED_XXX of speeds to be used.
     ///
     /// ETH_LINK_SPEED_FIXED disables link autonegotiation, and a unique speed shall be set.
@@ -319,14 +319,14 @@ pub struct ConfigBuilder {
     pub intr_conf: Option<ffi::Struct_rte_intr_conf>,
 }
 
-impl Default for ConfigBuilder {
+impl Default for EthConfigBuilder {
     fn default() -> Self {
         unsafe { ::std::mem::zeroed() }
     }
 }
 
-impl ConfigBuilder {
-    pub fn build(&self) -> RawEthConfig {
+impl EthConfigBuilder {
+    pub fn build(&self) -> EthConfig {
         unsafe {
             let conf = rte_eth_conf_new();
 
@@ -363,16 +363,16 @@ impl ConfigBuilder {
                 }
             }
 
-            RawEthConfig(conf)
+            EthConfig(conf)
         }
     }
 }
 
 type RawEthConfigPtr = *const ffi::Struct_rte_eth_conf;
 
-pub struct RawEthConfig(RawEthConfigPtr);
+pub struct EthConfig(RawEthConfigPtr);
 
-impl Drop for RawEthConfig {
+impl Drop for EthConfig {
     fn drop(&mut self) {
         unsafe { rte_eth_conf_free(self.0) }
     }
