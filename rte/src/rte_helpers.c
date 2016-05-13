@@ -4,6 +4,7 @@
 #include <rte_config.h>
 #include <rte_lcore.h>
 #include <rte_errno.h>
+#include <rte_cycles.h>
 #include <rte_ethdev.h>
 
 unsigned _rte_lcore_id() {
@@ -16,6 +17,14 @@ int _rte_errno() {
 
 size_t _rte_cache_line_size() {
     return RTE_CACHE_LINE_SIZE;
+}
+
+uint64_t _rte_rdtsc() {
+    return rte_rdtsc();
+}
+
+uint64_t _rte_rdtsc_precise() {
+    return rte_rdtsc_precise();
 }
 
 struct rte_eth_conf* _rte_eth_conf_new() {
