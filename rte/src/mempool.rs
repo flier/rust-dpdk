@@ -192,6 +192,12 @@ pub fn from_raw(p: RawMemoryPoolPtr) -> RawMemoryPool {
     RawMemoryPool(p)
 }
 
+impl RawMemoryPool {
+    pub fn as_raw(&self) -> RawMemoryPoolPtr {
+        self.0
+    }
+}
+
 pub fn lookup(name: &str) -> Option<RawMemoryPool> {
     let p = unsafe {
         ffi::rte_mempool_lookup(CString::new(name)

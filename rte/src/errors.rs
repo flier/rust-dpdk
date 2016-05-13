@@ -12,6 +12,16 @@ extern "C" {
     fn _rte_errno() -> i32;
 }
 
+macro_rules! rte_check {
+    ($ret:expr) => (
+        if $ret == 0 {
+            Ok(())
+        } else {
+            Err($crate::errors::Error::RteError($ret))
+        }
+    )
+}
+
 #[derive(Debug)]
 pub enum Error {
     RteError(i32),

@@ -9,9 +9,7 @@ use cfile::CFile;
 
 use ffi;
 
-use super::eal;
-use super::lcore;
-use super::mempool;
+use super::*;
 use super::mempool::{MemoryPool, MemoryPoolDebug};
 
 #[test]
@@ -30,6 +28,8 @@ fn test_eal() {
     test_lcore();
 
     test_mempool();
+
+    test_mbuf();
 }
 
 fn test_config() {
@@ -139,4 +139,40 @@ fn test_mempool() {
 
         mempool::list_dump(&stdout);
     }
+}
+
+fn test_mbuf() {
+    const NB_MBUF: u32 = 1024;
+    const CACHE_SIZE: u32 = 32;
+    const PRIV_SIZE: u16 = 0;
+    const MBUF_SIZE: u16 = 128;
+
+    let p = mbuf::pktmbuf_pool_create("mbuf_pool",
+                                      NB_MBUF,
+                                      CACHE_SIZE,
+                                      PRIV_SIZE,
+                                      mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
+                                      eal::socket_id())
+                .unwrap();
+
+    assert_eq!(p.name(), "mbuf_pool");
+    assert_eq!(p.size(), NB_MBUF);
+    assert!(p.phys_addr() != 0);
+    assert_eq!(p.cache_size(), CACHE_SIZE);
+    assert_eq!(p.cache_flushthresh(), 48);
+    assert_eq!(p.elt_size(),
+               (mbuf::RTE_MBUF_DEFAULT_BUF_SIZE + PRIV_SIZE + MBUF_SIZE) as u32);
+    assert_eq!(p.header_size(), 64);
+    assert_eq!(p.trailer_size(), 0);
+    assert_eq!(p.private_data_size(), 64);
+    assert_eq!((p.elt_va_end() - p.elt_va_start()) as u32,
+               (p.header_size() + p.elt_size()) * p.size());
+    assert_eq!(p.elt_pa().len(), 1);
+
+    assert_eq!(p.count(), NB_MBUF);
+    assert_eq!(p.free_count(), 0);
+    assert!(p.full());
+    assert!(!p.empty());
+
+    p.audit();
 }

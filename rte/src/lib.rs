@@ -10,12 +10,15 @@ extern crate cfile;
 
 extern crate rte_sys as ffi;
 
+#[macro_use]
 mod errors;
 pub mod common;
 pub mod config;
+pub mod malloc;
 pub mod memzone;
 pub mod mempool;
 pub mod mbuf;
+pub mod net;
 pub mod ethdev;
 pub mod lcore;
 pub mod eal;

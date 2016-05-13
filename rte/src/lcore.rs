@@ -38,6 +38,11 @@ pub fn role(lcore_id: u32) -> Role {
     unsafe { mem::transmute(ffi::rte_eal_lcore_role(lcore_id)) }
 }
 
+/// Test if an lcore is enabled.
+pub fn enabled(lcore_id: u32) -> bool {
+    role(lcore_id) == Role::Rte
+}
+
 /// Get the ID of the physical socket of the specified lcore
 pub fn socket_id(lcore_id: u32) -> u32 {
     unsafe { ffi::lcore_config[lcore_id as usize].socket_id }
