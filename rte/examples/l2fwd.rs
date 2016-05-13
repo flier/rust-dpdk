@@ -5,6 +5,8 @@ extern crate getopts;
 
 extern crate rte;
 
+use std::io;
+use std::io::prelude::*;
 use std::mem;
 use std::env;
 use std::clone::Clone;
@@ -130,6 +132,45 @@ fn l2fwd_parse_args(args: &Vec<String>) -> (u32, u32, Duration) {
     }
 
     (l2fwd_enabled_port_mask, l2fwd_rx_queue_per_lcore, Duration::from_secs(timer_period as u64))
+}
+
+// Check the link status of all ports in up to 9s, and print them finally
+fn check_all_ports_link_status(enabled_devices: &Vec<ethdev::EthDevice>) {
+    print!("Checking link status");
+
+    const CHECK_INTERVAL: u32 = 100;
+    const MAX_CHECK_TIME: usize = 90;
+
+    for _ in 0..MAX_CHECK_TIME {
+        if enabled_devices.iter().all(|dev| dev.link_nowait().status) {
+            break;
+        }
+
+        eal::delay_ms(CHECK_INTERVAL);
+
+        print!(".");
+
+        io::stdout().flush().unwrap();
+    }
+
+    println!("Done:");
+
+    for dev in enabled_devices.as_slice() {
+        let link = dev.link();
+
+        if link.status {
+            println!("  Port {} Link Up - speed {} Mbps - {}",
+                     dev.portid(),
+                     link.speed,
+                     if link.duplex {
+                         "full-duplex"
+                     } else {
+                         "half-duplex"
+                     })
+        } else {
+            println!("  Port {} Link Down", dev.portid());
+        }
+    }
 }
 
 fn main() {
@@ -290,6 +331,8 @@ fn main() {
 
         println!("  Port {}, MAC address: {}", portid, macaddr);
     }
+
+    check_all_ports_link_status(&enabled_devices);
 
     for dev in enabled_devices.as_slice() {
         print!("Closing port {}...", dev.portid());

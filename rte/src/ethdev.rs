@@ -13,6 +13,14 @@ use mempool;
 use malloc;
 use net::EtherAddr;
 
+/// A structure used to retrieve link-level information of an Ethernet port.
+pub struct EthLink {
+    pub speed: u32,
+    pub duplex: bool,
+    pub autoneg: bool,
+    pub status: bool,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct EthDevice(u8);
 
@@ -135,6 +143,42 @@ impl EthDevice {
         }
     }
 
+    /// Retrieve the status (ON/OFF), the speed (in Mbps) and
+    /// the mode (HALF-DUPLEX or FULL-DUPLEX) of the physical link of an Ethernet device.
+    ///
+    /// It might need to wait up to 9 seconds in it.
+    ///
+    pub fn link(&self) -> EthLink {
+        let link = 0u64;
+
+        unsafe { ffi::rte_eth_link_get(self.0, mem::transmute(&link)) }
+
+        EthLink {
+            speed: (link & 0xFFFFFFFF) as u32,
+            duplex: (link & (1 << 32)) != 0,
+            autoneg: (link & (1 << 33)) != 0,
+            status: (link & (1 << 34)) != 0,
+        }
+    }
+
+    /// Retrieve the status (ON/OFF), the speed (in Mbps) and
+    /// the mode (HALF-DUPLEX or FULL-DUPLEX) of the physical link of an Ethernet device.
+    ///
+    /// It is a no-wait version of rte_eth_link_get().
+    ///
+    pub fn link_nowait(&self) -> EthLink {
+        let link = 0u64;
+
+        unsafe { ffi::rte_eth_link_get_nowait(self.0, mem::transmute(&link)) }
+
+        EthLink {
+            speed: (link & 0xFFFFFFFF) as u32,
+            duplex: (link & (1 << 32)) != 0,
+            autoneg: (link & (1 << 33)) != 0,
+            status: (link & (1 << 34)) != 0,
+        }
+    }
+
     /// Start an Ethernet device.
     pub fn start(&self) -> Result<()> {
         rte_check!(unsafe { ffi::rte_eth_dev_start(self.0) })
@@ -171,34 +215,6 @@ impl EthDeviceInfo {
     /// Index to bound host interface, or 0 if none. Use if_indextoname() to translate into an interface name.
     pub fn if_index(&self) -> u32 {
         (*self.0).if_index
-    }
-}
-
-/// Device supported speeds bitmap flags
-bitflags! {
-    pub flags LinkSpeed: u32 {
-        /**< Autonegotiate (all speeds) */
-        const ETH_LINK_SPEED_AUTONEG  = 0 <<  0,
-        /**< Disable autoneg (fixed speed) */
-        const ETH_LINK_SPEED_FIXED    = 1 <<  0,
-        /**<  10 Mbps half-duplex */
-        const ETH_LINK_SPEED_10M_HD   = 1 <<  1,
-         /**<  10 Mbps full-duplex */
-        const ETH_LINK_SPEED_10M      = 1 <<  2,
-        /**< 100 Mbps half-duplex */
-        const ETH_LINK_SPEED_100M_HD  = 1 <<  3,
-        /**< 100 Mbps full-duplex */
-        const ETH_LINK_SPEED_100M     = 1 <<  4,
-        const ETH_LINK_SPEED_1G       = 1 <<  5,
-        const ETH_LINK_SPEED_2_5G     = 1 <<  6,
-        const ETH_LINK_SPEED_5G       = 1 <<  7,
-        const ETH_LINK_SPEED_10G      = 1 <<  8,
-        const ETH_LINK_SPEED_20G      = 1 <<  9,
-        const ETH_LINK_SPEED_25G      = 1 << 10,
-        const ETH_LINK_SPEED_40G      = 1 << 11,
-        const ETH_LINK_SPEED_50G      = 1 << 12,
-        const ETH_LINK_SPEED_56G      = 1 << 13,
-        const ETH_LINK_SPEED_100G     = 1 << 14,
     }
 }
 
@@ -294,13 +310,41 @@ pub enum TxAdvConf {
 
 }
 
+/// Device supported speeds bitmap flags
+bitflags! {
+    pub flags LinkSpeed: u32 {
+        /**< Autonegotiate (all speeds) */
+        const ETH_LINK_SPEED_AUTONEG  = 0 <<  0,
+        /**< Disable autoneg (fixed speed) */
+        const ETH_LINK_SPEED_FIXED    = 1 <<  0,
+        /**<  10 Mbps half-duplex */
+        const ETH_LINK_SPEED_10M_HD   = 1 <<  1,
+         /**<  10 Mbps full-duplex */
+        const ETH_LINK_SPEED_10M      = 1 <<  2,
+        /**< 100 Mbps half-duplex */
+        const ETH_LINK_SPEED_100M_HD  = 1 <<  3,
+        /**< 100 Mbps full-duplex */
+        const ETH_LINK_SPEED_100M     = 1 <<  4,
+        const ETH_LINK_SPEED_1G       = 1 <<  5,
+        const ETH_LINK_SPEED_2_5G     = 1 <<  6,
+        const ETH_LINK_SPEED_5G       = 1 <<  7,
+        const ETH_LINK_SPEED_10G      = 1 <<  8,
+        const ETH_LINK_SPEED_20G      = 1 <<  9,
+        const ETH_LINK_SPEED_25G      = 1 << 10,
+        const ETH_LINK_SPEED_40G      = 1 << 11,
+        const ETH_LINK_SPEED_50G      = 1 << 12,
+        const ETH_LINK_SPEED_56G      = 1 << 13,
+        const ETH_LINK_SPEED_100G     = 1 << 14,
+    }
+}
+
 pub struct EthConfigBuilder {
     /// bitmap of ETH_LINK_SPEED_XXX of speeds to be used.
     ///
     /// ETH_LINK_SPEED_FIXED disables link autonegotiation, and a unique speed shall be set.
     /// Otherwise, the bitmap defines the set of speeds to be advertised.
     /// If the special value ETH_LINK_SPEED_AUTONEG (0) is used, all speeds supported are advertised.
-    pub publink_speeds: LinkSpeed,
+    pub link_speeds: LinkSpeed,
     /// Port RX configuration.
     pub rxmode: Option<EthRxMode>,
     /// Port TX configuration.
