@@ -28,5 +28,9 @@ pub mod eal;
 pub use errors::{Error, Result};
 pub use ffi::consts::*;
 
+pub mod raw {
+    pub use ffi::*;
+}
+
 #[cfg(test)]
 mod tests;

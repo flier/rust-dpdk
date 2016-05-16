@@ -2,12 +2,13 @@
 extern crate log;
 extern crate env_logger;
 extern crate getopts;
-
+extern crate libc;
 extern crate rte;
 
 use std::io;
 use std::io::prelude::*;
 use std::mem;
+use std::ptr;
 use std::env;
 use std::clone::Clone;
 use std::process::exit;
@@ -24,6 +25,8 @@ const MAX_PKT_BURST: usize = 32;
 
 const MAX_RX_QUEUE_PER_LCORE: u32 = 16;
 
+// A tsc-based timer responsible for triggering statistics printout
+const TIMER_MILLISECOND: i64 = 2000000; /* around 1ms at 2 Ghz */
 const MAX_TIMER_PERIOD: u32 = 86400; /* 1 day max */
 
 const NB_MBUF: u32 = 2048;
@@ -36,7 +39,7 @@ const RTE_TEST_TX_DESC_DEFAULT: u16 = 512;
 #[derive(Copy)]
 struct lcore_queue_conf {
     n_rx_port: u32,
-    rx_port_list: [u8; MAX_RX_QUEUE_PER_LCORE as usize],
+    rx_port_list: [u32; MAX_RX_QUEUE_PER_LCORE as usize],
 }
 impl Clone for lcore_queue_conf {
     fn clone(&self) -> Self {
@@ -54,19 +57,6 @@ struct Conf {
     nb_txd: u16,
 
     queue_conf: [lcore_queue_conf; RTE_MAX_LCORE as usize],
-
-    /// ethernet addresses of ports
-    ports_eth_addr: [Option<net::EtherAddr>; RTE_MAX_ETHPORTS as usize],
-
-    /// list of enabled ports
-    dst_ports: [u8; RTE_MAX_ETHPORTS as usize],
-
-    tx_buffers: [Option<ethdev::TxBuffer>; RTE_MAX_ETHPORTS as usize],
-
-    /// default period is 10 seconds
-    timer_period: Duration,
-
-    force_quit: bool,
 }
 
 impl Default for Conf {
@@ -75,7 +65,6 @@ impl Default for Conf {
 
         conf.nb_rxd = RTE_TEST_RX_DESC_DEFAULT;
         conf.nb_txd = RTE_TEST_TX_DESC_DEFAULT;
-        conf.timer_period = Duration::new(10, 0);
 
         return conf;
     }
@@ -91,7 +80,7 @@ fn l2fwd_usage(program: &String, opts: getopts::Options) -> ! {
 }
 
 // Parse the argument given in the command line of the application
-fn l2fwd_parse_args(args: &Vec<String>) -> (u32, u32, Duration) {
+fn l2fwd_parse_args(args: &Vec<String>) -> (u32, u32, u32) {
     let mut opts = getopts::Options::new();
     let program = args[0].clone();
 
@@ -123,13 +112,13 @@ fn l2fwd_parse_args(args: &Vec<String>) -> (u32, u32, Duration) {
         l2fwd_usage(&program, opts);
     }
 
-    let mut l2fwd_enabled_port_mask: u32 = 0; // mask of enabled ports
-    let mut l2fwd_rx_queue_per_lcore: u32 = 1;
-    let mut timer_period: u32 = 10; // default period is 10 seconds
+    let mut enabled_port_mask: u32 = 0; // mask of enabled ports
+    let mut rx_queue_per_lcore: u32 = 1;
+    let mut timer_period_seconds: u32 = 10; // default period is 10 seconds
 
     if let Some(arg) = matches.opt_str("p") {
         match u32::from_str_radix(arg.as_str(), 16) {
-            Ok(mask) if mask != 0 => l2fwd_enabled_port_mask = mask,
+            Ok(mask) if mask != 0 => enabled_port_mask = mask,
             _ => {
                 println!("invalid portmask, {}", arg);
 
@@ -140,7 +129,7 @@ fn l2fwd_parse_args(args: &Vec<String>) -> (u32, u32, Duration) {
 
     if let Some(arg) = matches.opt_str("q") {
         match u32::from_str(arg.as_str()) {
-            Ok(n) if 0 < n && n < MAX_RX_QUEUE_PER_LCORE => l2fwd_rx_queue_per_lcore = n,
+            Ok(n) if 0 < n && n < MAX_RX_QUEUE_PER_LCORE => rx_queue_per_lcore = n,
             _ => {
                 println!("invalid queue number, {}", arg);
 
@@ -151,7 +140,7 @@ fn l2fwd_parse_args(args: &Vec<String>) -> (u32, u32, Duration) {
 
     if let Some(arg) = matches.opt_str("T") {
         match u32::from_str(arg.as_str()) {
-            Ok(t) if 0 < t && t < MAX_TIMER_PERIOD => timer_period = t,
+            Ok(t) if 0 < t && t < MAX_TIMER_PERIOD => timer_period_seconds = t,
             _ => {
                 println!("invalid timer period, {}", arg);
 
@@ -160,7 +149,7 @@ fn l2fwd_parse_args(args: &Vec<String>) -> (u32, u32, Duration) {
         }
     }
 
-    (l2fwd_enabled_port_mask, l2fwd_rx_queue_per_lcore, Duration::from_secs(timer_period as u64))
+    (enabled_port_mask, rx_queue_per_lcore, timer_period_seconds)
 }
 
 // Check the link status of all ports in up to 9s, and print them finally
@@ -202,7 +191,26 @@ fn check_all_ports_link_status(enabled_devices: &Vec<ethdev::EthDevice>) {
     }
 }
 
-fn l2fwd_main_loop(conf: &Conf) -> i32 {
+#[link(name = "l2fwd_core")]
+extern "C" {
+    static mut l2fwd_force_quit: libc::c_int;
+
+    static mut l2fwd_enabled_port_mask: libc::uint32_t;
+
+    static mut l2fwd_ports_eth_addr: [[libc::uint8_t; 6usize]; RTE_MAX_ETHPORTS as usize];
+
+    static mut l2fwd_dst_ports: [libc::uint32_t; RTE_MAX_ETHPORTS as usize];
+
+    static mut l2fwd_tx_buffers: [*mut rte::raw::Struct_rte_eth_dev_tx_buffer; RTE_MAX_ETHPORTS as usize];
+
+    static mut l2fwd_timer_period: libc::int64_t;
+
+    fn l2fwd_main_loop(rx_port_list: *const libc::uint32_t,
+                       n_rx_port: libc::c_uint)
+                       -> libc::c_int;
+}
+
+fn l2fwd_launch_one_lcore(conf: &Conf) -> i32 {
     let lcore_id = lcore::id().unwrap();
     let qconf = conf.queue_conf[lcore_id as usize];
 
@@ -218,13 +226,7 @@ fn l2fwd_main_loop(conf: &Conf) -> i32 {
         info!(" -- lcoreid={} portid={}", lcore_id, portid);
     }
 
-    while !conf.force_quit {
-        let cur_tsc = eal::rdtsc();
-
-        // TX burst queue drain
-    }
-
-    0
+    unsafe { l2fwd_main_loop(qconf.rx_port_list.as_ptr(), qconf.n_rx_port) }
 }
 
 fn main() {
@@ -245,12 +247,15 @@ fn main() {
 
     debug!("eal args: {:?}, l2fwd args: {:?}", eal_args, opt_args);
 
-    let (l2fwd_enabled_port_mask, l2fwd_rx_queue_per_lcore, timer_period) =
-        l2fwd_parse_args(&opt_args);
+    let (enabled_port_mask, rx_queue_per_lcore, timer_period_seconds) = l2fwd_parse_args(&opt_args);
+
+
+    unsafe {
+        l2fwd_enabled_port_mask = enabled_port_mask;
+        l2fwd_timer_period = timer_period_seconds as i64 * TIMER_MILLISECOND * 1000;
+    }
 
     let mut conf = Conf::default();
-
-    conf.timer_period = timer_period;
 
     // init EAL
     eal::init(&eal_args);
@@ -276,15 +281,11 @@ fn main() {
         nb_ports = RTE_MAX_ETHPORTS;
     }
 
-    // ethernet addresses of ports
-    let mut l2fwd_ports_eth_addr: [Option<net::EtherAddr>; RTE_MAX_ETHPORTS as usize] =
-        Default::default();
-
     let mut last_port = 0;
     let mut nb_ports_in_mask = 0;
 
     let enabled_devices : Vec<ethdev::EthDevice> = (0..nb_ports as u8)
-                            .filter(|portid| (l2fwd_enabled_port_mask & (1 << portid) as u32) != 0) // skip ports that are not enabled
+                            .filter(|portid| (enabled_port_mask & (1 << portid) as u32) != 0) // skip ports that are not enabled
                             .map(|portid| ethdev::EthDevice::from(portid))
                             .collect();
 
@@ -298,8 +299,10 @@ fn main() {
         let portid = dev.portid();
 
         if (nb_ports_in_mask % 2) != 0 {
-            conf.dst_ports[portid as usize] = last_port;
-            conf.dst_ports[last_port as usize] = portid;
+            unsafe {
+                l2fwd_dst_ports[portid as usize] = last_port as u32;
+                l2fwd_dst_ports[last_port as usize] = portid as u32;
+            }
         } else {
             last_port = portid;
         }
@@ -314,7 +317,9 @@ fn main() {
     if (nb_ports_in_mask % 2) != 0 {
         println!("Notice: odd number of ports in portmask.");
 
-        conf.dst_ports[last_port as usize] = last_port;
+        unsafe {
+            l2fwd_dst_ports[last_port as usize] = last_port as u32;
+        }
     }
 
     let mut rx_lcore_id = 0;
@@ -324,7 +329,7 @@ fn main() {
         let portid = dev.portid();
 
         while !lcore::is_enabled(rx_lcore_id) ||
-              conf.queue_conf[rx_lcore_id as usize].n_rx_port == l2fwd_rx_queue_per_lcore {
+              conf.queue_conf[rx_lcore_id as usize].n_rx_port == rx_queue_per_lcore {
             rx_lcore_id += 1;
 
             if rx_lcore_id >= RTE_MAX_LCORE {
@@ -335,7 +340,7 @@ fn main() {
         // Assigned a new logical core in the loop above.
         let qconf = &mut conf.queue_conf[rx_lcore_id as usize];
 
-        qconf.rx_port_list[qconf.n_rx_port as usize] = portid;
+        qconf.rx_port_list[qconf.n_rx_port as usize] = portid as u32;
         qconf.n_rx_port += 1;
 
         println!("Lcore {}: RX port {}", rx_lcore_id, portid);
@@ -355,7 +360,11 @@ fn main() {
 
         let macaddr = dev.macaddr();
 
-        l2fwd_ports_eth_addr[portid] = Some(macaddr);
+        unsafe {
+            ptr::copy_nonoverlapping(macaddr.octets().as_ptr(),
+                                     l2fwd_ports_eth_addr[portid].as_mut_ptr(),
+                                     l2fwd_ports_eth_addr[portid].len());
+        }
 
         // init one RX queue
         dev.rx_queue_setup(0, conf.nb_rxd, None, &l2fwd_pktmbuf_pool)
@@ -372,7 +381,9 @@ fn main() {
         buf.count_err_packets()
            .expect(format!("failt to set error callback for tx buffer: port={}", portid).as_str());
 
-        conf.tx_buffers[portid] = Some(buf);
+        unsafe {
+            l2fwd_tx_buffers[portid] = buf.as_raw();
+        }
 
         // Start device
         dev.start().expect(format!("fail to start device: port={}", portid).as_str());
@@ -387,7 +398,7 @@ fn main() {
     check_all_ports_link_status(&enabled_devices);
 
     // launch per-lcore init on every lcore
-    launch::mp_remote_launch(Some(l2fwd_main_loop), Some(&conf), false).unwrap();
+    launch::mp_remote_launch(Some(l2fwd_launch_one_lcore), Some(&conf), false).unwrap();
 
     lcore::foreach_slave(|lcore_id| launch::wait_lcore(lcore_id));
 
