@@ -3,6 +3,8 @@ extern crate log;
 extern crate env_logger;
 extern crate getopts;
 extern crate libc;
+extern crate nix;
+
 extern crate rte;
 
 use std::io;
@@ -13,13 +15,13 @@ use std::env;
 use std::clone::Clone;
 use std::process::exit;
 use std::str::FromStr;
-use std::time::Duration;
 use std::path::Path;
+
+use nix::sys::signal;
 
 use rte::*;
 
-const EXIT_FAILURE: i32 = 1;
-const EXIT_SUCCESS: i32 = 0;
+const EXIT_FAILURE: i32 = -1;
 
 const MAX_PKT_BURST: usize = 32;
 
@@ -229,8 +231,25 @@ fn l2fwd_launch_one_lcore(conf: &Conf) -> i32 {
     unsafe { l2fwd_main_loop(qconf.rx_port_list.as_ptr(), qconf.n_rx_port) }
 }
 
+extern "C" fn handle_sigint(sig: signal::SigNum) {
+    match sig {
+        signal::SIGINT => unsafe {
+            l2fwd_force_quit = 1;
+        },
+        _ => info!("sig: {}", sig),
+    }
+}
+
 fn main() {
     env_logger::init().unwrap();
+
+    let sig_action = signal::SigAction::new(signal::SigHandler::Handler(handle_sigint),
+                                            signal::SaFlag::empty(),
+                                            signal::SigSet::empty());
+
+    unsafe {
+        signal::sigaction(signal::SIGINT, &sig_action);
+    }
 
     let mut args: Vec<String> = env::args().collect();
     let program = String::from(Path::new(&args[0]).file_name().unwrap().to_str().unwrap());
