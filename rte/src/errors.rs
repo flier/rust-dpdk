@@ -13,13 +13,41 @@ extern "C" {
 }
 
 macro_rules! rte_check {
-    ($ret:expr) => (
-        if $ret == 0 {
-            Ok(())
+    ( $ret:expr ) => (
+        rte_check!($ret; ok => {()}; err => {$crate::errors::Error::RteError($ret)})
+    );
+    ( $ret:expr; ok => $ok:block) => (
+        rte_check!($ret; ok => $ok; err => {$crate::errors::Error::RteError($ret)})
+    );
+    ( $ret:expr; err => $err:block) => (
+        rte_check!($ret; ok => {()}; err => $err)
+    );
+    ( $ret:expr; ok => $ok:block; err => $err:block ) => ({
+        if ($ret) >= 0 {
+            Ok($ok)
         } else {
-            Err($crate::errors::Error::RteError($ret))
+            Err($err)
         }
-    )
+    });
+}
+
+macro_rules! rte_check_ptr {
+    ( $ret:expr ) => (
+        rte_check_ptr!($ret; ok => {()}; err => {$crate::errors::Error::rte_error()})
+    );
+    ( $ret:expr; ok => $ok:block) => (
+        rte_check_ptr!($ret; ok => $ok; err => {$crate::errors::Error::rte_error()})
+    );
+    ( $ret:expr; err => $err:block) => (
+        rte_check_ptr!($ret; ok => {()}; err => $err)
+    );
+    ( $ret:expr; ok => $ok:block; err => $err:block ) => ({
+        if !(($ret).is_null()) {
+            Ok($ok)
+        } else {
+            Err($err)
+        }
+    });
 }
 
 #[derive(Debug)]

@@ -1,7 +1,7 @@
 use std::fmt;
 use std::ptr;
 use std::mem;
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 
 use libc;
@@ -44,6 +44,17 @@ impl EthDevice {
     /// In the case, the applications need to manage enabled port by themselves.
     pub fn count() -> u32 {
         unsafe { ffi::rte_eth_dev_count() as u32 }
+    }
+
+    /// Attach a new Ethernet device specified by aruguments.
+    pub fn attach(devargs: &str) -> Result<Self> {
+        let mut portid: u8 = 0;
+
+        let ret = unsafe {
+            ffi::rte_eth_dev_attach(try!(CString::new(devargs)).as_ptr(), &mut portid)
+        };
+
+        rte_check!(ret; ok => { EthDevice(portid) })
     }
 
     /// Configure an Ethernet device.
@@ -136,11 +147,7 @@ impl EthDevice {
     pub fn is_promiscuous_enabled(&self) -> Result<bool> {
         let ret = unsafe { ffi::rte_eth_promiscuous_get(self.0) };
 
-        if ret < 0 {
-            Err(Error::rte_error())
-        } else {
-            Ok(ret != 0)
-        }
+        rte_check!(ret; ok => { ret != 0 })
     }
 
     /// Retrieve the status (ON/OFF), the speed (in Mbps) and

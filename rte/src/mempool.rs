@@ -6,7 +6,7 @@ use std::os::unix::io::AsRawFd;
 
 use ffi;
 
-use errors::{Error, Result};
+use errors::Result;
 use cfile::{Stream, CFile};
 
 bitflags! {
@@ -181,11 +181,7 @@ pub fn create<T, O>(name: &str,
                                 flags.bits)
     };
 
-    if p.is_null() {
-        Err(Error::rte_error())
-    } else {
-        Ok(RawMemoryPool(p))
-    }
+    rte_check_ptr!(p; ok => { RawMemoryPool(p) })
 }
 
 pub fn from_raw(p: RawMemoryPoolPtr) -> RawMemoryPool {

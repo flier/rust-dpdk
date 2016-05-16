@@ -413,7 +413,18 @@ fn main() {
 
         dev.promiscuous_enable();
 
-        println!("  Port {}, MAC address: {}", portid, macaddr);
+        println!("  Port {}, MAC address: {} (promiscuous {})",
+                 portid,
+                 macaddr,
+                 dev.is_promiscuous_enabled()
+                    .map(|enabled| if enabled {
+                        "enabled"
+                    } else {
+                        "disabled"
+                    })
+                    .expect(format!("fail to enable promiscuous mode for device: port={}",
+                                    portid)
+                                .as_str()));
     }
 
     check_all_ports_link_status(&enabled_devices);

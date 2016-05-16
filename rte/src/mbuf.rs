@@ -2,7 +2,7 @@ use std::ffi::CString;
 
 use ffi;
 
-use errors::{Error, Result};
+use errors::Result;
 use mempool;
 
 // Packet Offload Features Flags. It also carry packet type information.
@@ -180,9 +180,5 @@ pub fn pktmbuf_pool_create(name: &str,
         ffi::rte_pktmbuf_pool_create(name, n, cache_size, priv_size, data_room_size, socket_id)
     };
 
-    if p.is_null() {
-        Err(Error::rte_error())
-    } else {
-        Ok(mempool::from_raw(p))
-    }
+    rte_check_ptr!(p; ok => { mempool::from_raw(p) })
 }

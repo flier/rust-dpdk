@@ -2,7 +2,7 @@ use std::os::unix::io::AsRawFd;
 
 use ffi::{size_t, FILE, rte_openlog_stream};
 
-use errors::{Error, Result};
+use errors::Result;
 use cfile::{Stream, CFile};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -21,9 +21,5 @@ extern "C" {
 pub fn openlog_stream<S: AsRawFd>(s: &S) -> Result<CFile> {
     let f = try!(CFile::open_stream(s, "w"));
 
-    if unsafe { rte_openlog_stream(f.stream() as *mut FILE) } != 0 {
-        Err(Error::rte_error())
-    } else {
-        Ok(f)
-    }
+    rte_check!(unsafe { rte_openlog_stream(f.stream() as *mut FILE) }; ok => {f})
 }
