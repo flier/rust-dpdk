@@ -23,26 +23,24 @@ macro_rules! rte_check {
         rte_check!($ret; ok => {()}; err => $err)
     );
     ( $ret:expr; ok => $ok:block; err => $err:block ) => ({
-        if ($ret) >= 0 {
+        if $ret >= 0 {
             Ok($ok)
         } else {
             Err($err)
         }
     });
-}
 
-macro_rules! rte_check_ptr {
-    ( $ret:expr ) => (
-        rte_check_ptr!($ret; ok => {()}; err => {$crate::errors::Error::rte_error()})
+    ( $ret:expr, NonNull ) => (
+        rte_check!($ret, NonNull; ok => {()}; err => {$crate::errors::Error::rte_error()})
     );
-    ( $ret:expr; ok => $ok:block) => (
-        rte_check_ptr!($ret; ok => $ok; err => {$crate::errors::Error::rte_error()})
+    ( $ret:expr, NonNull; ok => $ok:block) => (
+        rte_check!($ret, NonNull; ok => $ok; err => {$crate::errors::Error::rte_error()})
     );
-    ( $ret:expr; err => $err:block) => (
-        rte_check_ptr!($ret; ok => {()}; err => $err)
+    ( $ret:expr, NonNull; err => $err:block) => (
+        rte_check!($ret, NonNull; ok => {()}; err => $err)
     );
-    ( $ret:expr; ok => $ok:block; err => $err:block ) => ({
-        if !(($ret).is_null()) {
+    ( $ret:expr, NonNull; ok => $ok:block; err => $err:block ) => ({
+        if !$ret.is_null() {
             Ok($ok)
         } else {
             Err($err)

@@ -180,5 +180,5 @@ pub fn pktmbuf_pool_create(name: &str,
         ffi::rte_pktmbuf_pool_create(name, n, cache_size, priv_size, data_room_size, socket_id)
     };
 
-    rte_check_ptr!(p; ok => { mempool::from_raw(p) })
+    rte_check!(p, NonNull; ok => { mempool::from_raw(p) })
 }

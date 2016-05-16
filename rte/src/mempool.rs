@@ -181,7 +181,7 @@ pub fn create<T, O>(name: &str,
                                 flags.bits)
     };
 
-    rte_check_ptr!(p; ok => { RawMemoryPool(p) })
+    rte_check!(p, NonNull; ok => { RawMemoryPool(p) })
 }
 
 pub fn from_raw(p: RawMemoryPoolPtr) -> RawMemoryPool {
