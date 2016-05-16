@@ -10,7 +10,6 @@ extern crate rte;
 use std::io;
 use std::io::prelude::*;
 use std::mem;
-use std::ptr;
 use std::env;
 use std::clone::Clone;
 use std::process::exit;
@@ -38,27 +37,16 @@ const NB_MBUF: u32 = 2048;
 const RTE_TEST_RX_DESC_DEFAULT: u16 = 128;
 const RTE_TEST_TX_DESC_DEFAULT: u16 = 512;
 
-#[derive(Copy)]
-struct lcore_queue_conf {
+struct LcoreQueueConf {
     n_rx_port: u32,
     rx_port_list: [u32; MAX_RX_QUEUE_PER_LCORE as usize],
-}
-impl Clone for lcore_queue_conf {
-    fn clone(&self) -> Self {
-        *self
-    }
-}
-impl Default for lcore_queue_conf {
-    fn default() -> Self {
-        unsafe { mem::zeroed() }
-    }
 }
 
 struct Conf {
     nb_rxd: u16,
     nb_txd: u16,
 
-    queue_conf: [lcore_queue_conf; RTE_MAX_LCORE as usize],
+    queue_conf: [LcoreQueueConf; RTE_MAX_LCORE as usize],
 }
 
 impl Default for Conf {
@@ -162,7 +150,11 @@ fn check_all_ports_link_status(enabled_devices: &Vec<ethdev::EthDevice>) {
     const MAX_CHECK_TIME: usize = 90;
 
     for _ in 0..MAX_CHECK_TIME {
-        if enabled_devices.iter().all(|dev| dev.link_nowait().status) {
+        if unsafe { l2fwd_force_quit != 0 } {
+            break;
+        }
+
+        if enabled_devices.iter().all(|dev| dev.link_nowait().up) {
             break;
         }
 
@@ -175,10 +167,10 @@ fn check_all_ports_link_status(enabled_devices: &Vec<ethdev::EthDevice>) {
 
     println!("Done:");
 
-    for dev in enabled_devices.as_slice() {
+    for dev in enabled_devices {
         let link = dev.link();
 
-        if link.status {
+        if link.up {
             println!("  Port {} Link Up - speed {} Mbps - {}",
                      dev.portid(),
                      link.speed,
@@ -214,7 +206,7 @@ extern "C" {
 
 fn l2fwd_launch_one_lcore(conf: &Conf) -> i32 {
     let lcore_id = lcore::id().unwrap();
-    let qconf = conf.queue_conf[lcore_id as usize];
+    let qconf = &conf.queue_conf[lcore_id as usize];
 
     if qconf.n_rx_port == 0 {
         info!("lcore {} has nothing to do", lcore_id);
@@ -233,28 +225,31 @@ fn l2fwd_launch_one_lcore(conf: &Conf) -> i32 {
 
 extern "C" fn handle_sigint(sig: signal::SigNum) {
     match sig {
-        signal::SIGINT => unsafe {
+        signal::SIGINT | signal::SIGTERM => unsafe {
+            println!("Signal {} received, preparing to exit...", sig);
+
             l2fwd_force_quit = 1;
         },
-        _ => info!("sig: {}", sig),
+        _ => info!("unexpect signo: {}", sig),
     }
 }
 
-fn main() {
-    env_logger::init().unwrap();
-
+fn handle_signals() -> nix::Result<()> {
     let sig_action = signal::SigAction::new(signal::SigHandler::Handler(handle_sigint),
                                             signal::SaFlag::empty(),
                                             signal::SigSet::empty());
-
     unsafe {
-        signal::sigaction(signal::SIGINT, &sig_action);
+        try!(signal::sigaction(signal::SIGINT, &sig_action));
+        try!(signal::sigaction(signal::SIGTERM, &sig_action));
     }
 
-    let mut args: Vec<String> = env::args().collect();
+    Ok(())
+}
+
+fn prepare_args(args: &mut Vec<String>) -> (Vec<String>, Vec<String>) {
     let program = String::from(Path::new(&args[0]).file_name().unwrap().to_str().unwrap());
 
-    let (eal_args, opt_args) = if let Some(pos) = args.iter().position(|arg| arg == "--") {
+    if let Some(pos) = args.iter().position(|arg| arg == "--") {
         let (eal_args, opt_args) = args.split_at_mut(pos);
 
         opt_args[0] = program;
@@ -262,19 +257,26 @@ fn main() {
         (eal_args.to_vec(), opt_args.to_vec())
     } else {
         (args[..1].to_vec(), args.clone())
-    };
+    }
+}
+
+fn main() {
+    env_logger::init().unwrap();
+
+    handle_signals().expect("fail to handle signals");
+
+    let mut args: Vec<String> = env::args().collect();
+
+    let (eal_args, opt_args) = prepare_args(&mut args);
 
     debug!("eal args: {:?}, l2fwd args: {:?}", eal_args, opt_args);
 
     let (enabled_port_mask, rx_queue_per_lcore, timer_period_seconds) = l2fwd_parse_args(&opt_args);
 
-
     unsafe {
         l2fwd_enabled_port_mask = enabled_port_mask;
         l2fwd_timer_period = timer_period_seconds as i64 * TIMER_MILLISECOND * 1000;
     }
-
-    let mut conf = Conf::default();
 
     // init EAL
     eal::init(&eal_args);
@@ -286,7 +288,7 @@ fn main() {
                                                        0,
                                                        mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
                                                        eal::socket_id())
-                                 .expect("Cannot init mbuf pool");
+                                 .expect("fail to initial mbuf pool");
 
     let mut nb_ports = ethdev::EthDevice::count();
 
@@ -300,12 +302,9 @@ fn main() {
         nb_ports = RTE_MAX_ETHPORTS;
     }
 
-    let mut last_port = 0;
-    let mut nb_ports_in_mask = 0;
-
-    let enabled_devices : Vec<ethdev::EthDevice> = (0..nb_ports as u8)
+    let enabled_devices : Vec<ethdev::EthDevice> = (0..nb_ports)
                             .filter(|portid| (enabled_port_mask & (1 << portid) as u32) != 0) // skip ports that are not enabled
-                            .map(|portid| ethdev::EthDevice::from(portid))
+                            .map(|portid| ethdev::EthDevice::from(portid as u8))
                             .collect();
 
     if enabled_devices.is_empty() {
@@ -313,8 +312,11 @@ fn main() {
                   "All available ports are disabled. Please set portmask.\n");
     }
 
+    let mut last_port = 0;
+    let mut nb_ports_in_mask = 0;
+
     // Each logical core is assigned a dedicated TX queue on each port.
-    for dev in enabled_devices.as_slice() {
+    for dev in &enabled_devices {
         let portid = dev.portid();
 
         if (nb_ports_in_mask % 2) != 0 {
@@ -341,10 +343,12 @@ fn main() {
         }
     }
 
+    let mut conf = Conf::default();
+
     let mut rx_lcore_id = 0;
 
     // Initialize the port/queue configuration of each logical core
-    for dev in enabled_devices.as_slice() {
+    for dev in &enabled_devices {
         let portid = dev.portid();
 
         while !lcore::is_enabled(rx_lcore_id) ||
@@ -368,7 +372,7 @@ fn main() {
     let port_conf = ethdev::EthConfigBuilder::default().build();
 
     // Initialise each port
-    for dev in enabled_devices.as_slice() {
+    for dev in &enabled_devices {
         let portid = dev.portid() as usize;
 
         // init port
@@ -380,9 +384,7 @@ fn main() {
         let macaddr = dev.macaddr();
 
         unsafe {
-            ptr::copy_nonoverlapping(macaddr.octets().as_ptr(),
-                                     l2fwd_ports_eth_addr[portid].as_mut_ptr(),
-                                     l2fwd_ports_eth_addr[portid].len());
+            l2fwd_ports_eth_addr[portid] = macaddr.octets();
         }
 
         // init one RX queue
@@ -401,7 +403,7 @@ fn main() {
            .expect(format!("failt to set error callback for tx buffer: port={}", portid).as_str());
 
         unsafe {
-            l2fwd_tx_buffers[portid] = buf.as_raw();
+            l2fwd_tx_buffers[portid] = buf.into_raw();
         }
 
         // Start device
@@ -421,7 +423,7 @@ fn main() {
 
     lcore::foreach_slave(|lcore_id| launch::wait_lcore(lcore_id));
 
-    for dev in enabled_devices.as_slice() {
+    for dev in &enabled_devices {
         print!("Closing port {}...", dev.portid());
         dev.stop();
         dev.close();

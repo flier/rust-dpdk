@@ -18,7 +18,7 @@ pub struct EthLink {
     pub speed: u32,
     pub duplex: bool,
     pub autoneg: bool,
-    pub status: bool,
+    pub up: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -157,7 +157,7 @@ impl EthDevice {
             speed: (link & 0xFFFFFFFF) as u32,
             duplex: (link & (1 << 32)) != 0,
             autoneg: (link & (1 << 33)) != 0,
-            status: (link & (1 << 34)) != 0,
+            up: (link & (1 << 34)) != 0,
         }
     }
 
@@ -175,7 +175,7 @@ impl EthDevice {
             speed: (link & 0xFFFFFFFF) as u32,
             duplex: (link & (1 << 32)) != 0,
             autoneg: (link & (1 << 33)) != 0,
-            status: (link & (1 << 34)) != 0,
+            up: (link & (1 << 34)) != 0,
         }
     }
 
@@ -428,8 +428,16 @@ impl Drop for EthConfig {
 pub type RawTxBufferPtr = *mut ffi::Struct_rte_eth_dev_tx_buffer;
 
 ///  Structure used to buffer packets for future TX
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct TxBuffer(RawTxBufferPtr);
+
+impl Drop for TxBuffer {
+    fn drop(&mut self) {
+        malloc::free(self.0 as *mut c_void);
+
+        self.0 = ptr::null_mut();
+    }
+}
 
 pub type TxBufferErrorCallback<T> = fn(unsent: *mut *mut ffi::Struct_rte_mbuf,
                                        count: u16,
@@ -464,16 +472,18 @@ impl TxBuffer {
         }
     }
 
+    /// Extract the raw pointer from an underlying object.
     pub fn as_raw(&self) -> RawTxBufferPtr {
         return self.0;
     }
 
-    pub fn free(&mut self) {
-        if !self.0.is_null() {
-            malloc::free(self.0 as *mut c_void);
+    /// Consumes the TxBuffer, returning the wrapped raw pointer.
+    pub fn into_raw(&self) -> RawTxBufferPtr {
+        let p = self.0;
 
-            self.0 = ptr::null_mut();
-        }
+        mem::forget(self);
+
+        return p;
     }
 
     /// Configure a callback for buffered packets which cannot be sent
