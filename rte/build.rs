@@ -71,6 +71,6 @@ fn main() {
     gen_cargo_config(&base_dir);
 
     rte_config(&base_dir)
-        .file("examples/l2fwd_core.c")
+        .file("examples/l2fwd/l2fwd_core.c")
         .compile("libl2fwd_core.a");
 }
