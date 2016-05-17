@@ -80,6 +80,7 @@ pub const RTE_RETA_GROUP_SIZE: u32 = 64; // 64
 pub const RTE_KNI_VHOST_MAX_CACHE_SIZE: u32 = 1024; // 1024
 pub const RTE_LOGTYPE_USER6: u32 = 0x20000000; // 0x20000000
 pub const RTE_PTYPE_INNER_L2_MASK: u32 = 0x000f0000; // 0x000f0000
+// #define RTE_KNI_IOCTL_RELEASE _IOWR(0, 3, struct rte_kni_device_info)
 // #define RTE_ATOMIC64_INIT(val) { (val) }
 pub const RTE_MACHINE_CPUFLAG_PCLMULQDQ: u32 = 1; // 1
 pub const RTE_PMD_PACKET_PREFETCH: u32 = 1; // 1
@@ -179,6 +180,7 @@ pub const RTE_MEMPOOL_MZ_PREFIX: &'static str = "MP_"; // "MP_"
 pub const RTE_LOG_WARNING: u32 = 5; // 5U
 pub const RTE_CRYPTODEV_NAME_LEN: u32 = 64; // 64
 pub const RTE_LIBRTE_CMDLINE: u32 = 1; // 1
+// #define RTE_KNI_IOCTL_TEST _IOWR(0, 1, int)
 // #define RTE_STR(x) _RTE_STR(x)
 pub const RTE_ETHDEV_RXTX_CALLBACKS: u32 = 1; // 1
 pub const RTE_MAX_TAILQ: u32 = 32; // 32
@@ -273,6 +275,7 @@ pub const RTE_MACHINE_CPUFLAG_SSE4_1: u32 = 1; // 1
 pub const RTE_MACHINE_CPUFLAG_SSE4_2: u32 = 1; // 1
 pub const RTE_XABORT_CAPACITY: u32 = 1 << 3; // (1 << 3)
 pub const RTE_LOGTYPE_SCHED: u32 = 0x00001000; // 0x00001000
+// #define RTE_KNI_IOCTL_CREATE _IOWR(0, 2, struct rte_kni_device_info)
 pub const RTE_PTYPE_L3_IPV4_EXT_UNKNOWN: u32 = 0x00000090; // 0x00000090
 // #define RTE_TAILQ_LOOKUP(name,struct_name) RTE_TAILQ_CAST(rte_eal_tailq_lookup(name), struct_name)
 // #define RTE_PTR_ADD(ptr,x) ((void*)((uintptr_t)(ptr) + (x)))
@@ -348,6 +351,7 @@ pub const RTE_ETH_DEV_BONDED_SLAVE: u32 = 0x0004; // 0x0004
 pub const RTE_LIBRTE_VHOST_USER: u32 = 1; // 1
 pub const RTE_PTYPE_INNER_L4_FRAG: u32 = 0x03000000; // 0x03000000
 pub const RTE_PCI_DRV_NEED_MAPPING: u32 = 0x0001; // 0x0001
+pub const RTE_KNI_NAMESIZE: u32 = 32; // 32
 pub const RTE_LIBRTE_PMD_AF_PACKET: u32 = 1; // 1
 pub const RTE_APP_TEST: u32 = 1; // 1
 pub const RTE_LOGTYPE_MEMPOOL: u32 = 0x00000008; // 0x00000008

@@ -12,7 +12,7 @@ use std::io::prelude::*;
 use std::mem;
 use std::env;
 use std::clone::Clone;
-use std::process::exit;
+use std::process;
 use std::str::FromStr;
 use std::path::Path;
 
@@ -61,16 +61,16 @@ impl Default for Conf {
 }
 
 // display usage
-fn l2fwd_usage(program: &String, opts: getopts::Options) -> ! {
+fn print_usage(program: &String, opts: getopts::Options) -> ! {
     let brief = format!("Usage: {} [EAL options] -- [options]", program);
 
     print!("{}", opts.usage(&brief));
 
-    exit(-1);
+    process::exit(-1);
 }
 
 // Parse the argument given in the command line of the application
-fn l2fwd_parse_args(args: &Vec<String>) -> (u32, u32, u32) {
+fn parse_args(args: &Vec<String>) -> (u32, u32, u32) {
     let mut opts = getopts::Options::new();
     let program = args[0].clone();
 
@@ -94,12 +94,12 @@ fn l2fwd_parse_args(args: &Vec<String>) -> (u32, u32, u32) {
         Err(err) => {
             println!("Invalid L2FWD arguments, {}", err);
 
-            l2fwd_usage(&program, opts);
+            print_usage(&program, opts);
         }
     };
 
     if matches.opt_present("h") {
-        l2fwd_usage(&program, opts);
+        print_usage(&program, opts);
     }
 
     let mut enabled_port_mask: u32 = 0; // mask of enabled ports
@@ -112,7 +112,7 @@ fn l2fwd_parse_args(args: &Vec<String>) -> (u32, u32, u32) {
             _ => {
                 println!("invalid portmask, {}", arg);
 
-                l2fwd_usage(&program, opts);
+                print_usage(&program, opts);
             }
         }
     }
@@ -123,7 +123,7 @@ fn l2fwd_parse_args(args: &Vec<String>) -> (u32, u32, u32) {
             _ => {
                 println!("invalid queue number, {}", arg);
 
-                l2fwd_usage(&program, opts);
+                print_usage(&program, opts);
             }
         }
     }
@@ -134,7 +134,7 @@ fn l2fwd_parse_args(args: &Vec<String>) -> (u32, u32, u32) {
             _ => {
                 println!("invalid timer period, {}", arg);
 
-                l2fwd_usage(&program, opts);
+                print_usage(&program, opts);
             }
         }
     }
@@ -271,7 +271,7 @@ fn main() {
 
     debug!("eal args: {:?}, l2fwd args: {:?}", eal_args, opt_args);
 
-    let (enabled_port_mask, rx_queue_per_lcore, timer_period_seconds) = l2fwd_parse_args(&opt_args);
+    let (enabled_port_mask, rx_queue_per_lcore, timer_period_seconds) = parse_args(&opt_args);
 
     unsafe {
         l2fwd_enabled_port_mask = enabled_port_mask;
@@ -293,9 +293,7 @@ fn main() {
     let mut nb_ports = ethdev::EthDevice::count();
 
     if nb_ports == 0 {
-        println!("No Ethernet ports - bye");
-
-        exit(0);
+        eal::exit(EXIT_FAILURE, "No Ethernet ports - bye\n");
     }
 
     if nb_ports > RTE_MAX_ETHPORTS {

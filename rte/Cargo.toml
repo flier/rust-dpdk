@@ -31,3 +31,9 @@ name = "l2fwd"
 path = "examples/l2fwd/l2fwd.rs"
 test = false
 bench = false
+
+[[example]]
+name = "kni"
+path = "examples/kni/kni.rs"
+test = false
+bench = false

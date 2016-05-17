@@ -73,4 +73,8 @@ fn main() {
     rte_config(&base_dir)
         .file("examples/l2fwd/l2fwd_core.c")
         .compile("libl2fwd_core.a");
+
+    rte_config(&base_dir)
+        .file("examples/kni/kni_core.c")
+        .compile("libkni_core.a");
 }

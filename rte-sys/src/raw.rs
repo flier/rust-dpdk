@@ -4505,6 +4505,141 @@ pub type rte_eth_dev_cb_fn =
                                                event: Enum_rte_eth_event_type,
                                                cb_arg:
                                                    *mut ::std::os::raw::c_void)>;
+#[derive(Clone, Copy)]
+#[repr(u32)]
+pub enum Enum_rte_kni_req_id {
+    RTE_KNI_REQ_UNKNOWN = 0,
+    RTE_KNI_REQ_CHANGE_MTU = 1,
+    RTE_KNI_REQ_CFG_NETWORK_IF = 2,
+    RTE_KNI_REQ_MAX = 3,
+}
+#[repr(C, packed)]
+#[derive(Copy)]
+pub struct Struct_rte_kni_request {
+    pub req_id: uint32_t,
+    pub _bindgen_data_1_: [u32; 1usize],
+    pub result: int32_t,
+}
+impl Struct_rte_kni_request {
+    pub unsafe fn new_mtu(&mut self) -> *mut uint32_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_1_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn if_up(&mut self) -> *mut uint8_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_1_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+}
+impl ::std::clone::Clone for Struct_rte_kni_request {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_rte_kni_request {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_rte_kni_fifo {
+    pub write: ::std::os::raw::c_uint,
+    pub read: ::std::os::raw::c_uint,
+    pub len: ::std::os::raw::c_uint,
+    pub elem_size: ::std::os::raw::c_uint,
+    pub buffer: [*mut ::std::os::raw::c_void; 0usize],
+}
+impl ::std::clone::Clone for Struct_rte_kni_fifo {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_rte_kni_fifo {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_rte_kni_mbuf {
+    pub buf_addr: *mut ::std::os::raw::c_void,
+    pub pad0: [::std::os::raw::c_char; 10usize],
+    pub data_off: uint16_t,
+    pub pad1: [::std::os::raw::c_char; 4usize],
+    pub ol_flags: uint64_t,
+    pub pad2: [::std::os::raw::c_char; 4usize],
+    pub pkt_len: uint32_t,
+    pub data_len: uint16_t,
+    pub pad3: [::std::os::raw::c_char; 8usize],
+    pub pool: *mut ::std::os::raw::c_void,
+    pub next: *mut ::std::os::raw::c_void,
+}
+impl ::std::clone::Clone for Struct_rte_kni_mbuf {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_rte_kni_mbuf {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_rte_kni_device_info {
+    pub name: [::std::os::raw::c_char; 32usize],
+    pub tx_phys: phys_addr_t,
+    pub rx_phys: phys_addr_t,
+    pub alloc_phys: phys_addr_t,
+    pub free_phys: phys_addr_t,
+    pub req_phys: phys_addr_t,
+    pub resp_phys: phys_addr_t,
+    pub sync_phys: phys_addr_t,
+    pub sync_va: *mut ::std::os::raw::c_void,
+    pub mbuf_va: *mut ::std::os::raw::c_void,
+    pub mbuf_phys: phys_addr_t,
+    pub vendor_id: uint16_t,
+    pub device_id: uint16_t,
+    pub bus: uint8_t,
+    pub devid: uint8_t,
+    pub function: uint8_t,
+    pub group_id: uint16_t,
+    pub core_id: uint32_t,
+    pub _bindgen_bitfield_1_: uint8_t,
+    pub mbuf_size: ::std::os::raw::c_uint,
+}
+impl ::std::clone::Clone for Struct_rte_kni_device_info {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_rte_kni_device_info {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub enum Struct_rte_kni { }
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_rte_kni_ops {
+    pub port_id: uint8_t,
+    pub change_mtu: ::std::option::Option<extern "C" fn(port_id: uint8_t,
+                                                        new_mtu:
+                                                            ::std::os::raw::c_uint)
+                                              -> ::std::os::raw::c_int>,
+    pub config_network_if: ::std::option::Option<extern "C" fn(port_id:
+                                                                   uint8_t,
+                                                               if_up: uint8_t)
+                                                     ->
+                                                         ::std::os::raw::c_int>,
+}
+impl ::std::clone::Clone for Struct_rte_kni_ops {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_rte_kni_ops {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_rte_kni_conf {
+    pub name: [::std::os::raw::c_char; 32usize],
+    pub core_id: uint32_t,
+    pub group_id: uint16_t,
+    pub mbuf_size: ::std::os::raw::c_uint,
+    pub addr: Struct_rte_pci_addr,
+    pub id: Struct_rte_pci_id,
+    pub _bindgen_bitfield_1_: uint8_t,
+}
+impl ::std::clone::Clone for Struct_rte_kni_conf {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_rte_kni_conf {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
 pub type __va_list_tag = Struct___va_list_tag;
 #[repr(C)]
 #[derive(Copy)]
@@ -6253,4 +6388,29 @@ extern "C" {
                                                  *mut Struct_rte_eth_l2_tunnel_conf,
                                              mask: uint32_t, en: uint8_t)
      -> ::std::os::raw::c_int;
+    pub fn rte_kni_init(max_kni_ifaces: ::std::os::raw::c_uint);
+    pub fn rte_kni_alloc(pktmbuf_pool: *mut Struct_rte_mempool,
+                         conf: *const Struct_rte_kni_conf,
+                         ops: *mut Struct_rte_kni_ops) -> *mut Struct_rte_kni;
+    pub fn rte_kni_release(kni: *mut Struct_rte_kni) -> ::std::os::raw::c_int;
+    pub fn rte_kni_handle_request(kni: *mut Struct_rte_kni)
+     -> ::std::os::raw::c_int;
+    pub fn rte_kni_rx_burst(kni: *mut Struct_rte_kni,
+                            mbufs: *mut *mut Struct_rte_mbuf,
+                            num: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_uint;
+    pub fn rte_kni_tx_burst(kni: *mut Struct_rte_kni,
+                            mbufs: *mut *mut Struct_rte_mbuf,
+                            num: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_uint;
+    pub fn rte_kni_get(name: *const ::std::os::raw::c_char)
+     -> *mut Struct_rte_kni;
+    pub fn rte_kni_get_name(kni: *const Struct_rte_kni)
+     -> *const ::std::os::raw::c_char;
+    pub fn rte_kni_register_handlers(kni: *mut Struct_rte_kni,
+                                     ops: *mut Struct_rte_kni_ops)
+     -> ::std::os::raw::c_int;
+    pub fn rte_kni_unregister_handlers(kni: *mut Struct_rte_kni)
+     -> ::std::os::raw::c_int;
+    pub fn rte_kni_close();
 }

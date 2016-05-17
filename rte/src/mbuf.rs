@@ -160,6 +160,8 @@ pub const RTE_MBUF_DEFAULT_BUF_SIZE: u16 =
     (ffi::RTE_MBUF_DEFAULT_DATAROOM + ffi::RTE_PKTMBUF_HEADROOM) as u16;
 
 
+pub type RawMbufPtr = *mut ffi::Struct_rte_mbuf;
+
 /// Create a mbuf pool.
 ///
 /// This function creates and initializes a packet mbuf pool.

@@ -11,6 +11,7 @@ use ffi;
 use errors::{Error, Result};
 use mempool;
 use malloc;
+use pci;
 use net::EtherAddr;
 
 /// A structure used to retrieve link-level information of an Ethernet port.
@@ -222,6 +223,10 @@ impl EthDeviceInfo {
     /// Index to bound host interface, or 0 if none. Use if_indextoname() to translate into an interface name.
     pub fn if_index(&self) -> u32 {
         (*self.0).if_index
+    }
+
+    pub fn pci_dev(&self) -> pci::RawDevicePtr {
+        (*self.0).pci_dev
     }
 }
 

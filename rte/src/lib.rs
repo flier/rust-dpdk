@@ -14,16 +14,19 @@ extern crate rte_sys as ffi;
 pub mod errors;
 pub mod common;
 pub mod config;
+#[macro_use]
 pub mod malloc;
 pub mod memzone;
 pub mod mempool;
 pub mod mbuf;
 pub mod net;
-pub mod ethdev;
 pub mod lcore;
 pub mod cycles;
 pub mod launch;
 pub mod eal;
+pub mod ethdev;
+pub mod pci;
+pub mod kni;
 
 pub use errors::{Error, Result};
 pub use ffi::consts::*;
