@@ -169,11 +169,13 @@ extern "C" fn handle_sigint(sig: signal::SigNum) {
             println!("**Statistics have been reset**");
         }
         // When we receive a TERM or SIGINT signal, stop kni processing
-        signal::SIGINT | signal::SIGTERM => unsafe {
-            println!("SIGINT or SIGTERM is received, and the KNI processing is going to stop\n");
+        signal::SIGINT | signal::SIGTERM => {
+            unsafe {
+                kni_stop = 1;
+            }
 
-            kni_stop = 1;
-        },
+            println!("SIGINT or SIGTERM is received, and the KNI processing is going to stop\n");
+        }
         _ => info!("unexpect signo: {}", sig),
     }
 }
@@ -529,6 +531,8 @@ struct Struct_kni_interface_stats {
 extern "C" {
     static mut kni_stop: libc::c_int;
 
+    static mut kni_port_params_array: *const *mut Struct_kni_port_params;
+
     static mut kni_stats: [Struct_kni_interface_stats; RTE_MAX_ETHPORTS as usize];
 
     fn kni_print_stats();
@@ -606,6 +610,10 @@ fn main() {
 
     // Parse application arguments (after the EAL ones)
     let conf = parse_args(&opt_args).expect("Could not parse input parameters");
+
+    unsafe {
+        kni_port_params_array = conf.port_params.as_ptr();
+    }
 
     // create the mbuf pool
     let pktmbuf_pool = mbuf::pktmbuf_pool_create("mbuf_pool",

@@ -36,7 +36,7 @@ struct kni_port_params {
     struct rte_kni *kni[KNI_MAX_KTHREAD]; /* KNI context pointers */
 } __rte_cache_aligned;
 
-struct kni_port_params *kni_port_params_array[RTE_MAX_ETHPORTS];
+struct kni_port_params * *kni_port_params_array;
 
 /* Structure type for recording kni interface specific stats */
 struct kni_interface_stats {
