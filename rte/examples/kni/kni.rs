@@ -33,7 +33,7 @@ const MAX_PACKET_SZ: u32 = 2048;
 const MBUF_DATA_SZ: u32 = MAX_PACKET_SZ + RTE_PKTMBUF_HEADROOM;
 
 // Number of mbufs in mempool that is created
-const NB_MBUF: u32 = 1024;
+const NB_MBUF: u32 = 8192;
 
 // How many packets to attempt to read from NIC in one go
 const PKT_BURST_SZ: u32 = 32;
@@ -148,28 +148,19 @@ impl Conf {
     }
 }
 
-#[link(name = "kni_core")]
-extern "C" {
-    static mut kni_stop: libc::c_int;
-
-    fn kni_main_loop() -> libc::c_int;
-}
-
-fn print_stats() {}
-
-fn reset_stats() {}
-
 extern "C" fn handle_sigint(sig: signal::SigNum) {
     match sig {
         // When we receive a USR1 signal, print stats
-        signal::SIGUSR1 => {
-            print_stats();
-        }
+        signal::SIGUSR1 => unsafe {
+            kni_print_stats();
+        },
         // When we receive a USR2 signal, reset stats
         signal::SIGUSR2 => {
-            println!("**Statistics have been reset**");
+            unsafe {
+                kni_stats = mem::zeroed();
+            }
 
-            reset_stats();
+            println!("**Statistics have been reset**");
         }
         // When we receive a TERM or SIGINT signal, stop kni processing
         signal::SIGINT | signal::SIGTERM => unsafe {
@@ -382,7 +373,12 @@ fn kni_alloc(conf: &Conf, dev: &ethdev::EthDevice, pktmbuf_pool: &mempool::RawMe
                   })
                   .expect(format!("Fail to create kni for port: {}", portid).as_str());
 
-        param.kni[i as usize] = kni.into_raw();
+        param.kni[i as usize] = kni.as_raw();
+
+        debug!("allocated kni device `{}` @{:p} for port #{}",
+               conf.name,
+               param.kni[i as usize],
+               portid);
     }
 }
 
@@ -447,8 +443,84 @@ fn check_all_ports_link_status(enabled_devices: &Vec<ethdev::EthDevice>) {
     }
 }
 
-fn main_loop(_: &Conf) -> i32 {
-    unsafe { kni_main_loop() }
+#[repr(C)]
+struct Struct_kni_interface_stats {
+    // number of pkts received from NIC, and sent to KNI
+    rx_packets: libc::uint64_t,
+
+    // number of pkts received from NIC, but failed to send to KNI
+    rx_dropped: libc::uint64_t,
+
+    // number of pkts received from KNI, and sent to NIC
+    tx_packets: libc::uint64_t,
+
+    // number of pkts received from KNI, but failed to send to NIC
+    tx_dropped: libc::uint64_t,
+}
+
+#[link(name = "kni_core")]
+extern "C" {
+    static mut kni_stop: libc::c_int;
+
+    static mut kni_stats: [Struct_kni_interface_stats; RTE_MAX_ETHPORTS as usize];
+
+    fn kni_print_stats();
+
+    fn kni_ingress(param: *const Struct_kni_port_params) -> libc::c_int;
+
+    fn kni_egress(param: *const Struct_kni_port_params) -> libc::c_int;
+}
+
+fn main_loop(conf: &Conf) -> i32 {
+    let nb_sys_ports = ethdev::EthDevice::count();
+
+    enum LcoreType<'a> {
+        Rx(&'a Struct_kni_port_params),
+        Tx(&'a Struct_kni_port_params),
+    };
+
+    let lcore_id = lcore::id().unwrap();
+    let mut lcore_type: Option<LcoreType> = None;
+
+    for portid in 0..nb_sys_ports {
+        if conf.port_params[portid as usize].is_null() {
+            continue;
+        }
+
+        let param = unsafe { &*conf.port_params[portid as usize] };
+
+        if param.lcore_rx == lcore_id {
+            lcore_type = Some(LcoreType::Rx(param));
+            break;
+        }
+
+        if (*param).lcore_tx == lcore_id {
+            lcore_type = Some(LcoreType::Tx(param));
+            break;
+        }
+    }
+
+    match lcore_type {
+        Some(LcoreType::Rx(param)) => {
+            info!("Lcore {} is reading from port {}",
+                  param.lcore_rx,
+                  param.port_id);
+
+            unsafe { kni_ingress(param) }
+        }
+        Some(LcoreType::Tx(param)) => {
+            info!("Lcore {} is writing from port {}",
+                  param.lcore_tx,
+                  param.port_id);
+
+            unsafe { kni_egress(param) }
+        }
+        _ => {
+            info!("Lcore {} has nothing to do", lcore_id);
+
+            0
+        }
+    }
 }
 
 fn main() {
