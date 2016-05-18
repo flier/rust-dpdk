@@ -49,7 +49,6 @@ pub fn alloc(pktmbuf_pool: &mempool::RawMemoryPool,
 
         let p = ffi::rte_kni_alloc(pktmbuf_pool.as_raw(), &kni_conf, mem::transmute(opts));
 
-
         rte_check!(p, NonNull; ok => { RawDevice(p)})
     }
 }
@@ -97,14 +96,6 @@ pub type RawDevicePtr = *mut ffi::Struct_rte_kni;
 
 pub struct RawDevice(RawDevicePtr);
 
-impl Drop for RawDevice {
-    fn drop(&mut self) {
-        if self.release().is_ok() {
-
-        }
-    }
-}
-
 impl From<RawDevicePtr> for RawDevice {
     fn from(p: RawDevicePtr) -> Self {
         RawDevice(p)
@@ -115,15 +106,6 @@ impl RawDevice {
     /// Extract the raw pointer from an underlying object.
     pub fn as_raw(&self) -> RawDevicePtr {
         return self.0;
-    }
-
-    /// Consumes the TxBuffer, returning the wrapped raw pointer.
-    pub fn into_raw(&self) -> RawDevicePtr {
-        let p = self.0;
-
-        mem::forget(self);
-
-        return p;
     }
 
     pub fn release(&mut self) -> Result<()> {

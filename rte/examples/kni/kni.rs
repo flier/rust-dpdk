@@ -47,6 +47,12 @@ const NB_RXD: u16 = 128;
 // Number of TX ring descriptors
 const NB_TXD: u16 = 512;
 
+// Total octets in ethernet header
+const KNI_ENET_HEADER_SIZE: u32 = 14;
+
+// Total octets in the FCS
+const KNI_ENET_FCS_SIZE: u32 = 4;
+
 const KNI_MAX_KTHREAD: usize = 32;
 
 #[repr(C)]
@@ -307,8 +313,49 @@ fn init_port(conf: &Conf,
     }
 }
 
-extern "C" fn kni_change_mtu(port_id: u8, new_mut: libc::c_uint) -> libc::c_int {
-    debug!("port {} change MTU to {}", port_id, new_mut);
+extern "C" fn kni_change_mtu(port_id: u8, new_mtu: libc::c_uint) -> libc::c_int {
+    debug!("port {} change MTU to {}", port_id, new_mtu);
+
+    let nb_sys_ports = ethdev::EthDevice::count();
+
+    if port_id as u32 > nb_sys_ports || port_id as u32 > RTE_MAX_ETHPORTS {
+        error!("Invalid port id {}", port_id);
+
+        return -libc::EINVAL;
+    }
+
+    if new_mtu > ETHER_MAX_LEN {
+        let dev = ethdev::EthDevice::from(port_id);
+
+        dev.stop();
+
+        // Set new MTU
+        let mut port_conf_builder = ethdev::EthConfigBuilder::default();
+
+        let mut rxmode: ethdev::EthRxMode = Default::default();
+
+        rxmode.max_rx_pkt_len = new_mtu + KNI_ENET_HEADER_SIZE + KNI_ENET_FCS_SIZE;
+
+        port_conf_builder.rxmode = Some(rxmode);
+
+        let port_conf = port_conf_builder.build();
+
+        if let Err(err) = dev.configure(1, 1, &port_conf) {
+            error!("Fail to reconfigure port {}, {}", port_id, err);
+
+            if let Error::RteError(errno) = err {
+                return errno;
+            }
+        }
+
+        if let Err(err) = dev.start() {
+            error!("Failed to start port {}, {}", port_id, err);
+
+            if let Error::RteError(errno) = err {
+                return errno;
+            }
+        }
+    }
 
     0
 }
@@ -321,6 +368,28 @@ extern "C" fn kni_config_network_interface(port_id: u8, if_up: u8) -> libc::c_in
            } else {
                "down"
            });
+
+    let nb_sys_ports = ethdev::EthDevice::count();
+
+    if port_id as u32 > nb_sys_ports || port_id as u32 > RTE_MAX_ETHPORTS {
+        error!("Invalid port id {}", port_id);
+
+        return -libc::EINVAL;
+    }
+
+    let dev = ethdev::EthDevice::from(port_id);
+
+    dev.stop();
+
+    if if_up != 0 {
+        if let Err(err) = dev.start() {
+            error!("Failed to start port {}, {}", port_id, err);
+
+            if let Error::RteError(errno) = err {
+                return errno;
+            }
+        }
+    }
 
     0
 }

@@ -263,6 +263,12 @@ pub struct EthRxMode {
     pub enable_lro: bool,
 }
 
+impl Default for EthRxMode {
+    fn default() -> Self {
+        unsafe { mem::zeroed() }
+    }
+}
+
 /**
  * A set of values to identify what method is to be used to transmit
  * packets using multi-TCs.
@@ -278,6 +284,12 @@ pub struct EthTxMode {
     pub hw_vlan_reject_untagged: bool,
     /// If set, enable port based VLAN insertion
     pub hw_vlan_insert_pvid: bool,
+}
+
+impl Default for EthTxMode {
+    fn default() -> Self {
+        unsafe { mem::zeroed() }
+    }
 }
 
 /// The RSS offload types are defined based on flow types which are defined
@@ -318,8 +330,20 @@ pub struct RxAdvConf {
     pub vmdq_rx_conf: Option<ffi::Struct_rte_eth_vmdq_rx_conf>,
 }
 
+impl Default for RxAdvConf {
+    fn default() -> Self {
+        unsafe { mem::zeroed() }
+    }
+}
+
 pub enum TxAdvConf {
 
+}
+
+impl Default for TxAdvConf {
+    fn default() -> Self {
+        unsafe { mem::zeroed() }
+    }
 }
 
 /// Device supported speeds bitmap flags
