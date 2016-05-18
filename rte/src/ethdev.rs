@@ -63,8 +63,13 @@ impl EthDevice {
     /// This function must be invoked first before any other function in the Ethernet API.
     /// This function can also be re-invoked when a device is in the stopped state.
     ///
-    pub fn configure(&self, nb_rx_queue: u16, nb_tx_queue: u16, conf: &EthConfig) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_configure(self.0, nb_rx_queue, nb_tx_queue, conf.0) })
+    pub fn configure(&self, nb_rx_queue: u16, nb_tx_queue: u16, conf: &EthConf) -> Result<()> {
+        rte_check!(unsafe {
+            ffi::rte_eth_dev_configure(self.0,
+                                       nb_rx_queue,
+                                       nb_tx_queue,
+                                       RawEthConf::from(conf).as_raw())
+        })
     }
 
     /// Retrieve the contextual information of an Ethernet device.
@@ -374,7 +379,7 @@ bitflags! {
     }
 }
 
-pub struct EthConfigBuilder {
+pub struct EthConf {
     /// bitmap of ETH_LINK_SPEED_XXX of speeds to be used.
     ///
     /// ETH_LINK_SPEED_FIXED disables link autonegotiation, and a unique speed shall be set.
@@ -402,18 +407,34 @@ pub struct EthConfigBuilder {
     pub intr_conf: Option<ffi::Struct_rte_intr_conf>,
 }
 
-impl Default for EthConfigBuilder {
+impl Default for EthConf {
     fn default() -> Self {
         unsafe { ::std::mem::zeroed() }
     }
 }
 
-impl EthConfigBuilder {
-    pub fn build(&self) -> EthConfig {
+pub type RawEthConfPtr = *const ffi::Struct_rte_eth_conf;
+
+pub struct RawEthConf(RawEthConfPtr);
+
+impl RawEthConf {
+    fn as_raw(&self) -> RawEthConfPtr {
+        self.0
+    }
+}
+
+impl Drop for RawEthConf {
+    fn drop(&mut self) {
+        unsafe { _rte_eth_conf_free(self.0) }
+    }
+}
+
+impl<'a> From<&'a EthConf> for RawEthConf {
+    fn from(c: &EthConf) -> Self {
         unsafe {
             let conf = _rte_eth_conf_new();
 
-            if let Some(ref rxmode) = self.rxmode {
+            if let Some(ref rxmode) = c.rxmode {
                 _rte_eth_conf_set_rx_mode(conf,
                                           rxmode.mq_mode.bits,
                                           rxmode.split_hdr_size,
@@ -427,7 +448,7 @@ impl EthConfigBuilder {
                                           rxmode.enable_lro as u8);
             }
 
-            if let Some(ref txmode) = self.txmode {
+            if let Some(ref txmode) = c.txmode {
                 _rte_eth_conf_set_tx_mode(conf,
                                           txmode.mq_mode as u32,
                                           txmode.hw_vlan_reject_tagged as u8,
@@ -435,7 +456,7 @@ impl EthConfigBuilder {
                                           txmode.hw_vlan_insert_pvid as u8);
             }
 
-            if let Some(ref adv_conf) = self.rx_adv_conf {
+            if let Some(ref adv_conf) = c.rx_adv_conf {
                 if let Some(ref rss_conf) = adv_conf.rss_conf {
                     let (rss_key, rss_key_len) = rss_conf.key
                                                          .map_or_else(|| (ptr::null(), 0), |key| {
@@ -446,18 +467,8 @@ impl EthConfigBuilder {
                 }
             }
 
-            EthConfig(conf)
+            RawEthConf(conf)
         }
-    }
-}
-
-type RawEthConfigPtr = *const ffi::Struct_rte_eth_conf;
-
-pub struct EthConfig(RawEthConfigPtr);
-
-impl Drop for EthConfig {
-    fn drop(&mut self) {
-        unsafe { _rte_eth_conf_free(self.0) }
     }
 }
 
@@ -466,6 +477,12 @@ pub type RawTxBufferPtr = *mut ffi::Struct_rte_eth_dev_tx_buffer;
 ///  Structure used to buffer packets for future TX
 #[derive(Debug, PartialEq, Eq)]
 pub struct TxBuffer(RawTxBufferPtr);
+
+impl TxBuffer {
+    pub fn as_raw(&self) -> RawTxBufferPtr {
+        self.0
+    }
+}
 
 impl Drop for TxBuffer {
     fn drop(&mut self) {
@@ -554,11 +571,11 @@ impl TxBuffer {
 }
 
 extern "C" {
-    fn _rte_eth_conf_new() -> RawEthConfigPtr;
+    fn _rte_eth_conf_new() -> RawEthConfPtr;
 
-    fn _rte_eth_conf_free(conf: RawEthConfigPtr);
+    fn _rte_eth_conf_free(conf: RawEthConfPtr);
 
-    fn _rte_eth_conf_set_rx_mode(conf: RawEthConfigPtr,
+    fn _rte_eth_conf_set_rx_mode(conf: RawEthConfPtr,
                                  mq_mode: libc::uint32_t,
                                  split_hdr_size: libc::uint16_t,
                                  hw_ip_checksum: libc::uint8_t,
@@ -570,13 +587,13 @@ extern "C" {
                                  enable_scatter: libc::uint8_t,
                                  enable_lro: libc::uint8_t);
 
-    fn _rte_eth_conf_set_tx_mode(conf: RawEthConfigPtr,
+    fn _rte_eth_conf_set_tx_mode(conf: RawEthConfPtr,
                                  mq_mode: libc::uint32_t,
                                  hw_vlan_reject_tagged: libc::uint8_t,
                                  hw_vlan_reject_untagged: libc::uint8_t,
                                  hw_vlan_insert_pvid: libc::uint8_t);
 
-    fn _rte_eth_conf_set_rss_conf(conf: RawEthConfigPtr,
+    fn _rte_eth_conf_set_rss_conf(conf: RawEthConfPtr,
                                   rss_key: *const libc::uint8_t,
                                   rss_key_len: libc::uint8_t,
                                   rss_hf: libc::uint64_t);

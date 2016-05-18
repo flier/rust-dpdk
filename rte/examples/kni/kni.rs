@@ -285,7 +285,7 @@ fn init_kni(conf: &Conf) {
 // Initialise a single port on an Ethernet device
 fn init_port(conf: &Conf,
              dev: &ethdev::EthDevice,
-             port_conf: &ethdev::EthConfig,
+             port_conf: &ethdev::EthConf,
              pktmbuf_pool: &mempool::RawMemoryPool) {
     let portid = dev.portid();
 
@@ -330,15 +330,13 @@ extern "C" fn kni_change_mtu(port_id: u8, new_mtu: libc::c_uint) -> libc::c_int 
         dev.stop();
 
         // Set new MTU
-        let mut port_conf_builder = ethdev::EthConfigBuilder::default();
+        let mut port_conf = ethdev::EthConf::default();
 
         let mut rxmode: ethdev::EthRxMode = Default::default();
 
         rxmode.max_rx_pkt_len = new_mtu + KNI_ENET_HEADER_SIZE + KNI_ENET_FCS_SIZE;
 
-        port_conf_builder.rxmode = Some(rxmode);
-
-        let port_conf = port_conf_builder.build();
+        port_conf.rxmode = Some(rxmode);
 
         if let Err(err) = dev.configure(1, 1, &port_conf) {
             error!("Fail to reconfigure port {}, {}", port_id, err);
@@ -637,7 +635,7 @@ fn main() {
     init_kni(&conf);
 
     // Initialise each port
-    let port_conf = ethdev::EthConfigBuilder::default().build();
+    let port_conf = ethdev::EthConf::default();
 
     for dev in &enabled_devices {
         init_port(&conf, &dev, &port_conf, &pktmbuf_pool);

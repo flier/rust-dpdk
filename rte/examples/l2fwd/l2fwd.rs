@@ -367,7 +367,7 @@ fn main() {
         println!("Lcore {}: RX port {}", rx_lcore_id, portid);
     }
 
-    let port_conf = ethdev::EthConfigBuilder::default().build();
+    let port_conf = ethdev::EthConf::default();
 
     // Initialise each port
     for dev in &enabled_devices {
