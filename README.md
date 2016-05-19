@@ -46,7 +46,7 @@ fn main() {
 }
 ```
 
-Please check [l2fwd](rte/examples/l2fwd.rs) example for details.
+Please check [l2fwd](rte/examples/l2fwd/l2fwd.rs) example for details.
 
 ```
 $ sudo RTE_SDK=<rte_path> cargo run --example l2fwd -- --log-level 8 -v -c f -- -p f
