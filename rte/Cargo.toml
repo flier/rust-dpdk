@@ -43,3 +43,9 @@ name = "kni"
 path = "examples/kni/kni.rs"
 test = false
 bench = false
+
+[[example]]
+name = "cmdline"
+path = "examples/cmdline/main.rs"
+test = false
+bench = false

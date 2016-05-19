@@ -13,7 +13,11 @@ extern crate rte_sys as ffi;
 #[macro_use]
 pub mod errors;
 pub mod common;
+#[macro_use]
+pub mod debug;
 pub mod config;
+#[macro_use]
+pub mod cmdline;
 #[macro_use]
 pub mod malloc;
 pub mod memzone;

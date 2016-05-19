@@ -4640,6 +4640,764 @@ impl ::std::clone::Clone for Struct_rte_kni_conf {
 impl ::std::default::Default for Struct_rte_kni_conf {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cirbuf {
+    pub maxlen: ::std::os::raw::c_uint,
+    pub start: ::std::os::raw::c_uint,
+    pub end: ::std::os::raw::c_uint,
+    pub len: ::std::os::raw::c_uint,
+    pub buf: *mut ::std::os::raw::c_char,
+}
+impl ::std::clone::Clone for Struct_cirbuf {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cirbuf {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[derive(Clone, Copy)]
+#[repr(u32)]
+pub enum Enum_cmdline_vt100_parser_state {
+    CMDLINE_VT100_INIT = 0,
+    CMDLINE_VT100_ESCAPE = 1,
+    CMDLINE_VT100_ESCAPE_CSI = 2,
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_vt100 {
+    pub bufpos: uint8_t,
+    pub buf: [::std::os::raw::c_char; 8usize],
+    pub state: Enum_cmdline_vt100_parser_state,
+}
+impl ::std::clone::Clone for Struct_cmdline_vt100 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_vt100 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[derive(Clone, Copy)]
+#[repr(u32)]
+pub enum Enum_rdline_status {
+    RDLINE_INIT = 0,
+    RDLINE_RUNNING = 1,
+    RDLINE_EXITED = 2,
+}
+pub type rdline_write_char_t =
+    unsafe extern "C" fn(rdl: *mut Struct_rdline,
+                         arg1: ::std::os::raw::c_char)
+        -> ::std::os::raw::c_int;
+pub type rdline_validate_t =
+    unsafe extern "C" fn(rdl: *mut Struct_rdline,
+                         buf: *const ::std::os::raw::c_char,
+                         size: ::std::os::raw::c_uint);
+pub type rdline_complete_t =
+    unsafe extern "C" fn(rdl: *mut Struct_rdline,
+                         buf: *const ::std::os::raw::c_char,
+                         dstbuf: *mut ::std::os::raw::c_char,
+                         dstsize: ::std::os::raw::c_uint,
+                         state: *mut ::std::os::raw::c_int)
+        -> ::std::os::raw::c_int;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_rdline {
+    pub status: Enum_rdline_status,
+    pub left: Struct_cirbuf,
+    pub right: Struct_cirbuf,
+    pub left_buf: [::std::os::raw::c_char; 514usize],
+    pub right_buf: [::std::os::raw::c_char; 512usize],
+    pub prompt: [::std::os::raw::c_char; 32usize],
+    pub prompt_size: ::std::os::raw::c_uint,
+    pub kill_buf: [::std::os::raw::c_char; 512usize],
+    pub kill_size: ::std::os::raw::c_uint,
+    pub history: Struct_cirbuf,
+    pub history_buf: [::std::os::raw::c_char; 8192usize],
+    pub history_cur_line: ::std::os::raw::c_int,
+    pub write_char: *mut rdline_write_char_t,
+    pub validate: *mut rdline_validate_t,
+    pub complete: *mut rdline_complete_t,
+    pub vt100: Struct_cmdline_vt100,
+    pub opaque: *mut ::std::os::raw::c_void,
+}
+impl ::std::clone::Clone for Struct_rdline {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_rdline {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_token_hdr {
+    pub ops: *mut Struct_cmdline_token_ops,
+    pub offset: ::std::os::raw::c_uint,
+}
+impl ::std::clone::Clone for Struct_cmdline_token_hdr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_token_hdr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type cmdline_parse_token_hdr_t = Struct_cmdline_token_hdr;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_token_ops {
+    pub parse: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                              *mut cmdline_parse_token_hdr_t,
+                                                          arg2:
+                                                              *const ::std::os::raw::c_char,
+                                                          arg3:
+                                                              *mut ::std::os::raw::c_void,
+                                                          arg4:
+                                                              ::std::os::raw::c_uint)
+                                         -> ::std::os::raw::c_int>,
+    pub complete_get_nb: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                        *mut cmdline_parse_token_hdr_t)
+                                                   -> ::std::os::raw::c_int>,
+    pub complete_get_elt: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                         *mut cmdline_parse_token_hdr_t,
+                                                                     arg2:
+                                                                         ::std::os::raw::c_int,
+                                                                     arg3:
+                                                                         *mut ::std::os::raw::c_char,
+                                                                     arg4:
+                                                                         ::std::os::raw::c_uint)
+                                                    -> ::std::os::raw::c_int>,
+    pub get_help: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                 *mut cmdline_parse_token_hdr_t,
+                                                             arg2:
+                                                                 *mut ::std::os::raw::c_char,
+                                                             arg3:
+                                                                 ::std::os::raw::c_uint)
+                                            -> ::std::os::raw::c_int>,
+}
+impl ::std::clone::Clone for Struct_cmdline_token_ops {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_token_ops {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_inst {
+    pub f: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                          *mut ::std::os::raw::c_void,
+                                                      arg2:
+                                                          *mut Struct_cmdline,
+                                                      arg3:
+                                                          *mut ::std::os::raw::c_void)>,
+    pub data: *mut ::std::os::raw::c_void,
+    pub help_str: *const ::std::os::raw::c_char,
+    pub tokens: *mut *mut cmdline_parse_token_hdr_t,
+}
+impl ::std::clone::Clone for Struct_cmdline_inst {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_inst {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type cmdline_parse_inst_t = Struct_cmdline_inst;
+pub type cmdline_parse_ctx_t = *mut cmdline_parse_inst_t;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_token_etheraddr {
+    pub hdr: Struct_cmdline_token_hdr,
+}
+impl ::std::clone::Clone for Struct_cmdline_token_etheraddr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_token_etheraddr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type cmdline_parse_token_etheraddr_t = Struct_cmdline_token_etheraddr;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_iovec {
+    pub iov_base: *mut ::std::os::raw::c_void,
+    pub iov_len: size_t,
+}
+impl ::std::clone::Clone for Struct_iovec {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_iovec {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type socklen_t = __socklen_t;
+#[derive(Clone, Copy)]
+#[repr(u32)]
+pub enum Enum___socket_type {
+    SOCK_STREAM = 1,
+    SOCK_DGRAM = 2,
+    SOCK_RAW = 3,
+    SOCK_RDM = 4,
+    SOCK_SEQPACKET = 5,
+    SOCK_DCCP = 6,
+    SOCK_PACKET = 10,
+    SOCK_CLOEXEC = 524288,
+    SOCK_NONBLOCK = 2048,
+}
+pub type sa_family_t = ::std::os::raw::c_ushort;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_sockaddr {
+    pub sa_family: sa_family_t,
+    pub sa_data: [::std::os::raw::c_char; 14usize],
+}
+impl ::std::clone::Clone for Struct_sockaddr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_sockaddr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_sockaddr_storage {
+    pub ss_family: sa_family_t,
+    pub __ss_align: ::std::os::raw::c_ulong,
+    pub __ss_padding: [::std::os::raw::c_char; 112usize],
+}
+impl ::std::clone::Clone for Struct_sockaddr_storage {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_sockaddr_storage {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[derive(Clone, Copy)]
+#[repr(u32)]
+pub enum Enum_Unnamed71 {
+    MSG_OOB = 1,
+    MSG_PEEK = 2,
+    MSG_DONTROUTE = 4,
+    MSG_CTRUNC = 8,
+    MSG_PROXY = 16,
+    MSG_TRUNC = 32,
+    MSG_DONTWAIT = 64,
+    MSG_EOR = 128,
+    MSG_WAITALL = 256,
+    MSG_FIN = 512,
+    MSG_SYN = 1024,
+    MSG_CONFIRM = 2048,
+    MSG_RST = 4096,
+    MSG_ERRQUEUE = 8192,
+    MSG_NOSIGNAL = 16384,
+    MSG_MORE = 32768,
+    MSG_WAITFORONE = 65536,
+    MSG_CMSG_CLOEXEC = 1073741824,
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_msghdr {
+    pub msg_name: *mut ::std::os::raw::c_void,
+    pub msg_namelen: socklen_t,
+    pub msg_iov: *mut Struct_iovec,
+    pub msg_iovlen: size_t,
+    pub msg_control: *mut ::std::os::raw::c_void,
+    pub msg_controllen: size_t,
+    pub msg_flags: ::std::os::raw::c_int,
+}
+impl ::std::clone::Clone for Struct_msghdr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_msghdr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmsghdr {
+    pub cmsg_len: size_t,
+    pub cmsg_level: ::std::os::raw::c_int,
+    pub cmsg_type: ::std::os::raw::c_int,
+    pub __cmsg_data: *mut ::std::os::raw::c_uchar,
+}
+impl ::std::clone::Clone for Struct_cmsghdr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmsghdr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[derive(Clone, Copy)]
+#[repr(u32)]
+pub enum Enum_Unnamed72 { SCM_RIGHTS = 1, }
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_linger {
+    pub l_onoff: ::std::os::raw::c_int,
+    pub l_linger: ::std::os::raw::c_int,
+}
+impl ::std::clone::Clone for Struct_linger {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_linger {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_osockaddr {
+    pub sa_family: ::std::os::raw::c_ushort,
+    pub sa_data: [::std::os::raw::c_uchar; 14usize],
+}
+impl ::std::clone::Clone for Struct_osockaddr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_osockaddr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[derive(Clone, Copy)]
+#[repr(u32)]
+pub enum Enum_Unnamed73 { SHUT_RD = 0, SHUT_WR = 1, SHUT_RDWR = 2, }
+pub const IPPROTO_HOPOPTS: Enum_Unnamed74 = Enum_Unnamed74::IPPROTO_IP;
+#[derive(Clone, Copy)]
+#[repr(u32)]
+pub enum Enum_Unnamed74 {
+    IPPROTO_IP = 0,
+    IPPROTO_ICMP = 1,
+    IPPROTO_IGMP = 2,
+    IPPROTO_IPIP = 4,
+    IPPROTO_TCP = 6,
+    IPPROTO_EGP = 8,
+    IPPROTO_PUP = 12,
+    IPPROTO_UDP = 17,
+    IPPROTO_IDP = 22,
+    IPPROTO_TP = 29,
+    IPPROTO_DCCP = 33,
+    IPPROTO_IPV6 = 41,
+    IPPROTO_ROUTING = 43,
+    IPPROTO_FRAGMENT = 44,
+    IPPROTO_RSVP = 46,
+    IPPROTO_GRE = 47,
+    IPPROTO_ESP = 50,
+    IPPROTO_AH = 51,
+    IPPROTO_ICMPV6 = 58,
+    IPPROTO_NONE = 59,
+    IPPROTO_DSTOPTS = 60,
+    IPPROTO_MTP = 92,
+    IPPROTO_ENCAP = 98,
+    IPPROTO_PIM = 103,
+    IPPROTO_COMP = 108,
+    IPPROTO_SCTP = 132,
+    IPPROTO_UDPLITE = 136,
+    IPPROTO_RAW = 255,
+    IPPROTO_MAX = 256,
+}
+pub type in_port_t = uint16_t;
+pub const IPPORT_BIFFUDP: Enum_Unnamed75 = Enum_Unnamed75::IPPORT_EXECSERVER;
+pub const IPPORT_WHOSERVER: Enum_Unnamed75 =
+    Enum_Unnamed75::IPPORT_LOGINSERVER;
+pub const IPPORT_ROUTESERVER: Enum_Unnamed75 =
+    Enum_Unnamed75::IPPORT_EFSSERVER;
+#[derive(Clone, Copy)]
+#[repr(u32)]
+pub enum Enum_Unnamed75 {
+    IPPORT_ECHO = 7,
+    IPPORT_DISCARD = 9,
+    IPPORT_SYSTAT = 11,
+    IPPORT_DAYTIME = 13,
+    IPPORT_NETSTAT = 15,
+    IPPORT_FTP = 21,
+    IPPORT_TELNET = 23,
+    IPPORT_SMTP = 25,
+    IPPORT_TIMESERVER = 37,
+    IPPORT_NAMESERVER = 42,
+    IPPORT_WHOIS = 43,
+    IPPORT_MTP = 57,
+    IPPORT_TFTP = 69,
+    IPPORT_RJE = 77,
+    IPPORT_FINGER = 79,
+    IPPORT_TTYLINK = 87,
+    IPPORT_SUPDUP = 95,
+    IPPORT_EXECSERVER = 512,
+    IPPORT_LOGINSERVER = 513,
+    IPPORT_CMDSERVER = 514,
+    IPPORT_EFSSERVER = 520,
+    IPPORT_RESERVED = 1024,
+    IPPORT_USERRESERVED = 5000,
+}
+pub type in_addr_t = uint32_t;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_in_addr {
+    pub s_addr: in_addr_t,
+}
+impl ::std::clone::Clone for Struct_in_addr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_in_addr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_in6_addr {
+    pub __in6_u: Union_Unnamed76,
+}
+impl ::std::clone::Clone for Struct_in6_addr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_in6_addr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Union_Unnamed76 {
+    pub _bindgen_data_: [u32; 4usize],
+}
+impl Union_Unnamed76 {
+    pub unsafe fn __u6_addr8(&mut self) -> *mut [uint8_t; 16usize] {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn __u6_addr16(&mut self) -> *mut [uint16_t; 8usize] {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn __u6_addr32(&mut self) -> *mut [uint32_t; 4usize] {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+}
+impl ::std::clone::Clone for Union_Unnamed76 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Union_Unnamed76 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_sockaddr_in {
+    pub sin_family: sa_family_t,
+    pub sin_port: in_port_t,
+    pub sin_addr: Struct_in_addr,
+    pub sin_zero: [::std::os::raw::c_uchar; 8usize],
+}
+impl ::std::clone::Clone for Struct_sockaddr_in {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_sockaddr_in {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_sockaddr_in6 {
+    pub sin6_family: sa_family_t,
+    pub sin6_port: in_port_t,
+    pub sin6_flowinfo: uint32_t,
+    pub sin6_addr: Struct_in6_addr,
+    pub sin6_scope_id: uint32_t,
+}
+impl ::std::clone::Clone for Struct_sockaddr_in6 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_sockaddr_in6 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ip_mreq {
+    pub imr_multiaddr: Struct_in_addr,
+    pub imr_interface: Struct_in_addr,
+}
+impl ::std::clone::Clone for Struct_ip_mreq {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ip_mreq {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ip_mreq_source {
+    pub imr_multiaddr: Struct_in_addr,
+    pub imr_interface: Struct_in_addr,
+    pub imr_sourceaddr: Struct_in_addr,
+}
+impl ::std::clone::Clone for Struct_ip_mreq_source {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ip_mreq_source {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ipv6_mreq {
+    pub ipv6mr_multiaddr: Struct_in6_addr,
+    pub ipv6mr_interface: ::std::os::raw::c_uint,
+}
+impl ::std::clone::Clone for Struct_ipv6_mreq {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ipv6_mreq {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_group_req {
+    pub gr_interface: uint32_t,
+    pub gr_group: Struct_sockaddr_storage,
+}
+impl ::std::clone::Clone for Struct_group_req {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_group_req {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_group_source_req {
+    pub gsr_interface: uint32_t,
+    pub gsr_group: Struct_sockaddr_storage,
+    pub gsr_source: Struct_sockaddr_storage,
+}
+impl ::std::clone::Clone for Struct_group_source_req {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_group_source_req {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ip_msfilter {
+    pub imsf_multiaddr: Struct_in_addr,
+    pub imsf_interface: Struct_in_addr,
+    pub imsf_fmode: uint32_t,
+    pub imsf_numsrc: uint32_t,
+    pub imsf_slist: [Struct_in_addr; 1usize],
+}
+impl ::std::clone::Clone for Struct_ip_msfilter {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ip_msfilter {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_group_filter {
+    pub gf_interface: uint32_t,
+    pub gf_group: Struct_sockaddr_storage,
+    pub gf_fmode: uint32_t,
+    pub gf_numsrc: uint32_t,
+    pub gf_slist: [Struct_sockaddr_storage; 1usize],
+}
+impl ::std::clone::Clone for Struct_group_filter {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_group_filter {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ip_opts {
+    pub ip_dst: Struct_in_addr,
+    pub ip_opts: [::std::os::raw::c_char; 40usize],
+}
+impl ::std::clone::Clone for Struct_ip_opts {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ip_opts {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ip_mreqn {
+    pub imr_multiaddr: Struct_in_addr,
+    pub imr_address: Struct_in_addr,
+    pub imr_ifindex: ::std::os::raw::c_int,
+}
+impl ::std::clone::Clone for Struct_ip_mreqn {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ip_mreqn {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_in_pktinfo {
+    pub ipi_ifindex: ::std::os::raw::c_int,
+    pub ipi_spec_dst: Struct_in_addr,
+    pub ipi_addr: Struct_in_addr,
+}
+impl ::std::clone::Clone for Struct_in_pktinfo {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_in_pktinfo {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_ipaddr {
+    pub family: uint8_t,
+    pub addr: Union_Unnamed77,
+    pub prefixlen: ::std::os::raw::c_uint,
+}
+impl ::std::clone::Clone for Struct_cmdline_ipaddr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_ipaddr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Union_Unnamed77 {
+    pub _bindgen_data_: [u32; 4usize],
+}
+impl Union_Unnamed77 {
+    pub unsafe fn ipv4(&mut self) -> *mut Struct_in_addr {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn ipv6(&mut self) -> *mut Struct_in6_addr {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+}
+impl ::std::clone::Clone for Union_Unnamed77 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Union_Unnamed77 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type cmdline_ipaddr_t = Struct_cmdline_ipaddr;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_token_ipaddr_data {
+    pub flags: uint8_t,
+}
+impl ::std::clone::Clone for Struct_cmdline_token_ipaddr_data {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_token_ipaddr_data {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_token_ipaddr {
+    pub hdr: Struct_cmdline_token_hdr,
+    pub ipaddr_data: Struct_cmdline_token_ipaddr_data,
+}
+impl ::std::clone::Clone for Struct_cmdline_token_ipaddr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_token_ipaddr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type cmdline_parse_token_ipaddr_t = Struct_cmdline_token_ipaddr;
+#[derive(Clone, Copy)]
+#[repr(u32)]
+pub enum Enum_cmdline_numtype {
+    UINT8 = 0,
+    UINT16 = 1,
+    UINT32 = 2,
+    UINT64 = 3,
+    INT8 = 4,
+    INT16 = 5,
+    INT32 = 6,
+    INT64 = 7,
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_token_num_data {
+    pub _type: Enum_cmdline_numtype,
+}
+impl ::std::clone::Clone for Struct_cmdline_token_num_data {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_token_num_data {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_token_num {
+    pub hdr: Struct_cmdline_token_hdr,
+    pub num_data: Struct_cmdline_token_num_data,
+}
+impl ::std::clone::Clone for Struct_cmdline_token_num {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_token_num {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type cmdline_parse_token_num_t = Struct_cmdline_token_num;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_portlist {
+    pub map: uint32_t,
+}
+impl ::std::clone::Clone for Struct_cmdline_portlist {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_portlist {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type cmdline_portlist_t = Struct_cmdline_portlist;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_token_portlist {
+    pub hdr: Struct_cmdline_token_hdr,
+}
+impl ::std::clone::Clone for Struct_cmdline_token_portlist {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_token_portlist {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type cmdline_parse_token_portlist_t = Struct_cmdline_token_portlist;
+pub type cmdline_fixed_string_t = [::std::os::raw::c_char; 128usize];
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_token_string_data {
+    pub _str: *const ::std::os::raw::c_char,
+}
+impl ::std::clone::Clone for Struct_cmdline_token_string_data {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_token_string_data {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_token_string {
+    pub hdr: Struct_cmdline_token_hdr,
+    pub string_data: Struct_cmdline_token_string_data,
+}
+impl ::std::clone::Clone for Struct_cmdline_token_string {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_token_string {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type cmdline_parse_token_string_t = Struct_cmdline_token_string;
+pub type cc_t = ::std::os::raw::c_uchar;
+pub type speed_t = ::std::os::raw::c_uint;
+pub type tcflag_t = ::std::os::raw::c_uint;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_termios {
+    pub c_iflag: tcflag_t,
+    pub c_oflag: tcflag_t,
+    pub c_cflag: tcflag_t,
+    pub c_lflag: tcflag_t,
+    pub c_line: cc_t,
+    pub c_cc: [cc_t; 32usize],
+    pub c_ispeed: speed_t,
+    pub c_ospeed: speed_t,
+}
+impl ::std::clone::Clone for Struct_termios {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_termios {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline {
+    pub s_in: ::std::os::raw::c_int,
+    pub s_out: ::std::os::raw::c_int,
+    pub ctx: *mut cmdline_parse_ctx_t,
+    pub rdl: Struct_rdline,
+    pub prompt: [::std::os::raw::c_char; 32usize],
+    pub oldterm: Struct_termios,
+}
+impl ::std::clone::Clone for Struct_cmdline {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
 pub type __va_list_tag = Struct___va_list_tag;
 #[repr(C)]
 #[derive(Copy)]
@@ -4682,6 +5440,14 @@ extern "C" {
     pub static mut pci_device_list: Struct_pci_device_list;
     pub static mut devargs_list: Struct_rte_devargs_list;
     pub static mut rte_eth_devices: *mut Struct_rte_eth_dev;
+    pub static mut cmdline_vt100_commands: *mut *const ::std::os::raw::c_char;
+    pub static mut cmdline_token_etheraddr_ops: Struct_cmdline_token_ops;
+    pub static in6addr_any: Struct_in6_addr;
+    pub static in6addr_loopback: Struct_in6_addr;
+    pub static mut cmdline_token_ipaddr_ops: Struct_cmdline_token_ops;
+    pub static mut cmdline_token_num_ops: Struct_cmdline_token_ops;
+    pub static mut cmdline_token_portlist_ops: Struct_cmdline_token_ops;
+    pub static mut cmdline_token_string_ops: Struct_cmdline_token_ops;
 }
 extern "C" {
     pub fn __ctype_get_mb_cur_max() -> size_t;
@@ -6413,4 +7179,278 @@ extern "C" {
     pub fn rte_kni_unregister_handlers(kni: *mut Struct_rte_kni)
      -> ::std::os::raw::c_int;
     pub fn rte_kni_close();
+    pub fn cirbuf_init(cbuf: *mut Struct_cirbuf,
+                       buf: *mut ::std::os::raw::c_char,
+                       start: ::std::os::raw::c_uint,
+                       maxlen: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn cirbuf_add_head_safe(cbuf: *mut Struct_cirbuf,
+                                c: ::std::os::raw::c_char)
+     -> ::std::os::raw::c_int;
+    pub fn cirbuf_add_head(cbuf: *mut Struct_cirbuf,
+                           c: ::std::os::raw::c_char);
+    pub fn cirbuf_add_tail_safe(cbuf: *mut Struct_cirbuf,
+                                c: ::std::os::raw::c_char)
+     -> ::std::os::raw::c_int;
+    pub fn cirbuf_add_tail(cbuf: *mut Struct_cirbuf,
+                           c: ::std::os::raw::c_char);
+    pub fn cirbuf_del_head_safe(cbuf: *mut Struct_cirbuf)
+     -> ::std::os::raw::c_int;
+    pub fn cirbuf_del_head(cbuf: *mut Struct_cirbuf);
+    pub fn cirbuf_del_tail_safe(cbuf: *mut Struct_cirbuf)
+     -> ::std::os::raw::c_int;
+    pub fn cirbuf_del_tail(cbuf: *mut Struct_cirbuf);
+    pub fn cirbuf_get_head(cbuf: *mut Struct_cirbuf)
+     -> ::std::os::raw::c_char;
+    pub fn cirbuf_get_tail(cbuf: *mut Struct_cirbuf)
+     -> ::std::os::raw::c_char;
+    pub fn cirbuf_add_buf_head(cbuf: *mut Struct_cirbuf,
+                               c: *const ::std::os::raw::c_char,
+                               n: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn cirbuf_add_buf_tail(cbuf: *mut Struct_cirbuf,
+                               c: *const ::std::os::raw::c_char,
+                               n: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn cirbuf_del_buf_head(cbuf: *mut Struct_cirbuf,
+                               size: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn cirbuf_del_buf_tail(cbuf: *mut Struct_cirbuf,
+                               size: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn cirbuf_get_buf_head(cbuf: *mut Struct_cirbuf,
+                               c: *mut ::std::os::raw::c_char,
+                               size: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn cirbuf_get_buf_tail(cbuf: *mut Struct_cirbuf,
+                               c: *mut ::std::os::raw::c_char,
+                               size: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn cirbuf_align_left(cbuf: *mut Struct_cirbuf)
+     -> ::std::os::raw::c_int;
+    pub fn cirbuf_align_right(cbuf: *mut Struct_cirbuf)
+     -> ::std::os::raw::c_int;
+    pub fn vt100_init(vt: *mut Struct_cmdline_vt100);
+    pub fn vt100_parser(vt: *mut Struct_cmdline_vt100,
+                        c: ::std::os::raw::c_char) -> ::std::os::raw::c_int;
+    pub fn rdline_init(rdl: *mut Struct_rdline,
+                       write_char: *mut rdline_write_char_t,
+                       validate: *mut rdline_validate_t,
+                       complete: *mut rdline_complete_t)
+     -> ::std::os::raw::c_int;
+    pub fn rdline_newline(rdl: *mut Struct_rdline,
+                          prompt: *const ::std::os::raw::c_char);
+    pub fn rdline_stop(rdl: *mut Struct_rdline);
+    pub fn rdline_quit(rdl: *mut Struct_rdline);
+    pub fn rdline_restart(rdl: *mut Struct_rdline);
+    pub fn rdline_redisplay(rdl: *mut Struct_rdline);
+    pub fn rdline_reset(rdl: *mut Struct_rdline);
+    pub fn rdline_char_in(rdl: *mut Struct_rdline, c: ::std::os::raw::c_char)
+     -> ::std::os::raw::c_int;
+    pub fn rdline_get_buffer(rdl: *mut Struct_rdline)
+     -> *const ::std::os::raw::c_char;
+    pub fn rdline_add_history(rdl: *mut Struct_rdline,
+                              buf: *const ::std::os::raw::c_char)
+     -> ::std::os::raw::c_int;
+    pub fn rdline_clear_history(rdl: *mut Struct_rdline);
+    pub fn rdline_get_history_item(rdl: *mut Struct_rdline,
+                                   i: ::std::os::raw::c_uint)
+     -> *mut ::std::os::raw::c_char;
+    pub fn cmdline_parse(cl: *mut Struct_cmdline,
+                         buf: *const ::std::os::raw::c_char)
+     -> ::std::os::raw::c_int;
+    pub fn cmdline_complete(cl: *mut Struct_cmdline,
+                            buf: *const ::std::os::raw::c_char,
+                            state: *mut ::std::os::raw::c_int,
+                            dst: *mut ::std::os::raw::c_char,
+                            size: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn cmdline_isendoftoken(c: ::std::os::raw::c_char)
+     -> ::std::os::raw::c_int;
+    pub fn cmdline_parse_etheraddr(tk: *mut cmdline_parse_token_hdr_t,
+                                   srcbuf: *const ::std::os::raw::c_char,
+                                   res: *mut ::std::os::raw::c_void,
+                                   ressize: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn cmdline_get_help_etheraddr(tk: *mut cmdline_parse_token_hdr_t,
+                                      dstbuf: *mut ::std::os::raw::c_char,
+                                      size: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn readv(__fd: ::std::os::raw::c_int, __iovec: *const Struct_iovec,
+                 __count: ::std::os::raw::c_int) -> ssize_t;
+    pub fn writev(__fd: ::std::os::raw::c_int, __iovec: *const Struct_iovec,
+                  __count: ::std::os::raw::c_int) -> ssize_t;
+    pub fn preadv(__fd: ::std::os::raw::c_int, __iovec: *const Struct_iovec,
+                  __count: ::std::os::raw::c_int, __offset: __off_t)
+     -> ssize_t;
+    pub fn pwritev(__fd: ::std::os::raw::c_int, __iovec: *const Struct_iovec,
+                   __count: ::std::os::raw::c_int, __offset: __off_t)
+     -> ssize_t;
+    pub fn __cmsg_nxthdr(__mhdr: *mut Struct_msghdr,
+                         __cmsg: *mut Struct_cmsghdr) -> *mut Struct_cmsghdr;
+    pub fn socket(__domain: ::std::os::raw::c_int,
+                  __type: ::std::os::raw::c_int,
+                  __protocol: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+    pub fn socketpair(__domain: ::std::os::raw::c_int,
+                      __type: ::std::os::raw::c_int,
+                      __protocol: ::std::os::raw::c_int,
+                      __fds: *mut ::std::os::raw::c_int)
+     -> ::std::os::raw::c_int;
+    pub fn bind(__fd: ::std::os::raw::c_int, __addr: *const Struct_sockaddr,
+                __len: socklen_t) -> ::std::os::raw::c_int;
+    pub fn getsockname(__fd: ::std::os::raw::c_int,
+                       __addr: *mut Struct_sockaddr, __len: *mut socklen_t)
+     -> ::std::os::raw::c_int;
+    pub fn connect(__fd: ::std::os::raw::c_int,
+                   __addr: *const Struct_sockaddr, __len: socklen_t)
+     -> ::std::os::raw::c_int;
+    pub fn getpeername(__fd: ::std::os::raw::c_int,
+                       __addr: *mut Struct_sockaddr, __len: *mut socklen_t)
+     -> ::std::os::raw::c_int;
+    pub fn send(__fd: ::std::os::raw::c_int,
+                __buf: *const ::std::os::raw::c_void, __n: size_t,
+                __flags: ::std::os::raw::c_int) -> ssize_t;
+    pub fn recv(__fd: ::std::os::raw::c_int,
+                __buf: *mut ::std::os::raw::c_void, __n: size_t,
+                __flags: ::std::os::raw::c_int) -> ssize_t;
+    pub fn sendto(__fd: ::std::os::raw::c_int,
+                  __buf: *const ::std::os::raw::c_void, __n: size_t,
+                  __flags: ::std::os::raw::c_int,
+                  __addr: *const Struct_sockaddr, __addr_len: socklen_t)
+     -> ssize_t;
+    pub fn recvfrom(__fd: ::std::os::raw::c_int,
+                    __buf: *mut ::std::os::raw::c_void, __n: size_t,
+                    __flags: ::std::os::raw::c_int,
+                    __addr: *mut Struct_sockaddr, __addr_len: *mut socklen_t)
+     -> ssize_t;
+    pub fn sendmsg(__fd: ::std::os::raw::c_int,
+                   __message: *const Struct_msghdr,
+                   __flags: ::std::os::raw::c_int) -> ssize_t;
+    pub fn recvmsg(__fd: ::std::os::raw::c_int, __message: *mut Struct_msghdr,
+                   __flags: ::std::os::raw::c_int) -> ssize_t;
+    pub fn getsockopt(__fd: ::std::os::raw::c_int,
+                      __level: ::std::os::raw::c_int,
+                      __optname: ::std::os::raw::c_int,
+                      __optval: *mut ::std::os::raw::c_void,
+                      __optlen: *mut socklen_t) -> ::std::os::raw::c_int;
+    pub fn setsockopt(__fd: ::std::os::raw::c_int,
+                      __level: ::std::os::raw::c_int,
+                      __optname: ::std::os::raw::c_int,
+                      __optval: *const ::std::os::raw::c_void,
+                      __optlen: socklen_t) -> ::std::os::raw::c_int;
+    pub fn listen(__fd: ::std::os::raw::c_int, __n: ::std::os::raw::c_int)
+     -> ::std::os::raw::c_int;
+    pub fn accept(__fd: ::std::os::raw::c_int, __addr: *mut Struct_sockaddr,
+                  __addr_len: *mut socklen_t) -> ::std::os::raw::c_int;
+    pub fn shutdown(__fd: ::std::os::raw::c_int, __how: ::std::os::raw::c_int)
+     -> ::std::os::raw::c_int;
+    pub fn sockatmark(__fd: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+    pub fn isfdtype(__fd: ::std::os::raw::c_int,
+                    __fdtype: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+    pub fn ntohl(__netlong: uint32_t) -> uint32_t;
+    pub fn ntohs(__netshort: uint16_t) -> uint16_t;
+    pub fn htonl(__hostlong: uint32_t) -> uint32_t;
+    pub fn htons(__hostshort: uint16_t) -> uint16_t;
+    pub fn bindresvport(__sockfd: ::std::os::raw::c_int,
+                        __sock_in: *mut Struct_sockaddr_in)
+     -> ::std::os::raw::c_int;
+    pub fn bindresvport6(__sockfd: ::std::os::raw::c_int,
+                         __sock_in: *mut Struct_sockaddr_in6)
+     -> ::std::os::raw::c_int;
+    pub fn cmdline_parse_ipaddr(tk: *mut cmdline_parse_token_hdr_t,
+                                srcbuf: *const ::std::os::raw::c_char,
+                                res: *mut ::std::os::raw::c_void,
+                                ressize: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn cmdline_get_help_ipaddr(tk: *mut cmdline_parse_token_hdr_t,
+                                   dstbuf: *mut ::std::os::raw::c_char,
+                                   size: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn cmdline_parse_num(tk: *mut cmdline_parse_token_hdr_t,
+                             srcbuf: *const ::std::os::raw::c_char,
+                             res: *mut ::std::os::raw::c_void,
+                             ressize: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn cmdline_get_help_num(tk: *mut cmdline_parse_token_hdr_t,
+                                dstbuf: *mut ::std::os::raw::c_char,
+                                size: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn cmdline_parse_portlist(tk: *mut cmdline_parse_token_hdr_t,
+                                  srcbuf: *const ::std::os::raw::c_char,
+                                  res: *mut ::std::os::raw::c_void,
+                                  ressize: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn cmdline_get_help_portlist(tk: *mut cmdline_parse_token_hdr_t,
+                                     dstbuf: *mut ::std::os::raw::c_char,
+                                     size: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn cmdline_parse_string(tk: *mut cmdline_parse_token_hdr_t,
+                                srcbuf: *const ::std::os::raw::c_char,
+                                res: *mut ::std::os::raw::c_void,
+                                ressize: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn cmdline_complete_get_nb_string(tk: *mut cmdline_parse_token_hdr_t)
+     -> ::std::os::raw::c_int;
+    pub fn cmdline_complete_get_elt_string(tk: *mut cmdline_parse_token_hdr_t,
+                                           idx: ::std::os::raw::c_int,
+                                           dstbuf:
+                                               *mut ::std::os::raw::c_char,
+                                           size: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn cmdline_get_help_string(tk: *mut cmdline_parse_token_hdr_t,
+                                   dstbuf: *mut ::std::os::raw::c_char,
+                                   size: ::std::os::raw::c_uint)
+     -> ::std::os::raw::c_int;
+    pub fn cmdline_file_new(ctx: *mut cmdline_parse_ctx_t,
+                            prompt: *const ::std::os::raw::c_char,
+                            path: *const ::std::os::raw::c_char)
+     -> *mut Struct_cmdline;
+    pub fn cmdline_stdin_new(ctx: *mut cmdline_parse_ctx_t,
+                             prompt: *const ::std::os::raw::c_char)
+     -> *mut Struct_cmdline;
+    pub fn cmdline_stdin_exit(cl: *mut Struct_cmdline);
+    pub fn cfgetospeed(__termios_p: *const Struct_termios) -> speed_t;
+    pub fn cfgetispeed(__termios_p: *const Struct_termios) -> speed_t;
+    pub fn cfsetospeed(__termios_p: *mut Struct_termios, __speed: speed_t)
+     -> ::std::os::raw::c_int;
+    pub fn cfsetispeed(__termios_p: *mut Struct_termios, __speed: speed_t)
+     -> ::std::os::raw::c_int;
+    pub fn cfsetspeed(__termios_p: *mut Struct_termios, __speed: speed_t)
+     -> ::std::os::raw::c_int;
+    pub fn tcgetattr(__fd: ::std::os::raw::c_int,
+                     __termios_p: *mut Struct_termios)
+     -> ::std::os::raw::c_int;
+    pub fn tcsetattr(__fd: ::std::os::raw::c_int,
+                     __optional_actions: ::std::os::raw::c_int,
+                     __termios_p: *const Struct_termios)
+     -> ::std::os::raw::c_int;
+    pub fn cfmakeraw(__termios_p: *mut Struct_termios);
+    pub fn tcsendbreak(__fd: ::std::os::raw::c_int,
+                       __duration: ::std::os::raw::c_int)
+     -> ::std::os::raw::c_int;
+    pub fn tcdrain(__fd: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+    pub fn tcflush(__fd: ::std::os::raw::c_int,
+                   __queue_selector: ::std::os::raw::c_int)
+     -> ::std::os::raw::c_int;
+    pub fn tcflow(__fd: ::std::os::raw::c_int,
+                  __action: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+    pub fn tcgetsid(__fd: ::std::os::raw::c_int) -> __pid_t;
+    pub fn cmdline_new(ctx: *mut cmdline_parse_ctx_t,
+                       prompt: *const ::std::os::raw::c_char,
+                       s_in: ::std::os::raw::c_int,
+                       s_out: ::std::os::raw::c_int) -> *mut Struct_cmdline;
+    pub fn cmdline_set_prompt(cl: *mut Struct_cmdline,
+                              prompt: *const ::std::os::raw::c_char);
+    pub fn cmdline_free(cl: *mut Struct_cmdline);
+    pub fn cmdline_printf(cl: *const Struct_cmdline,
+                          fmt: *const ::std::os::raw::c_char, ...);
+    pub fn cmdline_in(cl: *mut Struct_cmdline,
+                      buf: *const ::std::os::raw::c_char,
+                      size: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+    pub fn cmdline_write_char(rdl: *mut Struct_rdline,
+                              c: ::std::os::raw::c_char)
+     -> ::std::os::raw::c_int;
+    pub fn cmdline_poll(cl: *mut Struct_cmdline) -> ::std::os::raw::c_int;
+    pub fn cmdline_interact(cl: *mut Struct_cmdline);
+    pub fn cmdline_quit(cl: *mut Struct_cmdline);
 }

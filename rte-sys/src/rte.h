@@ -30,3 +30,13 @@
 #include <rte_ether.h>
 #include <rte_ethdev.h>
 #include <rte_kni.h>
+
+#include <cmdline_rdline.h>
+#include <cmdline_parse.h>
+#include <cmdline_parse_etheraddr.h>
+#include <cmdline_parse_ipaddr.h>
+#include <cmdline_parse_num.h>
+#include <cmdline_parse_portlist.h>
+#include <cmdline_parse_string.h>
+#include <cmdline_socket.h>
+#include <cmdline.h>
