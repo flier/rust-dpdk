@@ -2,9 +2,10 @@ use std::mem;
 use std::ptr;
 use std::ffi::CString;
 use std::os::raw::c_char;
-use std::sync::{Once, ONCE_INIT};
 
 use ffi;
+
+use errors::Result;
 
 pub use common::*;
 pub use config::*;
@@ -63,44 +64,37 @@ unsafe fn init_pmd_drivers() {
 /// The function finishes the initialization process before main() is called.
 /// It puts the SLAVE lcores in the WAIT state.
 ///
-pub fn init(args: &Vec<String>) -> bool {
-    static mut INITIALIZED: bool = false;
-    static ONCE: Once = ONCE_INIT;
+pub fn init(args: &Vec<String>) -> Result<i32> {
+    debug!("initial EAL with {} args: {:?}",
+           args.len(),
+           args.as_slice());
 
+    // rust doesn't support __attribute__((constructor)), we need to invoke those static initializer
     unsafe {
-        ONCE.call_once(|| {
-            debug!("initial EAL with {} args: {:?}",
-                   args.len(),
-                   args.as_slice());
-
-            // rust doesn't support __attribute__((constructor)), we need to invoke those static initializer
-            init_pmd_drivers();
-
-            let cargs: Vec<Vec<u8>> = args.iter()
-                                          .map(|s| {
-                                              let mut v: Vec<u8> = Vec::from(s.as_bytes());
-                                              v.push(0);
-                                              v
-                                          })
-                                          .collect();
-
-            let mut cptrs: Vec<*mut c_char> = cargs.iter()
-                                                   .map(|s| s.as_ptr() as *mut c_char)
-                                                   .collect();
-
-            let parsed = if args.is_empty() {
-                ffi::rte_eal_init(0, ptr::null_mut())
-            } else {
-                ffi::rte_eal_init(cptrs.len() as i32, cptrs.as_mut_ptr())
-            };
-
-            debug!("EAL parsed {} arguments", parsed);
-
-            INITIALIZED = parsed >= 0;
-        });
-
-        INITIALIZED
+        init_pmd_drivers();
     }
+
+    let parsed = if args.is_empty() {
+        unsafe { ffi::rte_eal_init(0, ptr::null_mut()) }
+    } else {
+        let cargs: Vec<Vec<u8>> = args.iter()
+                                      .map(|s| {
+                                          let mut v: Vec<u8> = Vec::from(s.as_bytes());
+                                          v.push(0);
+                                          v
+                                      })
+                                      .collect();
+
+        let mut cptrs: Vec<*mut c_char> = cargs.iter()
+                                               .map(|s| s.as_ptr() as *mut c_char)
+                                               .collect();
+
+        unsafe { ffi::rte_eal_init(cptrs.len() as i32, cptrs.as_mut_ptr()) }
+    };
+
+    debug!("EAL parsed {} arguments", parsed);
+
+    rte_check!(parsed; ok => { parsed })
 }
 
 /// Function to terminate the application immediately,

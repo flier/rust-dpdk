@@ -542,7 +542,7 @@ extern "C" {
     fn kni_egress(param: *const Struct_kni_port_params) -> libc::c_int;
 }
 
-fn main_loop(conf: &Conf) -> i32 {
+extern "C" fn main_loop(conf: *const Conf) -> i32 {
     let nb_sys_ports = ethdev::EthDevice::count();
 
     enum LcoreType<'a> {
@@ -554,11 +554,11 @@ fn main_loop(conf: &Conf) -> i32 {
     let mut lcore_type: Option<LcoreType> = None;
 
     for portid in 0..nb_sys_ports {
-        if conf.port_params[portid as usize].is_null() {
+        if unsafe { (*conf).port_params[portid as usize].is_null() } {
             continue;
         }
 
-        let param = unsafe { &*conf.port_params[portid as usize] };
+        let param = unsafe { &*(*conf).port_params[portid as usize] };
 
         if param.lcore_rx == lcore_id {
             lcore_type = Some(LcoreType::Rx(param));
@@ -640,7 +640,7 @@ fn main() {
                             .collect();
 
     // Initialize KNI subsystem
-    init_kni(&conf);
+    init_kni(&conf).expect("Cannot init EAL");
 
     // Initialise each port
     let port_conf = ethdev::EthConf::default();
@@ -654,7 +654,7 @@ fn main() {
     check_all_ports_link_status(&enabled_devices);
 
     // launch per-lcore init on every lcore
-    launch::mp_remote_launch(Some(main_loop), Some(&conf), false).unwrap();
+    launch::mp_remote_launch(main_loop, Some(&conf), false).unwrap();
 
     lcore::foreach_slave(|lcore_id| launch::wait_lcore(lcore_id));
 

@@ -204,9 +204,9 @@ extern "C" {
                        -> libc::c_int;
 }
 
-fn l2fwd_launch_one_lcore(conf: &Conf) -> i32 {
+extern "C" fn l2fwd_launch_one_lcore(conf: *const Conf) -> i32 {
     let lcore_id = lcore::id().unwrap();
-    let qconf = &conf.queue_conf[lcore_id as usize];
+    let qconf = unsafe { &(*conf).queue_conf[lcore_id as usize] };
 
     if qconf.n_rx_port == 0 {
         info!("lcore {} has nothing to do", lcore_id);
@@ -279,7 +279,7 @@ fn main() {
     }
 
     // init EAL
-    eal::init(&eal_args);
+    eal::init(&eal_args).expect("fail to initial EAL");
 
     // create the mbuf pool
     let l2fwd_pktmbuf_pool = mbuf::pktmbuf_pool_create("mbuf_pool",
@@ -428,7 +428,7 @@ fn main() {
     check_all_ports_link_status(&enabled_devices);
 
     // launch per-lcore init on every lcore
-    launch::mp_remote_launch(Some(l2fwd_launch_one_lcore), Some(&conf), false).unwrap();
+    launch::mp_remote_launch(l2fwd_launch_one_lcore, Some(&conf), false).unwrap();
 
     lcore::foreach_slave(|lcore_id| launch::wait_lcore(lcore_id));
 

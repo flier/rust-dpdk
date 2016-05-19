@@ -17,11 +17,13 @@ use super::mempool::{MemoryPool, MemoryPoolDebug};
 fn test_eal() {
     let _ = env_logger::init();
 
-    assert!(eal::init(&vec![String::from("test"),
-                            String::from("-c"),
-                            format!("{:x}", (1 << num_cpus::get()) - 1),
-                            String::from("--log-level"),
-                            String::from("8")]));
+    assert_eq!(eal::init(&vec![String::from("test"),
+                               String::from("-c"),
+                               format!("{:x}", (1 << num_cpus::get()) - 1),
+                               String::from("--log-level"),
+                               String::from("8")])
+                   .unwrap(),
+               4);
 
     assert_eq!(eal::process_type(), eal::ProcType::Primary);
     assert!(!eal::primary_proc_alive());
@@ -76,10 +78,10 @@ fn test_lcore() {
 }
 
 fn test_launch() {
-    fn slave_main(mutext: &Arc<Mutex<usize>>) -> i32 {
+    extern "C" fn slave_main(mutex: *const Arc<Mutex<usize>>) -> i32 {
         debug!("lcore {} is running", lcore::id().unwrap());
 
-        let mut data = mutext.lock().unwrap();
+        let mut data = unsafe { (*mutex).lock().unwrap() };
 
         *data += 1;
 
@@ -100,7 +102,7 @@ fn test_launch() {
 
         debug!("remote launch lcore {}", slave_id);
 
-        launch::remote_launch(Some(slave_main), Some(&mutex.clone()), slave_id).unwrap();
+        launch::remote_launch(slave_main, Some(&mutex.clone()), slave_id).unwrap();
 
         assert_eq!(launch::LcoreState::Running,
                    launch::get_lcore_state(slave_id));
@@ -125,7 +127,7 @@ fn test_launch() {
 
         debug!("remote launch lcores");
 
-        launch::mp_remote_launch(Some(slave_main), Some(&mutex.clone()), true).unwrap();
+        launch::mp_remote_launch(slave_main, Some(&mutex.clone()), true).unwrap();
     }
 
     launch::mp_wait_lcore();

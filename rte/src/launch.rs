@@ -4,7 +4,7 @@ use ffi;
 
 use errors::Result;
 
-pub type LcoreFunc<T> = fn(&T) -> i32;
+pub type LcoreFunc<T> = extern "C" fn(*const T) -> i32;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LcoreState {
@@ -24,17 +24,14 @@ impl From<ffi::Enum_rte_lcore_state_t> for LcoreState {
 }
 
 /// Launch a function on another lcore.
-pub fn remote_launch<T>(f: Option<LcoreFunc<T>>, arg: Option<&T>, slave_id: u32) -> Result<()> {
+pub fn remote_launch<T>(f: LcoreFunc<T>, arg: Option<&T>, slave_id: u32) -> Result<()> {
     rte_check!(unsafe {
         ffi::rte_eal_remote_launch(mem::transmute(f), mem::transmute(arg), slave_id)
     })
 }
 
 /// Launch a function on all lcores.
-pub fn mp_remote_launch<T>(f: Option<LcoreFunc<T>>,
-                           arg: Option<&T>,
-                           skip_master: bool)
-                           -> Result<()> {
+pub fn mp_remote_launch<T>(f: LcoreFunc<T>, arg: Option<&T>, skip_master: bool) -> Result<()> {
     rte_check!(unsafe {
         ffi::rte_eal_mp_remote_launch(mem::transmute(f),
                                       mem::transmute(arg),

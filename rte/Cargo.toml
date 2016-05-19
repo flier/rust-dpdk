@@ -27,6 +27,12 @@ nix = "0.5"
 name = "rte"
 
 [[example]]
+name = "helloworld"
+path = "examples/helloworld/main.rs"
+test = false
+bench = false
+
+[[example]]
 name = "l2fwd"
 path = "examples/l2fwd/l2fwd.rs"
 test = false
