@@ -7,6 +7,9 @@
 #include <rte_cycles.h>
 #include <rte_ethdev.h>
 
+#include <cmdline_parse.h>
+#include <cmdline.h>
+
 unsigned _rte_lcore_id() {
     return rte_lcore_id();
 }
@@ -87,3 +90,6 @@ size_t _rte_eth_tx_buffer_size(size_t size) {
     return RTE_ETH_TX_BUFFER_SIZE(size);
 }
 
+void _cmdline_write(const struct cmdline *cl, const char *str) {
+    cmdline_printf(cl, str);
+}

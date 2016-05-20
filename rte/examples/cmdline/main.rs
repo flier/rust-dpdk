@@ -1,4 +1,9 @@
 #[macro_use]
+extern crate log;
+extern crate env_logger;
+extern crate libc;
+
+#[macro_use]
 extern crate rte;
 
 use std::env;
@@ -10,10 +15,7 @@ struct CmdDelShowResult {
     action: cmdline::FixedStr,
 }
 
-extern "C" fn cmd_obj_del_show_parsed(result: &CmdDelShowResult,
-                                      cl: &cmdline::RawCmdline,
-                                      data: *const c_void) {
-}
+fn cmd_obj_del_show(cl: &cmdline::RawCmdline, _: &CmdDelShowResult, _: Option<c_void>) {}
 
 struct CmdObjAddResult {
     action: cmdline::FixedStr,
@@ -21,18 +23,13 @@ struct CmdObjAddResult {
     ip: cmdline::IpAddr,
 }
 
-extern "C" fn cmd_obj_add_parsed(result: &CmdObjAddResult,
-                                 cl: &cmdline::RawCmdline,
-                                 data: *const c_void) {
-}
+fn cmd_obj_add(cl: &cmdline::RawCmdline, _: &CmdObjAddResult, _: Option<c_void>) {}
 
 struct CmdHelpResult {
     help: cmdline::FixedStr,
 }
 
-extern "C" fn cmd_help_parsed(result: &CmdHelpResult,
-                              cl: &cmdline::RawCmdline,
-                              data: *const c_void) {
+fn cmd_help(cl: &cmdline::RawCmdline, _: &CmdHelpResult, _: Option<c_void>) {
     cl.print(r#"Demo example of command line interface in RTE
 
 
@@ -47,39 +44,47 @@ extended to handle a list of objects. There are
 - add obj_name IP
 - del obj_name
 - show obj_name
-"#);
+"#)
+      .unwrap();
 }
 
-fn handle_commands() {
-    let cmd_obj_action = TOKEN_STRING_INITIALIZER!(CmdDelShowResult, action, "show#del");
+struct CmdQuitResult {
+    help: cmdline::FixedStr,
+}
 
-    let cmd_obj_del_show = cmdline::Inst::new(Some(cmd_obj_del_show_parsed),
-                                              None,
-                                              "Show/del an object",
-                                              &[&cmd_obj_action]);
-
-    let cmd_obj_action_add = TOKEN_STRING_INITIALIZER!(CmdObjAddResult, action, "add");
-    let cmd_obj_name = TOKEN_STRING_INITIALIZER!(CmdObjAddResult, name, "");
-    let cmd_obj_ip = TOKEN_IPADDR_INITIALIZER!(CmdObjAddResult, ip);
-
-    let cmd_obj_add = cmdline::Inst::new(Some(cmd_obj_add_parsed),
-                                         None,
-                                         "Add an object (name, val)",
-                                         &[&cmd_obj_action_add, &cmd_obj_name, &cmd_obj_ip]);
-
-    let cmd_help_help = TOKEN_STRING_INITIALIZER!(CmdHelpResult, help, "help");
-
-    let cmd_help = cmdline::Inst::new(Some(cmd_help_parsed), None, "show help", &[&cmd_help_help]);
-
-    cmdline::new(&[&cmd_obj_del_show, &cmd_obj_add, &cmd_help])
-        .open_stdin("example> ")
-        .interact();
+fn cmd_quit(cl: &cmdline::RawCmdline, result: &CmdQuitResult, data: Option<c_void>) {
+    cl.quit();
 }
 
 fn main() {
+    env_logger::init().unwrap();
+
     let args: Vec<String> = env::args().collect();
 
     eal::init(&args).expect("Cannot init EAL");
 
-    handle_commands()
+    let cmds = &[&cmdline::inst(Some(cmd_obj_del_show),
+                                None,
+                                "Show/del an object",
+                                &[&TOKEN_STRING_INITIALIZER!(CmdDelShowResult,
+                                                             action,
+                                                             "show#del")]),
+                 &cmdline::inst(Some(cmd_obj_add),
+                                None,
+                                "Add an object (name, val)",
+                                &[&TOKEN_STRING_INITIALIZER!(CmdObjAddResult, action, "add"),
+                                  &TOKEN_STRING_INITIALIZER!(CmdObjAddResult, name, ""),
+                                  &TOKEN_IPADDR_INITIALIZER!(CmdObjAddResult, ip)]),
+                 &cmdline::inst(Some(cmd_help),
+                                None,
+                                "show help",
+                                &[&TOKEN_STRING_INITIALIZER!(CmdHelpResult, help, "help")]),
+                 &cmdline::inst(Some(cmd_quit),
+                                None,
+                                "quit",
+                                &[&TOKEN_STRING_INITIALIZER!(CmdQuitResult, help, "quit")])];
+
+    cmdline::new(cmds)
+        .open_stdin("example> ")
+        .interact();
 }
