@@ -1,7 +1,12 @@
 use std::mem;
 use std::ptr;
+use std::str;
+use std::result;
+use std::slice;
+use std::string;
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::path::Path;
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_void};
 
 use libc;
@@ -43,7 +48,23 @@ impl Drop for Token {
 }
 
 pub type FixedStr = ffi::cmdline_fixed_string_t;
-pub type IpAddr = ffi::cmdline_ipaddr_t;
+pub type IpNetAddr = ffi::cmdline_ipaddr_t;
+
+pub fn str(s: &FixedStr) -> result::Result<&str, str::Utf8Error> {
+    unsafe { str::from_utf8(CStr::from_ptr(s.as_ptr()).to_bytes()) }
+}
+
+pub fn ipaddr(ip: &mut IpNetAddr) -> IpAddr {
+    unsafe {
+        if ip.family == libc::AF_INET as u8 {
+            IpAddr::V4(Ipv4Addr::from((*ip.addr.ipv4()).s_addr))
+        } else {
+            let a: &[u16] = slice::from_raw_parts(mem::transmute(ip.addr.ipv6()), 8);
+
+            IpAddr::V6(Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+        }
+    }
+}
 
 /// Macro to get the offset of a struct field in bytes from the address of the
 /// struct.
@@ -79,6 +100,20 @@ macro_rules! offset_of {
 
 #[macro_export]
 macro_rules! TOKEN_STRING_INITIALIZER {
+    ($container:path, $field:ident) => ({
+        $crate::cmdline::Token::Str(
+            $crate::raw::Struct_cmdline_token_string {
+                hdr: $crate::raw::Struct_cmdline_token_hdr {
+                    ops: unsafe { &mut $crate::raw::cmdline_token_string_ops },
+                    offset: offset_of!($container, $field) as u32,
+                },
+                string_data: $crate::raw::Struct_cmdline_token_string_data {
+                    _str: ::std::ptr::null(),
+                },
+            }
+        )
+    });
+
     ($container:path, $field:ident, $string:expr) => ({
         let p = unsafe { ::libc::calloc(1, $string.len()+1) as *mut u8 };
 
@@ -202,20 +237,18 @@ macro_rules! TOKEN_ETHERADDR_INITIALIZER {
     )
 }
 
-pub type InstHandler<T, D> = fn(cmdline: &RawCmdline, result: &T, data: Option<D>);
+pub type InstHandler<T, D> = fn(cmdline: &RawCmdline, result: &mut T, data: Option<*mut D>);
 
 struct CommandHandlerContext<T, D> {
-    data: Option<D>,
-    handler: Option<InstHandler<T, D>>,
+    data: Option<*mut D>,
+    handler: InstHandler<T, D>,
 }
 
-extern "C" fn _command_handler_adapter<T, D>(result: &T,
+extern "C" fn _command_handler_adapter<T, D>(result: &mut T,
                                              cl: *mut ffi::Struct_cmdline,
-                                             data: *mut CommandHandlerContext<T, D>) {
-    let ctxt = unsafe { Box::from_raw(data) };
-
-    if let Some(handler) = ctxt.handler {
-        handler(&RawCmdline(cl, false, false), result, ctxt.data)
+                                             ctxt: *mut CommandHandlerContext<T, D>) {
+    unsafe {
+        ((*ctxt).handler)(&RawCmdline(cl, false, false), result, (*ctxt).data);
     }
 }
 
@@ -238,8 +271,8 @@ impl Inst {
     }
 }
 
-pub fn inst<T, D>(handler: Option<InstHandler<T, D>>,
-                  data: Option<D>,
+pub fn inst<T, D>(handler: InstHandler<T, D>,
+                  data: Option<*mut D>,
                   help: &'static str,
                   tokens: &[&Token])
                   -> Inst {
@@ -248,19 +281,16 @@ pub fn inst<T, D>(handler: Option<InstHandler<T, D>>,
 
         ptr::copy_nonoverlapping(help.as_ptr(), help_str as *mut u8, help.len());
 
-        let inst = libc::calloc(1,
-                                mem::size_of::<ffi::Struct_cmdline_inst>() +
-                                mem::size_of::<RawTokenPtr>() *
-                                tokens.len()) as *mut ffi::Struct_cmdline_inst;
-
-        let ctxt = Box::new(CommandHandlerContext {
-            data: data,
-            handler: handler,
-        });
+        let size = mem::size_of::<ffi::Struct_cmdline_inst>() +
+                   mem::size_of::<RawTokenPtr>() * tokens.len();
+        let inst = libc::calloc(1, size) as *mut ffi::Struct_cmdline_inst;
 
         *inst = ffi::Struct_cmdline_inst {
-            f: Some(mem::transmute(_command_handler_adapter::<T, D>)),
-            data: Box::into_raw(ctxt) as *mut c_void,
+            f: mem::transmute(_command_handler_adapter::<T, D>),
+            data: Box::into_raw(Box::new(CommandHandlerContext {
+                data: data,
+                handler: handler,
+            })) as *mut c_void,
             help_str: help_str,
             tokens: ptr::null_mut(),
         };
@@ -356,9 +386,10 @@ extern "C" {
 }
 
 impl RawCmdline {
-    pub fn print(&self, s: &str) -> Result<()> {
+    pub fn print<T: string::ToString>(&self, s: T) -> Result<()> {
         unsafe {
-            _cmdline_write(self.0, try!(CString::new(s)).as_ptr() as *const i8);
+            _cmdline_write(self.0,
+                           try!(CString::new(s.to_string())).as_ptr() as *const i8);
         }
 
         Ok(())
