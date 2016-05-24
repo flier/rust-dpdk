@@ -4,6 +4,7 @@ use std::str;
 use std::result;
 use std::slice;
 use std::string;
+use std::iter::Iterator;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::path::Path;
 use std::ffi::{CStr, CString};
@@ -13,28 +14,35 @@ use libc;
 
 use ffi;
 
-use errors::Result;
+use errors::{Error, Result};
+use ether;
 
-pub type RawTokenPtr = *const ffi::Struct_cmdline_token_hdr;
+pub type RawTokenHeader = ffi::Struct_cmdline_token_hdr;
+pub type RawTokenPtr = *const RawTokenHeader;
 pub type RawStrToken = ffi::Struct_cmdline_token_string;
 pub type RawNumToken = ffi::Struct_cmdline_token_num;
 pub type RawIpAddrToken = ffi::Struct_cmdline_token_ipaddr;
 pub type RawEtherAddrToken = ffi::Struct_cmdline_token_etheraddr;
+pub type RawPortListToken = ffi::Struct_cmdline_token_portlist;
 
 pub enum Token {
+    Raw(RawTokenPtr),
     Str(RawStrToken),
     Num(RawNumToken),
     IpAddr(RawIpAddrToken),
     EtherAddr(RawEtherAddrToken),
+    PortList(RawPortListToken),
 }
 
 impl Token {
     pub fn as_raw(&self) -> RawTokenPtr {
         match self {
+            &Token::Raw(hdr) => hdr,
             &Token::Str(ref token) => &token.hdr,
             &Token::Num(ref token) => &token.hdr,
             &Token::IpAddr(ref token) => &token.hdr,
             &Token::EtherAddr(ref token) => &token.hdr,
+            &Token::PortList(ref token) => &token.hdr,
         }
     }
 }
@@ -49,6 +57,8 @@ impl Drop for Token {
 
 pub type FixedStr = ffi::cmdline_fixed_string_t;
 pub type IpNetAddr = ffi::cmdline_ipaddr_t;
+pub type EtherAddr = ffi::Struct_ether_addr;
+pub type PortList = ffi::cmdline_portlist_t;
 
 pub fn str(s: &FixedStr) -> result::Result<&str, str::Utf8Error> {
     unsafe { str::from_utf8(CStr::from_ptr(s.as_ptr()).to_bytes()) }
@@ -64,6 +74,26 @@ pub fn ipaddr(ip: &mut IpNetAddr) -> IpAddr {
             IpAddr::V6(Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
         }
     }
+}
+
+pub fn etheraddr(addr: &EtherAddr) -> ether::EtherAddr {
+    ether::EtherAddr::from(addr.addr_bytes)
+}
+
+pub fn portlist(ports: &PortList) -> Vec<u32> {
+    (0..32).filter(|portid| ((1 << portid) as u32 & ports.map) != 0).collect()
+}
+
+pub fn is_end_of_token(c: u8) -> bool {
+    unsafe { ffi::cmdline_isendoftoken(c as i8) != 0 }
+}
+
+pub type RawTokenOps = ffi::Struct_cmdline_token_ops;
+
+macro_rules! cstr {
+    ($s:expr) => (
+        try!(CString::new($s.to_string())).as_ptr() as *const i8
+    )
 }
 
 /// Macro to get the offset of a struct field in bytes from the address of the
@@ -237,7 +267,21 @@ macro_rules! TOKEN_ETHERADDR_INITIALIZER {
     )
 }
 
-pub type InstHandler<T, D> = fn(cmdline: &RawCmdline, result: &mut T, data: Option<*mut D>);
+#[macro_export]
+macro_rules! TOKEN_PORTLIST_INITIALIZER {
+    ($container:path, $field:ident) => (
+        $crate::cmdline::Token::PortList(
+            $crate::raw::Struct_cmdline_token_portlist {
+                hdr: $crate::raw::Struct_cmdline_token_hdr {
+                    ops: unsafe { &mut $crate::raw::cmdline_token_portlist_ops },
+                    offset: offset_of!($container, $field) as u32,
+                }
+            }
+        )
+    )
+}
+
+pub type InstHandler<T, D> = fn(result: &mut T, cmdline: &RawCmdline, data: Option<*mut D>);
 
 struct CommandHandlerContext<T, D> {
     data: Option<*mut D>,
@@ -248,7 +292,7 @@ extern "C" fn _command_handler_adapter<T, D>(result: &mut T,
                                              cl: *mut ffi::Struct_cmdline,
                                              ctxt: *mut CommandHandlerContext<T, D>) {
     unsafe {
-        ((*ctxt).handler)(&RawCmdline(cl, false, false), result, (*ctxt).data);
+        ((*ctxt).handler)(result, &RawCmdline(cl, false, false), (*ctxt).data);
     }
 }
 
@@ -349,15 +393,53 @@ impl Context {
     }
 }
 
-#[allow(non_camel_case_types)]
 #[repr(i32)]
 pub enum ReadlineStatus {
-    RDLINE_INIT = 0,
-    RDLINE_RUNNING = 1,
-    RDLINE_EXITED = 2,
+    Init = 0, // RDLINE_INIT
+    Running = 1, // RDLINE_RUNNING
+    Exited = 2, // RDLINE_EXITED
 }
 
 impl From<i32> for ReadlineStatus {
+    fn from(status: i32) -> Self {
+        unsafe { mem::transmute(status) }
+    }
+}
+
+#[repr(i32)]
+pub enum ParseStatus {
+    Success = ffi::CMDLINE_PARSE_SUCCESS as i32,
+    Ambiguous = ffi::CMDLINE_PARSE_AMBIGUOUS,
+    NoMatch = ffi::CMDLINE_PARSE_NOMATCH,
+    BadArgs = ffi::CMDLINE_PARSE_BAD_ARGS,
+}
+
+impl From<i32> for ParseStatus {
+    fn from(status: i32) -> Self {
+        unsafe { mem::transmute(status) }
+    }
+}
+
+#[repr(i32)]
+pub enum ParseCompleteState {
+    TryToComplete = 0,
+    DisplayChoice = -1,
+}
+
+impl From<i32> for ParseCompleteState {
+    fn from(status: i32) -> Self {
+        unsafe { mem::transmute(status) }
+    }
+}
+
+#[repr(u32)]
+pub enum ParseCompleteStatus {
+    Finished = ffi::CMDLINE_PARSE_COMPLETE_FINISHED,
+    Again = ffi::CMDLINE_PARSE_COMPLETE_AGAIN,
+    Buffer = ffi::CMDLINE_PARSE_COMPLETED_BUFFER,
+}
+
+impl From<i32> for ParseCompleteStatus {
     fn from(status: i32) -> Self {
         unsafe { mem::transmute(status) }
     }
@@ -388,8 +470,7 @@ extern "C" {
 impl RawCmdline {
     pub fn print<T: string::ToString>(&self, s: T) -> Result<()> {
         unsafe {
-            _cmdline_write(self.0,
-                           try!(CString::new(s.to_string())).as_ptr() as *const i8);
+            _cmdline_write(self.0, cstr!(s));
         }
 
         Ok(())
@@ -419,5 +500,27 @@ impl RawCmdline {
 
     pub fn quit(&self) {
         unsafe { ffi::cmdline_quit(self.0) }
+    }
+
+    pub fn parse<T: string::ToString>(&self, buf: T) -> Result<()> {
+        let status = unsafe { ffi::cmdline_parse(self.0, cstr!(buf)) };
+
+        rte_check!(status; err => { Error::RteError(status) })
+    }
+
+    pub fn complete<T: string::ToString>(&self,
+                                         buf: T,
+                                         state: &mut ParseCompleteState,
+                                         dst: &mut [u8])
+                                         -> Result<ParseCompleteStatus> {
+        let status = unsafe {
+            ffi::cmdline_complete(self.0,
+                                  cstr!(buf),
+                                  mem::transmute(state),
+                                  dst.as_mut_ptr() as *mut i8,
+                                  dst.len() as u32)
+        };
+
+        rte_check!(status; ok => { ParseCompleteStatus::from(status) })
     }
 }
