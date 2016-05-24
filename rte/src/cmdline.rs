@@ -8,6 +8,7 @@ use std::iter::Iterator;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::path::Path;
 use std::ffi::{CStr, CString};
+use std::marker::PhantomData;
 use std::os::raw::{c_char, c_void};
 
 use libc;
@@ -25,31 +26,31 @@ pub type RawIpAddrToken = ffi::Struct_cmdline_token_ipaddr;
 pub type RawEtherAddrToken = ffi::Struct_cmdline_token_etheraddr;
 pub type RawPortListToken = ffi::Struct_cmdline_token_portlist;
 
-pub enum Token {
-    Raw(RawTokenPtr),
-    Str(RawStrToken),
-    Num(RawNumToken),
-    IpAddr(RawIpAddrToken),
-    EtherAddr(RawEtherAddrToken),
-    PortList(RawPortListToken),
+pub enum Token<T> {
+    Raw(RawTokenPtr, PhantomData<T>),
+    Str(RawStrToken, PhantomData<T>),
+    Num(RawNumToken, PhantomData<T>),
+    IpAddr(RawIpAddrToken, PhantomData<T>),
+    EtherAddr(RawEtherAddrToken, PhantomData<T>),
+    PortList(RawPortListToken, PhantomData<T>),
 }
 
-impl Token {
+impl<T> Token<T> {
     pub fn as_raw(&self) -> RawTokenPtr {
         match self {
-            &Token::Raw(hdr) => hdr,
-            &Token::Str(ref token) => &token.hdr,
-            &Token::Num(ref token) => &token.hdr,
-            &Token::IpAddr(ref token) => &token.hdr,
-            &Token::EtherAddr(ref token) => &token.hdr,
-            &Token::PortList(ref token) => &token.hdr,
+            &Token::Raw(hdr, _) => hdr,
+            &Token::Str(ref token, _) => &token.hdr,
+            &Token::Num(ref token, _) => &token.hdr,
+            &Token::IpAddr(ref token, _) => &token.hdr,
+            &Token::EtherAddr(ref token, _) => &token.hdr,
+            &Token::PortList(ref token, _) => &token.hdr,
         }
     }
 }
 
-impl Drop for Token {
+impl<T> Drop for Token<T> {
     fn drop(&mut self) {
-        if let &mut Token::Str(ref token) = self {
+        if let &mut Token::Str(ref token, _) = self {
             unsafe { libc::free(token.string_data._str as *mut libc::c_void) }
         }
     }
@@ -140,7 +141,7 @@ macro_rules! TOKEN_STRING_INITIALIZER {
                 string_data: $crate::raw::Struct_cmdline_token_string_data {
                     _str: ::std::ptr::null(),
                 },
-            }
+            }, ::std::marker::PhantomData
         )
     });
 
@@ -158,7 +159,7 @@ macro_rules! TOKEN_STRING_INITIALIZER {
                 string_data: $crate::raw::Struct_cmdline_token_string_data {
                     _str: p as *const i8,
                 },
-            }
+            }, ::std::marker::PhantomData
         )
     })
 }
@@ -166,7 +167,7 @@ macro_rules! TOKEN_STRING_INITIALIZER {
 #[macro_export]
 macro_rules! TOKEN_NUM_INITIALIZER {
     ($container:path, $field:ident, $numtype:expr) => (
-        $crate::cmdline::Token::Str(
+        $crate::cmdline::Token::Num(
             $crate::raw::Struct_cmdline_token_num {
                 hdr: $crate::raw::Struct_cmdline_token_hdr {
                     ops: unsafe { &mut $crate::raw::cmdline_token_string_ops },
@@ -175,7 +176,7 @@ macro_rules! TOKEN_NUM_INITIALIZER {
                 num_data: $crate::raw::Struct_cmdline_token_num_data {
                     _type: $numtype,
                 },
-            }
+            }, ::std::marker::PhantomData
         )
     )
 }
@@ -199,7 +200,7 @@ macro_rules! TOKEN_IPADDR_INITIALIZER {
                 ipaddr_data: $crate::raw::Struct_cmdline_token_ipaddr_data {
                     flags: $flags as u8,
                 }
-            }
+            }, ::std::marker::PhantomData
         )
     )
 }
@@ -262,7 +263,7 @@ macro_rules! TOKEN_ETHERADDR_INITIALIZER {
                     ops: unsafe { &mut $crate::raw::cmdline_token_ipaddr_ops },
                     offset: offset_of!($container, $field) as u32,
                 }
-            }
+            }, ::std::marker::PhantomData
         )
     )
 }
@@ -276,7 +277,7 @@ macro_rules! TOKEN_PORTLIST_INITIALIZER {
                     ops: unsafe { &mut $crate::raw::cmdline_token_portlist_ops },
                     offset: offset_of!($container, $field) as u32,
                 }
-            }
+            }, ::std::marker::PhantomData
         )
     )
 }
@@ -318,7 +319,7 @@ impl Inst {
 pub fn inst<T, D>(handler: InstHandler<T, D>,
                   data: Option<*mut D>,
                   help: &'static str,
-                  tokens: &[&Token])
+                  tokens: &[&Token<T>])
                   -> Inst {
     unsafe {
         let help_str = libc::calloc(1, help.len() + 1) as *mut c_char;

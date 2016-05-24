@@ -14,6 +14,7 @@ use std::ffi::CString;
 use std::net::IpAddr;
 use std::os::raw::c_void;
 use std::collections::HashMap;
+use std::marker::PhantomData;
 
 use rte::*;
 
@@ -226,7 +227,7 @@ fn main() {
         obj_list_data: TokenObjectListData { objs: &mut objects },
     };
 
-    let cmd_obj_obj = cmdline::Token::Raw(&token_obj_list.hdr);
+    let cmd_obj_obj = cmdline::Token::Raw(&token_obj_list.hdr, PhantomData);
 
     let cmd_obj_del_show = cmdline::inst(CmdDelShowResult::parsed,
                                          Some(&mut objects),
