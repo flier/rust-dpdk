@@ -12,7 +12,7 @@ use errors::{Error, Result};
 use mempool;
 use malloc;
 use pci;
-use net::EtherAddr;
+use ether::EtherAddr;
 
 /// A structure used to retrieve link-level information of an Ethernet port.
 pub struct EthLink {

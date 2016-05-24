@@ -23,7 +23,7 @@ pub mod malloc;
 pub mod memzone;
 pub mod mempool;
 pub mod mbuf;
-pub mod net;
+pub mod ether;
 pub mod lcore;
 pub mod cycles;
 pub mod launch;
