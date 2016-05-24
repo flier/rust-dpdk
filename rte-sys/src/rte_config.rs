@@ -57,6 +57,16 @@ pub const ETHER_TYPE_RARP: u32 = 0x8035; // 0x8035
 pub const ETHER_TYPE_SLOW: u32 = 0x8809; // 0x8809
 pub const ETHER_TYPE_TEB: u32 = 0x6558; // 0x6558
 pub const ETHER_TYPE_VLAN: u32 = 0x8100; // 0x8100
+pub const RDLINE_BUF_SIZE: u32 = 512; // 512
+pub const RDLINE_HISTORY_MAX_LINE: u32 = 64; // 64
+pub const RDLINE_PROMPT_SIZE: u32 = 32; // 32
+pub const RDLINE_RES_COMPLETE: u32 = 2; // 2
+pub const RDLINE_RES_EOF: i32 = -2; // -2
+pub const RDLINE_RES_EXITED: i32 = -3; // -3
+pub const RDLINE_RES_NOT_RUNNING: i32 = -1; // -1
+pub const RDLINE_RES_SUCCESS: u32 = 0; // 0
+pub const RDLINE_RES_VALIDATED: u32 = 1; // 1
+pub const RDLINE_VT100_BUF_SIZE: u32 = 8; // 8
 pub const RTE_APP_TEST: u32 = 1; // 1
 pub const RTE_ARCH: &'static str = "x86_64"; // "x86_64"
 pub const RTE_ARCH_64: u32 = 1; // 1
@@ -358,6 +368,7 @@ pub const RTE_XABORT_RETRY: u32 = 1 << 1; // (1 << 1)
 // #define ETHER_MAX_VLAN_FRAME_LEN	(ETHER_MAX_LEN + 4)
 // #define ETHER_MTU	(ETHER_MAX_LEN - ETHER_HDR_LEN - ETHER_CRC_LEN)
 // #define ETHER_VXLAN_HLEN	(sizeof(struct udp_hdr) + sizeof(struct vxlan_hdr))
+// #define RDLINE_HISTORY_BUF_SIZE	BUFSIZ
 // #define RTE_2TUPLE_FLAGS	( RTE_NTUPLE_FLAGS_DST_PORT | RTE_NTUPLE_FLAGS_PROTO)
 // #define RTE_5TUPLE_FLAGS	( RTE_NTUPLE_FLAGS_DST_IP | RTE_NTUPLE_FLAGS_SRC_IP | RTE_NTUPLE_FLAGS_DST_PORT | RTE_NTUPLE_FLAGS_SRC_PORT | RTE_NTUPLE_FLAGS_PROTO)
 // #define RTE_ALIGN(val,align)	RTE_ALIGN_CEIL(val, align)

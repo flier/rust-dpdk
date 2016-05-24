@@ -77,7 +77,7 @@ fn gen_rte_config(base_dir: &PathBuf) {
 
     let f = File::create(&dest_path).unwrap();
 
-    let name_prefixes = &["RTE_", "ETHER_", "CMDLINE_"];
+    let name_prefixes = &["RTE_", "ETHER_", "CMDLINE_", "RDLINE_"];
 
     fn value_types(sign: bool, long: bool) -> &'static str {
         match (sign, long) {
