@@ -1,4 +1,3 @@
-use std::fmt;
 use std::ptr;
 use std::mem;
 use std::ops::{Deref, DerefMut, Range};
@@ -99,11 +98,25 @@ impl EthDevice {
 
     /// Retrieve the contextual information of an Ethernet device.
     pub fn info(&self) -> EthDeviceInfo {
-        let mut info: Box<RawEthDeviceInfo> = Box::new(Default::default());
+        let mut info: RawEthDeviceInfo = Default::default();
 
-        unsafe { ffi::rte_eth_dev_info_get(self.0, info.as_mut()) }
+        unsafe { ffi::rte_eth_dev_info_get(self.0, &mut info) }
 
         EthDeviceInfo(info)
+    }
+
+    /// Retrieve the general I/O statistics of an Ethernet device.
+    pub fn stats(&self) -> Result<EthDeviceStats> {
+        let mut stats: RawEthDeviceStats = Default::default();
+
+        rte_check!(unsafe {
+            ffi::rte_eth_stats_get(self.0, &mut stats)
+        }; ok => { EthDeviceStats(stats)})
+    }
+
+    /// Reset the general I/O statistics of an Ethernet device.
+    pub fn reset_stats(&self) {
+        unsafe { ffi::rte_eth_stats_reset(self.0) }
     }
 
     /// Retrieve the Ethernet address of an Ethernet device.
@@ -336,39 +349,42 @@ impl EthDevice {
 
 pub type RawEthDeviceInfo = ffi::Struct_rte_eth_dev_info;
 
-pub struct EthDeviceInfo(Box<RawEthDeviceInfo>);
-
-impl fmt::Debug for EthDeviceInfo {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,
-               "EthDeviceInfo {{ driver_name: \"{}\", if_index: {} }}",
-               self.driver_name(),
-               self.if_index())
-    }
-}
+pub struct EthDeviceInfo(RawEthDeviceInfo);
 
 impl Deref for EthDeviceInfo {
     type Target = RawEthDeviceInfo;
 
     fn deref(&self) -> &Self::Target {
-        &*self.0
+        &self.0
     }
 }
 
 impl EthDeviceInfo {
     /// Device Driver name.
     pub fn driver_name(&self) -> &str {
-        unsafe { CStr::from_ptr((*self.0).driver_name).to_str().unwrap() }
+        unsafe { CStr::from_ptr(self.0.driver_name).to_str().unwrap() }
     }
 
     /// Index to bound host interface, or 0 if none.
     /// Use if_indextoname() to translate into an interface name.
     pub fn if_index(&self) -> u32 {
-        (*self.0).if_index
+        self.0.if_index
     }
 
     pub fn pci_dev(&self) -> pci::RawDevicePtr {
-        (*self.0).pci_dev
+        self.0.pci_dev
+    }
+}
+
+pub type RawEthDeviceStats = ffi::Struct_rte_eth_stats;
+
+pub struct EthDeviceStats(RawEthDeviceStats);
+
+impl Deref for EthDeviceStats {
+    type Target = RawEthDeviceStats;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
