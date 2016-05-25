@@ -512,6 +512,14 @@ impl RawCmdline {
         Ok(())
     }
 
+    pub fn println<T: string::ToString>(&self, s: T) -> Result<()> {
+        unsafe {
+            _cmdline_write(self.0, try_cstr!(format!("{}\n", s.to_string())));
+        }
+
+        Ok(())
+    }
+
     pub fn set_prompt(&self, s: &str) -> &RawCmdline {
         unsafe {
             ffi::cmdline_set_prompt(self.0, s.as_ptr() as *const i8);
