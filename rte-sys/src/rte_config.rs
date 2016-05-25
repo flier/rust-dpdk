@@ -354,6 +354,12 @@ pub const RTE_TIMER_RUNNING: u32 = 2; // 2
 pub const RTE_TIMER_STOP: u32 = 0; // 0
 pub const RTE_TOOLCHAIN: &'static str = "gcc"; // "gcc"
 pub const RTE_TOOLCHAIN_GCC: u32 = 1; // 1
+pub const RTE_VER_MINOR: u32 = 0; // 0
+pub const RTE_VER_MONTH: u32 = 4; // 4
+pub const RTE_VER_PREFIX: &'static str = "DPDK"; // "DPDK"
+pub const RTE_VER_RELEASE: u32 = 16; // 16
+pub const RTE_VER_SUFFIX: &'static str = ""; // ""
+pub const RTE_VER_YEAR: u32 = 16; // 16
 pub const RTE_XABORT_CAPACITY: u32 = 1 << 3; // (1 << 3)
 pub const RTE_XABORT_CONFLICT: u32 = 1 << 2; // (1 << 2)
 pub const RTE_XABORT_DEBUG: u32 = 1 << 4; // (1 << 4)
@@ -444,5 +450,7 @@ pub const RTE_XABORT_RETRY: u32 = 1 << 1; // (1 << 1)
 // #define RTE_TUNNEL_FILTER_IMAC_TENID	(ETH_TUNNEL_FILTER_IMAC | ETH_TUNNEL_FILTER_TENID)
 // #define RTE_TUNNEL_FILTER_OMAC_TENID_IMAC	(ETH_TUNNEL_FILTER_OMAC | ETH_TUNNEL_FILTER_TENID | ETH_TUNNEL_FILTER_IMAC)
 // #define RTE_VERIFY(exp)	do { if (!(exp)) rte_panic("line %d\tassert \"" #exp "\" failed\n", __LINE__); } while (0)
+// #define RTE_VERSION	RTE_VERSION_NUM( RTE_VER_YEAR, RTE_VER_MONTH, RTE_VER_MINOR, RTE_VER_RELEASE)
+// #define RTE_VERSION_NUM(a,b,c,d)	((a) << 24 | (b) << 16 | (c) << 8 | (d))
 // #define RTE_XABORT_CODE(x)	(((x) >> 24) & 0xff)
 // #define RTE_XBEGIN_STARTED	(~0u)

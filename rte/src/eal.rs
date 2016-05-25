@@ -1,6 +1,6 @@
 use std::mem;
 use std::ptr;
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
 use ffi;
@@ -13,6 +13,8 @@ pub use cycles::*;
 pub use launch::*;
 
 extern "C" {
+    fn _rte_version() -> *const c_char;
+
     fn devinitfn_pmd_af_packet_drv();
     fn devinitfn_bond_drv();
     fn devinitfn_rte_cxgbe_driver();
@@ -56,6 +58,10 @@ unsafe fn init_pmd_drivers() {
     devinitfn_rte_vmxnet3_driver();
 }
 
+pub fn version<'a>() -> &'a str {
+    unsafe { CStr::from_ptr(_rte_version()).to_str().unwrap() }
+}
+
 /// Initialize the Environment Abstraction Layer (EAL).
 ///
 /// This function is to be executed on the MASTER lcore only,
@@ -78,16 +84,16 @@ pub fn init(args: &Vec<String>) -> Result<i32> {
         unsafe { ffi::rte_eal_init(0, ptr::null_mut()) }
     } else {
         let cargs: Vec<Vec<u8>> = args.iter()
-                                      .map(|s| {
-                                          let mut v: Vec<u8> = Vec::from(s.as_bytes());
-                                          v.push(0);
-                                          v
-                                      })
-                                      .collect();
+            .map(|s| {
+                let mut v: Vec<u8> = Vec::from(s.as_bytes());
+                v.push(0);
+                v
+            })
+            .collect();
 
         let mut cptrs: Vec<*mut c_char> = cargs.iter()
-                                               .map(|s| s.as_ptr() as *mut c_char)
-                                               .collect();
+            .map(|s| s.as_ptr() as *mut c_char)
+            .collect();
 
         unsafe { ffi::rte_eal_init(cptrs.len() as i32, cptrs.as_mut_ptr()) }
     };

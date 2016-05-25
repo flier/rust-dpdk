@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include <rte_config.h>
+#include <rte_version.h>
 #include <rte_lcore.h>
 #include <rte_errno.h>
 #include <rte_cycles.h>
@@ -18,6 +19,10 @@ int _rte_errno() {
     return rte_errno;
 }
 
+const char *_rte_version() {
+    return rte_version();
+}
+
 size_t _rte_cache_line_size() {
     return RTE_CACHE_LINE_SIZE;
 }
@@ -28,6 +33,18 @@ uint64_t _rte_rdtsc() {
 
 uint64_t _rte_rdtsc_precise() {
     return rte_rdtsc_precise();
+}
+
+uint16_t
+_rte_eth_rx_burst(uint8_t port_id, uint16_t queue_id,
+         struct rte_mbuf **rx_pkts, const uint16_t nb_pkts) {
+    return rte_eth_rx_burst(port_id, queue_id, rx_pkts, nb_pkts);
+}
+
+uint16_t
+_rte_eth_tx_burst(uint8_t port_id, uint16_t queue_id,
+         struct rte_mbuf **tx_pkts, uint16_t nb_pkts) {
+    return rte_eth_tx_burst(port_id, queue_id, tx_pkts, nb_pkts);
 }
 
 struct rte_eth_conf* _rte_eth_conf_new() {
