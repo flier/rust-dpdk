@@ -49,6 +49,23 @@ pub fn index(lcore_id: i32) -> Option<u32> {
     }
 }
 
+/// Get the next enabled lcore ID.
+pub fn next(lcore_id: u32, skip_master: bool) -> u32 {
+    let mut i = (lcore_id + 1) % ffi::RTE_MAX_LCORE;
+
+    while i < ffi::RTE_MAX_LCORE {
+        if !is_enabled(i) || (skip_master && i == master()) {
+            i = (i + 1) % ffi::RTE_MAX_LCORE;
+
+            continue;
+        }
+
+        break;
+    }
+
+    i
+}
+
 /// Get a lcore's role.
 pub fn role(lcore_id: u32) -> Role {
     unsafe { mem::transmute(ffi::rte_eal_lcore_role(lcore_id)) }
