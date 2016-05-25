@@ -369,10 +369,10 @@ fn main() {
         dev.configure(1, 1, &port_conf)
             .expect(format!("fail to configure device: port={}", portid).as_str());
 
-        let macaddr = dev.macaddr();
+        let mac_addr = dev.mac_addr();
 
         unsafe {
-            l2fwd_ports_eth_addr[portid] = *macaddr.octets();
+            l2fwd_ports_eth_addr[portid] = *mac_addr.octets();
         }
 
         // init one RX queue
@@ -403,7 +403,7 @@ fn main() {
 
         println!("  Port {}, MAC address: {} (promiscuous {})",
                  portid,
-                 macaddr,
+                 mac_addr,
                  dev.is_promiscuous_enabled()
                      .map(|enabled| if enabled {
                          "enabled"
@@ -427,6 +427,8 @@ fn main() {
         dev.stop();
         dev.close();
         println!(" Done");
+
+        let _ = ethdev::TxBuffer::from(l2fwd_tx_buffers[dev.portid()]);
     }
 
     println!("Bye...");

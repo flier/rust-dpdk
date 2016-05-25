@@ -75,7 +75,7 @@ fn setup_ports(app_cfg: &mut AppConfig) {
 
         println!("Init port {}..\n", portid);
 
-        app_port.mac_addr = dev.macaddr();
+        app_port.mac_addr = dev.mac_addr();
         app_port.port_active = true;
         app_port.idx_port = portid;
         app_port.lock = Some(Arc::new(Mutex::new(0)));
@@ -121,7 +121,7 @@ extern "C" fn slave_main(app_cfg: &mut AppConfig) -> i32 {
 
                     // MAC address was updated
                     if app_port.port_dirty {
-                        app_port.mac_addr = dev.macaddr();
+                        app_port.mac_addr = dev.mac_addr();
                         app_port.port_dirty = false;
                     }
 

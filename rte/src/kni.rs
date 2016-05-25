@@ -29,9 +29,9 @@ pub fn close() {
 /// the traditional Linux application talking to.
 ///
 pub fn alloc(pktmbuf_pool: &mempool::RawMemoryPool,
-             conf: &DeviceConf,
-             opts: Option<&RawDeviceOps>)
-             -> Result<RawDevice> {
+             conf: &KniDeviceConf,
+             opts: Option<&KniDeviceOps>)
+             -> Result<KniDevice> {
     unsafe {
         let mut kni_conf = ffi::Struct_rte_kni_conf {
             name: mem::zeroed(),
@@ -49,7 +49,7 @@ pub fn alloc(pktmbuf_pool: &mempool::RawMemoryPool,
 
         let p = ffi::rte_kni_alloc(pktmbuf_pool.as_raw(), &kni_conf, mem::transmute(opts));
 
-        rte_check!(p, NonNull; ok => { RawDevice(p)})
+        rte_check!(p, NonNull; ok => { KniDevice(p)})
     }
 }
 
@@ -60,7 +60,7 @@ bitflags! {
 }
 
 /// Structure for configuring KNI device.
-pub struct DeviceConf<'a> {
+pub struct KniDeviceConf<'a> {
     /// KNI name which will be used in relevant network device.
     /// Let the name as short as possible, as it will be part of memzone name.
     pub name: &'a str,
@@ -78,7 +78,7 @@ pub struct DeviceConf<'a> {
     pub flags: KniFlag,
 }
 
-impl<'a> Default for DeviceConf<'a> {
+impl<'a> Default for KniDeviceConf<'a> {
     fn default() -> Self {
         unsafe { mem::zeroed() }
     }
@@ -90,19 +90,19 @@ pub type ChangeMtuCallback = fn(port_id: u8, new_mut: libc::c_uint) -> libc::c_i
 /// Pointer to function of configuring network interface
 pub type ConfigNetworkInterfaceCallback = fn(port_id: u8, if_up: u8) -> libc::c_int;
 
-pub type RawDeviceOps = ffi::Struct_rte_kni_ops;
+pub type KniDeviceOps = ffi::Struct_rte_kni_ops;
 
 pub type RawDevicePtr = *mut ffi::Struct_rte_kni;
 
-pub struct RawDevice(RawDevicePtr);
+pub struct KniDevice(RawDevicePtr);
 
-impl From<RawDevicePtr> for RawDevice {
+impl From<RawDevicePtr> for KniDevice {
     fn from(p: RawDevicePtr) -> Self {
-        RawDevice(p)
+        KniDevice(p)
     }
 }
 
-impl RawDevice {
+impl KniDevice {
     /// Extract the raw pointer from an underlying object.
     pub fn as_raw(&self) -> RawDevicePtr {
         return self.0;
@@ -113,10 +113,10 @@ impl RawDevice {
     }
 
     /// Get the KNI context of its name.
-    pub fn get(name: &str) -> Result<RawDevice> {
+    pub fn get(name: &str) -> Result<KniDevice> {
         let p = unsafe { ffi::rte_kni_get(try!(CString::new(name)).as_ptr()) };
 
-        rte_check!(p, NonNull; ok => { RawDevice(p) })
+        rte_check!(p, NonNull; ok => { KniDevice(p) })
     }
 
     /// Get the name given to a KNI device
@@ -157,7 +157,7 @@ impl RawDevice {
 
     /// Register KNI request handling for a specified port,
     /// and it can be called by master process or slave process.
-    pub fn register_handlers(&self, opts: Option<&RawDeviceOps>) -> Result<()> {
+    pub fn register_handlers(&self, opts: Option<&KniDeviceOps>) -> Result<()> {
         rte_check!(unsafe { ffi::rte_kni_register_handlers(self.0, mem::transmute(opts)) })
     }
 

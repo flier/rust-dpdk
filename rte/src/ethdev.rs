@@ -1,7 +1,7 @@
 use std::fmt;
 use std::ptr;
 use std::mem;
-use std::ops::{Deref, Range};
+use std::ops::{Deref, DerefMut, Range};
 use std::iter::Map;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
@@ -15,7 +15,7 @@ use mempool;
 use malloc;
 use mbuf;
 use pci;
-use ether::EtherAddr;
+use ether;
 
 /// A structure used to retrieve link-level information of an Ethernet port.
 pub struct EthLink {
@@ -31,6 +31,14 @@ pub struct EthDevice(u8);
 impl From<u8> for EthDevice {
     fn from(portid: u8) -> Self {
         EthDevice(portid)
+    }
+}
+
+impl Deref for EthDevice {
+    type Target = u8;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -92,14 +100,21 @@ impl EthDevice {
     }
 
     /// Retrieve the Ethernet address of an Ethernet device.
-    pub fn macaddr(&self) -> EtherAddr {
+    pub fn mac_addr(&self) -> ether::EtherAddr {
         unsafe {
             let mut addr: ffi::Struct_ether_addr = mem::zeroed();
 
             ffi::rte_eth_macaddr_get(self.0, &mut addr);
 
-            EtherAddr::from(addr.addr_bytes)
+            ether::EtherAddr::from(addr.addr_bytes)
         }
+    }
+
+    /// Set the default MAC address.
+    pub fn set_mac_addr(&self, addr: &[u8; ether::ETHER_ADDR_LEN]) -> Result<()> {
+        rte_check!(unsafe {
+            ffi::rte_eth_dev_default_mac_addr_set(self.0, mem::transmute(addr.as_ptr()))
+        })
     }
 
     /// Return the NUMA socket to which an Ethernet device is connected
@@ -175,7 +190,7 @@ impl EthDevice {
 
     /// Change the MTU of an Ethernet device.
     pub fn set_mtu(&self, mtu: u16) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_set_mtu(self.0) })
+        rte_check!(unsafe { ffi::rte_eth_dev_set_mtu(self.0, mtu) })
     }
 
     /// Retrieve the Ethernet device link status
@@ -222,35 +237,35 @@ impl EthDevice {
 
     /// Link up an Ethernet device.
     pub fn set_link_up(&self) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_set_link_up(self.0) });
+        rte_check!(unsafe { ffi::rte_eth_dev_set_link_up(self.0) })
     }
 
     /// Link down an Ethernet device.
     pub fn set_link_down(&self) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_set_link_down(self.0) });
+        rte_check!(unsafe { ffi::rte_eth_dev_set_link_down(self.0) })
     }
 
     /// Allocate mbuf from mempool, setup the DMA physical address
     /// and then start RX for specified queue of a port. It is used
     /// when rx_deferred_start flag of the specified queue is true.
     pub fn rx_queue_start(&self, rx_queue_id: u16) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_rx_queue_start(self.0, rx_queue_id) });
+        rte_check!(unsafe { ffi::rte_eth_dev_rx_queue_start(self.0, rx_queue_id) })
     }
 
     /// Stop specified RX queue of a port
     pub fn rx_queue_stop(&self, rx_queue_id: u16) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_rx_queue_stop(self.0, rx_queue_id) });
+        rte_check!(unsafe { ffi::rte_eth_dev_rx_queue_stop(self.0, rx_queue_id) })
     }
 
     /// Start TX for specified queue of a port.
     /// It is used when tx_deferred_start flag of the specified queue is true.
     pub fn tx_queue_start(&self, tx_queue_id: u16) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_tx_queue_start(self.0, tx_queue_id) });
+        rte_check!(unsafe { ffi::rte_eth_dev_tx_queue_start(self.0, tx_queue_id) })
     }
 
     /// Stop specified TX queue of a port
     pub fn tx_queue_stop(&self, tx_queue_id: u16) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_tx_queue_stop(self.0, tx_queue_id) });
+        rte_check!(unsafe { ffi::rte_eth_dev_tx_queue_stop(self.0, tx_queue_id) })
     }
 
     /// Start an Ethernet device.
@@ -557,6 +572,7 @@ impl<'a> From<&'a EthConf> for RawEthConf {
     }
 }
 
+pub type RawTxBuffer = ffi::Struct_rte_eth_dev_tx_buffer;
 pub type RawTxBufferPtr = *mut ffi::Struct_rte_eth_dev_tx_buffer;
 
 ///  Structure used to buffer packets for future TX
@@ -569,6 +585,12 @@ impl TxBuffer {
     }
 }
 
+impl From<RawTxBufferPtr> for TxBuffer {
+    fn from(p: RawTxBufferPtr) -> Self {
+        TxBuffer(p)
+    }
+}
+
 impl Drop for TxBuffer {
     fn drop(&mut self) {
         malloc::free(self.0 as *mut c_void);
@@ -577,15 +599,23 @@ impl Drop for TxBuffer {
     }
 }
 
+impl Deref for TxBuffer {
+    type Target = RawTxBuffer;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { &*self.0 }
+    }
+}
+
+impl DerefMut for TxBuffer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { &mut *self.0 }
+    }
+}
+
 pub type TxBufferErrorCallback<T> = fn(unsent: *mut *mut ffi::Struct_rte_mbuf,
                                        count: u16,
                                        userdata: &T);
-
-impl From<RawTxBufferPtr> for TxBuffer {
-    fn from(p: RawTxBufferPtr) -> Self {
-        TxBuffer(p)
-    }
-}
 
 impl TxBuffer {
     /// Initialize default values for buffered transmitting

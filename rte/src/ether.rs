@@ -20,7 +20,7 @@ impl error::Error for AddrParseError {
     }
 }
 
-const ETHER_ADDR_LEN: usize = 6;
+pub const ETHER_ADDR_LEN: usize = 6;
 
 /// A 48-bit (6 byte) buffer containing the MAC address
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, Hash)]
