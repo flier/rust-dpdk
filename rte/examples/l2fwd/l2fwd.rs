@@ -195,7 +195,8 @@ extern "C" {
 
     static mut l2fwd_dst_ports: [libc::uint32_t; RTE_MAX_ETHPORTS as usize];
 
-    static mut l2fwd_tx_buffers: [*mut rte::raw::Struct_rte_eth_dev_tx_buffer; RTE_MAX_ETHPORTS as usize];
+    static mut l2fwd_tx_buffers: [*mut rte::raw::Struct_rte_eth_dev_tx_buffer;
+                                  RTE_MAX_ETHPORTS as usize];
 
     static mut l2fwd_timer_period: libc::int64_t;
 
@@ -288,22 +289,11 @@ fn main() {
                                                        0,
                                                        mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
                                                        eal::socket_id())
-                                 .expect("fail to initial mbuf pool");
+        .expect("fail to initial mbuf pool");
 
-    let mut nb_ports = ethdev::EthDevice::count();
-
-    if nb_ports == 0 {
-        eal::exit(EXIT_FAILURE, "No Ethernet ports - bye\n");
-    }
-
-    if nb_ports > RTE_MAX_ETHPORTS {
-        nb_ports = RTE_MAX_ETHPORTS;
-    }
-
-    let enabled_devices : Vec<ethdev::EthDevice> = (0..nb_ports)
-                            .filter(|portid| (enabled_port_mask & (1 << portid) as u32) != 0) // skip ports that are not enabled
-                            .map(|portid| ethdev::EthDevice::from(portid as u8))
-                            .collect();
+    let enabled_devices: Vec<ethdev::EthDevice> = ethdev::devices()
+        .filter(|dev| ((1 << dev.portid()) & enabled_port_mask) != 0)
+        .collect();
 
     if enabled_devices.is_empty() {
         eal::exit(EXIT_FAILURE,
@@ -377,28 +367,28 @@ fn main() {
         print!("Initializing port {}... ", portid);
 
         dev.configure(1, 1, &port_conf)
-           .expect(format!("fail to configure device: port={}", portid).as_str());
+            .expect(format!("fail to configure device: port={}", portid).as_str());
 
         let macaddr = dev.macaddr();
 
         unsafe {
-            l2fwd_ports_eth_addr[portid] = macaddr.octets();
+            l2fwd_ports_eth_addr[portid] = *macaddr.octets();
         }
 
         // init one RX queue
         dev.rx_queue_setup(0, conf.nb_rxd, None, &l2fwd_pktmbuf_pool)
-           .expect(format!("fail to setup device rx queue: port={}", portid).as_str());
+            .expect(format!("fail to setup device rx queue: port={}", portid).as_str());
 
         // init one TX queue on each port
         dev.tx_queue_setup(0, conf.nb_txd, None)
-           .expect(format!("fail to setup device tx queue: port={}", portid).as_str());
+            .expect(format!("fail to setup device tx queue: port={}", portid).as_str());
 
         // Initialize TX buffers
         let buf = ethdev::TxBuffer::new(MAX_PKT_BURST, dev.socket_id())
-                      .expect(format!("fail to allocate buffer for tx: port={}", portid).as_str());
+            .expect(format!("fail to allocate buffer for tx: port={}", portid).as_str());
 
         buf.count_err_packets()
-           .expect(format!("failt to set error callback for tx buffer: port={}", portid).as_str());
+            .expect(format!("failt to set error callback for tx buffer: port={}", portid).as_str());
 
         unsafe {
             l2fwd_tx_buffers[portid] = buf.into_raw();
@@ -415,14 +405,14 @@ fn main() {
                  portid,
                  macaddr,
                  dev.is_promiscuous_enabled()
-                    .map(|enabled| if enabled {
-                        "enabled"
-                    } else {
-                        "disabled"
-                    })
-                    .expect(format!("fail to enable promiscuous mode for device: port={}",
-                                    portid)
-                                .as_str()));
+                     .map(|enabled| if enabled {
+                         "enabled"
+                     } else {
+                         "disabled"
+                     })
+                     .expect(format!("fail to enable promiscuous mode for device: port={}",
+                                     portid)
+                         .as_str()));
     }
 
     check_all_ports_link_status(&enabled_devices);

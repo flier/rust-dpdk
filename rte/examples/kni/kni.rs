@@ -111,7 +111,7 @@ impl Conf {
 
     fn parse_config(&mut self, arg: &str) -> result::Result<(), String> {
         let mut fields = arg.split(',')
-                            .map(|s| u32::from_str(s).expect("Invalid config parameters"));
+            .map(|s| u32::from_str(s).expect("Invalid config parameters"));
 
         let port_id = try!(fields.next().ok_or("Invalid config parameter, missed port_id field"));
 
@@ -129,9 +129,9 @@ impl Conf {
 
         param.port_id = port_id as u8;
         param.lcore_rx = try!(fields.next()
-                                    .ok_or("Invalid config parameter, missed lcore_rx field"));
+            .ok_or("Invalid config parameter, missed lcore_rx field"));
         param.lcore_tx = try!(fields.next()
-                                    .ok_or("Invalid config parameter, missed lcore_tx field"));
+            .ok_or("Invalid config parameter, missed lcore_tx field"));
 
         if param.lcore_rx >= RTE_MAX_LCORE || param.lcore_tx >= RTE_MAX_LCORE {
             return Err(format!("lcore_rx {} or lcore_tx {} ID could not exceed the maximum {}",
@@ -295,15 +295,15 @@ fn init_port(conf: &Conf,
     info!("Initialising port {} ...", portid);
 
     dev.configure(1, 1, &port_conf)
-       .expect(format!("fail to configure device: port={}", portid).as_str());
+        .expect(format!("fail to configure device: port={}", portid).as_str());
 
     // init one RX queue
     dev.rx_queue_setup(0, NB_RXD, None, &pktmbuf_pool)
-       .expect(format!("fail to setup device rx queue: port={}", portid).as_str());
+        .expect(format!("fail to setup device rx queue: port={}", portid).as_str());
 
     // init one TX queue on each port
     dev.tx_queue_setup(0, NB_TXD, None)
-       .expect(format!("fail to setup device tx queue: port={}", portid).as_str());
+        .expect(format!("fail to setup device tx queue: port={}", portid).as_str());
 
     // Start device
     dev.start().expect(format!("fail to start device: port={}", portid).as_str());
@@ -318,9 +318,9 @@ fn init_port(conf: &Conf,
 extern "C" fn kni_change_mtu(port_id: u8, new_mtu: libc::c_uint) -> libc::c_int {
     debug!("port {} change MTU to {}", port_id, new_mtu);
 
-    let nb_sys_ports = ethdev::EthDevice::count();
+    let nb_sys_ports = ethdev::count();
 
-    if port_id as u32 > nb_sys_ports || port_id as u32 > RTE_MAX_ETHPORTS {
+    if port_id > nb_sys_ports || port_id as u32 > RTE_MAX_ETHPORTS {
         error!("Invalid port id {}", port_id);
 
         return -libc::EINVAL;
@@ -369,9 +369,9 @@ extern "C" fn kni_config_network_interface(port_id: u8, if_up: u8) -> libc::c_in
                "down"
            });
 
-    let nb_sys_ports = ethdev::EthDevice::count();
+    let nb_sys_ports = ethdev::count();
 
-    if port_id as u32 > nb_sys_ports || port_id as u32 > RTE_MAX_ETHPORTS {
+    if port_id > nb_sys_ports || port_id as u32 > RTE_MAX_ETHPORTS {
         error!("Invalid port id {}", port_id);
 
         return -libc::EINVAL;
@@ -422,25 +422,25 @@ fn kni_alloc(conf: &Conf, dev: &ethdev::EthDevice, pktmbuf_pool: &mempool::RawMe
 
 
         let kni = (if i == 0 {
-                      // The first KNI device associated to a port is the master,
-                      // for multiple kernel thread environment.
-                      let info = dev.info();
-                      let pci_dev = unsafe { &*info.pci_dev() };
+                // The first KNI device associated to a port is the master,
+                // for multiple kernel thread environment.
+                let info = dev.info();
+                let pci_dev = unsafe { &*info.pci_dev() };
 
-                      conf.pci_addr = pci_dev.addr;
-                      conf.pci_id = pci_dev.id;
+                conf.pci_addr = pci_dev.addr;
+                conf.pci_id = pci_dev.id;
 
-                      let ops = kni::RawDeviceOps {
-                          port_id: portid,
-                          change_mtu: Some(kni_change_mtu),
-                          config_network_if: Some(kni_config_network_interface),
-                      };
+                let ops = kni::RawDeviceOps {
+                    port_id: portid,
+                    change_mtu: Some(kni_change_mtu),
+                    config_network_if: Some(kni_config_network_interface),
+                };
 
-                      kni::alloc(&pktmbuf_pool, &conf, Some(&ops))
-                  } else {
-                      kni::alloc(&pktmbuf_pool, &conf, None)
-                  })
-                  .expect(format!("Fail to create kni for port: {}", portid).as_str());
+                kni::alloc(&pktmbuf_pool, &conf, Some(&ops))
+            } else {
+                kni::alloc(&pktmbuf_pool, &conf, None)
+            })
+            .expect(format!("Fail to create kni for port: {}", portid).as_str());
 
         param.kni[i as usize] = kni.as_raw();
 
@@ -543,8 +543,6 @@ extern "C" {
 }
 
 extern "C" fn main_loop(conf: *const Conf) -> i32 {
-    let nb_sys_ports = ethdev::EthDevice::count();
-
     enum LcoreType<'a> {
         Rx(&'a Struct_kni_port_params),
         Tx(&'a Struct_kni_port_params),
@@ -553,7 +551,7 @@ extern "C" fn main_loop(conf: *const Conf) -> i32 {
     let lcore_id = lcore::id().unwrap();
     let mut lcore_type: Option<LcoreType> = None;
 
-    for portid in 0..nb_sys_ports {
+    for portid in ethdev::ports() {
         if unsafe { (*conf).port_params[portid as usize].is_null() } {
             continue;
         }
@@ -606,7 +604,7 @@ fn main() {
     debug!("eal args: {:?}, l2fwd args: {:?}", eal_args, opt_args);
 
     // Initialise EAL
-    eal::init(&eal_args);
+    eal::init(&eal_args).expect("Cannot init EAL");
 
     // Parse application arguments (after the EAL ones)
     let conf = parse_args(&opt_args).expect("Could not parse input parameters");
@@ -622,25 +620,19 @@ fn main() {
                                                  0,
                                                  MBUF_DATA_SZ as u16,
                                                  eal::socket_id())
-                           .expect("fail to initial mbuf pool");
+        .expect("fail to initial mbuf pool");
 
-    let mut nb_sys_ports = ethdev::EthDevice::count();
+    let enabled_devices: Vec<ethdev::EthDevice> = ethdev::devices()
+        .filter(|dev| ((1 << dev.portid()) & conf.enabled_port_mask) != 0)
+        .collect();
 
-    if nb_sys_ports == 0 {
-        eal::exit(EXIT_FAILURE, "No Ethernet ports - bye\n");
+    if enabled_devices.is_empty() {
+        eal::exit(EXIT_FAILURE,
+                  "All available ports are disabled. Please set portmask.\n");
     }
-
-    if nb_sys_ports > RTE_MAX_ETHPORTS {
-        nb_sys_ports = RTE_MAX_ETHPORTS;
-    }
-
-    let enabled_devices : Vec<ethdev::EthDevice> = (0..nb_sys_ports)
-                            .filter(|portid| (conf.enabled_port_mask & (1 << portid) as u32) != 0) // skip ports that are not enabled
-                            .map(|portid| ethdev::EthDevice::from(portid as u8))
-                            .collect();
 
     // Initialize KNI subsystem
-    init_kni(&conf).expect("Cannot init EAL");
+    init_kni(&conf);
 
     // Initialise each port
     let port_conf = ethdev::EthConf::default();

@@ -1,6 +1,8 @@
 use std::fmt;
 use std::ptr;
 use std::mem;
+use std::ops::{Deref, Range};
+use std::iter::Map;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 
@@ -11,6 +13,7 @@ use ffi;
 use errors::{Error, Result};
 use mempool;
 use malloc;
+use mbuf;
 use pci;
 use ether::EtherAddr;
 
@@ -31,31 +34,38 @@ impl From<u8> for EthDevice {
     }
 }
 
+/// Get the total number of Ethernet devices that have been successfully initialized
+/// by the matching Ethernet driver during the PCI probing phase.
+///
+/// All devices whose port identifier is in the range [0, rte::ethdev::count() - 1]
+/// can be operated on by network applications immediately after invoking rte_eal_init().
+/// If the application unplugs a port using hotplug function,
+/// The enabled port numbers may be noncontiguous.
+/// In the case, the applications need to manage enabled port by themselves.
+pub fn count() -> u8 {
+    unsafe { ffi::rte_eth_dev_count() }
+}
+
+pub fn ports() -> Range<u8> {
+    0..count()
+}
+
+pub fn devices() -> Map<Range<u8>, fn(u8) -> EthDevice> {
+    (0..count()).map(EthDevice::from)
+}
+
+/// Attach a new Ethernet device specified by aruguments.
+pub fn attach(devargs: &str) -> Result<EthDevice> {
+    let mut portid: u8 = 0;
+
+    let ret = unsafe { ffi::rte_eth_dev_attach(try!(CString::new(devargs)).as_ptr(), &mut portid) };
+
+    rte_check!(ret; ok => { EthDevice(portid) })
+}
+
 impl EthDevice {
     pub fn portid(&self) -> u8 {
         self.0
-    }
-
-    /// Get the total number of Ethernet devices that have been successfully initialized
-    /// by the matching Ethernet driver during the PCI probing phase.
-    ///
-    /// All devices whose port identifier is in the range [0, rte::ethdev::count() - 1]
-    /// can be operated on by network applications immediately after invoking rte_eal_init().
-    /// If the application unplugs a port using hotplug function, The enabled port numbers may be noncontiguous.
-    /// In the case, the applications need to manage enabled port by themselves.
-    pub fn count() -> u32 {
-        unsafe { ffi::rte_eth_dev_count() as u32 }
-    }
-
-    /// Attach a new Ethernet device specified by aruguments.
-    pub fn attach(devargs: &str) -> Result<Self> {
-        let mut portid: u8 = 0;
-
-        let ret = unsafe {
-            ffi::rte_eth_dev_attach(try!(CString::new(devargs)).as_ptr(), &mut portid)
-        };
-
-        rte_check!(ret; ok => { EthDevice(portid) })
     }
 
     /// Configure an Ethernet device.
@@ -74,7 +84,7 @@ impl EthDevice {
 
     /// Retrieve the contextual information of an Ethernet device.
     pub fn info(&self) -> EthDeviceInfo {
-        let mut info: Box<ffi::Struct_rte_eth_dev_info> = Box::new(Default::default());
+        let mut info: Box<RawEthDeviceInfo> = Box::new(Default::default());
 
         unsafe { ffi::rte_eth_dev_info_get(self.0, info.as_mut()) }
 
@@ -206,9 +216,25 @@ impl EthDevice {
     pub fn close(&self) {
         unsafe { ffi::rte_eth_dev_close(self.0) }
     }
+
+    /// Retrieve a burst of input packets from a receive queue of an Ethernet device.
+    pub fn rx_burst(&self, queue_id: u16, rx_pkts: &mut [mbuf::RawMbufPtr]) -> usize {
+        unsafe {
+            _rte_eth_rx_burst(self.0, queue_id, rx_pkts.as_mut_ptr(), rx_pkts.len() as u16) as usize
+        }
+    }
+
+    /// Send a burst of output packets on a transmit queue of an Ethernet device.
+    pub fn tx_burst(&self, queue_id: u16, rx_pkts: &mut [mbuf::RawMbufPtr]) -> usize {
+        unsafe {
+            _rte_eth_tx_burst(self.0, queue_id, rx_pkts.as_mut_ptr(), rx_pkts.len() as u16) as usize
+        }
+    }
 }
 
-pub struct EthDeviceInfo(Box<ffi::Struct_rte_eth_dev_info>);
+pub type RawEthDeviceInfo = ffi::Struct_rte_eth_dev_info;
+
+pub struct EthDeviceInfo(Box<RawEthDeviceInfo>);
 
 impl fmt::Debug for EthDeviceInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -219,13 +245,22 @@ impl fmt::Debug for EthDeviceInfo {
     }
 }
 
+impl Deref for EthDeviceInfo {
+    type Target = RawEthDeviceInfo;
+
+    fn deref(&self) -> &Self::Target {
+        &*self.0
+    }
+}
+
 impl EthDeviceInfo {
     /// Device Driver name.
     pub fn driver_name(&self) -> &str {
         unsafe { CStr::from_ptr((*self.0).driver_name).to_str().unwrap() }
     }
 
-    /// Index to bound host interface, or 0 if none. Use if_indextoname() to translate into an interface name.
+    /// Index to bound host interface, or 0 if none.
+    /// Use if_indextoname() to translate into an interface name.
     pub fn if_index(&self) -> u32 {
         (*self.0).if_index
     }
@@ -384,7 +419,8 @@ pub struct EthConf {
     ///
     /// ETH_LINK_SPEED_FIXED disables link autonegotiation, and a unique speed shall be set.
     /// Otherwise, the bitmap defines the set of speeds to be advertised.
-    /// If the special value ETH_LINK_SPEED_AUTONEG (0) is used, all speeds supported are advertised.
+    /// If the special value ETH_LINK_SPEED_AUTONEG (0) is used,
+    /// all speeds supported are advertised.
     pub link_speeds: LinkSpeed,
     /// Port RX configuration.
     pub rxmode: Option<EthRxMode>,
@@ -459,9 +495,7 @@ impl<'a> From<&'a EthConf> for RawEthConf {
             if let Some(ref adv_conf) = c.rx_adv_conf {
                 if let Some(ref rss_conf) = adv_conf.rss_conf {
                     let (rss_key, rss_key_len) = rss_conf.key
-                                                         .map_or_else(|| (ptr::null(), 0), |key| {
-                                                             (key.as_ptr(), key.len() as u8)
-                                                         });
+                        .map_or_else(|| (ptr::null(), 0), |key| (key.as_ptr(), key.len() as u8));
 
                     _rte_eth_conf_set_rss_conf(conf, rss_key, rss_key_len, rss_conf.hash.bits);
                 }
@@ -571,6 +605,18 @@ impl TxBuffer {
 }
 
 extern "C" {
+    fn _rte_eth_rx_burst(port_id: libc::uint8_t,
+                         queue_id: libc::uint16_t,
+                         rx_pkts: *mut mbuf::RawMbufPtr,
+                         nb_pkts: libc::uint16_t)
+                         -> libc::uint16_t;
+
+    fn _rte_eth_tx_burst(port_id: libc::uint8_t,
+                         queue_id: libc::uint16_t,
+                         tx_pkts: *mut mbuf::RawMbufPtr,
+                         nb_pkts: libc::uint16_t)
+                         -> libc::uint16_t;
+
     fn _rte_eth_conf_new() -> RawEthConfPtr;
 
     fn _rte_eth_conf_free(conf: RawEthConfPtr);
