@@ -93,6 +93,12 @@ pub type RawTokenOps = ffi::Struct_cmdline_token_ops;
 
 macro_rules! cstr {
     ($s:expr) => (
+        CString::new($s).unwrap().as_ptr() as *const i8
+    )
+}
+
+macro_rules! try_cstr {
+    ($s:expr) => (
         try!(CString::new($s.to_string())).as_ptr() as *const i8
     )
 }
@@ -341,9 +347,9 @@ pub fn inst<T, D>(handler: InstHandler<T, D>,
         };
 
         ptr::copy_nonoverlapping(tokens.iter()
-                                       .map(|ref token| token.as_raw())
-                                       .collect::<Vec<RawTokenPtr>>()
-                                       .as_ptr(),
+                                     .map(|ref token| token.as_raw())
+                                     .collect::<Vec<RawTokenPtr>>()
+                                     .as_ptr(),
                                  mem::transmute(&((*inst).tokens)),
                                  tokens.len());
 
@@ -356,9 +362,9 @@ pub fn new(insts: &[&Inst]) -> Context {
         let p = libc::calloc(insts.len() + 1, mem::size_of::<RawInstPtr>()) as *mut RawInstPtr;
 
         ptr::copy_nonoverlapping(insts.iter()
-                                      .map(|ref inst| inst.as_raw())
-                                      .collect::<Vec<RawInstPtr>>()
-                                      .as_ptr(),
+                                     .map(|ref inst| inst.as_raw())
+                                     .collect::<Vec<RawInstPtr>>()
+                                     .as_ptr(),
                                  p,
                                  insts.len());
 
@@ -376,9 +382,7 @@ impl Drop for Context {
 
 impl Context {
     pub fn open_stdin(&self, prompt: &str) -> RawCmdline {
-        RawCmdline(unsafe {
-                       ffi::cmdline_stdin_new(mem::transmute(self.0), prompt.as_ptr() as *const i8)
-                   },
+        RawCmdline(unsafe { ffi::cmdline_stdin_new(mem::transmute(self.0), cstr!(prompt)) },
                    true,
                    true)
     }
@@ -386,8 +390,12 @@ impl Context {
     pub fn open_file<P: AsRef<Path>>(&self, prompt: &str, path: P) -> RawCmdline {
         RawCmdline(unsafe {
                        ffi::cmdline_file_new(mem::transmute(self.0),
-                                         prompt.as_ptr() as *const i8,
-                                         path.as_ref().as_os_str().to_str().unwrap().as_ptr() as *const i8)
+                                             cstr!(prompt),
+                                             path.as_ref()
+                                                 .as_os_str()
+                                                 .to_str()
+                                                 .unwrap()
+                                                 .as_ptr() as *const i8)
                    },
                    true,
                    false)
@@ -471,7 +479,7 @@ extern "C" {
 impl RawCmdline {
     pub fn print<T: string::ToString>(&self, s: T) -> Result<()> {
         unsafe {
-            _cmdline_write(self.0, cstr!(s));
+            _cmdline_write(self.0, try_cstr!(s));
         }
 
         Ok(())
@@ -504,7 +512,7 @@ impl RawCmdline {
     }
 
     pub fn parse<T: string::ToString>(&self, buf: T) -> Result<()> {
-        let status = unsafe { ffi::cmdline_parse(self.0, cstr!(buf)) };
+        let status = unsafe { ffi::cmdline_parse(self.0, try_cstr!(buf)) };
 
         rte_check!(status; err => { Error::RteError(status) })
     }
@@ -516,7 +524,7 @@ impl RawCmdline {
                                          -> Result<ParseCompleteStatus> {
         let status = unsafe {
             ffi::cmdline_complete(self.0,
-                                  cstr!(buf),
+                                  try_cstr!(buf),
                                   mem::transmute(state),
                                   dst.as_mut_ptr() as *mut i8,
                                   dst.len() as u32)
