@@ -1,1 +1,48 @@
+use std::mem;
+use std::sync::Mutex;
 
+use rte::*;
+
+pub const MAX_PORTS: u8 = RTE_MAX_ETHPORTS as u8;
+
+pub const MAX_BURST_LENGTH: usize = 32;
+
+pub struct TxQueuePort {
+    pub cnt_unsent: usize,
+    pub buf_frames: [mbuf::RawMbufPtr; MAX_BURST_LENGTH],
+}
+
+pub struct AppPort {
+    pub mac_addr: ether::EtherAddr,
+    pub txq: TxQueuePort,
+    pub port_id: u8,
+    pub port_active: bool,
+    pub port_dirty: bool,
+    pub pkt_pool: Option<mempool::RawMemoryPool>,
+}
+
+impl Default for AppPort {
+    fn default() -> Self {
+        unsafe { mem::zeroed() }
+    }
+}
+
+pub struct AppConfig {
+    pub ports: Vec<Mutex<AppPort>>,
+    pub exit_now: bool,
+}
+
+impl Default for AppConfig {
+    fn default() -> Self {
+        unsafe { mem::zeroed() }
+    }
+}
+
+impl AppConfig {
+    pub fn new(ports: u32) -> AppConfig {
+        AppConfig {
+            ports: (0..ports).map(|_| Mutex::new(AppPort::default())).collect(),
+            exit_now: false,
+        }
+    }
+}

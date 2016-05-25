@@ -17,6 +17,13 @@ use mbuf;
 use pci;
 use ether;
 
+const BOOL_TRUE: u8 = 1;
+const BOOL_FALSE: u8 = 0;
+
+macro_rules! bool_value {
+    ($b:expr) => ( if $b { BOOL_TRUE } else { BOOL_FALSE })
+}
+
 /// A structure used to retrieve link-level information of an Ethernet port.
 pub struct EthLink {
     pub speed: u32,
@@ -123,7 +130,7 @@ impl EthDevice {
     }
 
     /// Check if port_id of device is attached
-    pub fn is_attached(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         unsafe { ffi::rte_eth_dev_is_valid_port(self.0) != 0 }
     }
 
@@ -296,6 +303,35 @@ impl EthDevice {
             _rte_eth_tx_burst(self.0, queue_id, rx_pkts.as_mut_ptr(), rx_pkts.len() as u16) as usize
         }
     }
+
+    /// Set RX L2 Filtering mode of a VF of an Ethernet device.
+    pub fn set_vf_rxmode(&self, vf: u16, rx_mode: EthVmdqRxMode, on: bool) -> Result<()> {
+        rte_check!(unsafe {
+            ffi::rte_eth_dev_set_vf_rxmode(self.0, vf, rx_mode.bits, bool_value!(on))
+        })
+    }
+
+    /// Enable or disable a VF traffic transmit of the Ethernet device.
+    pub fn set_vf_tx(&self, vf: u16, on: bool) -> Result<()> {
+        rte_check!(unsafe { ffi::rte_eth_dev_set_vf_tx(self.0, vf, bool_value!(on)) })
+    }
+
+    /// Enable or disable a VF traffic receive of an Ethernet device.
+    pub fn set_vf_rx(&self, vf: u16, on: bool) -> Result<()> {
+        rte_check!(unsafe { ffi::rte_eth_dev_set_vf_rx(self.0, vf, bool_value!(on)) })
+    }
+
+    /// Read VLAN Offload configuration from an Ethernet device
+    pub fn vlan_offload(&self) -> Result<EthVlanOffloadMode> {
+        let mode = unsafe { ffi::rte_eth_dev_get_vlan_offload(self.0) };
+
+        rte_check!(mode; ok => { EthVlanOffloadMode::from_bits_truncate(mode) })
+    }
+
+    /// Set VLAN offload configuration on an Ethernet device
+    pub fn set_vlan_offload(&self, mode: EthVlanOffloadMode) -> Result<()> {
+        rte_check!(unsafe { ffi::rte_eth_dev_set_vlan_offload(self.0, mode.bits) })
+    }
 }
 
 pub type RawEthDeviceInfo = ffi::Struct_rte_eth_dev_info;
@@ -336,12 +372,49 @@ impl EthDeviceInfo {
     }
 }
 
+bitflags! {
+    /// Definitions used for VMDQ pool rx mode setting
+    pub flags EthVmdqRxMode : u16 {
+        /// accept untagged packets.
+        const ETH_VMDQ_ACCEPT_UNTAG     = 0x0001,
+        /// accept packets in multicast table .
+        const ETH_VMDQ_ACCEPT_HASH_MC   = 0x0002,
+        /// accept packets in unicast table.
+        const ETH_VMDQ_ACCEPT_HASH_UC   = 0x0004,
+        /// accept broadcast packets.
+        const ETH_VMDQ_ACCEPT_BROADCAST = 0x0008,
+        /// multicast promiscuous.
+        const ETH_VMDQ_ACCEPT_MULTICAST = 0x0010,
+    }
+}
+
 /// A set of values to identify what method is to be used to route packets to multiple queues.
 bitflags! {
     pub flags EthRxMultiQueueMode: u32 {
         const ETH_MQ_RX_RSS_FLAG    = 0x1,
         const ETH_MQ_RX_DCB_FLAG    = 0x2,
         const ETH_MQ_RX_VMDQ_FLAG   = 0x4,
+    }
+}
+
+bitflags! {
+    /// Definitions used for VLAN Offload functionality
+    pub flags EthVlanOffloadMode: i32 {
+        /// VLAN Strip  On/Off
+        const ETH_VLAN_STRIP_OFFLOAD  = 0x0001,
+        /// VLAN Filter On/Off
+        const ETH_VLAN_FILTER_OFFLOAD = 0x0002,
+        /// VLAN Extend On/Off
+        const ETH_VLAN_EXTEND_OFFLOAD = 0x0004,
+
+        /// VLAN Strip  setting mask
+        const ETH_VLAN_STRIP_MASK     = 0x0001,
+        /// VLAN Filter  setting mask
+        const ETH_VLAN_FILTER_MASK    = 0x0002,
+        /// VLAN Extend  setting mask
+        const ETH_VLAN_EXTEND_MASK    = 0x0004,
+        /// VLAN ID is in lower 12 bits
+        const ETH_VLAN_ID_MAX         = 0x0FFF,
     }
 }
 

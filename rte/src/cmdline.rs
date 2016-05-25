@@ -56,6 +56,8 @@ impl<T> Drop for Token<T> {
     }
 }
 
+pub type NumType = ffi::Enum_cmdline_numtype;
+
 pub type FixedStr = ffi::cmdline_fixed_string_t;
 pub type IpNetAddr = ffi::cmdline_ipaddr_t;
 pub type EtherAddr = ffi::Struct_ether_addr;
@@ -172,11 +174,36 @@ macro_rules! TOKEN_STRING_INITIALIZER {
 
 #[macro_export]
 macro_rules! TOKEN_NUM_INITIALIZER {
+    ($container:path, $field:ident, u8) => (
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::Enum_cmdline_numtype::UINT8)
+    );
+    ($container:path, $field:ident, u16) => (
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::Enum_cmdline_numtype::UINT16)
+    );
+    ($container:path, $field:ident, u32) => (
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::Enum_cmdline_numtype::UINT32)
+    );
+    ($container:path, $field:ident, u64) => (
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::Enum_cmdline_numtype::UINT64)
+    );
+    ($container:path, $field:ident, i8) => (
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::Enum_cmdline_numtype::INT8)
+    );
+    ($container:path, $field:ident, i16) => (
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::Enum_cmdline_numtype::INT16)
+    );
+    ($container:path, $field:ident, i32) => (
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::Enum_cmdline_numtype::INT32)
+    );
+    ($container:path, $field:ident, i64) => (
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::Enum_cmdline_numtype::INT64)
+    );
+
     ($container:path, $field:ident, $numtype:expr) => (
         $crate::cmdline::Token::Num(
             $crate::raw::Struct_cmdline_token_num {
                 hdr: $crate::raw::Struct_cmdline_token_hdr {
-                    ops: unsafe { &mut $crate::raw::cmdline_token_string_ops },
+                    ops: unsafe { &mut $crate::raw::cmdline_token_num_ops },
                     offset: offset_of!($container, $field) as u32,
                 },
                 num_data: $crate::raw::Struct_cmdline_token_num_data {
@@ -266,7 +293,7 @@ macro_rules! TOKEN_ETHERADDR_INITIALIZER {
         $crate::cmdline::Token::EtherAddr(
             $crate::raw::Struct_cmdline_token_etheraddr {
                 hdr: $crate::raw::Struct_cmdline_token_hdr {
-                    ops: unsafe { &mut $crate::raw::cmdline_token_ipaddr_ops },
+                    ops: unsafe { &mut $crate::raw::cmdline_token_etheraddr_ops },
                     offset: offset_of!($container, $field) as u32,
                 }
             }, ::std::marker::PhantomData

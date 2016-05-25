@@ -11,144 +11,113 @@ mod ethapp;
 
 use std::mem;
 use std::env;
-use std::sync::{Arc, Mutex};
 
 use rte::*;
 
-const MAX_PORTS: u8 = RTE_MAX_ETHPORTS as u8;
+use ethtool::*;
 
-const MAX_BURST_LENGTH: usize = 32;
 const PORT_RX_QUEUE_SIZE: u16 = 128;
 const PORT_TX_QUEUE_SIZE: u16 = 256;
+
 const PKTPOOL_EXTRA_SIZE: u16 = 512;
 const PKTPOOL_CACHE: u32 = 32;
 
 const EXIT_FAILURE: i32 = -1;
 
-struct TxQueuePort {
-    cnt_unsent: usize,
-    buf_frames: [mbuf::RawMbufPtr; MAX_BURST_LENGTH],
-}
-
-struct AppPort {
-    mac_addr: ether::EtherAddr,
-    txq: TxQueuePort,
-    lock: Option<Arc<Mutex<u32>>>,
-    port_active: bool,
-    port_dirty: bool,
-    idx_port: u32,
-    pkt_pool: Option<mempool::RawMemoryPool>,
-}
-
-struct AppConfig {
-    ports: [AppPort; MAX_PORTS as usize],
-    cnt_ports: u32,
-    exit_now: bool,
-}
-
-impl AppConfig {
-    fn default() -> Self {
-        unsafe { mem::zeroed() }
-    }
-}
-
 fn setup_ports(app_cfg: &mut AppConfig) {
     let port_conf = ethdev::EthConf::default();
 
-    for portid in 0..app_cfg.cnt_ports {
-        let app_port = &mut app_cfg.ports[portid as usize];
+    for (portid, mutex) in app_cfg.ports.iter().enumerate() {
+        if let Ok(mut guard) = mutex.lock() {
+            let app_port: &mut AppPort = &mut *guard;
 
-        let dev = ethdev::EthDevice::from(portid as u8);
-        let dev_info = dev.info();
+            let dev = ethdev::EthDevice::from(portid as u8);
+            let dev_info = dev.info();
 
-        let info: &ethdev::RawEthDeviceInfo = &*dev_info;
+            let info: &ethdev::RawEthDeviceInfo = &*dev_info;
 
-        let size_pktpool = info.rx_desc_lim.nb_max + info.tx_desc_lim.nb_max + PKTPOOL_EXTRA_SIZE;
+            let size_pktpool = info.rx_desc_lim.nb_max + info.tx_desc_lim.nb_max +
+                               PKTPOOL_EXTRA_SIZE;
 
-        app_port.pkt_pool = Some(mbuf::pktmbuf_pool_create(&format!("pkt_pool{}", portid),
-                                                           size_pktpool as u32,
-                                                           PKTPOOL_CACHE,
-                                                           0,
-                                                           mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
-                                                           eal::socket_id())
-            .expect("create mbuf pool failed"));
+            app_port.pkt_pool = Some(mbuf::pktmbuf_pool_create(&format!("pkt_pool{}", portid),
+                                                               size_pktpool as u32,
+                                                               PKTPOOL_CACHE,
+                                                               0,
+                                                               mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
+                                                               eal::socket_id())
+                .expect("create mbuf pool failed"));
 
-        println!("Init port {}..\n", portid);
+            println!("Init port {}..\n", portid);
 
-        app_port.mac_addr = dev.mac_addr();
-        app_port.port_active = true;
-        app_port.idx_port = portid;
-        app_port.lock = Some(Arc::new(Mutex::new(0)));
+            app_port.mac_addr = dev.mac_addr();
+            app_port.port_active = true;
+            app_port.port_id = portid as u8;
 
-        dev.configure(1, 1, &port_conf)
-            .expect(format!("fail to configure device: port={}", portid).as_str());
+            dev.configure(1, 1, &port_conf)
+                .expect(format!("fail to configure device: port={}", portid).as_str());
 
-        // init one RX queue
-        dev.rx_queue_setup(0, PORT_RX_QUEUE_SIZE, None, &app_port.pkt_pool.unwrap())
-            .expect(format!("fail to setup device rx queue: port={}", portid).as_str());
+            // init one RX queue
+            dev.rx_queue_setup(0, PORT_RX_QUEUE_SIZE, None, &app_port.pkt_pool.unwrap())
+                .expect(format!("fail to setup device rx queue: port={}", portid).as_str());
 
-        // init one TX queue on each port
-        dev.tx_queue_setup(0, PORT_TX_QUEUE_SIZE, None)
-            .expect(format!("fail to setup device tx queue: port={}", portid).as_str());
+            // init one TX queue on each port
+            dev.tx_queue_setup(0, PORT_TX_QUEUE_SIZE, None)
+                .expect(format!("fail to setup device tx queue: port={}", portid).as_str());
 
-        // Start device
-        dev.start().expect(format!("fail to start device: port={}", portid).as_str());
+            // Start device
+            dev.start().expect(format!("fail to start device: port={}", portid).as_str());
 
-        dev.promiscuous_enable();
+            dev.promiscuous_enable();
+        }
     }
 }
 
-fn process_frame(app_port: &AppPort, frame: mbuf::RawMbufPtr) {
+fn process_frame(mac_addr: &ether::EtherAddr, frame: mbuf::RawMbufPtr) {
     let ether_hdr = unsafe { &mut *pktmbuf_mtod!(frame, *mut ether::EtherHdr) };
 
     ether::EtherAddr::copy(&ether_hdr.s_addr, &mut ether_hdr.d_addr);
-    ether::EtherAddr::copy(&app_port.mac_addr, &mut ether_hdr.s_addr);
+    ether::EtherAddr::copy(&mac_addr, &mut ether_hdr.s_addr);
 }
 
 extern "C" fn slave_main(app_cfg: &mut AppConfig) -> i32 {
     while !app_cfg.exit_now {
-        for portid in 0..app_cfg.cnt_ports {
-            let app_port = &mut app_cfg.ports[portid as usize];
-
+        for (portid, mutex) in app_cfg.ports.iter().enumerate() {
             // Check that port is active and unlocked
-            if let Some(ref lock) = app_port.lock {
-                if let Ok(_) = lock.try_lock() {
-                    if !app_port.port_active {
-                        continue;
+            if let Ok(mut guard) = mutex.try_lock() {
+                let app_port: &mut AppPort = &mut *guard;
+
+                if !app_port.port_active {
+                    continue;
+                }
+
+                let dev = ethdev::EthDevice::from(portid as u8);
+
+                // MAC address was updated
+                if app_port.port_dirty {
+                    app_port.mac_addr = dev.mac_addr();
+                    app_port.port_dirty = false;
+                }
+
+                let txq = &mut app_port.txq;
+
+                // Incoming frames
+                let cnt_recv_frames = dev.rx_burst(0, &mut txq.buf_frames[txq.cnt_unsent..]);
+
+                if cnt_recv_frames > 0 {
+                    let frames = &txq.buf_frames[txq.cnt_unsent..txq.cnt_unsent + cnt_recv_frames];
+                    for frame in frames {
+                        process_frame(&app_port.mac_addr, *frame);
                     }
 
-                    let dev = ethdev::EthDevice::from(portid as u8);
+                    txq.cnt_unsent += cnt_recv_frames
+                }
 
-                    // MAC address was updated
-                    if app_port.port_dirty {
-                        app_port.mac_addr = dev.mac_addr();
-                        app_port.port_dirty = false;
-                    }
+                // Outgoing frames
+                if txq.cnt_unsent > 0 {
+                    let cnt_sent = dev.tx_burst(0, &mut txq.buf_frames[..txq.cnt_unsent]);
 
-                    // Incoming frames
-                    let cnt_recv_frames =
-                        dev.rx_burst(0, &mut app_port.txq.buf_frames[app_port.txq.cnt_unsent..]);
-
-                    if cnt_recv_frames > 0 {
-                        for frame in
-                            &app_port.txq.buf_frames[app_port.txq.cnt_unsent..app_port.txq
-                            .cnt_unsent +
-                                                                              cnt_recv_frames] {
-                            process_frame(&app_port, *frame);
-                        }
-
-                        app_port.txq.cnt_unsent += cnt_recv_frames
-                    }
-
-                    // Outgoing frames
-                    if app_port.txq.cnt_unsent > 0 {
-                        let cnt_sent =
-                            dev.tx_burst(0,
-                                         &mut app_port.txq.buf_frames[..app_port.txq.cnt_unsent]);
-
-                        for i in cnt_sent..app_port.txq.cnt_unsent {
-                            app_port.txq.buf_frames[i - cnt_sent] = app_port.txq.buf_frames[i];
-                        }
+                    for i in cnt_sent..txq.cnt_unsent {
+                        txq.buf_frames[i - cnt_sent] = txq.buf_frames[i];
                     }
                 }
             }
@@ -166,9 +135,7 @@ fn main() {
     // Init runtime enviornment
     eal::init(&args).expect("Cannot init EAL");
 
-    let mut app_cfg = AppConfig::default();
-
-    app_cfg.cnt_ports = match ethdev::count() {
+    let cnt_ports = match ethdev::count() {
         0 => {
             eal::exit(EXIT_FAILURE, "No available NIC ports!\n");
 
@@ -182,7 +149,9 @@ fn main() {
         }
     } as u32;
 
-    println!("Number of NICs: {}", app_cfg.cnt_ports);
+    println!("Number of NICs: {}", cnt_ports);
+
+    let mut app_cfg = AppConfig::new(cnt_ports);
 
     if lcore::count() < 2 {
         eal::exit(EXIT_FAILURE, "No available slave core!\n");
@@ -198,7 +167,7 @@ fn main() {
                           lcore_id)
         .unwrap();
 
-    ethapp::main();
+    ethapp::main(&mut app_cfg);
 
     app_cfg.exit_now = true;
 
