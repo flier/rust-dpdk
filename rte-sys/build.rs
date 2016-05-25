@@ -31,53 +31,56 @@ fn build_dpdk(base_dir: &PathBuf) {
         .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
 }
 
+static RE_NUM: &'static str =
+    r"^[\({]?\s*(?:\([:word:]+\))?\(?(?P<value>-?[:digit:]+)(?P<suffix>[Uu]?[Ll]*)\s*[\)}]?$";
+static RE_HEX: &'static str =
+    r"^[\({]?\s*(?:\([:word:]+\))?\(?(?P<value>0x[:xdigit:]+)(?P<suffix>[Uu]?[Ll]*)\s*[\)}]?$";
+static RE_SHIFT: &'static str = r"^\(?(?P<value>[:digit:]+\s*<<\s*[:digit:]+)\)?$";
+
 fn gen_rte_config(base_dir: &PathBuf) {
     let dest_path = PathBuf::from("src/rte_config.rs");
 
     debug!("generating rte_config.rs @ {}", dest_path.to_str().unwrap());
 
     let mut cmd = gcc::Config::new()
-                      .include(base_dir.join("include"))
-                      .flag("-dM")
-                      .flag("-E")
-                      .flag("-march=native")
-                      .flag("-DRTE_MACHINE_CPUFLAG_SSE")
-                      .flag("-DRTE_MACHINE_CPUFLAG_SSE2")
-                      .flag("-DRTE_MACHINE_CPUFLAG_SSE3")
-                      .flag("-DRTE_MACHINE_CPUFLAG_SSSE3")
-                      .flag("-DRTE_MACHINE_CPUFLAG_SSE4_1")
-                      .flag("-DRTE_MACHINE_CPUFLAG_SSE4_2")
-                      .flag("-DRTE_MACHINE_CPUFLAG_AES")
-                      .flag("-DRTE_MACHINE_CPUFLAG_PCLMULQDQ")
-                      .flag("-DRTE_MACHINE_CPUFLAG_AVX")
-                      .flag("-DRTE_MACHINE_CPUFLAG_RDRAND")
-                      .flag("-DRTE_MACHINE_CPUFLAG_FSGSBASE")
-                      .flag("-DRTE_MACHINE_CPUFLAG_F16C")
-                      .flag("-DRTE_MACHINE_CPUFLAG_AVX2")
-                      .flag("-DRTE_COMPILE_TIME_CPUFLAGS=RTE_CPUFLAG_SSE,RTE_CPUFLAG_SSE2,\
-                             RTE_CPUFLAG_SSE3,RTE_CPUFLAG_SSSE3,RTE_CPUFLAG_SSE4_1,\
-                             RTE_CPUFLAG_SSE4_2,RTE_CPUFLAG_AES,RTE_CPUFLAG_PCLMULQDQ,\
-                             RTE_CPUFLAG_AVX,RTE_CPUFLAG_RDRAND,RTE_CPUFLAG_FSGSBASE,\
-                             RTE_CPUFLAG_F16C,RTE_CPUFLAG_AVX2")
-                      .get_compiler()
-                      .to_command();
+        .include(base_dir.join("include"))
+        .flag("-dM")
+        .flag("-E")
+        .flag("-march=native")
+        .flag("-DRTE_MACHINE_CPUFLAG_SSE")
+        .flag("-DRTE_MACHINE_CPUFLAG_SSE2")
+        .flag("-DRTE_MACHINE_CPUFLAG_SSE3")
+        .flag("-DRTE_MACHINE_CPUFLAG_SSSE3")
+        .flag("-DRTE_MACHINE_CPUFLAG_SSE4_1")
+        .flag("-DRTE_MACHINE_CPUFLAG_SSE4_2")
+        .flag("-DRTE_MACHINE_CPUFLAG_AES")
+        .flag("-DRTE_MACHINE_CPUFLAG_PCLMULQDQ")
+        .flag("-DRTE_MACHINE_CPUFLAG_AVX")
+        .flag("-DRTE_MACHINE_CPUFLAG_RDRAND")
+        .flag("-DRTE_MACHINE_CPUFLAG_FSGSBASE")
+        .flag("-DRTE_MACHINE_CPUFLAG_F16C")
+        .flag("-DRTE_MACHINE_CPUFLAG_AVX2")
+        .flag("-DRTE_COMPILE_TIME_CPUFLAGS=RTE_CPUFLAG_SSE,RTE_CPUFLAG_SSE2,RTE_CPUFLAG_SSE3,\
+               RTE_CPUFLAG_SSSE3,RTE_CPUFLAG_SSE4_1,RTE_CPUFLAG_SSE4_2,RTE_CPUFLAG_AES,\
+               RTE_CPUFLAG_PCLMULQDQ,RTE_CPUFLAG_AVX,RTE_CPUFLAG_RDRAND,RTE_CPUFLAG_FSGSBASE,\
+               RTE_CPUFLAG_F16C,RTE_CPUFLAG_AVX2")
+        .get_compiler()
+        .to_command();
 
     cmd.arg("src/rte.h");
 
-    let re_num = regex::Regex::new(r"^[\({]?\s*(?:\([:word:]+\))?\(?(?P<value>-?[:digit:]+)(?P<suffix>[Uu]?[Ll]*)\s*[\)}]?$")
-                     .unwrap();
-    let re_hex = regex::Regex::new(r"^[\({]?\s*(?:\([:word:]+\))?\(?(?P<value>0x[:xdigit:]+)(?P<suffix>[Uu]?[Ll]*)\s*[\)}]?$")
-                     .unwrap();
-    let re_shift = regex::Regex::new(r"^\(?(?P<value>[:digit:]+\s*<<\s*[:digit:]+)\)?$").unwrap();
+    let re_num = regex::Regex::new(RE_NUM).unwrap();
+    let re_hex = regex::Regex::new(RE_HEX).unwrap();
+    let re_shift = regex::Regex::new(RE_SHIFT).unwrap();
 
     debug!("executing: {:?}", cmd);
 
     let output = cmd.output()
-                    .unwrap_or_else(|err| panic!("failed to generate rte_config.rs, {}", err));
+        .unwrap_or_else(|err| panic!("failed to generate rte_config.rs, {}", err));
 
     let f = File::create(&dest_path).unwrap();
 
-    let name_prefixes = &["RTE_", "ETHER_", "CMDLINE_", "RDLINE_"];
+    let name_prefixes = &["RTE_", "ETH_", "ETHER_", "CMDLINE_", "RDLINE_"];
 
     fn value_types(sign: bool, long: bool) -> &'static str {
         match (sign, long) {
@@ -95,69 +98,72 @@ fn gen_rte_config(base_dir: &PathBuf) {
         .unwrap();
 
     let keyvalues = Cursor::new(output.stdout)
-                        .lines()
-                        .filter_map(|r| r.ok())
-                        .filter_map(|line| {
-                            let vars: Vec<&str> = line.splitn(3, " ")
-                                                      .collect();
+        .lines()
+        .filter_map(|r| r.ok())
+        .filter_map(|line| {
+            let vars: Vec<&str> = line.splitn(3, " ")
+                .collect();
 
-                            if vars[0] == "#define" {
-                                Some((String::from(vars[1]), String::from(vars[2])))
-                            } else {
-                                None
-                            }
-                        })
-                        .filter(|&(ref name, _)| {
-                            name_prefixes.iter().any(|prefix| name.starts_with(prefix))
-                        })
-                        .collect::<HashMap<String, String>>();
+            if vars[0] == "#define" {
+                Some((String::from(vars[1]), String::from(vars[2])))
+            } else {
+                None
+            }
+        })
+        .filter(|&(ref name, _)| name_prefixes.iter().any(|prefix| name.starts_with(prefix)))
+        .collect::<HashMap<String, String>>();
 
     let mut skipped_keyvalues = HashMap::<String, String>::new();
 
     let mut lines = keyvalues.iter()
-                             .filter_map(|(name, raw_value)| {
-                                 if raw_value.starts_with("\"") && raw_value.ends_with("\"") {
-                                     Some((name, raw_value, raw_value.clone(), "&'static str"))
-                                 } else if let Some(caps) = re_num.captures(raw_value.as_str()) {
-                                     let value = caps.name("value").expect("`value` not found");
+        .filter_map(|(name, raw_value)| {
+            if raw_value.starts_with("\"") && raw_value.ends_with("\"") {
+                Some((name, raw_value, raw_value.clone(), "&'static str"))
+            } else if let Some(caps) = re_num.captures(raw_value.as_str()) {
+                let value = caps.name("value").expect("`value` not found");
 
-                                     Some((name,
-                                           raw_value,
-                                           String::from(value),
-                                           value_types(value.starts_with("-"),
-                                                       caps.name("suffix")
-                                                           .map_or_else(|| false, |suffix| {
-                                                               suffix.to_uppercase() == "ULL"
-                                                           }))))
-                                 } else if let Some(caps) = re_hex.captures(raw_value.as_str()) {
-                                     let value = caps.name("value").expect("`value` not found");
+                Some((name,
+                      raw_value,
+                      String::from(value),
+                      value_types(value.starts_with("-"),
+                                  caps.name("suffix")
+                                      .map_or_else(|| false,
+                                                   |suffix| suffix.to_uppercase() == "ULL"))))
+            } else if let Some(caps) = re_hex.captures(raw_value.as_str()) {
+                let value = caps.name("value").expect("`value` not found");
 
-                                     Some((name,
-                                           raw_value,
-                                           String::from(value),
-                                           value_types(value.starts_with("-"),
-                                                       caps.name("suffix")
-                                                           .map_or_else(|| false, |suffix| {
-                                                               suffix.to_uppercase() == "ULL"
-                                                           }))))
-                                 } else if let Some(caps) = re_shift.captures(raw_value.as_str()) {
-                                     let value = caps.name("value").expect("`value` not found");
+                Some((name,
+                      raw_value,
+                      String::from(value),
+                      value_types(value.starts_with("-"),
+                                  caps.name("suffix")
+                                      .map_or_else(|| false,
+                                                   |suffix| suffix.to_uppercase() == "ULL"))))
+            } else if let Some(caps) = re_shift.captures(raw_value.as_str()) {
+                let value = caps.name("value").expect("`value` not found");
 
-                                     Some((name, raw_value, String::from(value), "u32"))
-                                 } else {
-                                     skipped_keyvalues.insert(name.clone(), raw_value.clone());
+                Some((name, raw_value, String::from(value), "u32"))
+            } else {
+                skipped_keyvalues.insert(name.clone(), raw_value.clone());
 
-                                     None
-                                 }
-                             })
-                             .map(|(name, raw_value, value, value_type)| {
-                                 format!("pub const {}: {} = {}; // {}",
-                                         name.to_uppercase(),
-                                         value_type,
-                                         value,
-                                         raw_value)
-                             })
-                             .collect::<Vec<String>>();
+                None
+            }
+        })
+        .map(|(name, raw_value, value, value_type)| {
+            if *value == *raw_value {
+                format!("pub const {}: {} = {}; ",
+                        name.to_uppercase(),
+                        value_type,
+                        value)
+            } else {
+                format!("pub const {}: {} = {}; // {}",
+                        name.to_uppercase(),
+                        value_type,
+                        value,
+                        raw_value)
+            }
+        })
+        .collect::<Vec<String>>();
 
     lines.sort();
 
@@ -173,10 +179,8 @@ fn gen_rte_config(base_dir: &PathBuf) {
         .unwrap();
 
     let mut skipped_lines = skipped_keyvalues.iter()
-                                             .map(|(name, value)| {
-                                                 format!("#define {}\t{}", name, value)
-                                             })
-                                             .collect::<Vec<String>>();
+        .map(|(name, value)| format!("#define {}\t{}", name, value))
+        .collect::<Vec<String>>();
 
     skipped_lines.sort();
 
@@ -223,9 +227,9 @@ fn main() {
     env_logger::init().unwrap();
 
     let root_dir = env::var("RTE_SDK")
-                       .expect("RTE_SDK - Points to the DPDK installation directory.");
+        .expect("RTE_SDK - Points to the DPDK installation directory.");
     let target = env::var("RTE_TARGET")
-                     .unwrap_or(String::from(format!("{}-native-{}app-gcc", ARCH, OS)));
+        .unwrap_or(String::from(format!("{}-native-{}app-gcc", ARCH, OS)));
 
     let base_dir = PathBuf::from(root_dir).join(target);
 
