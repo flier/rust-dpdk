@@ -414,7 +414,7 @@ fn kni_alloc(conf: &Conf, dev: &ethdev::EthDevice, pktmbuf_pool: &mempool::RawMe
             format!("vEth{}", portid)
         };
 
-        let mut conf = kni::DeviceConf::default();
+        let mut conf = kni::KniDeviceConf::default();
 
         conf.name = name.as_str();
         conf.group_id = portid as u16;
@@ -430,7 +430,7 @@ fn kni_alloc(conf: &Conf, dev: &ethdev::EthDevice, pktmbuf_pool: &mempool::RawMe
                 conf.pci_addr = pci_dev.addr;
                 conf.pci_id = pci_dev.id;
 
-                let ops = kni::RawDeviceOps {
+                let ops = kni::KniDeviceOps {
                     port_id: portid,
                     change_mtu: Some(kni_change_mtu),
                     config_network_if: Some(kni_config_network_interface),
@@ -463,7 +463,7 @@ fn kni_free_kni(conf: &Conf, dev: &ethdev::EthDevice) {
     };
 
     for kni in &param.kni[..param.nb_kni as usize] {
-        let _ = kni::RawDevice::from(*kni);
+        let _ = kni::KniDevice::from(*kni);
     }
 
     dev.stop();
