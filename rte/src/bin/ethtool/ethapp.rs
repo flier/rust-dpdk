@@ -58,7 +58,7 @@ pub fn main() {
                                      None,
                                      "drvinfo\n     Print driver info",
                                      &[&pcmd_drvinfo_token_cmd]);
-    let pcmd_link = cmdline::inst(CmdGetParams::quit,
+    let pcmd_link = cmdline::inst(CmdGetParams::link,
                                   None,
                                   "link\n     Print port link states",
                                   &[&pcmd_link_token_cmd]);
