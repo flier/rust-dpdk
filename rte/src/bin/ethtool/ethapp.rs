@@ -11,26 +11,42 @@ impl CmdGetParams {
         cl.quit();
     }
 
-    fn stats(&mut self, cl: &cmdline::RawCmdline, _: Option<*mut c_void>) {}
-
     fn drvinfo(&mut self, cl: &cmdline::RawCmdline, _: Option<*mut c_void>) {
         for dev in ethdev::devices() {
             let info = dev.info();
 
             cl.print(&format!("Port {} driver: {} (ver: {})\n",
-                              dev.portid(),
-                              info.driver_name(),
-                              eal::version()));
+                                dev.portid(),
+                                info.driver_name(),
+                                eal::version()))
+                .unwrap();
         }
     }
 
-    fn link(&mut self, cl: &cmdline::RawCmdline, _: Option<*mut c_void>) {}
+    fn link(&mut self, cl: &cmdline::RawCmdline, _: Option<*mut c_void>) {
+        for dev in ethdev::devices().filter(|dev| dev.is_attached()) {
+            let link = dev.link();
+
+            if link.up {
+                cl.print(&format!("Port {} Link Up (speed {} Mbps, {})\n",
+                                    dev.portid(),
+                                    link.speed,
+                                    if link.duplex {
+                                        "full-duplex"
+                                    } else {
+                                        "half-duplex"
+                                    }))
+                    .unwrap();
+            } else {
+                cl.print(&format!("Port {} Link Down\n", dev.portid())).unwrap();
+            }
+        }
+    }
 }
 
 pub fn main() {
     // Parameter-less commands
     let pcmd_quit_token_cmd = TOKEN_STRING_INITIALIZER!(CmdGetParams, cmd, "quit");
-    let pcmd_stats_token_cmd = TOKEN_STRING_INITIALIZER!(CmdGetParams, cmd, "stats");
     let pcmd_drvinfo_token_cmd = TOKEN_STRING_INITIALIZER!(CmdGetParams, cmd, "drvinfo");
     let pcmd_link_token_cmd = TOKEN_STRING_INITIALIZER!(CmdGetParams, cmd, "link");
 
@@ -38,10 +54,6 @@ pub fn main() {
                                   None,
                                   "quit\n     Exit program",
                                   &[&pcmd_quit_token_cmd]);
-    let pcmd_stats = cmdline::inst(CmdGetParams::stats,
-                                   None,
-                                   "stats\n     Print stats",
-                                   &[&pcmd_stats_token_cmd]);
     let pcmd_drvinfo = cmdline::inst(CmdGetParams::drvinfo,
                                      None,
                                      "drvinfo\n     Print driver info",
@@ -51,7 +63,7 @@ pub fn main() {
                                   "link\n     Print port link states",
                                   &[&pcmd_link_token_cmd]);
 
-    let cmds = &[&pcmd_quit, &pcmd_stats, &pcmd_drvinfo, &pcmd_link];
+    let cmds = &[&pcmd_quit, &pcmd_drvinfo, &pcmd_link];
 
     cmdline::new(cmds)
         .open_stdin("EthApp> ")
