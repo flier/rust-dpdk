@@ -1,3 +1,4 @@
+use std::result;
 use std::os::raw::c_void;
 
 use rte::*;
@@ -21,10 +22,10 @@ impl CmdGetParams {
         for dev in ethdev::devices() {
             let info = dev.info();
 
-            cl.print(format!("Port {} driver: {} (ver: {})\n",
-                               dev.portid(),
-                               info.driver_name(),
-                               eal::version()))
+            cl.println(format!("Port {} driver: {} (ver: {})",
+                                 dev.portid(),
+                                 info.driver_name(),
+                                 eal::version()))
                 .unwrap();
         }
     }
@@ -36,21 +37,23 @@ impl CmdGetParams {
             let link = dev.link();
 
             if link.up {
-                cl.print(format!("Port {} Link Up (speed {} Mbps, {})\n",
-                                   dev.portid(),
-                                   link.speed,
-                                   if link.duplex {
-                                       "full-duplex"
-                                   } else {
-                                       "half-duplex"
-                                   }))
+                cl.println(format!("Port {} Link Up (speed {} Mbps, {})",
+                                     dev.portid(),
+                                     link.speed,
+                                     if link.duplex {
+                                         "full-duplex"
+                                     } else {
+                                         "half-duplex"
+                                     }))
                     .unwrap();
             } else {
-                cl.print(format!("Port {} Link Down\n", dev.portid())).unwrap();
+                cl.println(format!("Port {} Link Down", dev.portid())).unwrap();
             }
         }
     }
 }
+
+type CommandResult = result::Result<String, String>;
 
 struct CmdIntParams {
     cmd: cmdline::FixedStr,
@@ -58,36 +61,48 @@ struct CmdIntParams {
 }
 
 impl CmdIntParams {
+    fn lock_port<F>(&self, app_cfg: Option<*mut AppConfig>, callback: F) -> CommandResult
+        where F: Fn(&mut AppPort, &ethdev::EthDevice) -> CommandResult
+    {
+        match unsafe { &mut *app_cfg.unwrap() }.ports.iter().nth(self.port as usize) {
+            Some(mutex) => {
+                let dev = ethdev::EthDevice::from(self.port as u8);
+
+                if !dev.is_valid() {
+                    Err(format!("port {} is invalid", self.port))
+                } else {
+                    match mutex.lock() {
+                        Ok(mut guard) => {
+                            let app_port = &mut *guard;
+
+                            callback(app_port, &dev)
+                        }
+                        Err(err) => Err(format!("fail to lock port {}, {}", self.port, err)),
+                    }
+                }
+            }
+            _ => Err(format!("port number {} is invalid", self.port)),
+        }
+    }
+
     fn open(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<*mut AppConfig>) {
         debug!("execute `{}` command for port {}",
                cmdline::str(&self.cmd).unwrap(),
                self.port);
 
-        match unsafe { (*app_cfg.unwrap()).ports.iter().nth(self.port as usize) } {
-            Some(mutex) => {
-                let dev = ethdev::EthDevice::from(self.port as u8);
+        let res = self.lock_port(app_cfg, |app_port, dev| {
+            dev.stop();
 
-                if !dev.is_valid() {
-                    cl.print(format!("Error: port {} is invalid\n", self.port)).unwrap();
-                } else if let Ok(mut guard) = mutex.lock() {
-                    let app_port: &mut AppPort = &mut *guard;
+            if let Err(err) = dev.start() {
+                Err(format!("Error: failed to start port {}, {}", self.port, err))
+            } else {
+                app_port.port_active = true;
 
-                    dev.stop();
-
-                    if let Err(err) = dev.start() {
-                        cl.print(format!("Error: failed to start port {}, {}", self.port, err))
-                            .unwrap();
-                    } else {
-                        app_port.port_active = true;
-
-                        info!("port {} started", self.port);
-                    }
-                }
+                Ok(format!("port {} started", self.port))
             }
-            _ => {
-                cl.print(format!("Error: port number {} is invalid\n", self.port)).unwrap();
-            }
-        }
+        });
+
+        cl.println(res.unwrap_or_else(|err| format!("Error: {}", err))).unwrap();
     }
 
     fn stop(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<*mut AppConfig>) {
@@ -95,28 +110,19 @@ impl CmdIntParams {
                cmdline::str(&self.cmd).unwrap(),
                self.port);
 
-        match unsafe { (*app_cfg.unwrap()).ports.iter().nth(self.port as usize) } {
-            Some(mutex) => {
-                let dev = ethdev::EthDevice::from(self.port as u8);
+        let res = self.lock_port(app_cfg, |app_port, dev| {
+            if !dev.is_up() {
+                Err(format!("Port {} already stopped", self.port))
+            } else {
+                dev.stop();
 
-                if !dev.is_valid() {
-                    cl.print(format!("Error: port {} is invalid\n", self.port)).unwrap();
-                } else if !dev.is_up() {
-                    cl.print(format!("Port {} already stopped\n", self.port)).unwrap();
-                } else if let Ok(mut guard) = mutex.lock() {
-                    let app_port: &mut AppPort = &mut *guard;
+                app_port.port_active = false;
 
-                    dev.stop();
-
-                    app_port.port_active = false;
-
-                    info!("port {} stopped", self.port);
-                }
+                Ok(format!("port {} stopped", self.port))
             }
-            _ => {
-                cl.print(format!("Error: port number {} is invalid\n", self.port)).unwrap();
-            }
-        }
+        });
+
+        cl.println(res.unwrap_or_else(|err| format!("Error: {}", err))).unwrap();
     }
 
     fn rxmode(&mut self, cl: &cmdline::RawCmdline, _: Option<*mut c_void>) {
@@ -127,7 +133,7 @@ impl CmdIntParams {
         let dev = ethdev::EthDevice::from(self.port as u8);
 
         if !dev.is_valid() {
-            cl.print(format!("Error: port {} is invalid\n", self.port)).unwrap();
+            cl.print(format!("Error: port {} is invalid", self.port)).unwrap();
         } else {
             // Set VF vf_rx_mode, VF unsupport status is discard
             for vf in 0..(*dev.info()).max_vfs {
