@@ -22,6 +22,7 @@ pub mod cmdline;
 pub mod malloc;
 pub mod memzone;
 pub mod mempool;
+#[macro_use]
 pub mod mbuf;
 pub mod ether;
 pub mod lcore;

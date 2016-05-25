@@ -162,6 +162,23 @@ pub const RTE_MBUF_DEFAULT_BUF_SIZE: u16 =
 
 pub type RawMbufPtr = *mut ffi::Struct_rte_mbuf;
 
+
+/// A macro that points to an offset into the data in the mbuf.
+#[macro_export]
+macro_rules! pktmbuf_mtod_offset {
+    ($m:expr, $t:ty, $off:expr) => (
+        (((*$m).buf_addr as *const ::std::os::raw::c_char).offset((*$m).data_off as isize) as $t)
+    )
+}
+
+/// A macro that points to the start of the data in the mbuf.
+#[macro_export]
+macro_rules! pktmbuf_mtod {
+    ($m:expr, $t:ty) => (
+        pktmbuf_mtod_offset!($m, $t, 0)
+    )
+}
+
 /// Create a mbuf pool.
 ///
 /// This function creates and initializes a packet mbuf pool.
@@ -175,8 +192,8 @@ pub fn pktmbuf_pool_create(name: &str,
                            socket_id: i32)
                            -> Result<mempool::RawMemoryPool> {
     let name = try!(CString::new(name))
-                   .as_bytes_with_nul()
-                   .as_ptr() as *const i8;
+        .as_bytes_with_nul()
+        .as_ptr() as *const i8;
 
     let p = unsafe {
         ffi::rte_pktmbuf_pool_create(name, n, cache_size, priv_size, data_room_size, socket_id)
