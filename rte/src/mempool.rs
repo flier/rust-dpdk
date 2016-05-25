@@ -163,8 +163,8 @@ pub fn create<T, O>(name: &str,
                     flags: MemoryPoolFlags)
                     -> Result<RawMemoryPool> {
     let name = try!(CString::new(name))
-                   .as_bytes_with_nul()
-                   .as_ptr() as *const i8;
+        .as_bytes_with_nul()
+        .as_ptr() as *const i8;
 
 
     let p = unsafe {
@@ -197,9 +197,9 @@ impl RawMemoryPool {
 pub fn lookup(name: &str) -> Option<RawMemoryPool> {
     let p = unsafe {
         ffi::rte_mempool_lookup(CString::new(name)
-                                    .unwrap()
-                                    .as_bytes_with_nul()
-                                    .as_ptr() as *const i8)
+            .unwrap()
+            .as_bytes_with_nul()
+            .as_ptr() as *const i8)
     };
 
     if p.is_null() {

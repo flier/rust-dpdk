@@ -5,11 +5,14 @@ use ffi::Struct_rte_memzone;
 /// The goal of the memzone allocator is to reserve contiguous portions of physical memory.
 /// These zones are identified by a name.
 ///
-/// The memzone descriptors are shared by all partitions and are located in a known place of physical memory.
+/// The memzone descriptors are shared by all partitions
+/// and are located in a known place of physical memory.
 /// This zone is accessed using rte_eal_get_configuration().
-/// The lookup (by name) of a memory zone can be done in any partition and returns the same physical address.
+/// The lookup (by name) of a memory zone can be done
+// in any partition and returns the same physical address.
 ///
-/// A reserved memory zone cannot be unreserved. The reservation shall be done at initialization time only.
+/// A reserved memory zone cannot be unreserved.
+/// The reservation shall be done at initialization time only.
 ///
 pub struct MemoryZone(*const Struct_rte_memzone);
 

@@ -52,7 +52,8 @@ pub fn malloc(tag: &'static str, size: usize, align: u32) -> *mut c_void {
 /// Allocate zero'ed memory from the heap.
 ///
 /// Equivalent to rte_malloc() except that the memory zone is initialised with zeros.
-/// In NUMA systems, the memory allocated resides on the same NUMA socket as the core that calls this function.
+/// In NUMA systems, the memory allocated resides on the same NUMA socket
+/// as the core that calls this function.
 ///
 pub fn zmalloc(tag: &'static str, size: usize, align: u32) -> *mut c_void {
     unsafe { ffi::rte_zmalloc(tag.as_ptr() as *const i8, size as u64, align) }

@@ -152,7 +152,8 @@ fn test_mempool() {
                                               None, // obj_init
                                               None, // obj_init_arg
                                               ffi::SOCKET_ID_ANY, // socket_id
-                                              mempool::MEMPOOL_F_SP_PUT | mempool::MEMPOOL_F_SC_GET) // flags
+                                              mempool::MEMPOOL_F_SP_PUT |
+                                              mempool::MEMPOOL_F_SC_GET) // flags
                     .unwrap();
 
     assert_eq!(p.name(), "test");
@@ -192,7 +193,7 @@ fn test_mempool() {
             let obj_end: usize = mem::transmute(obj_end);
 
             elements.unwrap()
-                    .push((obj_index, obj_end - obj_addr));
+                .push((obj_index, obj_end - obj_addr));
         }
     }
 
@@ -232,7 +233,7 @@ fn test_mbuf() {
                                       PRIV_SIZE,
                                       mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
                                       eal::socket_id())
-                .unwrap();
+        .unwrap();
 
     assert_eq!(p.name(), "mbuf_pool");
     assert_eq!(p.size(), NB_MBUF);
