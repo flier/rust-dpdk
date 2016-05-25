@@ -51,7 +51,7 @@ pub fn ports() -> Range<u8> {
 }
 
 pub fn devices() -> Map<Range<u8>, fn(u8) -> EthDevice> {
-    (0..count()).map(EthDevice::from)
+    ports().map(EthDevice::from)
 }
 
 /// Attach a new Ethernet device specified by aruguments.
@@ -166,6 +166,24 @@ impl EthDevice {
         rte_check!(ret; ok => { ret != 0 })
     }
 
+    /// Retrieve the MTU of an Ethernet device.
+    pub fn mtu(&self) -> Result<u16> {
+        let mut mtu: u16 = 0;
+
+        rte_check!(unsafe { ffi::rte_eth_dev_get_mtu(self.0, &mut mtu)}; ok => { mtu })
+    }
+
+    /// Change the MTU of an Ethernet device.
+    pub fn set_mtu(&self, mtu: u16) -> Result<()> {
+        rte_check!(unsafe { ffi::rte_eth_dev_set_mtu(self.0) })
+    }
+
+    /// Retrieve the Ethernet device link status
+    #[inline]
+    pub fn is_up(&self) -> bool {
+        self.link().up
+    }
+
     /// Retrieve the status (ON/OFF), the speed (in Mbps) and
     /// the mode (HALF-DUPLEX or FULL-DUPLEX) of the physical link of an Ethernet device.
     ///
@@ -200,6 +218,39 @@ impl EthDevice {
             autoneg: (link & (1 << 33)) != 0,
             up: (link & (1 << 34)) != 0,
         }
+    }
+
+    /// Link up an Ethernet device.
+    pub fn set_link_up(&self) -> Result<()> {
+        rte_check!(unsafe { ffi::rte_eth_dev_set_link_up(self.0) });
+    }
+
+    /// Link down an Ethernet device.
+    pub fn set_link_down(&self) -> Result<()> {
+        rte_check!(unsafe { ffi::rte_eth_dev_set_link_down(self.0) });
+    }
+
+    /// Allocate mbuf from mempool, setup the DMA physical address
+    /// and then start RX for specified queue of a port. It is used
+    /// when rx_deferred_start flag of the specified queue is true.
+    pub fn rx_queue_start(&self, rx_queue_id: u16) -> Result<()> {
+        rte_check!(unsafe { ffi::rte_eth_dev_rx_queue_start(self.0, rx_queue_id) });
+    }
+
+    /// Stop specified RX queue of a port
+    pub fn rx_queue_stop(&self, rx_queue_id: u16) -> Result<()> {
+        rte_check!(unsafe { ffi::rte_eth_dev_rx_queue_stop(self.0, rx_queue_id) });
+    }
+
+    /// Start TX for specified queue of a port.
+    /// It is used when tx_deferred_start flag of the specified queue is true.
+    pub fn tx_queue_start(&self, tx_queue_id: u16) -> Result<()> {
+        rte_check!(unsafe { ffi::rte_eth_dev_tx_queue_start(self.0, tx_queue_id) });
+    }
+
+    /// Stop specified TX queue of a port
+    pub fn tx_queue_stop(&self, tx_queue_id: u16) -> Result<()> {
+        rte_check!(unsafe { ffi::rte_eth_dev_tx_queue_stop(self.0, tx_queue_id) });
     }
 
     /// Start an Ethernet device.
