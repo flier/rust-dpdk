@@ -66,6 +66,10 @@ impl CmdIntParams {
         cmdline::str(&self.cmd).unwrap()
     }
 
+    fn dev(&self) -> ethdev::EthDevice {
+        ethdev::dev(self.port as u8)
+    }
+
     fn open(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<&AppConfig>) {
         debug!("execute `{}` command for port {}", self.cmd(), self.port);
 
@@ -105,7 +109,7 @@ impl CmdIntParams {
     fn rxmode(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
         debug!("execute `{}` command for port {}", self.cmd(), self.port);
 
-        let dev = ethdev::EthDevice::from(self.port as u8);
+        let dev = self.dev();
 
         if !dev.is_valid() {
             cl.println(format!("Error: port {} is invalid", self.port)).unwrap();
@@ -133,7 +137,7 @@ impl CmdIntParams {
     fn portstats(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
         debug!("execute `{}` command for port {}", self.cmd(), self.port);
 
-        let dev = ethdev::EthDevice::from(self.port as u8);
+        let dev = self.dev();
 
         cl.println(if !dev.is_valid() {
                 format!("Error: port {} is invalid", self.port)
@@ -160,19 +164,19 @@ impl CmdIntParams {
     }
 }
 
-struct CmdIntStrParams {
+struct CmdIntMtuParams {
     cmd: cmdline::FixedStr,
     port: u16,
-    opt: cmdline::FixedStr,
+    mtu: u16,
 }
 
-impl CmdIntStrParams {
+impl CmdIntMtuParams {
     fn cmd(&self) -> &str {
         cmdline::str(&self.cmd).unwrap()
     }
 
-    fn opt(&self) -> &str {
-        cmdline::str(&self.opt).unwrap()
+    fn dev(&self) -> ethdev::EthDevice {
+        ethdev::dev(self.port as u8)
     }
 
     fn mtu_list(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<&AppConfig>) {
@@ -181,7 +185,7 @@ impl CmdIntStrParams {
                self.port);
 
         for portid in 0..app_cfg.unwrap().ports.len() {
-            let dev = ethdev::EthDevice::from(portid as u8);
+            let dev = ethdev::dev(portid as u8);
 
             cl.println(format!("Port {} MTU: {}", portid, dev.mtu().unwrap()))
                 .unwrap();
@@ -193,7 +197,7 @@ impl CmdIntStrParams {
                self.cmd(),
                self.port);
 
-        let dev = ethdev::EthDevice::from(self.port as u8);
+        let dev = self.dev();
 
         cl.println(if !dev.is_valid() {
                 format!("Error: port {} is invalid", self.port)
@@ -208,19 +212,14 @@ impl CmdIntStrParams {
                self.cmd(),
                self.port);
 
-        let dev = ethdev::EthDevice::from(self.port as u8);
+        let dev = self.dev();
 
-        cl.println(match self.opt().parse::<u32>() {
-                Ok(mtu) => {
-                    if let Err(err) = dev.set_mtu(mtu as u16) {
-                        format!("Error: Fail to change mac address of port {}, {}",
-                                self.port,
-                                err)
-                    } else {
-                        format!("Port {} MTU was changed to {}", self.port, mtu)
-                    }
-                }
-                Err(err) => format!("Error: invalid MTU number {}, {}", self.opt(), err),
+        cl.println(if let Err(err) = dev.set_mtu(self.mtu) {
+                format!("Error: Fail to change mac address of port {}, {}",
+                        self.port,
+                        err)
+            } else {
+                format!("Port {} MTU was changed to {}", self.port, self.mtu)
             })
             .unwrap()
     }
@@ -237,6 +236,10 @@ impl CmdIntMacParams {
         cmdline::str(&self.cmd).unwrap()
     }
 
+    fn dev(&self) -> ethdev::EthDevice {
+        ethdev::dev(self.port as u8)
+    }
+
     fn mac_addr(&self) -> ether::EtherAddr {
         cmdline::etheraddr(&self.mac)
     }
@@ -247,7 +250,7 @@ impl CmdIntMacParams {
                self.port);
 
         for portid in 0..app_cfg.unwrap().ports.len() {
-            let dev = ethdev::EthDevice::from(portid as u8);
+            let dev = ethdev::dev(portid as u8);
 
             cl.println(format!("Port {} MAC Address: {}", portid, dev.mac_addr()))
                 .unwrap();
@@ -259,7 +262,7 @@ impl CmdIntMacParams {
                self.cmd(),
                self.port);
 
-        let dev = ethdev::EthDevice::from(self.port as u8);
+        let dev = self.dev();
 
         cl.println(if !dev.is_valid() {
                 format!("Error: port {} is invalid", self.port)
@@ -305,6 +308,68 @@ impl CmdIntMacParams {
     }
 }
 
+struct CmdVlanParams {
+    cmd: cmdline::FixedStr,
+    port: u16,
+    mode: cmdline::FixedStr,
+    vlan_id: u16,
+}
+
+impl CmdVlanParams {
+    fn cmd(&self) -> &str {
+        cmdline::str(&self.cmd).unwrap()
+    }
+
+    fn dev(&self) -> ethdev::EthDevice {
+        ethdev::dev(self.port as u8)
+    }
+
+    fn mode(&self) -> &str {
+        cmdline::str(&self.mode).unwrap()
+    }
+
+    fn change(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
+        debug!("execute `{}` command for port {}", self.cmd(), self.port);
+
+        let dev = self.dev();
+
+        cl.println(if !dev.is_valid() {
+                format!("Error: port {} is invalid", self.port)
+            } else {
+                match self.mode() {
+                    "add" => {
+                        match dev.set_vlan_filter(self.vlan_id, true) {
+                            Ok(_) => {
+                                format!("VLAN vid {} added to port {}", self.vlan_id, self.port)
+                            }
+                            Err(err) => {
+                                format!("Error: fail to add VLAN vid {} to port {}, {}",
+                                        self.vlan_id,
+                                        self.port,
+                                        err)
+                            }
+                        }
+                    }
+                    "del" => {
+                        match dev.set_vlan_filter(self.vlan_id, false) {
+                            Ok(_) => {
+                                format!("VLAN vid {} removed from port {}", self.vlan_id, self.port)
+                            }
+                            Err(err) => {
+                                format!("Error: fail to remove VLAN vid {} to port {}, {}",
+                                        self.vlan_id,
+                                        self.port,
+                                        err)
+                            }
+                        }
+                    }
+                    mode @ _ => format!("Error: Bad mode {}", mode),
+                }
+            })
+            .unwrap();
+    }
+}
+
 pub fn main(app_cfg: &mut AppConfig) {
     // Parameter-less commands
     let pcmd_quit_token_cmd = TOKEN_STRING_INITIALIZER!(CmdGetParams, cmd, "quit");
@@ -320,10 +385,9 @@ pub fn main(app_cfg: &mut AppConfig) {
     let pcmd_int_token_port = TOKEN_NUM_INITIALIZER!(CmdIntParams, port, u16);
 
     // Commands taking port id and string
-    let pcmd_mtu_token_cmd = TOKEN_STRING_INITIALIZER!(CmdIntStrParams, cmd, "mtu");
-
-    let pcmd_intstr_token_port = TOKEN_NUM_INITIALIZER!(CmdIntStrParams, port, u16);
-    let pcmd_intstr_token_opt = TOKEN_STRING_INITIALIZER!(CmdIntStrParams, opt);
+    let pcmd_mtu_token_cmd = TOKEN_STRING_INITIALIZER!(CmdIntMtuParams, cmd, "mtu");
+    let pcmd_intmtu_token_port = TOKEN_NUM_INITIALIZER!(CmdIntMtuParams, port, u16);
+    let pcmd_intmtu_token_opt = TOKEN_NUM_INITIALIZER!(CmdIntMtuParams, mtu, u16);
 
     // Commands taking port id and a MAC address string
     let pcmd_macaddr_token_cmd = TOKEN_STRING_INITIALIZER!(CmdIntMacParams, cmd, "macaddr");
@@ -332,6 +396,12 @@ pub fn main(app_cfg: &mut AppConfig) {
 
     // Command taking just a MAC address
     let pcmd_validate_token_cmd = TOKEN_STRING_INITIALIZER!(CmdIntMacParams, cmd, "validate");
+
+    // /* VLAN commands */
+    let pcmd_vlan_token_cmd = TOKEN_STRING_INITIALIZER!(CmdVlanParams, cmd, "vlan");
+    let pcmd_vlan_token_port = TOKEN_NUM_INITIALIZER!(CmdVlanParams, port, u16);
+    let pcmd_vlan_token_mode = TOKEN_STRING_INITIALIZER!(CmdVlanParams, mode, "add#del");
+    let pcmd_vlan_token_vlan_id = TOKEN_NUM_INITIALIZER!(CmdVlanParams, vlan_id, u16);
 
     let pcmd_quit = cmdline::inst(CmdGetParams::quit,
                                   None,
@@ -368,21 +438,21 @@ pub fn main(app_cfg: &mut AppConfig) {
                                        "portstats <port_id>\n     Print port eth statistics",
                                        &[&pcmd_portstats_token_cmd, &pcmd_int_token_port]);
 
-    let pcmd_mtu_list = cmdline::inst(CmdIntStrParams::mtu_list,
+    let pcmd_mtu_list = cmdline::inst(CmdIntMtuParams::mtu_list,
                                       Some(app_cfg),
                                       "mtu\n     List MTU",
                                       &[&pcmd_mtu_token_cmd]);
 
-    let pcmd_mtu_get = cmdline::inst(CmdIntStrParams::mtu_get,
+    let pcmd_mtu_get = cmdline::inst(CmdIntMtuParams::mtu_get,
                                      None,
                                      "mtu <port_id>\n     Show MTU",
-                                     &[&pcmd_mtu_token_cmd, &pcmd_intstr_token_port]);
+                                     &[&pcmd_mtu_token_cmd, &pcmd_intmtu_token_port]);
 
     let pcmd_mtu_set =
-        cmdline::inst(CmdIntStrParams::mtu_set,
+        cmdline::inst(CmdIntMtuParams::mtu_set,
                       None,
                       "mtu <port_id> <mtu_value>\n     Change MTU",
-                      &[&pcmd_mtu_token_cmd, &pcmd_intstr_token_port, &pcmd_intstr_token_opt]);
+                      &[&pcmd_mtu_token_cmd, &pcmd_intmtu_token_port, &pcmd_intmtu_token_opt]);
 
 
     let pcmd_macaddr_list = cmdline::inst(CmdIntMacParams::list,
@@ -407,6 +477,14 @@ pub fn main(app_cfg: &mut AppConfig) {
                                                is valid unicast address",
                                               &[&pcmd_validate_token_cmd, &pcmd_intmac_token_mac]);
 
+    let pcmd_vlan = cmdline::inst(CmdVlanParams::change,
+                                  None,
+                                  "vlan <port_id> <add|del> <vlan_id>\n     Add/remove VLAN id",
+                                  &[&pcmd_vlan_token_cmd,
+                                    &pcmd_vlan_token_port,
+                                    &pcmd_vlan_token_mode,
+                                    &pcmd_vlan_token_vlan_id]);
+
     let cmds = &[&pcmd_quit,
                  &pcmd_drvinfo,
                  &pcmd_link,
@@ -420,7 +498,8 @@ pub fn main(app_cfg: &mut AppConfig) {
                  &pcmd_macaddr_list,
                  &pcmd_macaddr_get,
                  &pcmd_macaddr_set,
-                 &pcmd_macaddr_validate];
+                 &pcmd_macaddr_validate,
+                 &pcmd_vlan];
 
     cmdline::new(cmds)
         .open_stdin("EthApp> ")

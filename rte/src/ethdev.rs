@@ -20,7 +20,7 @@ const BOOL_TRUE: u8 = 1;
 const BOOL_FALSE: u8 = 0;
 
 macro_rules! bool_value {
-    ($b:expr) => ( if $b { BOOL_TRUE } else { BOOL_FALSE })
+    ($b:expr) => ( if $b { BOOL_TRUE } else { BOOL_FALSE } )
 }
 
 /// A structure used to retrieve link-level information of an Ethernet port.
@@ -66,6 +66,10 @@ pub fn ports() -> Range<u8> {
 
 pub fn devices() -> Map<Range<u8>, fn(u8) -> EthDevice> {
     ports().map(EthDevice::from)
+}
+
+pub fn dev(portid: u8) -> EthDevice {
+    EthDevice(portid)
 }
 
 /// Attach a new Ethernet device specified by aruguments.
@@ -211,6 +215,12 @@ impl EthDevice {
     /// Change the MTU of an Ethernet device.
     pub fn set_mtu(&self, mtu: u16) -> Result<()> {
         rte_check!(unsafe { ffi::rte_eth_dev_set_mtu(self.0, mtu) })
+    }
+
+    /// Enable/Disable hardware filtering by an Ethernet device
+    /// of received VLAN packets tagged with a given VLAN Tag Identifier.
+    pub fn set_vlan_filter(&self, vlan_id: u16, on: bool) -> Result<()> {
+        rte_check!(unsafe { ffi::rte_eth_dev_vlan_filter(self.0, vlan_id, bool_value!(on) as i32) })
     }
 
     /// Retrieve the Ethernet device link status
