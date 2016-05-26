@@ -10,6 +10,8 @@ use std::env;
 use std::str;
 use std::mem;
 use std::slice;
+use std::rc::Rc;
+use std::cell::RefCell;
 use std::ffi::CString;
 use std::net::IpAddr;
 use std::os::raw::c_void;
@@ -26,7 +28,7 @@ struct Object {
 type ObjectMap = HashMap<String, Object>;
 
 struct TokenObjectListData {
-    objs: *mut ObjectMap,
+    objs: Rc<RefCell<ObjectMap>>,
 }
 
 struct TokenObjectList {
@@ -57,7 +59,7 @@ unsafe extern "C" fn parse_obj_list(token: &mut TokenObjectList,
 
     let name = str::from_utf8(slice::from_raw_parts(srcbuf, token_len)).unwrap();
 
-    if let Some(obj) = (*token.obj_list_data.objs).get(name) {
+    if let Some(obj) = token.obj_list_data.objs.borrow().get(name) {
         if !res.is_null() {
             *res = obj;
         }
@@ -69,7 +71,7 @@ unsafe extern "C" fn parse_obj_list(token: &mut TokenObjectList,
 }
 
 unsafe extern "C" fn complete_get_nb_obj_list(token: &mut TokenObjectList) -> i32 {
-    (*token.obj_list_data.objs).len() as i32
+    token.obj_list_data.objs.borrow().len() as i32
 }
 
 unsafe extern "C" fn complete_get_elt_obj_list(token: &mut TokenObjectList,
@@ -77,7 +79,7 @@ unsafe extern "C" fn complete_get_elt_obj_list(token: &mut TokenObjectList,
                                                dstbuf: *mut u8,
                                                size: u32)
                                                -> i32 {
-    if let Some((name, _)) = (*token.obj_list_data.objs).iter().nth(idx as usize) {
+    if let Some((name, _)) = token.obj_list_data.objs.borrow().iter().nth(idx as usize) {
         if (name.len() + 1) < size as usize {
             let buf = slice::from_raw_parts_mut(dstbuf, size as usize);
 
@@ -105,24 +107,21 @@ unsafe extern "C" fn get_help_obj_list(_: &mut TokenObjectList, dstbuf: *mut u8,
     }
 }
 
-struct CmdDelShowResult {
+struct CmdDelShowResult<'a> {
     action: cmdline::FixedStr,
-    obj: *mut Object,
+    obj: &'a Object,
 }
 
-impl CmdDelShowResult {
-    fn parsed(&mut self, cl: &cmdline::RawCmdline, objs: Option<*mut ObjectMap>) {
-        let obj = unsafe { &mut *self.obj };
+impl<'a> CmdDelShowResult<'a> {
+    fn parsed(&mut self, cl: &cmdline::RawCmdline, objs: Option<&RefCell<ObjectMap>>) {
         let action = cmdline::str(&self.action).unwrap();
 
         match action {
             "show" => {
-                cl.print(format!("Object {}, ip={}\n", obj.name, obj.ip)).unwrap();
+                cl.print(format!("Object {}, ip={}\n", self.obj.name, self.obj.ip)).unwrap();
             }
             "del" => {
-                let objs = unsafe { &mut *objs.unwrap() };
-
-                if let Some(ref obj) = objs.remove(&obj.name) {
+                if let Some(ref obj) = objs.unwrap().borrow_mut().remove(&self.obj.name) {
                     cl.print(format!("Object {} removed, ip={}\n", obj.name, obj.ip)).unwrap();
                 }
             }
@@ -140,27 +139,23 @@ struct CmdObjAddResult {
 }
 
 impl CmdObjAddResult {
-    fn parsed(&mut self, cl: &cmdline::RawCmdline, data: Option<*mut ObjectMap>) {
-        let objs = data.unwrap();
-
+    fn parsed(&mut self, cl: &cmdline::RawCmdline, objs: Option<&RefCell<ObjectMap>>) {
         let name = cmdline::str(&self.name).unwrap();
 
-        unsafe {
-            if (*objs).contains_key(name) {
-                cl.print(format!("Object {} already exist\n", name)).unwrap();
+        if objs.unwrap().borrow().contains_key(name) {
+            cl.print(format!("Object {} already exist\n", name)).unwrap();
 
-                return;
-            }
-
-            let obj = Object {
-                name: String::from(name),
-                ip: cmdline::ipaddr(&mut self.ip),
-            };
-
-            cl.print(format!("Object {} added, ip={}\n", name, obj.ip)).unwrap();
-
-            let _ = (*objs).insert(String::from(name), obj);
+            return;
         }
+
+        let obj = Object {
+            name: String::from(name),
+            ip: cmdline::ipaddr(&mut self.ip),
+        };
+
+        cl.print(format!("Object {} added, ip={}\n", name, obj.ip)).unwrap();
+
+        let _ = objs.unwrap().borrow_mut().insert(String::from(name), obj);
     }
 }
 
@@ -169,7 +164,7 @@ struct CmdHelpResult {
 }
 
 impl CmdHelpResult {
-    fn parsed(&mut self, cl: &cmdline::RawCmdline, _: Option<*mut c_void>) {
+    fn parsed(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
         cl.print(r#"Demo example of command line interface in RTE
 
 
@@ -185,7 +180,7 @@ extended to handle a list of objects. There are
 - del obj_name
 - show obj_name
 "#)
-          .unwrap();
+            .unwrap();
     }
 }
 
@@ -194,7 +189,7 @@ struct CmdQuitResult {
 }
 
 impl CmdQuitResult {
-    fn parsed(&mut self, cl: &cmdline::RawCmdline, _: Option<*mut c_void>) {
+    fn parsed(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
         cl.quit();
     }
 }
@@ -206,7 +201,7 @@ fn main() {
 
     eal::init(&args).expect("Cannot init EAL");
 
-    let mut objects = ObjectMap::new();
+    let objects = Rc::new(RefCell::new(ObjectMap::new()));
 
     let cmd_obj_action = TOKEN_STRING_INITIALIZER!(CmdDelShowResult, action, "show#del");
 
@@ -224,13 +219,13 @@ fn main() {
             ops: &mut token_obj_list_ops,
             offset: offset_of!(CmdDelShowResult, obj) as u32,
         },
-        obj_list_data: TokenObjectListData { objs: &mut objects },
+        obj_list_data: TokenObjectListData { objs: objects.clone() },
     };
 
     let cmd_obj_obj = cmdline::Token::Raw(&token_obj_list.hdr, PhantomData);
 
     let cmd_obj_del_show = cmdline::inst(CmdDelShowResult::parsed,
-                                         Some(&mut objects),
+                                         Some(&objects),
                                          "Show/del an object",
                                          &[&cmd_obj_action, &cmd_obj_obj]);
 
@@ -239,7 +234,7 @@ fn main() {
     let cmd_obj_ip = TOKEN_IPADDR_INITIALIZER!(CmdObjAddResult, ip);
 
     let cmd_obj_add = cmdline::inst(CmdObjAddResult::parsed,
-                                    Some(&mut objects),
+                                    Some(&objects),
                                     "Add an object (name, val)",
                                     &[&cmd_obj_action_add, &cmd_obj_name, &cmd_obj_ip]);
 

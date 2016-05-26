@@ -315,10 +315,12 @@ macro_rules! TOKEN_PORTLIST_INITIALIZER {
     )
 }
 
-pub type InstHandler<T, D> = fn(result: &mut T, cmdline: &RawCmdline, data: Option<*mut D>);
+pub type InstHandler<T, D> = fn(result: &mut T, cmdline: &RawCmdline, data: Option<&D>);
 
-struct CommandHandlerContext<T, D> {
-    data: Option<*mut D>,
+struct CommandHandlerContext<'a, T, D>
+    where D: 'a
+{
+    data: Option<&'a D>,
     handler: InstHandler<T, D>,
 }
 
@@ -350,7 +352,7 @@ impl Inst {
 }
 
 pub fn inst<T, D>(handler: InstHandler<T, D>,
-                  data: Option<*mut D>,
+                  data: Option<&D>,
                   help: &'static str,
                   tokens: &[&Token<T>])
                   -> Inst {
