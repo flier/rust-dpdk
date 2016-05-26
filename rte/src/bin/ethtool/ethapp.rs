@@ -1,4 +1,3 @@
-use std::result;
 use std::os::raw::c_void;
 
 use rte::*;
@@ -10,13 +9,13 @@ struct CmdGetParams {
 }
 
 impl CmdGetParams {
-    fn quit(&mut self, cl: &cmdline::RawCmdline, _: Option<*mut c_void>) {
+    fn quit(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
         debug!("execute `{}` command", cmdline::str(&self.cmd).unwrap());
 
         cl.quit();
     }
 
-    fn drvinfo(&mut self, cl: &cmdline::RawCmdline, _: Option<*mut c_void>) {
+    fn drvinfo(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
         debug!("execute `{}` command", cmdline::str(&self.cmd).unwrap());
 
         for dev in ethdev::devices() {
@@ -30,7 +29,7 @@ impl CmdGetParams {
         }
     }
 
-    fn link(&mut self, cl: &cmdline::RawCmdline, _: Option<*mut c_void>) {
+    fn link(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
         debug!("execute `{}` command", cmdline::str(&self.cmd).unwrap());
 
         for dev in ethdev::devices().filter(|dev| dev.is_valid()) {
@@ -53,20 +52,18 @@ impl CmdGetParams {
     }
 }
 
-type CommandResult = result::Result<String, String>;
-
 struct CmdIntParams {
     cmd: cmdline::FixedStr,
     port: u16,
 }
 
 impl CmdIntParams {
-    fn open(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<*mut AppConfig>) {
+    fn open(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<&AppConfig>) {
         debug!("execute `{}` command for port {}",
                cmdline::str(&self.cmd).unwrap(),
                self.port);
 
-        let res = unsafe { &mut *app_cfg.unwrap() }.lock_port(self.port as u8, |app_port, dev| {
+        let res = app_cfg.unwrap().lock_port(self.port as u8, |app_port, dev| {
             dev.stop();
 
             if let Err(err) = dev.start() {
@@ -81,12 +78,12 @@ impl CmdIntParams {
         cl.println(res.unwrap_or_else(|err| format!("Error: {}", err))).unwrap();
     }
 
-    fn stop(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<*mut AppConfig>) {
+    fn stop(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<&AppConfig>) {
         debug!("execute `{}` command for port {}",
                cmdline::str(&self.cmd).unwrap(),
                self.port);
 
-        let res = unsafe { &mut *app_cfg.unwrap() }.lock_port(self.port as u8, |app_port, dev| {
+        let res = app_cfg.unwrap().lock_port(self.port as u8, |app_port, dev| {
             if !dev.is_up() {
                 Err(format!("Port {} already stopped", self.port))
             } else {
@@ -101,7 +98,7 @@ impl CmdIntParams {
         cl.println(res.unwrap_or_else(|err| format!("Error: {}", err))).unwrap();
     }
 
-    fn rxmode(&mut self, cl: &cmdline::RawCmdline, _: Option<*mut c_void>) {
+    fn rxmode(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
         debug!("execute `{}` command for port {}",
                cmdline::str(&self.cmd).unwrap(),
                self.port);
@@ -109,32 +106,113 @@ impl CmdIntParams {
         let dev = ethdev::EthDevice::from(self.port as u8);
 
         if !dev.is_valid() {
-            cl.print(format!("Error: port {} is invalid", self.port)).unwrap();
+            cl.println(format!("Error: port {} is invalid", self.port)).unwrap();
         } else {
             // Set VF vf_rx_mode, VF unsupport status is discard
             for vf in 0..(*dev.info()).max_vfs {
                 if let Err(err) = dev.set_vf_rxmode(vf, ethdev::ETH_VMDQ_ACCEPT_UNTAG, false) {
-                    cl.print(format!("Error: failed to set VF rx mode for port {}, {}",
-                                       self.port,
-                                       err))
+                    cl.println(format!("Error: failed to set VF rx mode for port {}, {}",
+                                         self.port,
+                                         err))
                         .unwrap();
                 }
             }
 
             // Enable Rx vlan filter, VF unspport status is discard
             if let Err(err) = dev.set_vlan_offload(ethdev::ETH_VLAN_FILTER_MASK) {
-                cl.print(format!("Error: failed to set VLAN offload mode for port {}, {}",
-                                   self.port,
-                                   err))
+                cl.println(format!("Error: failed to set VLAN offload mode for port {}, {}",
+                                     self.port,
+                                     err))
                     .unwrap();
             }
         }
     }
 
-    fn portstats(&mut self, cl: &cmdline::RawCmdline, _: Option<*mut c_void>) {
+    fn portstats(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
         debug!("execute `{}` command for port {}",
                cmdline::str(&self.cmd).unwrap(),
                self.port);
+
+        let dev = ethdev::EthDevice::from(self.port as u8);
+
+        cl.println(if !dev.is_valid() {
+                format!("Error: port {} is invalid", self.port)
+            } else {
+                match dev.stats() {
+                    Ok(stats) => {
+                        format!("Port {} stats\n   In: {} ({} bytes)\n  Out: {} ({} bytes)\n  \
+                                 Err: {}",
+                                self.port,
+                                stats.ipackets,
+                                stats.ibytes,
+                                stats.opackets,
+                                stats.obytes,
+                                stats.ierrors + stats.oerrors)
+                    }
+                    Err(err) => {
+                        format!("Error: port {} fail to fetch statistics, {}",
+                                self.port,
+                                err)
+                    }
+                }
+            })
+            .unwrap()
+    }
+}
+
+struct CmdIntMacParams {
+    cmd: cmdline::FixedStr,
+    port: u16,
+    mac: cmdline::EtherAddr,
+}
+
+impl CmdIntMacParams {
+    fn list(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<&AppConfig>) {
+        debug!("execute list `{}` command for port {}",
+               cmdline::str(&self.cmd).unwrap(),
+               self.port);
+
+        for portid in 0..app_cfg.unwrap().ports.len() {
+            let dev = ethdev::EthDevice::from(portid as u8);
+
+            cl.println(format!("Port {} MAC Address: {}", portid, dev.mac_addr()))
+                .unwrap();
+        }
+    }
+
+    fn get(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
+        debug!("execute get `{}` command for port {}",
+               cmdline::str(&self.cmd).unwrap(),
+               self.port);
+
+        let dev = ethdev::EthDevice::from(self.port as u8);
+
+        cl.println(if !dev.is_valid() {
+                format!("Error: port {} is invalid", self.port)
+            } else {
+                format!("Port {} MAC Address: {}", self.port, dev.mac_addr())
+            })
+            .unwrap()
+    }
+
+    fn set(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<&AppConfig>) {
+        debug!("execute set `{}` command for port {}",
+               cmdline::str(&self.cmd).unwrap(),
+               self.port);
+
+        let mac = cmdline::etheraddr(&self.mac);
+
+        let res = app_cfg.unwrap().lock_port(self.port as u8, |app_port, dev| {
+            if let Err(err) = dev.set_mac_addr(&mac) {
+                Err(format!("Fail to change mac address of port {}, {}", self.port, err))
+            } else {
+                app_port.port_dirty = true;
+
+                Ok(format!("Port {} mac address was changed to {}", self.port, mac))
+            }
+        });
+
+        cl.println(res.unwrap_or_else(|err| format!("Error: {}", err))).unwrap();
     }
 }
 
@@ -151,6 +229,11 @@ pub fn main(app_cfg: &mut AppConfig) {
     let pcmd_portstats_token_cmd = TOKEN_STRING_INITIALIZER!(CmdIntParams, cmd, "portstats");
 
     let pcmd_int_token_port = TOKEN_NUM_INITIALIZER!(CmdIntParams, port, u16);
+
+    // Commands taking port id and a MAC address string
+    let pcmd_macaddr_token_cmd = TOKEN_STRING_INITIALIZER!(CmdIntMacParams, cmd, "macaddr");
+    let pcmd_intmac_token_port = TOKEN_NUM_INITIALIZER!(CmdIntMacParams, port, u16);
+    let pcmd_intmac_token_mac = TOKEN_ETHERADDR_INITIALIZER!(CmdIntMacParams, mac);
 
     let pcmd_quit = cmdline::inst(CmdGetParams::quit,
                                   None,
@@ -182,13 +265,32 @@ pub fn main(app_cfg: &mut AppConfig) {
                                        "portstats <port_id>\n     Print port eth statistics",
                                        &[&pcmd_portstats_token_cmd, &pcmd_int_token_port]);
 
+    let pcmd_macaddr_list = cmdline::inst(CmdIntMacParams::list,
+                                          Some(app_cfg),
+                                          "macaddr <port_id>\n     List port MAC address",
+                                          &[&pcmd_macaddr_token_cmd]);
+
+    let pcmd_macaddr_get = cmdline::inst(CmdIntMacParams::get,
+                                         None,
+                                         "macaddr <port_id>\n     Get MAC address",
+                                         &[&pcmd_macaddr_token_cmd, &pcmd_intmac_token_port]);
+
+    let pcmd_macaddr_set =
+        cmdline::inst(CmdIntMacParams::set,
+                      Some(app_cfg),
+                      "macaddr <port_id> <mac_addr>\n     Set MAC address",
+                      &[&pcmd_macaddr_token_cmd, &pcmd_intmac_token_port, &pcmd_intmac_token_mac]);
+
     let cmds = &[&pcmd_quit,
                  &pcmd_drvinfo,
                  &pcmd_link,
                  &pcmd_open,
                  &pcmd_stop,
                  &pcmd_rxmode,
-                 &pcmd_portstats];
+                 &pcmd_portstats,
+                 &pcmd_macaddr_list,
+                 &pcmd_macaddr_get,
+                 &pcmd_macaddr_set];
 
     cmdline::new(cmds)
         .open_stdin("EthApp> ")
