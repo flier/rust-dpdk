@@ -13,6 +13,7 @@ lazy_static = "0.1"
 libc = "0.2"
 errno = "0.1"
 cfile = "0.1"
+rand = "0.3"
 rte-sys = { version = "0.1", path = "../rte-sys" }
 
 [build-dependencies]
