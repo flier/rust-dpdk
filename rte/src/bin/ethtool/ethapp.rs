@@ -160,6 +160,72 @@ impl CmdIntParams {
     }
 }
 
+struct CmdIntStrParams {
+    cmd: cmdline::FixedStr,
+    port: u16,
+    opt: cmdline::FixedStr,
+}
+
+impl CmdIntStrParams {
+    fn cmd(&self) -> &str {
+        cmdline::str(&self.cmd).unwrap()
+    }
+
+    fn opt(&self) -> &str {
+        cmdline::str(&self.opt).unwrap()
+    }
+
+    fn mtu_list(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<&AppConfig>) {
+        debug!("execute list `{}` command for port {}",
+               self.cmd(),
+               self.port);
+
+        for portid in 0..app_cfg.unwrap().ports.len() {
+            let dev = ethdev::EthDevice::from(portid as u8);
+
+            cl.println(format!("Port {} MTU: {}", portid, dev.mtu().unwrap()))
+                .unwrap();
+        }
+    }
+
+    fn mtu_get(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
+        debug!("execute get `{}` command for port {}",
+               self.cmd(),
+               self.port);
+
+        let dev = ethdev::EthDevice::from(self.port as u8);
+
+        cl.println(if !dev.is_valid() {
+                format!("Error: port {} is invalid", self.port)
+            } else {
+                format!("Port {} MTU: {}", self.port, dev.mtu().unwrap())
+            })
+            .unwrap()
+    }
+
+    fn mtu_set(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
+        debug!("execute set `{}` command for port {}",
+               self.cmd(),
+               self.port);
+
+        let dev = ethdev::EthDevice::from(self.port as u8);
+
+        cl.println(match self.opt().parse::<u32>() {
+                Ok(mtu) => {
+                    if let Err(err) = dev.set_mtu(mtu as u16) {
+                        format!("Error: Fail to change mac address of port {}, {}",
+                                self.port,
+                                err)
+                    } else {
+                        format!("Port {} MTU was changed to {}", self.port, mtu)
+                    }
+                }
+                Err(err) => format!("Error: invalid MTU number {}, {}", self.opt(), err),
+            })
+            .unwrap()
+    }
+}
+
 struct CmdIntMacParams {
     cmd: cmdline::FixedStr,
     port: u16,
@@ -253,6 +319,12 @@ pub fn main(app_cfg: &mut AppConfig) {
 
     let pcmd_int_token_port = TOKEN_NUM_INITIALIZER!(CmdIntParams, port, u16);
 
+    // Commands taking port id and string
+    let pcmd_mtu_token_cmd = TOKEN_STRING_INITIALIZER!(CmdIntStrParams, cmd, "mtu");
+
+    let pcmd_intstr_token_port = TOKEN_NUM_INITIALIZER!(CmdIntStrParams, port, u16);
+    let pcmd_intstr_token_opt = TOKEN_STRING_INITIALIZER!(CmdIntStrParams, opt);
+
     // Commands taking port id and a MAC address string
     let pcmd_macaddr_token_cmd = TOKEN_STRING_INITIALIZER!(CmdIntMacParams, cmd, "macaddr");
     let pcmd_intmac_token_port = TOKEN_NUM_INITIALIZER!(CmdIntMacParams, port, u16);
@@ -265,10 +337,12 @@ pub fn main(app_cfg: &mut AppConfig) {
                                   None,
                                   "quit\n     Exit program",
                                   &[&pcmd_quit_token_cmd]);
+
     let pcmd_drvinfo = cmdline::inst(CmdGetParams::drvinfo,
                                      None,
                                      "drvinfo\n     Print driver info",
                                      &[&pcmd_drvinfo_token_cmd]);
+
     let pcmd_link = cmdline::inst(CmdGetParams::link,
                                   None,
                                   "link\n     Print port link states",
@@ -278,22 +352,42 @@ pub fn main(app_cfg: &mut AppConfig) {
                                   Some(app_cfg),
                                   "open <port_id>\n     Open port",
                                   &[&pcmd_open_token_cmd, &pcmd_int_token_port]);
+
     let pcmd_stop = cmdline::inst(CmdIntParams::stop,
                                   Some(app_cfg),
                                   "stop <port_id>\n     Stop port",
                                   &[&pcmd_stop_token_cmd, &pcmd_int_token_port]);
+
     let pcmd_rxmode = cmdline::inst(CmdIntParams::rxmode,
                                     None,
                                     "rxmode <port_id>\n     Toggle port Rx mode",
                                     &[&pcmd_rxmode_token_cmd, &pcmd_int_token_port]);
+
     let pcmd_portstats = cmdline::inst(CmdIntParams::portstats,
                                        None,
                                        "portstats <port_id>\n     Print port eth statistics",
                                        &[&pcmd_portstats_token_cmd, &pcmd_int_token_port]);
 
+    let pcmd_mtu_list = cmdline::inst(CmdIntStrParams::mtu_list,
+                                      Some(app_cfg),
+                                      "mtu\n     List MTU",
+                                      &[&pcmd_mtu_token_cmd]);
+
+    let pcmd_mtu_get = cmdline::inst(CmdIntStrParams::mtu_get,
+                                     None,
+                                     "mtu <port_id>\n     Show MTU",
+                                     &[&pcmd_mtu_token_cmd, &pcmd_intstr_token_port]);
+
+    let pcmd_mtu_set =
+        cmdline::inst(CmdIntStrParams::mtu_set,
+                      None,
+                      "mtu <port_id> <mtu_value>\n     Change MTU",
+                      &[&pcmd_mtu_token_cmd, &pcmd_intstr_token_port, &pcmd_intstr_token_opt]);
+
+
     let pcmd_macaddr_list = cmdline::inst(CmdIntMacParams::list,
                                           Some(app_cfg),
-                                          "macaddr <port_id>\n     List port MAC address",
+                                          "macaddr\n     List port MAC address",
                                           &[&pcmd_macaddr_token_cmd]);
 
     let pcmd_macaddr_get = cmdline::inst(CmdIntMacParams::get,
@@ -306,7 +400,6 @@ pub fn main(app_cfg: &mut AppConfig) {
                       Some(app_cfg),
                       "macaddr <port_id> <mac_addr>\n     Set MAC address",
                       &[&pcmd_macaddr_token_cmd, &pcmd_intmac_token_port, &pcmd_intmac_token_mac]);
-
 
     let pcmd_macaddr_validate = cmdline::inst(CmdIntMacParams::validate,
                                               None,
@@ -321,6 +414,9 @@ pub fn main(app_cfg: &mut AppConfig) {
                  &pcmd_stop,
                  &pcmd_rxmode,
                  &pcmd_portstats,
+                 &pcmd_mtu_list,
+                 &pcmd_mtu_get,
+                 &pcmd_mtu_set,
                  &pcmd_macaddr_list,
                  &pcmd_macaddr_get,
                  &pcmd_macaddr_set,
