@@ -1,4 +1,5 @@
 use std::mem;
+use std::result;
 use std::sync::Mutex;
 
 use rte::*;
@@ -43,6 +44,30 @@ impl AppConfig {
         AppConfig {
             ports: (0..ports).map(|_| Mutex::new(AppPort::default())).collect(),
             exit_now: false,
+        }
+    }
+
+    pub fn lock_port<T, F>(&self, port: u8, callback: F) -> result::Result<T, String>
+        where F: Fn(&mut AppPort, &ethdev::EthDevice) -> result::Result<T, String>
+    {
+        match self.ports.iter().nth(port as usize) {
+            Some(mutex) => {
+                let dev = ethdev::EthDevice::from(port);
+
+                if !dev.is_valid() {
+                    Err(format!("port {} is invalid", port))
+                } else {
+                    match mutex.lock() {
+                        Ok(mut guard) => {
+                            let app_port = &mut *guard;
+
+                            callback(app_port, &dev)
+                        }
+                        Err(err) => Err(format!("fail to lock port {}, {}", port, err)),
+                    }
+                }
+            }
+            _ => Err(format!("port number {} is invalid", port)),
         }
     }
 }

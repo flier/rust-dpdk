@@ -61,36 +61,12 @@ struct CmdIntParams {
 }
 
 impl CmdIntParams {
-    fn lock_port<F>(&self, app_cfg: Option<*mut AppConfig>, callback: F) -> CommandResult
-        where F: Fn(&mut AppPort, &ethdev::EthDevice) -> CommandResult
-    {
-        match unsafe { &mut *app_cfg.unwrap() }.ports.iter().nth(self.port as usize) {
-            Some(mutex) => {
-                let dev = ethdev::EthDevice::from(self.port as u8);
-
-                if !dev.is_valid() {
-                    Err(format!("port {} is invalid", self.port))
-                } else {
-                    match mutex.lock() {
-                        Ok(mut guard) => {
-                            let app_port = &mut *guard;
-
-                            callback(app_port, &dev)
-                        }
-                        Err(err) => Err(format!("fail to lock port {}, {}", self.port, err)),
-                    }
-                }
-            }
-            _ => Err(format!("port number {} is invalid", self.port)),
-        }
-    }
-
     fn open(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<*mut AppConfig>) {
         debug!("execute `{}` command for port {}",
                cmdline::str(&self.cmd).unwrap(),
                self.port);
 
-        let res = self.lock_port(app_cfg, |app_port, dev| {
+        let res = unsafe { &mut *app_cfg.unwrap() }.lock_port(self.port as u8, |app_port, dev| {
             dev.stop();
 
             if let Err(err) = dev.start() {
@@ -110,7 +86,7 @@ impl CmdIntParams {
                cmdline::str(&self.cmd).unwrap(),
                self.port);
 
-        let res = self.lock_port(app_cfg, |app_port, dev| {
+        let res = unsafe { &mut *app_cfg.unwrap() }.lock_port(self.port as u8, |app_port, dev| {
             if !dev.is_up() {
                 Err(format!("Port {} already stopped", self.port))
             } else {
