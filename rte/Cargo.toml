@@ -30,28 +30,23 @@ name = "rte"
 [[bin]]
 name = "ethtool"
 path = "src/bin/ethtool/main.rs"
-doc = false
 
 [[example]]
 name = "helloworld"
 path = "examples/helloworld/main.rs"
-test = false
-bench = false
 
 [[example]]
 name = "l2fwd"
 path = "examples/l2fwd/l2fwd.rs"
-test = false
-bench = false
 
 [[example]]
 name = "kni"
 path = "examples/kni/kni.rs"
-test = false
-bench = false
+
+[[example]]
+name = "bond"
+path = "examples/bond/main.rs"
 
 [[example]]
 name = "cmdline"
 path = "examples/cmdline/main.rs"
-test = false
-bench = false

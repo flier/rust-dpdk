@@ -15,6 +15,8 @@ extern crate rte_sys as ffi;
 pub mod errors;
 pub mod common;
 #[macro_use]
+pub mod macros;
+#[macro_use]
 pub mod debug;
 pub mod config;
 #[macro_use]
@@ -30,6 +32,7 @@ pub mod lcore;
 pub mod cycles;
 pub mod launch;
 pub mod eal;
+pub mod devargs;
 pub mod ethdev;
 pub mod pci;
 pub mod kni;
