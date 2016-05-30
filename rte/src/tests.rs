@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 use std::os::raw::c_void;
 
 use log::LogLevel::Debug;
-use cfile::CFile;
+use cfile;
 
 use ffi;
 
@@ -177,7 +177,7 @@ fn test_mempool() {
     p.audit();
 
     if log_enabled!(Debug) {
-        let stdout = CFile::open_tmpfile().unwrap();
+        let stdout = cfile::tmpfile().unwrap();
 
         p.dump(&stdout);
     }
@@ -215,7 +215,7 @@ fn test_mempool() {
     assert!(pools.iter().find(|pool| **pool == *p).is_some());
 
     if log_enabled!(Debug) {
-        let stdout = CFile::open_tmpfile().unwrap();
+        let stdout = cfile::tmpfile().unwrap();
 
         mempool::list_dump(&stdout);
     }

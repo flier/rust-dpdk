@@ -1,7 +1,7 @@
 use std::mem;
 use std::os::unix::io::AsRawFd;
 
-use cfile::{CFile, Stream};
+use cfile;
 
 use ffi;
 
@@ -34,7 +34,7 @@ pub fn type_count(devtype: DevType) -> usize {
 
 /// This function dumps the list of user device and their arguments.
 pub fn dump<S: AsRawFd>(s: &S) {
-    if let Ok(f) = CFile::open_stream(s, "w") {
+    if let Ok(f) = cfile::open_stream(s, "w") {
         unsafe {
             ffi::rte_eal_devargs_dump(f.stream() as *mut ffi::FILE);
         }

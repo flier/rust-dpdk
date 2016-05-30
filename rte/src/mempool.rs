@@ -4,10 +4,12 @@ use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 use std::os::unix::io::AsRawFd;
 
+use cfile;
+
 use ffi;
 
 use errors::Result;
-use cfile::{Stream, CFile};
+use memory::SocketId;
 
 bitflags! {
     pub flags MemoryPoolFlags: u32 {
@@ -159,7 +161,7 @@ pub fn create<T, O>(name: &str,
                     mp_init_arg: Option<&T>,
                     obj_init: Option<MemoryPoolObjectContructor<O>>,
                     obj_init_arg: Option<&O>,
-                    socket_id: i32,
+                    socket_id: SocketId,
                     flags: MemoryPoolFlags)
                     -> Result<RawMemoryPool> {
     let name = try!(CString::new(name))
@@ -211,7 +213,7 @@ pub fn lookup(name: &str) -> Option<RawMemoryPool> {
 
 /// Dump the status of all mempools on the console
 pub fn list_dump<S: AsRawFd>(s: &S) {
-    if let Ok(f) = CFile::open_stream(s, "w") {
+    if let Ok(f) = cfile::open_stream(s, "w") {
         unsafe {
             ffi::rte_mempool_list_dump(f.stream() as *mut ffi::FILE);
         }
@@ -309,7 +311,7 @@ impl MemoryPoolDebug for RawMemoryPool {
     }
 
     fn dump<S: AsRawFd>(&self, s: &S) {
-        if let Ok(f) = CFile::open_stream(s, "w") {
+        if let Ok(f) = cfile::open_stream(s, "w") {
             unsafe {
                 ffi::rte_mempool_dump(f.stream() as *mut ffi::FILE, self.0);
             }

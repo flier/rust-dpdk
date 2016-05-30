@@ -3,7 +3,7 @@ use std::ptr;
 use std::os::unix::io::AsRawFd;
 use std::os::raw::c_void;
 
-use cfile::{Stream, CFile};
+use cfile;
 
 use ffi;
 
@@ -132,7 +132,7 @@ pub fn get_socket_stats(socket_id: i32) -> Option<ffi::Struct_rte_malloc_socket_
 
 /// Dump statistics.
 pub fn dump_stats<S: AsRawFd>(s: &S, tag: Option<&str>) {
-    if let Ok(f) = CFile::open_stream(s, "w") {
+    if let Ok(f) = cfile::open_stream(s, "w") {
         unsafe {
             ffi::rte_malloc_dump_stats(f.stream() as *mut ffi::FILE,
                                        tag.map_or_else(|| ptr::null(),
