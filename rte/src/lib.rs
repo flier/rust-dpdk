@@ -13,16 +13,16 @@ extern crate rte_sys as ffi;
 
 #[macro_use]
 pub mod errors;
-pub mod common;
 #[macro_use]
 pub mod macros;
+pub mod common;
 #[macro_use]
 pub mod debug;
 pub mod config;
-#[macro_use]
-pub mod cmdline;
+
 #[macro_use]
 pub mod malloc;
+pub mod memory;
 pub mod memzone;
 pub mod mempool;
 #[macro_use]
@@ -36,6 +36,10 @@ pub mod devargs;
 pub mod ethdev;
 pub mod pci;
 pub mod kni;
+pub mod bond;
+
+#[macro_use]
+pub mod cmdline;
 
 pub use errors::{Error, Result};
 pub use ffi::consts::*;

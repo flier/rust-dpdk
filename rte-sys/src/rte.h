@@ -31,6 +31,7 @@
 #include <rte_ether.h>
 #include <rte_ethdev.h>
 #include <rte_kni.h>
+#include <rte_eth_bond.h>
 
 #include <cmdline_rdline.h>
 #include <cmdline_parse.h>
