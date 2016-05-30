@@ -70,7 +70,7 @@ struct Struct_kni_port_params {
     // lcore ID list for kthreads
     lcore_k: [libc::c_uint; KNI_MAX_KTHREAD],
     // KNI context pointers
-    kni: [kni::RawDevicePtr; KNI_MAX_KTHREAD],
+    kni: [kni::RawKniDevicePtr; KNI_MAX_KTHREAD],
 }
 
 struct Conf {
@@ -421,7 +421,7 @@ fn kni_alloc(conf: &Conf, dev: &ethdev::EthDevice, pktmbuf_pool: &mempool::RawMe
         conf.mbuf_size = MAX_PACKET_SZ;
 
 
-        let kni = (if i == 0 {
+        let mut kni = (if i == 0 {
                 // The first KNI device associated to a port is the master,
                 // for multiple kernel thread environment.
                 let info = dev.info();
@@ -442,7 +442,7 @@ fn kni_alloc(conf: &Conf, dev: &ethdev::EthDevice, pktmbuf_pool: &mempool::RawMe
             })
             .expect(format!("Fail to create kni for port: {}", portid).as_str());
 
-        param.kni[i as usize] = kni.as_raw();
+        param.kni[i as usize] = kni.into_raw();
 
         debug!("allocated kni device `{}` @{:p} for port #{}",
                conf.name,
@@ -463,7 +463,7 @@ fn kni_free_kni(conf: &Conf, dev: &ethdev::EthDevice) {
     };
 
     for kni in &param.kni[..param.nb_kni as usize] {
-        let _ = kni::KniDevice::from(*kni);
+        let _ = kni::KniDevice::from_raw(*kni);
     }
 
     dev.stop();

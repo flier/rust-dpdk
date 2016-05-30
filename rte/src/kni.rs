@@ -1,6 +1,7 @@
 use std::ptr;
 use std::mem;
 use std::cmp;
+use std::ops::{Deref, DerefMut};
 use std::ffi::{CStr, CString};
 
 use libc;
@@ -92,24 +93,66 @@ pub type ConfigNetworkInterfaceCallback = fn(port_id: u8, if_up: u8) -> libc::c_
 
 pub type KniDeviceOps = ffi::Struct_rte_kni_ops;
 
-pub type RawDevicePtr = *mut ffi::Struct_rte_kni;
+pub type RawKniDevice = ffi::Struct_rte_kni;
+pub type RawKniDevicePtr = *mut ffi::Struct_rte_kni;
 
-pub struct KniDevice(RawDevicePtr);
+pub struct KniDevice(RawKniDevicePtr);
 
-impl From<RawDevicePtr> for KniDevice {
-    fn from(p: RawDevicePtr) -> Self {
-        KniDevice(p)
+impl Drop for KniDevice {
+    fn drop(&mut self) {
+        self.release().expect("fail to release KNI device")
+    }
+}
+
+impl Deref for KniDevice {
+    type Target = RawKniDevice;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { &*self.0 }
+    }
+}
+
+impl DerefMut for KniDevice {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { &mut *self.0 }
     }
 }
 
 impl KniDevice {
+    pub fn from_raw(p: RawKniDevicePtr) -> Self {
+        KniDevice(p)
+    }
+
     /// Extract the raw pointer from an underlying object.
-    pub fn as_raw(&self) -> RawDevicePtr {
+    pub fn as_raw(&self) -> RawKniDevicePtr {
         return self.0;
     }
 
+    /// Consume the KniDevice, returning the raw pointer from an underlying object.
+    pub fn into_raw(&mut self) -> RawKniDevicePtr {
+        let p = self.0;
+
+        self.0 = ptr::null_mut();
+
+        mem::forget(self);
+
+        p
+    }
+
     pub fn release(&mut self) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_kni_release(self.0) })
+        if self.0.is_null() {
+            Ok(())
+        } else {
+            rte_check!(unsafe {
+                ffi::rte_kni_release(self.0)
+            }; ok => {
+                self.0 = ptr::null_mut();
+
+                mem::forget(self);
+
+                ()
+            })
+        }
     }
 
     /// Get the KNI context of its name.
@@ -129,8 +172,8 @@ impl KniDevice {
     /// Then analyzes it and calls the specific actions for the specific requests.
     /// Finally constructs the response mbuf and puts it back to the resp_q.
     ///
-    pub fn handle_requests(&self) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_kni_handle_request(self.0) })
+    pub fn handle_requests(&self) -> Result<&Self> {
+        rte_check!(unsafe { ffi::rte_kni_handle_request(self.0) }; ok => { self })
     }
 
     /// Retrieve a burst of packets from a KNI interface.
@@ -157,12 +200,14 @@ impl KniDevice {
 
     /// Register KNI request handling for a specified port,
     /// and it can be called by master process or slave process.
-    pub fn register_handlers(&self, opts: Option<&KniDeviceOps>) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_kni_register_handlers(self.0, mem::transmute(opts)) })
+    pub fn register_handlers(&self, opts: Option<&KniDeviceOps>) -> Result<&Self> {
+        rte_check!(unsafe {
+            ffi::rte_kni_register_handlers(self.0, mem::transmute(opts))
+        }; ok => { self })
     }
 
     /// Unregister KNI request handling for a specified port.
-    pub fn unregister_handlers(&self) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_kni_unregister_handlers(self.0) })
+    pub fn unregister_handlers(&self) -> Result<&Self> {
+        rte_check!(unsafe { ffi::rte_kni_unregister_handlers(self.0) }; ok => { self })
     }
 }
