@@ -37,11 +37,11 @@ path = "examples/helloworld/main.rs"
 
 [[example]]
 name = "l2fwd"
-path = "examples/l2fwd/l2fwd.rs"
+path = "examples/l2fwd/main.rs"
 
 [[example]]
 name = "kni"
-path = "examples/kni/kni.rs"
+path = "examples/kni/main.rs"
 
 [[example]]
 name = "bond"
