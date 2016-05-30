@@ -41,23 +41,56 @@ fn slave_port_init(port_id: u8,
     let dev = ethdev::dev(port_id);
 
     dev.configure(1, 1, &port_conf)
-        .expect(format!("fail to configure device: port={}", port_id).as_str());
+        .expect(&format!("fail to configure device: port={}", port_id));
 
     // init one RX queue
     dev.rx_queue_setup(0, RTE_RX_DESC_DEFAULT, None, &pktmbuf_pool)
-        .expect(format!("fail to setup device rx queue: port={}", port_id).as_str());
+        .expect(&format!("fail to setup device rx queue: port={}", port_id));
 
     // init one TX queue on each port
     dev.tx_queue_setup(0, RTE_TX_DESC_DEFAULT, None)
-        .expect(format!("fail to setup device tx queue: port={}", port_id).as_str());
+        .expect(&format!("fail to setup device tx queue: port={}", port_id));
 
     // Start device
-    dev.start().expect(format!("fail to start device: port={}", port_id).as_str());
+    dev.start().expect(&format!("fail to start device: port={}", port_id));
 
     info!("Port {} MAC: {}", port_id, dev.mac_addr());
 }
 
-fn bond_port_init(pktmbuf_pool: &mempool::RawMemoryPool) {}
+fn bond_port_init(slave_count: u8,
+                  port_conf: &ethdev::EthConf,
+                  pktmbuf_pool: &mempool::RawMemoryPool) {
+    let dev = bond::create("bond0", bond::BondMode::AdaptiveLB, 0)
+        .expect("Faled to create bond port");
+
+    let bonded_port_id = dev.portid();
+
+    dev.configure(1, 1, &port_conf)
+        .expect(&format!("fail to configure device: port={}", bonded_port_id));
+
+    // init one RX queue
+    dev.rx_queue_setup(0, RTE_RX_DESC_DEFAULT, None, &pktmbuf_pool)
+        .expect(&format!("fail to setup device rx queue: port={}", bonded_port_id));
+
+    // init one TX queue on each port
+    dev.tx_queue_setup(0, RTE_TX_DESC_DEFAULT, None)
+        .expect(&format!("fail to setup device tx queue: port={}", bonded_port_id));
+
+    for slave_port_id in 0..slave_count {
+        dev.add_slave(&ethdev::dev(slave_port_id))
+            .expect(&format!("Oooops! adding slave {} to bond {} failed!",
+                             slave_port_id,
+                             bonded_port_id));
+    }
+
+    // Start device
+    dev.start()
+        .expect(&format!("fail to start device: port={}", bonded_port_id));
+
+    dev.promiscuous_enable();
+
+    info!("Bonded port {} MAC: {}", bonded_port_id, dev.mac_addr());
+}
 
 // Main function, does initialisation and calls the per-lcore functions
 fn main() {
@@ -105,5 +138,5 @@ fn main() {
         slave_port_init(portid, &port_conf, &pktmbuf_pool);
     }
 
-    bond_port_init(&pktmbuf_pool);
+    bond_port_init(nb_ports, &port_conf, &pktmbuf_pool);
 }

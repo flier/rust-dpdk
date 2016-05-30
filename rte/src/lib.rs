@@ -43,6 +43,10 @@ pub mod cmdline;
 
 pub use errors::{Error, Result};
 pub use ffi::consts::*;
+pub use memory::SocketId;
+pub use lcore::LcoreId;
+pub use ethdev::PortId;
+pub use ethdev::QueueId;
 
 pub mod raw {
     pub use ffi::*;

@@ -1,11 +1,10 @@
 use std::mem;
+use std::ops::{Deref, DerefMut};
 
 use ffi;
 
 use errors::Result;
 use memory::SocketId;
-use ethdev::PortId;
-
 use ethdev;
 use ether;
 
@@ -111,11 +110,25 @@ impl From<u8> for TransmitPolicy {
 
 pub struct BondedDevice(ethdev::EthDevice);
 
+impl Deref for BondedDevice {
+    type Target = ethdev::EthDevice;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for BondedDevice {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
 /// Create a bonded rte_eth_dev device
 pub fn create(name: &str, mode: BondMode, socket_id: SocketId) -> Result<BondedDevice> {
     let port_id = unsafe { ffi::rte_eth_bond_create(cstr!(name), mode as u8, socket_id as u8) };
 
-    rte_check!(port_id; ok => { dev(port_id as PortId) })
+    rte_check!(port_id; ok => { dev(port_id as ethdev::PortId) })
 }
 
 /// Free a bonded rte_eth_dev device
@@ -123,22 +136,22 @@ pub fn free(name: &str) -> Result<()> {
     rte_check!(unsafe { ffi::rte_eth_bond_free(cstr!(name)) })
 }
 
-pub fn dev(port_id: PortId) -> BondedDevice {
+pub fn dev(port_id: ethdev::PortId) -> BondedDevice {
     BondedDevice(ethdev::dev(port_id))
 }
 
 impl BondedDevice {
     /// Add a rte_eth_dev device as a slave to the bonded device
-    pub fn add_slave(&self, slave_port_id: PortId) -> Result<&Self> {
+    pub fn add_slave(&self, slave: &ethdev::EthDevice) -> Result<&Self> {
         rte_check!(unsafe {
-            ffi::rte_eth_bond_slave_add(self.0.portid(), slave_port_id)
+            ffi::rte_eth_bond_slave_add(self.0.portid(), slave.portid())
         }; ok => { self })
     }
 
     /// Remove a slave rte_eth_dev device from the bonded device
-    pub fn remove_slave(&self, slave_port_id: PortId) -> Result<&Self> {
+    pub fn remove_slave(&self, slave: &ethdev::EthDevice) -> Result<&Self> {
         rte_check!(unsafe {
-            ffi::rte_eth_bond_slave_remove(self.0.portid(), slave_port_id)
+            ffi::rte_eth_bond_slave_remove(self.0.portid(), slave.portid())
         }; ok => { self })
     }
 
