@@ -295,18 +295,18 @@ fn init_port(conf: &Conf,
     info!("Initialising port {} ...", portid);
 
     dev.configure(1, 1, &port_conf)
-        .expect(format!("fail to configure device: port={}", portid).as_str());
+        .expect(&format!("fail to configure device: port={}", portid));
 
     // init one RX queue
     dev.rx_queue_setup(0, NB_RXD, None, &pktmbuf_pool)
-        .expect(format!("fail to setup device rx queue: port={}", portid).as_str());
+        .expect(&format!("fail to setup device rx queue: port={}", portid));
 
     // init one TX queue on each port
     dev.tx_queue_setup(0, NB_TXD, None)
-        .expect(format!("fail to setup device tx queue: port={}", portid).as_str());
+        .expect(&format!("fail to setup device tx queue: port={}", portid));
 
     // Start device
-    dev.start().expect(format!("fail to start device: port={}", portid).as_str());
+    dev.start().expect(&format!("fail to start device: port={}", portid));
 
     info!("Done: ");
 
@@ -440,7 +440,7 @@ fn kni_alloc(conf: &Conf, dev: &ethdev::EthDevice, pktmbuf_pool: &mempool::RawMe
             } else {
                 kni::alloc(&pktmbuf_pool, &conf, None)
             })
-            .expect(format!("Fail to create kni for port: {}", portid).as_str());
+            .expect(&format!("Fail to create kni for port: {}", portid));
 
         param.kni[i as usize] = kni.into_raw();
 

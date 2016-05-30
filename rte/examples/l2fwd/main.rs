@@ -367,7 +367,7 @@ fn main() {
         print!("Initializing port {}... ", portid);
 
         dev.configure(1, 1, &port_conf)
-            .expect(format!("fail to configure device: port={}", portid).as_str());
+            .expect(&format!("fail to configure device: port={}", portid));
 
         let mac_addr = dev.mac_addr();
 
@@ -377,25 +377,25 @@ fn main() {
 
         // init one RX queue
         dev.rx_queue_setup(0, conf.nb_rxd, None, &l2fwd_pktmbuf_pool)
-            .expect(format!("fail to setup device rx queue: port={}", portid).as_str());
+            .expect(&format!("fail to setup device rx queue: port={}", portid));
 
         // init one TX queue on each port
         dev.tx_queue_setup(0, conf.nb_txd, None)
-            .expect(format!("fail to setup device tx queue: port={}", portid).as_str());
+            .expect(&format!("fail to setup device tx queue: port={}", portid));
 
         // Initialize TX buffers
         let buf = ethdev::TxBuffer::new(MAX_PKT_BURST, dev.socket_id())
-            .expect(format!("fail to allocate buffer for tx: port={}", portid).as_str());
+            .expect(&format!("fail to allocate buffer for tx: port={}", portid));
 
         buf.count_err_packets()
-            .expect(format!("failt to set error callback for tx buffer: port={}", portid).as_str());
+            .expect(&format!("failt to set error callback for tx buffer: port={}", portid));
 
         unsafe {
             l2fwd_tx_buffers[portid] = buf.into_raw();
         }
 
         // Start device
-        dev.start().expect(format!("fail to start device: port={}", portid).as_str());
+        dev.start().expect(&format!("fail to start device: port={}", portid));
 
         println!("Done: ");
 
@@ -410,9 +410,8 @@ fn main() {
                      } else {
                          "disabled"
                      })
-                     .expect(format!("fail to enable promiscuous mode for device: port={}",
-                                     portid)
-                         .as_str()));
+                     .expect(&format!("fail to enable promiscuous mode for device: port={}",
+                                      portid)));
     }
 
     check_all_ports_link_status(&enabled_devices);

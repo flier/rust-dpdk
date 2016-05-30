@@ -54,18 +54,18 @@ fn setup_ports(app_cfg: &mut AppConfig) {
             app_port.port_id = portid as u8;
 
             dev.configure(1, 1, &port_conf)
-                .expect(format!("fail to configure device: port={}", portid).as_str());
+                .expect(&format!("fail to configure device: port={}", portid));
 
             // init one RX queue
             dev.rx_queue_setup(0, PORT_RX_QUEUE_SIZE, None, &app_port.pkt_pool.unwrap())
-                .expect(format!("fail to setup device rx queue: port={}", portid).as_str());
+                .expect(&format!("fail to setup device rx queue: port={}", portid));
 
             // init one TX queue on each port
             dev.tx_queue_setup(0, PORT_TX_QUEUE_SIZE, None)
-                .expect(format!("fail to setup device tx queue: port={}", portid).as_str());
+                .expect(&format!("fail to setup device tx queue: port={}", portid));
 
             // Start device
-            dev.start().expect(format!("fail to start device: port={}", portid).as_str());
+            dev.start().expect(&format!("fail to start device: port={}", portid));
 
             dev.promiscuous_enable();
         }
