@@ -73,7 +73,7 @@ fn test_lcore() {
     assert_eq!(lcore::enabled_lcores().len(), num_cpus::get());
 
     assert_eq!(lcore::index(256), None);
-    assert_eq!(lcore::index(-1), Some(lcore_id));
+    assert_eq!(lcore::index(lcore::LCORE_ID_ANY), Some(lcore_id));
     assert_eq!(lcore::index(0), Some(lcore_id));
 }
 

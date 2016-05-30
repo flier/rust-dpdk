@@ -3,8 +3,11 @@ use std::mem;
 use ffi;
 
 use config;
+use memory::SocketId;
 
-const LCORE_ID_ANY: u32 = 0xffffffff;
+pub type LcoreId = u32;
+
+pub const LCORE_ID_ANY: LcoreId = !0 as u32;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(u32)]
@@ -18,18 +21,15 @@ extern "C" {
 }
 
 /// Return the ID of the execution unit we are running on.
-pub fn id() -> Option<u32> {
-    let id = unsafe { _rte_lcore_id() };
-
-    if id == LCORE_ID_ANY {
-        None
-    } else {
-        Some(id)
+pub fn id() -> Option<LcoreId> {
+    match unsafe { _rte_lcore_id() } {
+        LCORE_ID_ANY => None,
+        id @ _ => Some(id),
     }
 }
 
 /// Get the id of the master lcore
-pub fn master() -> u32 {
+pub fn master() -> LcoreId {
     config::get_configuration().master_lcore()
 }
 
@@ -39,18 +39,18 @@ pub fn count() -> usize {
 }
 
 /// Return the index of the lcore starting from zero.
-pub fn index(lcore_id: i32) -> Option<u32> {
-    if lcore_id >= ffi::RTE_MAX_LCORE as i32 {
-        None
-    } else if lcore_id < 0 {
-        id()
-    } else {
-        Some(unsafe { ffi::lcore_config[lcore_id as usize].core_index as u32 })
+pub fn index(lcore_id: LcoreId) -> Option<u32> {
+    match lcore_id {
+        LCORE_ID_ANY => id(),
+        0...ffi::RTE_MAX_LCORE => {
+            Some(unsafe { ffi::lcore_config[lcore_id as usize].core_index as u32 })
+        }
+        _ => None,
     }
 }
 
 /// Get the next enabled lcore ID.
-pub fn next(lcore_id: u32, skip_master: bool) -> u32 {
+pub fn next(lcore_id: LcoreId, skip_master: bool) -> LcoreId {
     let mut i = (lcore_id + 1) % ffi::RTE_MAX_LCORE;
 
     while i < ffi::RTE_MAX_LCORE {
@@ -67,31 +67,31 @@ pub fn next(lcore_id: u32, skip_master: bool) -> u32 {
 }
 
 /// Get a lcore's role.
-pub fn role(lcore_id: u32) -> Role {
+pub fn role(lcore_id: LcoreId) -> Role {
     unsafe { mem::transmute(ffi::rte_eal_lcore_role(lcore_id)) }
 }
 
 /// Get the ID of the physical socket of the specified lcore
-pub fn socket_id(lcore_id: u32) -> u32 {
-    unsafe { ffi::lcore_config[lcore_id as usize].socket_id }
+pub fn socket_id(lcore_id: LcoreId) -> SocketId {
+    unsafe { ffi::lcore_config[lcore_id as usize].socket_id as SocketId }
 }
 
 /// Test if an lcore is enabled.
-pub fn is_enabled(lcore_id: u32) -> bool {
+pub fn is_enabled(lcore_id: LcoreId) -> bool {
     role(lcore_id) == Role::Rte
 }
 
 #[inline]
-pub fn foreach<T, F: Fn(u32) -> T>(f: F) -> Vec<T> {
+pub fn foreach<T, F: Fn(LcoreId) -> T>(f: F) -> Vec<T> {
     foreach_lcores(f, false)
 }
 
 #[inline]
-pub fn foreach_slave<T, F: Fn(u32) -> T>(f: F) -> Vec<T> {
+pub fn foreach_slave<T, F: Fn(LcoreId) -> T>(f: F) -> Vec<T> {
     foreach_lcores(f, true)
 }
 
-pub fn foreach_lcores<T, F: Fn(u32) -> T>(f: F, skip_master: bool) -> Vec<T> {
+pub fn foreach_lcores<T, F: Fn(LcoreId) -> T>(f: F, skip_master: bool) -> Vec<T> {
     let master_lcore = config::get_configuration().master_lcore();
 
     (0..ffi::RTE_MAX_LCORE)
@@ -102,6 +102,6 @@ pub fn foreach_lcores<T, F: Fn(u32) -> T>(f: F, skip_master: bool) -> Vec<T> {
 }
 
 #[inline]
-pub fn enabled_lcores() -> Vec<u32> {
+pub fn enabled_lcores() -> Vec<LcoreId> {
     foreach(|lcore_id| lcore_id)
 }
