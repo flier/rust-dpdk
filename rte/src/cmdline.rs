@@ -7,7 +7,7 @@ use std::string;
 use std::iter::Iterator;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::path::Path;
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
 use std::marker::PhantomData;
 use std::os::raw::{c_char, c_void};
 
@@ -92,50 +92,6 @@ pub fn is_end_of_token(c: u8) -> bool {
 }
 
 pub type RawTokenOps = ffi::Struct_cmdline_token_ops;
-
-macro_rules! cstr {
-    ($s:expr) => (
-        CString::new($s).unwrap().as_ptr() as *const i8
-    )
-}
-
-macro_rules! try_cstr {
-    ($s:expr) => (
-        try!(CString::new($s.to_string())).as_ptr() as *const i8
-    )
-}
-
-/// Macro to get the offset of a struct field in bytes from the address of the
-/// struct.
-///
-/// This macro is identical to `offset_of!` but doesn't give a warning about
-/// unnecessary unsafe blocks when invoked from unsafe code.
-#[macro_export]
-macro_rules! offset_of_unsafe {
-    ($container:path, $field:ident) => {{
-        // Make sure the field exists, otherwise this could result in UB if the
-        // field is accessed through Deref. This will cause a null dereference
-        // at runtime since the offset can't be reduced to a constant.
-        let $container { $field : _, .. };
-
-        // Yes, this is technically derefencing a null pointer. However, Rust
-        // currently accepts this and reduces it to a constant, even in debug
-        // builds!
-        &(*(0 as *const $container)).$field as *const _ as isize
-    }};
-}
-
-/// Macro to get the offset of a struct field in bytes from the address of the
-/// struct.
-///
-/// This macro will cause a warning if it is invoked in an unsafe block. Use the
-/// `offset_of_unsafe` macro instead to avoid this warning.
-#[macro_export]
-macro_rules! offset_of {
-    ($container:path, $field:ident) => {
-        unsafe { offset_of_unsafe!($container, $field) }
-    };
-}
 
 #[macro_export]
 macro_rules! TOKEN_STRING_INITIALIZER {

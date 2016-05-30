@@ -428,7 +428,9 @@ fn main() {
         dev.close();
         println!(" Done");
 
-        let _ = ethdev::TxBuffer::from(l2fwd_tx_buffers[dev.portid()]);
+        unsafe {
+            let _ = ethdev::TxBuffer::from(l2fwd_tx_buffers[dev.portid() as usize]);
+        }
     }
 
     println!("Bye...");

@@ -16,13 +16,6 @@ use mbuf;
 use pci;
 use ether;
 
-const BOOL_TRUE: u8 = 1;
-const BOOL_FALSE: u8 = 0;
-
-macro_rules! bool_value {
-    ($b:expr) => ( if $b { BOOL_TRUE } else { BOOL_FALSE } )
-}
-
 /// A structure used to retrieve link-level information of an Ethernet port.
 pub struct EthLink {
     pub speed: u32,
