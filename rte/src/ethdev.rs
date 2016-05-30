@@ -10,11 +10,15 @@ use libc;
 use ffi;
 
 use errors::{Error, Result};
+use memory::SocketId;
 use mempool;
 use malloc;
 use mbuf;
 use pci;
 use ether;
+
+pub type PortId = u8;
+pub type QueueId = u16;
 
 /// A structure used to retrieve link-level information of an Ethernet port.
 pub struct EthLink {
@@ -27,14 +31,14 @@ pub struct EthLink {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct EthDevice(u8);
 
-impl From<u8> for EthDevice {
-    fn from(portid: u8) -> Self {
+impl From<PortId> for EthDevice {
+    fn from(portid: PortId) -> Self {
         EthDevice(portid)
     }
 }
 
 impl Deref for EthDevice {
-    type Target = u8;
+    type Target = PortId;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -53,15 +57,15 @@ pub fn count() -> u8 {
     unsafe { ffi::rte_eth_dev_count() }
 }
 
-pub fn ports() -> Range<u8> {
+pub fn ports() -> Range<PortId> {
     0..count()
 }
 
-pub fn devices() -> Map<Range<u8>, fn(u8) -> EthDevice> {
+pub fn devices() -> Map<Range<PortId>, fn(PortId) -> EthDevice> {
     ports().map(EthDevice::from)
 }
 
-pub fn dev(portid: u8) -> EthDevice {
+pub fn dev(portid: PortId) -> EthDevice {
     EthDevice(portid)
 }
 
@@ -75,7 +79,7 @@ pub fn attach(devargs: &str) -> Result<EthDevice> {
 }
 
 impl EthDevice {
-    pub fn portid(&self) -> u8 {
+    pub fn portid(&self) -> PortId {
         self.0
     }
 
@@ -84,13 +88,17 @@ impl EthDevice {
     /// This function must be invoked first before any other function in the Ethernet API.
     /// This function can also be re-invoked when a device is in the stopped state.
     ///
-    pub fn configure(&self, nb_rx_queue: u16, nb_tx_queue: u16, conf: &EthConf) -> Result<()> {
+    pub fn configure(&self,
+                     nb_rx_queue: QueueId,
+                     nb_tx_queue: QueueId,
+                     conf: &EthConf)
+                     -> Result<&Self> {
         rte_check!(unsafe {
             ffi::rte_eth_dev_configure(self.0,
                                        nb_rx_queue,
                                        nb_tx_queue,
                                        RawEthConf::from(conf).as_raw())
-        })
+        }; ok => { self })
     }
 
     /// Retrieve the contextual information of an Ethernet device.
@@ -112,8 +120,10 @@ impl EthDevice {
     }
 
     /// Reset the general I/O statistics of an Ethernet device.
-    pub fn reset_stats(&self) {
-        unsafe { ffi::rte_eth_stats_reset(self.0) }
+    pub fn reset_stats(&self) -> &Self {
+        unsafe { ffi::rte_eth_stats_reset(self.0) };
+
+        self
     }
 
     /// Retrieve the Ethernet address of an Ethernet device.
@@ -128,14 +138,14 @@ impl EthDevice {
     }
 
     /// Set the default MAC address.
-    pub fn set_mac_addr(&self, addr: &[u8; ether::ETHER_ADDR_LEN]) -> Result<()> {
+    pub fn set_mac_addr(&self, addr: &[u8; ether::ETHER_ADDR_LEN]) -> Result<&Self> {
         rte_check!(unsafe {
             ffi::rte_eth_dev_default_mac_addr_set(self.0, mem::transmute(addr.as_ptr()))
-        })
+        }; ok => { self })
     }
 
     /// Return the NUMA socket to which an Ethernet device is connected
-    pub fn socket_id(&self) -> i32 {
+    pub fn socket_id(&self) -> SocketId {
         unsafe { ffi::rte_eth_dev_socket_id(self.0) }
     }
 
@@ -151,11 +161,11 @@ impl EthDevice {
     /// and initializes each receive descriptor with a network buffer allocated
     /// from the memory pool *mb_pool*.
     pub fn rx_queue_setup(&self,
-                          rx_queue_id: u16,
+                          rx_queue_id: QueueId,
                           nb_rx_desc: u16,
                           rx_conf: Option<ffi::Struct_rte_eth_rxconf>,
                           mb_pool: &mempool::RawMemoryPool)
-                          -> Result<()> {
+                          -> Result<&Self> {
         rte_check!(unsafe {
             ffi::rte_eth_rx_queue_setup(self.0,
                                         rx_queue_id,
@@ -163,32 +173,36 @@ impl EthDevice {
                                         self.socket_id() as u32,
                                         mem::transmute(&rx_conf),
                                         mb_pool.as_raw())
-        })
+        }; ok => { self })
     }
 
     /// Allocate and set up a transmit queue for an Ethernet device.
     pub fn tx_queue_setup(&self,
-                          tx_queue_id: u16,
+                          tx_queue_id: QueueId,
                           nb_tx_desc: u16,
                           tx_conf: Option<ffi::Struct_rte_eth_txconf>)
-                          -> Result<()> {
+                          -> Result<&Self> {
         rte_check!(unsafe {
             ffi::rte_eth_tx_queue_setup(self.0,
                                         tx_queue_id,
                                         nb_tx_desc,
                                         self.socket_id() as u32,
                                         mem::transmute(&tx_conf))
-        })
+        }; ok => { self })
     }
 
     /// Enable receipt in promiscuous mode for an Ethernet device.
-    pub fn promiscuous_enable(&self) {
-        unsafe { ffi::rte_eth_promiscuous_enable(self.0) }
+    pub fn promiscuous_enable(&self) -> &Self {
+        unsafe { ffi::rte_eth_promiscuous_enable(self.0) };
+
+        self
     }
 
     /// Disable receipt in promiscuous mode for an Ethernet device.
-    pub fn promiscuous_disable(&self) {
-        unsafe { ffi::rte_eth_promiscuous_disable(self.0) }
+    pub fn promiscuous_disable(&self) -> &Self {
+        unsafe { ffi::rte_eth_promiscuous_disable(self.0) };
+
+        self
     }
 
     /// Return the value of promiscuous mode for an Ethernet device.
@@ -206,14 +220,16 @@ impl EthDevice {
     }
 
     /// Change the MTU of an Ethernet device.
-    pub fn set_mtu(&self, mtu: u16) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_set_mtu(self.0, mtu) })
+    pub fn set_mtu(&self, mtu: u16) -> Result<&Self> {
+        rte_check!(unsafe { ffi::rte_eth_dev_set_mtu(self.0, mtu) }; ok => { self })
     }
 
     /// Enable/Disable hardware filtering by an Ethernet device
     /// of received VLAN packets tagged with a given VLAN Tag Identifier.
-    pub fn set_vlan_filter(&self, vlan_id: u16, on: bool) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_vlan_filter(self.0, vlan_id, bool_value!(on) as i32) })
+    pub fn set_vlan_filter(&self, vlan_id: u16, on: bool) -> Result<&Self> {
+        rte_check!(unsafe {
+            ffi::rte_eth_dev_vlan_filter(self.0, vlan_id, bool_value!(on) as i32)
+        }; ok => { self })
     }
 
     /// Retrieve the Ethernet device link status
@@ -259,82 +275,90 @@ impl EthDevice {
     }
 
     /// Link up an Ethernet device.
-    pub fn set_link_up(&self) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_set_link_up(self.0) })
+    pub fn set_link_up(&self) -> Result<&Self> {
+        rte_check!(unsafe { ffi::rte_eth_dev_set_link_up(self.0) }; ok => { self })
     }
 
     /// Link down an Ethernet device.
-    pub fn set_link_down(&self) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_set_link_down(self.0) })
+    pub fn set_link_down(&self) -> Result<&Self> {
+        rte_check!(unsafe { ffi::rte_eth_dev_set_link_down(self.0) }; ok => { self })
     }
 
     /// Allocate mbuf from mempool, setup the DMA physical address
     /// and then start RX for specified queue of a port. It is used
     /// when rx_deferred_start flag of the specified queue is true.
-    pub fn rx_queue_start(&self, rx_queue_id: u16) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_rx_queue_start(self.0, rx_queue_id) })
+    pub fn rx_queue_start(&self, rx_queue_id: QueueId) -> Result<&Self> {
+        rte_check!(unsafe { ffi::rte_eth_dev_rx_queue_start(self.0, rx_queue_id) }; ok => { self })
     }
 
     /// Stop specified RX queue of a port
-    pub fn rx_queue_stop(&self, rx_queue_id: u16) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_rx_queue_stop(self.0, rx_queue_id) })
+    pub fn rx_queue_stop(&self, rx_queue_id: QueueId) -> Result<&Self> {
+        rte_check!(unsafe { ffi::rte_eth_dev_rx_queue_stop(self.0, rx_queue_id) }; ok => { self })
     }
 
     /// Start TX for specified queue of a port.
     /// It is used when tx_deferred_start flag of the specified queue is true.
-    pub fn tx_queue_start(&self, tx_queue_id: u16) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_tx_queue_start(self.0, tx_queue_id) })
+    pub fn tx_queue_start(&self, tx_queue_id: QueueId) -> Result<&Self> {
+        rte_check!(unsafe { ffi::rte_eth_dev_tx_queue_start(self.0, tx_queue_id) }; ok => { self })
     }
 
     /// Stop specified TX queue of a port
-    pub fn tx_queue_stop(&self, tx_queue_id: u16) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_tx_queue_stop(self.0, tx_queue_id) })
+    pub fn tx_queue_stop(&self, tx_queue_id: QueueId) -> Result<&Self> {
+        rte_check!(unsafe { ffi::rte_eth_dev_tx_queue_stop(self.0, tx_queue_id) }; ok => { self })
     }
 
     /// Start an Ethernet device.
-    pub fn start(&self) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_start(self.0) })
+    pub fn start(&self) -> Result<&Self> {
+        rte_check!(unsafe { ffi::rte_eth_dev_start(self.0) }; ok => { self })
     }
 
     /// Stop an Ethernet device.
-    pub fn stop(&self) {
-        unsafe { ffi::rte_eth_dev_stop(self.0) }
+    pub fn stop(&self) -> &Self {
+        unsafe { ffi::rte_eth_dev_stop(self.0) };
+
+        self
     }
 
     /// Close a stopped Ethernet device. The device cannot be restarted!
-    pub fn close(&self) {
-        unsafe { ffi::rte_eth_dev_close(self.0) }
+    pub fn close(&self) -> &Self {
+        unsafe { ffi::rte_eth_dev_close(self.0) };
+
+        self
     }
 
     /// Retrieve a burst of input packets from a receive queue of an Ethernet device.
-    pub fn rx_burst(&self, queue_id: u16, rx_pkts: &mut [mbuf::RawMbufPtr]) -> usize {
+    pub fn rx_burst(&self, queue_id: QueueId, rx_pkts: &mut [mbuf::RawMbufPtr]) -> usize {
         unsafe {
             _rte_eth_rx_burst(self.0, queue_id, rx_pkts.as_mut_ptr(), rx_pkts.len() as u16) as usize
         }
     }
 
     /// Send a burst of output packets on a transmit queue of an Ethernet device.
-    pub fn tx_burst(&self, queue_id: u16, rx_pkts: &mut [mbuf::RawMbufPtr]) -> usize {
+    pub fn tx_burst(&self, queue_id: QueueId, rx_pkts: &mut [mbuf::RawMbufPtr]) -> usize {
         unsafe {
             _rte_eth_tx_burst(self.0, queue_id, rx_pkts.as_mut_ptr(), rx_pkts.len() as u16) as usize
         }
     }
 
     /// Set RX L2 Filtering mode of a VF of an Ethernet device.
-    pub fn set_vf_rxmode(&self, vf: u16, rx_mode: EthVmdqRxMode, on: bool) -> Result<()> {
+    pub fn set_vf_rxmode(&self, vf: u16, rx_mode: EthVmdqRxMode, on: bool) -> Result<&Self> {
         rte_check!(unsafe {
             ffi::rte_eth_dev_set_vf_rxmode(self.0, vf, rx_mode.bits, bool_value!(on))
-        })
+        }; ok => { self })
     }
 
     /// Enable or disable a VF traffic transmit of the Ethernet device.
-    pub fn set_vf_tx(&self, vf: u16, on: bool) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_set_vf_tx(self.0, vf, bool_value!(on)) })
+    pub fn set_vf_tx(&self, vf: u16, on: bool) -> Result<&Self> {
+        rte_check!(unsafe {
+            ffi::rte_eth_dev_set_vf_tx(self.0, vf, bool_value!(on))
+        }; ok => { self })
     }
 
     /// Enable or disable a VF traffic receive of an Ethernet device.
-    pub fn set_vf_rx(&self, vf: u16, on: bool) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_set_vf_rx(self.0, vf, bool_value!(on)) })
+    pub fn set_vf_rx(&self, vf: u16, on: bool) -> Result<&Self> {
+        rte_check!(unsafe {
+            ffi::rte_eth_dev_set_vf_rx(self.0, vf, bool_value!(on))
+        }; ok => { self })
     }
 
     /// Read VLAN Offload configuration from an Ethernet device
@@ -345,8 +369,10 @@ impl EthDevice {
     }
 
     /// Set VLAN offload configuration on an Ethernet device
-    pub fn set_vlan_offload(&self, mode: EthVlanOffloadMode) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_eth_dev_set_vlan_offload(self.0, mode.bits) })
+    pub fn set_vlan_offload(&self, mode: EthVlanOffloadMode) -> Result<&Self> {
+        rte_check!(unsafe {
+            ffi::rte_eth_dev_set_vlan_offload(self.0, mode.bits)
+        }; ok => { self })
     }
 }
 
@@ -512,6 +538,48 @@ bitflags! {
         const ETH_RSS_IPV6_EX            = 1 << ::ffi::consts::RTE_ETH_FLOW_IPV6_EX,
         const ETH_RSS_IPV6_TCP_EX        = 1 << ::ffi::consts::RTE_ETH_FLOW_IPV6_TCP_EX,
         const ETH_RSS_IPV6_UDP_EX        = 1 << ::ffi::consts::RTE_ETH_FLOW_IPV6_UDP_EX,
+
+        const ETH_RSS_IP =
+            ETH_RSS_IPV4.bits |
+            ETH_RSS_FRAG_IPV4.bits |
+            ETH_RSS_NONFRAG_IPV4_OTHER.bits |
+            ETH_RSS_IPV6.bits |
+            ETH_RSS_FRAG_IPV6.bits |
+            ETH_RSS_NONFRAG_IPV6_OTHER.bits |
+            ETH_RSS_IPV6_EX.bits,
+
+        const ETH_RSS_UDP =
+            ETH_RSS_NONFRAG_IPV4_UDP.bits |
+            ETH_RSS_NONFRAG_IPV6_UDP.bits |
+            ETH_RSS_IPV6_UDP_EX.bits,
+
+        const ETH_RSS_TCP =
+            ETH_RSS_NONFRAG_IPV4_TCP.bits |
+            ETH_RSS_NONFRAG_IPV6_TCP.bits |
+            ETH_RSS_IPV6_TCP_EX.bits,
+
+        const ETH_RSS_SCTP =
+            ETH_RSS_NONFRAG_IPV4_SCTP.bits |
+            ETH_RSS_NONFRAG_IPV6_SCTP.bits,
+
+        /**< Mask of valid RSS hash protocols */
+        const ETH_RSS_PROTO_MASK =
+            ETH_RSS_IPV4.bits |
+            ETH_RSS_FRAG_IPV4.bits |
+            ETH_RSS_NONFRAG_IPV4_TCP.bits |
+            ETH_RSS_NONFRAG_IPV4_UDP.bits |
+            ETH_RSS_NONFRAG_IPV4_SCTP.bits |
+            ETH_RSS_NONFRAG_IPV4_OTHER.bits |
+            ETH_RSS_IPV6.bits |
+            ETH_RSS_FRAG_IPV6.bits |
+            ETH_RSS_NONFRAG_IPV6_TCP.bits |
+            ETH_RSS_NONFRAG_IPV6_UDP.bits |
+            ETH_RSS_NONFRAG_IPV6_SCTP.bits |
+            ETH_RSS_NONFRAG_IPV6_OTHER.bits |
+            ETH_RSS_L2_PAYLOAD.bits |
+            ETH_RSS_IPV6_EX.bits |
+            ETH_RSS_IPV6_TCP_EX.bits |
+            ETH_RSS_IPV6_UDP_EX.bits,
     }
 }
 
@@ -520,6 +588,13 @@ pub struct EthRssConf {
     pub hash: RssHashFunc,
 }
 
+impl Default for EthRssConf {
+    fn default() -> Self {
+        unsafe { mem::zeroed() }
+    }
+}
+
+#[derive(Default)]
 pub struct RxAdvConf {
     /// Port RSS configuration
     pub rss_conf: Option<EthRssConf>,
@@ -528,20 +603,8 @@ pub struct RxAdvConf {
     pub vmdq_rx_conf: Option<ffi::Struct_rte_eth_vmdq_rx_conf>,
 }
 
-impl Default for RxAdvConf {
-    fn default() -> Self {
-        unsafe { mem::zeroed() }
-    }
-}
-
 pub enum TxAdvConf {
 
-}
-
-impl Default for TxAdvConf {
-    fn default() -> Self {
-        unsafe { mem::zeroed() }
-    }
 }
 
 /// Device supported speeds bitmap flags
@@ -572,6 +635,13 @@ bitflags! {
     }
 }
 
+impl Default for LinkSpeed {
+    fn default() -> Self {
+        ETH_LINK_SPEED_AUTONEG
+    }
+}
+
+#[derive(Default)]
 pub struct EthConf {
     /// bitmap of ETH_LINK_SPEED_XXX of speeds to be used.
     ///
@@ -599,12 +669,6 @@ pub struct EthConf {
     pub dcb_capability_en: u32,
     pub fdir_conf: Option<ffi::Struct_rte_fdir_conf>,
     pub intr_conf: Option<ffi::Struct_rte_intr_conf>,
-}
-
-impl Default for EthConf {
-    fn default() -> Self {
-        unsafe { ::std::mem::zeroed() }
-    }
 }
 
 pub type RawEthConfPtr = *const ffi::Struct_rte_eth_conf;
@@ -750,30 +814,30 @@ impl TxBuffer {
     pub fn set_err_callback<T>(&self,
                                callback: Option<TxBufferErrorCallback<T>>,
                                userdata: Option<&T>)
-                               -> Result<()> {
+                               -> Result<&Self> {
         rte_check!(unsafe {
             ffi::rte_eth_tx_buffer_set_err_callback(self.0,
                                                     mem::transmute(callback),
                                                     mem::transmute(userdata))
-        })
+        }; ok => { self })
     }
 
     /// Silently dropping unsent buffered packets.
-    pub fn drop_err_packets(&self) -> Result<()> {
+    pub fn drop_err_packets(&self) -> Result<&Self> {
         rte_check!(unsafe {
             ffi::rte_eth_tx_buffer_set_err_callback(self.0,
                                                     Some(ffi::rte_eth_tx_buffer_drop_callback),
                                                     ptr::null_mut())
-        })
+        }; ok => { self })
     }
 
     /// Tracking unsent buffered packets.
-    pub fn count_err_packets(&self) -> Result<()> {
+    pub fn count_err_packets(&self) -> Result<&Self> {
         rte_check!(unsafe {
             ffi::rte_eth_tx_buffer_set_err_callback(self.0,
                                                     Some(ffi::rte_eth_tx_buffer_count_callback),
                                                     ptr::null_mut())
-        })
+        }; ok => { self })
     }
 }
 

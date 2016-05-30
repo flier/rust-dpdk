@@ -462,20 +462,20 @@ extern "C" {
 }
 
 impl RawCmdline {
-    pub fn print<T: string::ToString>(&self, s: T) -> Result<()> {
+    pub fn print<T: string::ToString>(&self, s: T) -> Result<&Self> {
         unsafe {
             _cmdline_write(self.0, try_cstr!(s));
         }
 
-        Ok(())
+        Ok(self)
     }
 
-    pub fn println<T: string::ToString>(&self, s: T) -> Result<()> {
+    pub fn println<T: string::ToString>(&self, s: T) -> Result<&Self> {
         unsafe {
             _cmdline_write(self.0, try_cstr!(format!("{}\n", s.to_string())));
         }
 
-        Ok(())
+        Ok(self)
     }
 
     pub fn set_prompt(&self, s: &str) -> &RawCmdline {
@@ -504,10 +504,10 @@ impl RawCmdline {
         unsafe { ffi::cmdline_quit(self.0) }
     }
 
-    pub fn parse<T: string::ToString>(&self, buf: T) -> Result<()> {
+    pub fn parse<T: string::ToString>(&self, buf: T) -> Result<&Self> {
         let status = unsafe { ffi::cmdline_parse(self.0, try_cstr!(buf)) };
 
-        rte_check!(status; err => { Error::RteError(status) })
+        rte_check!(status; ok => { self }; err => { Error::RteError(status) })
     }
 
     pub fn complete<T: string::ToString>(&self,

@@ -160,7 +160,7 @@ impl CmdIntParams {
                     }
                 }
             })
-            .unwrap()
+            .unwrap();
     }
 }
 
@@ -204,7 +204,7 @@ impl CmdIntMtuParams {
             } else {
                 format!("Port {} MTU: {}", self.port, dev.mtu().unwrap())
             })
-            .unwrap()
+            .unwrap();
     }
 
     fn mtu_set(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
@@ -221,7 +221,7 @@ impl CmdIntMtuParams {
             } else {
                 format!("Port {} MTU was changed to {}", self.port, self.mtu)
             })
-            .unwrap()
+            .unwrap();
     }
 }
 
@@ -252,8 +252,7 @@ impl CmdIntMacParams {
         for portid in 0..app_cfg.unwrap().ports.len() {
             let dev = ethdev::dev(portid as u8);
 
-            cl.println(format!("Port {} MAC Address: {}", portid, dev.mac_addr()))
-                .unwrap();
+            cl.println(format!("Port {} MAC Address: {}", portid, dev.mac_addr())).unwrap();
         }
     }
 
@@ -269,7 +268,7 @@ impl CmdIntMacParams {
             } else {
                 format!("Port {} MAC Address: {}", self.port, dev.mac_addr())
             })
-            .unwrap()
+            .unwrap();
     }
 
     fn set(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<&AppConfig>) {
@@ -304,7 +303,7 @@ impl CmdIntMacParams {
                              } else {
                                  "not unicast"
                              }))
-            .unwrap()
+            .unwrap();
     }
 }
 
