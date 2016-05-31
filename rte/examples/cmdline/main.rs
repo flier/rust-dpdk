@@ -185,7 +185,7 @@ extended to handle a list of objects. There are
 }
 
 struct CmdQuitResult {
-    help: cmdline::FixedStr,
+    quit: cmdline::FixedStr,
 }
 
 impl CmdQuitResult {
@@ -242,7 +242,7 @@ fn main() {
 
     let cmd_help = cmdline::inst(CmdHelpResult::parsed, None, "show help", &[&cmd_help_help]);
 
-    let cmd_quit_quit = TOKEN_STRING_INITIALIZER!(CmdQuitResult, help, "quit");
+    let cmd_quit_quit = TOKEN_STRING_INITIALIZER!(CmdQuitResult, quit, "quit");
 
     let cmd_quit = cmdline::inst(CmdQuitResult::parsed, None, "quit", &[&cmd_quit_quit]);
 
