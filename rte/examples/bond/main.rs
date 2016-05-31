@@ -56,6 +56,31 @@ impl Default for AppConfig {
     }
 }
 
+impl AppConfig {
+    fn is_running(&self) -> bool {
+        self.lcore_main_is_running.load(Ordering::Relaxed)
+    }
+
+    fn start(&self) {
+        launch::remote_launch(unsafe { mem::transmute(lcore_main) },
+                              Some(self),
+                              self.lcore_main_core_id)
+            .expect("Cannot launch task");
+
+        self.lcore_main_is_running.store(true, Ordering::Relaxed);
+
+        info!("Starting lcore_main on core {} Our IP {}",
+              self.lcore_main_core_id,
+              net::Ipv4Addr::from(self.bond_ip));
+    }
+
+    fn stop(&self) {
+        self.lcore_main_is_running.store(false, Ordering::Relaxed);
+
+        launch::wait_lcore(self.lcore_main_core_id);
+    }
+}
+
 fn slave_port_init(port_id: u8,
                    port_conf: &ethdev::EthConf,
                    pktmbuf_pool: &mempool::RawMemoryPool) {
@@ -246,40 +271,98 @@ struct CmdActionResult {
 }
 
 impl CmdActionResult {
-    fn help(&mut self, cl: &cmdline::RawCmdline, _: Option<&libc::c_void>) {
-        cl.println(r#"ALB - link bonding mode 6 example\n"
-            "send IP    - sends one ARPrequest thru bonding for IP.\n"
-            "start      - starts listening ARPs.\n"
-            "stop       - stops lcore_main.\n"
-            "show       - shows some bond info: ex. active slaves etc.\n"
-            "help       - prints help.\n"
-            "quit       - terminate all threads and quit.\n"#)
-            .unwrap();
-    }
-
-    fn quit(&mut self, cl: &cmdline::RawCmdline, data: Option<&AppConfig>) {
+    fn start(&mut self, cl: &cmdline::RawCmdline, data: Option<&AppConfig>) {
         let app_conf = data.unwrap();
 
-        if !app_conf.lcore_main_is_running.load(Ordering::Relaxed) {
+        if app_conf.is_running() {
+            cl.println(&format!("lcore_main already running on core: {}",
+                app_conf.lcore_main_core_id))
+                .unwrap();
+        } else {
+            app_conf.start();
+        }
+    }
+
+    fn stop(&mut self, cl: &cmdline::RawCmdline, data: Option<&AppConfig>) {
+        let app_conf = data.unwrap();
+
+        if !app_conf.is_running() {
             cl.println(&format!("lcore_main not running on core: {}", app_conf.lcore_main_core_id))
                 .unwrap();
         } else {
-            app_conf.lcore_main_is_running.store(false, Ordering::Relaxed);
-
-            launch::wait_lcore(app_conf.lcore_main_core_id);
+            app_conf.stop();
 
             cl.println(&format!("lcore_main stopped on core: {}", app_conf.lcore_main_core_id))
                 .unwrap();
         }
+    }
+
+    fn show(&mut self, cl: &cmdline::RawCmdline, data: Option<&AppConfig>) {
+        let app_conf = data.unwrap();
+
+        let dev = bond::dev(app_conf.bonded_port_id);
+
+        let active_slaves = dev.active_slaves().unwrap();
+        let primary = dev.primary().unwrap();
+
+        for slave in dev.slaves().unwrap() {
+            let role = if slave == primary {
+                "primary"
+            } else if active_slaves.contains(&slave) {
+                "active"
+            } else {
+                "unused"
+            };
+
+            cl.println(&format!("Slave {}, MAC={}, {}", slave.portid(), slave.mac_addr(), role))
+                .unwrap();
+        }
+
+        cl.println(&format!("Active_slaves: {}, packets received:Tot: {}, Arp: {}, IPv4: {}",
+            active_slaves.len(),
+            app_conf.port_packets[0].load(Ordering::Relaxed),
+            app_conf.port_packets[1].load(Ordering::Relaxed),
+            app_conf.port_packets[2].load(Ordering::Relaxed)))
+            .unwrap();
+    }
+
+    fn help(&mut self, cl: &cmdline::RawCmdline, _: Option<&libc::c_void>) {
+        cl.println(r#"ALB - link bonding mode 6 example
+    send IP    - sends one ARPrequest thru bonding for IP.
+    start      - starts listening ARPs.
+    stop       - stops lcore_main.
+    show       - shows some bond info: ex. active slaves etc.
+    help       - prints help.
+    quit       - terminate all threads and quit."#)
+            .unwrap();
+    }
+
+    fn quit(&mut self, cl: &cmdline::RawCmdline, data: Option<&AppConfig>) {
+        self.stop(cl, data);
 
         cl.quit();
     }
 }
 
 fn prompt(app_conf: &AppConfig) {
+    let cmd_action_start = TOKEN_STRING_INITIALIZER!(CmdActionResult, action, "start");
+    let cmd_action_stop = TOKEN_STRING_INITIALIZER!(CmdActionResult, action, "stop");
+    let cmd_action_show = TOKEN_STRING_INITIALIZER!(CmdActionResult, action, "show");
     let cmd_action_help = TOKEN_STRING_INITIALIZER!(CmdActionResult, action, "help");
     let cmd_action_quit = TOKEN_STRING_INITIALIZER!(CmdActionResult, action, "quit");
 
+    let cmd_start = cmdline::inst(CmdActionResult::start,
+                                  Some(app_conf),
+                                  "starts listening if not started at startup",
+                                  &[&cmd_action_start]);
+    let cmd_stop = cmdline::inst(CmdActionResult::stop,
+                                 Some(app_conf),
+                                 "stops listening if started at startup",
+                                 &[&cmd_action_stop]);
+    let cmd_show = cmdline::inst(CmdActionResult::show,
+                                 Some(app_conf),
+                                 "show listening status",
+                                 &[&cmd_action_show]);
     let cmd_help = cmdline::inst(CmdActionResult::help,
                                  None,
                                  "show help",
@@ -289,7 +372,7 @@ fn prompt(app_conf: &AppConfig) {
                                  "quit",
                                  &[&cmd_action_quit]);
 
-    let cmds = &[&cmd_help, &cmd_quit];
+    let cmds = &[&cmd_start, &cmd_stop, &cmd_show, &cmd_help, &cmd_quit];
 
     cmdline::new(cmds)
         .open_stdin("bond6> ")
@@ -367,13 +450,7 @@ fn main() {
         ..AppConfig::default()
     };
 
-    launch::remote_launch(unsafe { mem::transmute(lcore_main) },
-                          Some(&app_conf),
-                          slave_core_id)
-        .expect("Cannot launch task");
-
-    info!("Starting lcore_main on core {} Our IP {}",
-        slave_core_id, net::Ipv4Addr::from(app_conf.bond_ip));
+    app_conf.start();
 
     prompt(&app_conf);
 
