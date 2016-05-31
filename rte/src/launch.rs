@@ -3,6 +3,7 @@ use std::mem;
 use ffi;
 
 use errors::Result;
+use lcore::LcoreId;
 
 pub type LcoreFunc<T> = extern "C" fn(*const T) -> i32;
 
@@ -24,7 +25,7 @@ impl From<ffi::Enum_rte_lcore_state_t> for LcoreState {
 }
 
 /// Launch a function on another lcore.
-pub fn remote_launch<T>(f: LcoreFunc<T>, arg: Option<&T>, slave_id: u32) -> Result<()> {
+pub fn remote_launch<T>(f: LcoreFunc<T>, arg: Option<&T>, slave_id: LcoreId) -> Result<()> {
     rte_check!(unsafe {
         ffi::rte_eal_remote_launch(mem::transmute(f), mem::transmute(arg), slave_id)
     })
@@ -44,7 +45,7 @@ pub fn mp_remote_launch<T>(f: LcoreFunc<T>, arg: Option<&T>, skip_master: bool) 
 }
 
 /// Get the state of the lcore identified by slave_id.
-pub fn get_lcore_state(slave_id: u32) -> LcoreState {
+pub fn lcore_state(slave_id: LcoreId) -> LcoreState {
     LcoreState::from(unsafe { ffi::rte_eal_get_lcore_state(slave_id) })
 }
 
@@ -56,7 +57,7 @@ pub fn get_lcore_state(slave_id: u32) -> LcoreState {
 /// switch to the WAIT state. If the lcore is in RUNNING state, wait until
 /// the lcore finishes its job and moves to the FINISHED state.
 ///
-pub fn wait_lcore(slave_id: u32) -> bool {
+pub fn wait_lcore(slave_id: LcoreId) -> bool {
     unsafe { ffi::rte_eal_wait_lcore(slave_id) == 0 }
 }
 
