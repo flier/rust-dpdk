@@ -166,9 +166,9 @@ pub type RawMbufPtr = *mut ffi::Struct_rte_mbuf;
 /// A macro that points to an offset into the data in the mbuf.
 #[macro_export]
 macro_rules! pktmbuf_mtod_offset {
-    ($m:expr, $t:ty, $off:expr) => (
+    ($m:expr, $t:ty, $off:expr) => (unsafe {
         (((*$m).buf_addr as *const ::std::os::raw::c_char).offset((*$m).data_off as isize) as $t)
-    )
+    })
 }
 
 /// A macro that points to the start of the data in the mbuf.
@@ -200,4 +200,12 @@ pub fn pktmbuf_pool_create(name: &str,
     };
 
     rte_check!(p, NonNull; ok => { mempool::from_raw(p) })
+}
+
+pub fn pktmbuf_free(m: RawMbufPtr) {
+    unsafe { _rte_pktmbuf_free(m) }
+}
+
+extern "C" {
+    fn _rte_pktmbuf_free(m: RawMbufPtr);
 }
