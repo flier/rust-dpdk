@@ -27,6 +27,8 @@ impl error::Error for AddrParseError {
 
 pub const ETHER_ADDR_LEN: usize = 6;
 
+pub type RawEtherAddr = ffi::Struct_ether_addr;
+
 /// A 48-bit (6 byte) buffer containing the MAC address
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, Hash)]
 pub struct EtherAddr([u8; ETHER_ADDR_LEN]);
@@ -164,6 +166,12 @@ impl From<[u8; 6]> for EtherAddr {
     }
 }
 
+impl From<RawEtherAddr> for EtherAddr {
+    fn from(addr: RawEtherAddr) -> EtherAddr {
+        EtherAddr(addr.addr_bytes)
+    }
+}
+
 impl str::FromStr for EtherAddr {
     type Err = AddrParseError;
 
@@ -176,40 +184,33 @@ impl str::FromStr for EtherAddr {
     }
 }
 
+// Ethernet frame types
+
+/// IPv4 Protocol.
+pub const ETHER_TYPE_IPV4_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_IPV4 as u16);
+/// IPv6 Protocol.
+pub const ETHER_TYPE_IPV6_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_IPV6 as u16);
+/// Arp Protocol.
+pub const ETHER_TYPE_ARP_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_ARP as u16);
+/// Reverse Arp Protocol.
+pub const ETHER_TYPE_RARP_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_RARP as u16);
+/// IEEE 802.1Q VLAN tagging.
+pub const ETHER_TYPE_VLAN_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_VLAN as u16);
+/// IEEE 802.1AS 1588 Precise Time Protocol.
+pub const ETHER_TYPE_1588_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_1588 as u16);
+/// Slow protocols (LACP and Marker).
+pub const ETHER_TYPE_SLOW_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_SLOW as u16);
+/// Transparent Ethernet Bridging.
+pub const ETHER_TYPE_TEB_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_TEB as u16);
+
 /// Ethernet header: Contains the destination address, source address and frame type.
-#[repr(C)]
-pub struct EtherHdr {
-    /// Destination address.
-    pub d_addr: [u8; 6],
-    /// Source address.
-    pub s_addr: [u8; 6],
-    /// Frame type.
-    pub ether_type: u16,
-}
+pub type EtherHdr = ffi::Struct_ether_hdr;
 
 /// Ethernet VLAN Header.
-///
-/// Contains the 16-bit VLAN Tag Control Identifier
-/// and the Ethernet type of the encapsulated frame.
-///
-pub struct VlanHdr {
-    /// Priority (3) + CFI (1) + Identifier Code (12)
-    pub vlan_tci: u16,
-    /// Ethernet type of encapsulated frame.
-    pub eth_proto: u16,
-}
+pub type VlanHdr = ffi::Struct_vlan_hdr;
 
 /// VXLAN protocol header.
-///
-/// Contains the 8-bit flag, 24-bit VXLAN Network Identifier
-/// and Reserved fields (24 bits and 8 bits)
-///
-pub struct VxlanHdr {
-    /// flag (8) + Reserved (24).
-    pub vx_flags: u32,
-    /// VNI (24) + Reserved (8).
-    pub vx_vni: u32,
-}
+pub type VxlanHdr = ffi::Struct_vxlan_hdr;
 
 #[cfg(test)]
 mod tests {

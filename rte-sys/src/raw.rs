@@ -1335,6 +1335,122 @@ impl ::std::clone::Clone for Struct_lcore_config {
 impl ::std::default::Default for Struct_lcore_config {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed42 {
+    pub locked: ::std::os::raw::c_int,
+}
+impl ::std::clone::Clone for Struct_Unnamed42 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed42 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type rte_spinlock_t = Struct_Unnamed42;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed43 {
+    pub sl: rte_spinlock_t,
+    pub user: ::std::os::raw::c_int,
+    pub count: ::std::os::raw::c_int,
+}
+impl ::std::clone::Clone for Struct_Unnamed43 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed43 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type rte_spinlock_recursive_t = Struct_Unnamed43;
+#[derive(Clone, Copy)]
+#[repr(u32)]
+pub enum Enum_rte_cpu_flag_t {
+    RTE_CPUFLAG_SSE3 = 0,
+    RTE_CPUFLAG_PCLMULQDQ = 1,
+    RTE_CPUFLAG_DTES64 = 2,
+    RTE_CPUFLAG_MONITOR = 3,
+    RTE_CPUFLAG_DS_CPL = 4,
+    RTE_CPUFLAG_VMX = 5,
+    RTE_CPUFLAG_SMX = 6,
+    RTE_CPUFLAG_EIST = 7,
+    RTE_CPUFLAG_TM2 = 8,
+    RTE_CPUFLAG_SSSE3 = 9,
+    RTE_CPUFLAG_CNXT_ID = 10,
+    RTE_CPUFLAG_FMA = 11,
+    RTE_CPUFLAG_CMPXCHG16B = 12,
+    RTE_CPUFLAG_XTPR = 13,
+    RTE_CPUFLAG_PDCM = 14,
+    RTE_CPUFLAG_PCID = 15,
+    RTE_CPUFLAG_DCA = 16,
+    RTE_CPUFLAG_SSE4_1 = 17,
+    RTE_CPUFLAG_SSE4_2 = 18,
+    RTE_CPUFLAG_X2APIC = 19,
+    RTE_CPUFLAG_MOVBE = 20,
+    RTE_CPUFLAG_POPCNT = 21,
+    RTE_CPUFLAG_TSC_DEADLINE = 22,
+    RTE_CPUFLAG_AES = 23,
+    RTE_CPUFLAG_XSAVE = 24,
+    RTE_CPUFLAG_OSXSAVE = 25,
+    RTE_CPUFLAG_AVX = 26,
+    RTE_CPUFLAG_F16C = 27,
+    RTE_CPUFLAG_RDRAND = 28,
+    RTE_CPUFLAG_FPU = 29,
+    RTE_CPUFLAG_VME = 30,
+    RTE_CPUFLAG_DE = 31,
+    RTE_CPUFLAG_PSE = 32,
+    RTE_CPUFLAG_TSC = 33,
+    RTE_CPUFLAG_MSR = 34,
+    RTE_CPUFLAG_PAE = 35,
+    RTE_CPUFLAG_MCE = 36,
+    RTE_CPUFLAG_CX8 = 37,
+    RTE_CPUFLAG_APIC = 38,
+    RTE_CPUFLAG_SEP = 39,
+    RTE_CPUFLAG_MTRR = 40,
+    RTE_CPUFLAG_PGE = 41,
+    RTE_CPUFLAG_MCA = 42,
+    RTE_CPUFLAG_CMOV = 43,
+    RTE_CPUFLAG_PAT = 44,
+    RTE_CPUFLAG_PSE36 = 45,
+    RTE_CPUFLAG_PSN = 46,
+    RTE_CPUFLAG_CLFSH = 47,
+    RTE_CPUFLAG_DS = 48,
+    RTE_CPUFLAG_ACPI = 49,
+    RTE_CPUFLAG_MMX = 50,
+    RTE_CPUFLAG_FXSR = 51,
+    RTE_CPUFLAG_SSE = 52,
+    RTE_CPUFLAG_SSE2 = 53,
+    RTE_CPUFLAG_SS = 54,
+    RTE_CPUFLAG_HTT = 55,
+    RTE_CPUFLAG_TM = 56,
+    RTE_CPUFLAG_PBE = 57,
+    RTE_CPUFLAG_DIGTEMP = 58,
+    RTE_CPUFLAG_TRBOBST = 59,
+    RTE_CPUFLAG_ARAT = 60,
+    RTE_CPUFLAG_PLN = 61,
+    RTE_CPUFLAG_ECMD = 62,
+    RTE_CPUFLAG_PTM = 63,
+    RTE_CPUFLAG_MPERF_APERF_MSR = 64,
+    RTE_CPUFLAG_ACNT2 = 65,
+    RTE_CPUFLAG_ENERGY_EFF = 66,
+    RTE_CPUFLAG_FSGSBASE = 67,
+    RTE_CPUFLAG_BMI1 = 68,
+    RTE_CPUFLAG_HLE = 69,
+    RTE_CPUFLAG_AVX2 = 70,
+    RTE_CPUFLAG_SMEP = 71,
+    RTE_CPUFLAG_BMI2 = 72,
+    RTE_CPUFLAG_ERMS = 73,
+    RTE_CPUFLAG_INVPCID = 74,
+    RTE_CPUFLAG_RTM = 75,
+    RTE_CPUFLAG_AVX512F = 76,
+    RTE_CPUFLAG_LAHF_SAHF = 77,
+    RTE_CPUFLAG_LZCNT = 78,
+    RTE_CPUFLAG_SYSCALL = 79,
+    RTE_CPUFLAG_XD = 80,
+    RTE_CPUFLAG_1GB_PG = 81,
+    RTE_CPUFLAG_RDTSCP = 82,
+    RTE_CPUFLAG_EM64T = 83,
+    RTE_CPUFLAG_INVTSC = 84,
+    RTE_CPUFLAG_NUMFLAGS = 85,
+}
 #[derive(Clone, Copy)]
 #[repr(u32)]
 pub enum Enum_rte_ring_queue_behavior {
@@ -1391,17 +1507,17 @@ impl ::std::default::Default for Struct_cons {
 pub type __gwchar_t = ::std::os::raw::c_int;
 #[repr(C)]
 #[derive(Copy)]
-pub struct Struct_Unnamed42 {
+pub struct Struct_Unnamed44 {
     pub quot: ::std::os::raw::c_long,
     pub rem: ::std::os::raw::c_long,
 }
-impl ::std::clone::Clone for Struct_Unnamed42 {
+impl ::std::clone::Clone for Struct_Unnamed44 {
     fn clone(&self) -> Self { *self }
 }
-impl ::std::default::Default for Struct_Unnamed42 {
+impl ::std::default::Default for Struct_Unnamed44 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type imaxdiv_t = Struct_Unnamed42;
+pub type imaxdiv_t = Struct_Unnamed44;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_rte_mempool_cache {
@@ -1516,7 +1632,7 @@ pub struct Struct_rte_mbuf {
     pub pkt_len: uint32_t,
     pub data_len: uint16_t,
     pub vlan_tci: uint16_t,
-    pub hash: Union_Unnamed43,
+    pub hash: Union_Unnamed45,
     pub seqn: uint32_t,
     pub vlan_tci_outer: uint16_t,
     pub cacheline1: MARKER,
@@ -1561,19 +1677,19 @@ impl ::std::default::Default for Struct_rte_mbuf {
 }
 #[repr(C)]
 #[derive(Copy)]
-pub struct Union_Unnamed43 {
+pub struct Union_Unnamed45 {
     pub _bindgen_data_: [u32; 2usize],
 }
-impl Union_Unnamed43 {
+impl Union_Unnamed45 {
     pub unsafe fn rss(&mut self) -> *mut uint32_t {
         let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
         ::std::mem::transmute(raw.offset(0))
     }
-    pub unsafe fn fdir(&mut self) -> *mut Struct_Unnamed44 {
+    pub unsafe fn fdir(&mut self) -> *mut Struct_Unnamed46 {
         let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
         ::std::mem::transmute(raw.offset(0))
     }
-    pub unsafe fn sched(&mut self) -> *mut Struct_Unnamed45 {
+    pub unsafe fn sched(&mut self) -> *mut Struct_Unnamed47 {
         let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
         ::std::mem::transmute(raw.offset(0))
     }
@@ -1582,19 +1698,19 @@ impl Union_Unnamed43 {
         ::std::mem::transmute(raw.offset(0))
     }
 }
-impl ::std::clone::Clone for Union_Unnamed43 {
+impl ::std::clone::Clone for Union_Unnamed45 {
     fn clone(&self) -> Self { *self }
 }
-impl ::std::default::Default for Union_Unnamed43 {
+impl ::std::default::Default for Union_Unnamed45 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 #[repr(C)]
 #[derive(Copy)]
-pub struct Struct_Unnamed44 {
+pub struct Struct_Unnamed46 {
     pub _bindgen_data_1_: [u32; 1usize],
     pub hi: uint32_t,
 }
-impl Struct_Unnamed44 {
+impl Struct_Unnamed46 {
     pub unsafe fn hash(&mut self) -> *mut uint16_t {
         let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_1_);
         ::std::mem::transmute(raw.offset(0))
@@ -1608,22 +1724,22 @@ impl Struct_Unnamed44 {
         ::std::mem::transmute(raw.offset(0))
     }
 }
-impl ::std::clone::Clone for Struct_Unnamed44 {
+impl ::std::clone::Clone for Struct_Unnamed46 {
     fn clone(&self) -> Self { *self }
 }
-impl ::std::default::Default for Struct_Unnamed44 {
+impl ::std::default::Default for Struct_Unnamed46 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 #[repr(C)]
 #[derive(Copy)]
-pub struct Struct_Unnamed45 {
+pub struct Struct_Unnamed47 {
     pub lo: uint32_t,
     pub hi: uint32_t,
 }
-impl ::std::clone::Clone for Struct_Unnamed45 {
+impl ::std::clone::Clone for Struct_Unnamed47 {
     fn clone(&self) -> Self { *self }
 }
-impl ::std::default::Default for Struct_Unnamed45 {
+impl ::std::default::Default for Struct_Unnamed47 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 #[repr(C)]
@@ -1689,7 +1805,7 @@ impl ::std::default::Default for Struct_rte_timer {
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_rte_tailq_entry {
-    pub next: Struct_Unnamed46,
+    pub next: Struct_Unnamed48,
     pub data: *mut ::std::os::raw::c_void,
 }
 impl ::std::clone::Clone for Struct_rte_tailq_entry {
@@ -1700,14 +1816,14 @@ impl ::std::default::Default for Struct_rte_tailq_entry {
 }
 #[repr(C)]
 #[derive(Copy)]
-pub struct Struct_Unnamed46 {
+pub struct Struct_Unnamed48 {
     pub tqe_next: *mut Struct_rte_tailq_entry,
     pub tqe_prev: *mut *mut Struct_rte_tailq_entry,
 }
-impl ::std::clone::Clone for Struct_Unnamed46 {
+impl ::std::clone::Clone for Struct_Unnamed48 {
     fn clone(&self) -> Self { *self }
 }
-impl ::std::default::Default for Struct_Unnamed46 {
+impl ::std::default::Default for Struct_Unnamed48 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 #[repr(C)]
@@ -1738,7 +1854,7 @@ impl ::std::default::Default for Struct_rte_tailq_head {
 #[derive(Copy)]
 pub struct Struct_rte_tailq_elem {
     pub head: *mut Struct_rte_tailq_head,
-    pub next: Struct_Unnamed47,
+    pub next: Struct_Unnamed49,
     pub name: [::std::os::raw::c_char; 32usize],
 }
 impl ::std::clone::Clone for Struct_rte_tailq_elem {
@@ -1749,14 +1865,14 @@ impl ::std::default::Default for Struct_rte_tailq_elem {
 }
 #[repr(C)]
 #[derive(Copy)]
-pub struct Struct_Unnamed47 {
+pub struct Struct_Unnamed49 {
     pub tqe_next: *mut Struct_rte_tailq_elem,
     pub tqe_prev: *mut *mut Struct_rte_tailq_elem,
 }
-impl ::std::clone::Clone for Struct_Unnamed47 {
+impl ::std::clone::Clone for Struct_Unnamed49 {
     fn clone(&self) -> Self { *self }
 }
-impl ::std::default::Default for Struct_Unnamed47 {
+impl ::std::default::Default for Struct_Unnamed49 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 #[repr(C, packed)]
@@ -1786,122 +1902,6 @@ impl ::std::clone::Clone for Struct_rte_memzone {
 }
 impl ::std::default::Default for Struct_rte_memzone {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-#[repr(C)]
-#[derive(Copy)]
-pub struct Struct_Unnamed48 {
-    pub locked: ::std::os::raw::c_int,
-}
-impl ::std::clone::Clone for Struct_Unnamed48 {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_Unnamed48 {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-pub type rte_spinlock_t = Struct_Unnamed48;
-#[repr(C)]
-#[derive(Copy)]
-pub struct Struct_Unnamed49 {
-    pub sl: rte_spinlock_t,
-    pub user: ::std::os::raw::c_int,
-    pub count: ::std::os::raw::c_int,
-}
-impl ::std::clone::Clone for Struct_Unnamed49 {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_Unnamed49 {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-pub type rte_spinlock_recursive_t = Struct_Unnamed49;
-#[derive(Clone, Copy)]
-#[repr(u32)]
-pub enum Enum_rte_cpu_flag_t {
-    RTE_CPUFLAG_SSE3 = 0,
-    RTE_CPUFLAG_PCLMULQDQ = 1,
-    RTE_CPUFLAG_DTES64 = 2,
-    RTE_CPUFLAG_MONITOR = 3,
-    RTE_CPUFLAG_DS_CPL = 4,
-    RTE_CPUFLAG_VMX = 5,
-    RTE_CPUFLAG_SMX = 6,
-    RTE_CPUFLAG_EIST = 7,
-    RTE_CPUFLAG_TM2 = 8,
-    RTE_CPUFLAG_SSSE3 = 9,
-    RTE_CPUFLAG_CNXT_ID = 10,
-    RTE_CPUFLAG_FMA = 11,
-    RTE_CPUFLAG_CMPXCHG16B = 12,
-    RTE_CPUFLAG_XTPR = 13,
-    RTE_CPUFLAG_PDCM = 14,
-    RTE_CPUFLAG_PCID = 15,
-    RTE_CPUFLAG_DCA = 16,
-    RTE_CPUFLAG_SSE4_1 = 17,
-    RTE_CPUFLAG_SSE4_2 = 18,
-    RTE_CPUFLAG_X2APIC = 19,
-    RTE_CPUFLAG_MOVBE = 20,
-    RTE_CPUFLAG_POPCNT = 21,
-    RTE_CPUFLAG_TSC_DEADLINE = 22,
-    RTE_CPUFLAG_AES = 23,
-    RTE_CPUFLAG_XSAVE = 24,
-    RTE_CPUFLAG_OSXSAVE = 25,
-    RTE_CPUFLAG_AVX = 26,
-    RTE_CPUFLAG_F16C = 27,
-    RTE_CPUFLAG_RDRAND = 28,
-    RTE_CPUFLAG_FPU = 29,
-    RTE_CPUFLAG_VME = 30,
-    RTE_CPUFLAG_DE = 31,
-    RTE_CPUFLAG_PSE = 32,
-    RTE_CPUFLAG_TSC = 33,
-    RTE_CPUFLAG_MSR = 34,
-    RTE_CPUFLAG_PAE = 35,
-    RTE_CPUFLAG_MCE = 36,
-    RTE_CPUFLAG_CX8 = 37,
-    RTE_CPUFLAG_APIC = 38,
-    RTE_CPUFLAG_SEP = 39,
-    RTE_CPUFLAG_MTRR = 40,
-    RTE_CPUFLAG_PGE = 41,
-    RTE_CPUFLAG_MCA = 42,
-    RTE_CPUFLAG_CMOV = 43,
-    RTE_CPUFLAG_PAT = 44,
-    RTE_CPUFLAG_PSE36 = 45,
-    RTE_CPUFLAG_PSN = 46,
-    RTE_CPUFLAG_CLFSH = 47,
-    RTE_CPUFLAG_DS = 48,
-    RTE_CPUFLAG_ACPI = 49,
-    RTE_CPUFLAG_MMX = 50,
-    RTE_CPUFLAG_FXSR = 51,
-    RTE_CPUFLAG_SSE = 52,
-    RTE_CPUFLAG_SSE2 = 53,
-    RTE_CPUFLAG_SS = 54,
-    RTE_CPUFLAG_HTT = 55,
-    RTE_CPUFLAG_TM = 56,
-    RTE_CPUFLAG_PBE = 57,
-    RTE_CPUFLAG_DIGTEMP = 58,
-    RTE_CPUFLAG_TRBOBST = 59,
-    RTE_CPUFLAG_ARAT = 60,
-    RTE_CPUFLAG_PLN = 61,
-    RTE_CPUFLAG_ECMD = 62,
-    RTE_CPUFLAG_PTM = 63,
-    RTE_CPUFLAG_MPERF_APERF_MSR = 64,
-    RTE_CPUFLAG_ACNT2 = 65,
-    RTE_CPUFLAG_ENERGY_EFF = 66,
-    RTE_CPUFLAG_FSGSBASE = 67,
-    RTE_CPUFLAG_BMI1 = 68,
-    RTE_CPUFLAG_HLE = 69,
-    RTE_CPUFLAG_AVX2 = 70,
-    RTE_CPUFLAG_SMEP = 71,
-    RTE_CPUFLAG_BMI2 = 72,
-    RTE_CPUFLAG_ERMS = 73,
-    RTE_CPUFLAG_INVPCID = 74,
-    RTE_CPUFLAG_RTM = 75,
-    RTE_CPUFLAG_AVX512F = 76,
-    RTE_CPUFLAG_LAHF_SAHF = 77,
-    RTE_CPUFLAG_LZCNT = 78,
-    RTE_CPUFLAG_SYSCALL = 79,
-    RTE_CPUFLAG_XD = 80,
-    RTE_CPUFLAG_1GB_PG = 81,
-    RTE_CPUFLAG_RDTSCP = 82,
-    RTE_CPUFLAG_EM64T = 83,
-    RTE_CPUFLAG_INVTSC = 84,
-    RTE_CPUFLAG_NUMFLAGS = 85,
 }
 pub enum Struct_malloc_elem { }
 #[repr(C)]
@@ -2256,54 +2256,6 @@ impl ::std::clone::Clone for Struct_rte_pci_ioport {
 impl ::std::default::Default for Struct_rte_pci_ioport {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-#[repr(C, packed)]
-#[derive(Copy)]
-pub struct Struct_ether_addr {
-    pub addr_bytes: [uint8_t; 6usize],
-}
-impl ::std::clone::Clone for Struct_ether_addr {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_ether_addr {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-#[repr(C, packed)]
-#[derive(Copy)]
-pub struct Struct_ether_hdr {
-    pub d_addr: Struct_ether_addr,
-    pub s_addr: Struct_ether_addr,
-    pub ether_type: uint16_t,
-}
-impl ::std::clone::Clone for Struct_ether_hdr {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_ether_hdr {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-#[repr(C, packed)]
-#[derive(Copy)]
-pub struct Struct_vlan_hdr {
-    pub vlan_tci: uint16_t,
-    pub eth_proto: uint16_t,
-}
-impl ::std::clone::Clone for Struct_vlan_hdr {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_vlan_hdr {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-#[repr(C, packed)]
-#[derive(Copy)]
-pub struct Struct_vxlan_hdr {
-    pub vx_flags: uint32_t,
-    pub vx_vni: uint32_t,
-}
-impl ::std::clone::Clone for Struct_vxlan_hdr {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_vxlan_hdr {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_rte_driver_list {
@@ -2428,6 +2380,54 @@ impl ::std::clone::Clone for Struct_rte_devargs_list {
     fn clone(&self) -> Self { *self }
 }
 impl ::std::default::Default for Struct_rte_devargs_list {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C, packed)]
+#[derive(Copy)]
+pub struct Struct_ether_addr {
+    pub addr_bytes: [uint8_t; 6usize],
+}
+impl ::std::clone::Clone for Struct_ether_addr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ether_addr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C, packed)]
+#[derive(Copy)]
+pub struct Struct_ether_hdr {
+    pub d_addr: Struct_ether_addr,
+    pub s_addr: Struct_ether_addr,
+    pub ether_type: uint16_t,
+}
+impl ::std::clone::Clone for Struct_ether_hdr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ether_hdr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C, packed)]
+#[derive(Copy)]
+pub struct Struct_vlan_hdr {
+    pub vlan_tci: uint16_t,
+    pub eth_proto: uint16_t,
+}
+impl ::std::clone::Clone for Struct_vlan_hdr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_vlan_hdr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C, packed)]
+#[derive(Copy)]
+pub struct Struct_vxlan_hdr {
+    pub vx_flags: uint32_t,
+    pub vx_vni: uint32_t,
+}
+impl ::std::clone::Clone for Struct_vxlan_hdr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_vxlan_hdr {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 #[derive(Clone, Copy)]
@@ -4640,174 +4640,36 @@ impl ::std::clone::Clone for Struct_rte_kni_conf {
 impl ::std::default::Default for Struct_rte_kni_conf {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Copy)]
-pub struct Struct_cirbuf {
-    pub maxlen: ::std::os::raw::c_uint,
-    pub start: ::std::os::raw::c_uint,
-    pub end: ::std::os::raw::c_uint,
-    pub len: ::std::os::raw::c_uint,
-    pub buf: *mut ::std::os::raw::c_char,
+pub struct Struct_arp_ipv4 {
+    pub arp_sha: Struct_ether_addr,
+    pub arp_sip: uint32_t,
+    pub arp_tha: Struct_ether_addr,
+    pub arp_tip: uint32_t,
 }
-impl ::std::clone::Clone for Struct_cirbuf {
+impl ::std::clone::Clone for Struct_arp_ipv4 {
     fn clone(&self) -> Self { *self }
 }
-impl ::std::default::Default for Struct_cirbuf {
+impl ::std::default::Default for Struct_arp_ipv4 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-#[derive(Clone, Copy)]
-#[repr(u32)]
-pub enum Enum_cmdline_vt100_parser_state {
-    CMDLINE_VT100_INIT = 0,
-    CMDLINE_VT100_ESCAPE = 1,
-    CMDLINE_VT100_ESCAPE_CSI = 2,
-}
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Copy)]
-pub struct Struct_cmdline_vt100 {
-    pub bufpos: uint8_t,
-    pub buf: [::std::os::raw::c_char; 8usize],
-    pub state: Enum_cmdline_vt100_parser_state,
+pub struct Struct_arp_hdr {
+    pub arp_hrd: uint16_t,
+    pub arp_pro: uint16_t,
+    pub arp_hln: uint8_t,
+    pub arp_pln: uint8_t,
+    pub arp_op: uint16_t,
+    pub arp_data: Struct_arp_ipv4,
 }
-impl ::std::clone::Clone for Struct_cmdline_vt100 {
+impl ::std::clone::Clone for Struct_arp_hdr {
     fn clone(&self) -> Self { *self }
 }
-impl ::std::default::Default for Struct_cmdline_vt100 {
+impl ::std::default::Default for Struct_arp_hdr {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-#[derive(Clone, Copy)]
-#[repr(u32)]
-pub enum Enum_rdline_status {
-    RDLINE_INIT = 0,
-    RDLINE_RUNNING = 1,
-    RDLINE_EXITED = 2,
-}
-pub type rdline_write_char_t =
-    unsafe extern "C" fn(rdl: *mut Struct_rdline,
-                         arg1: ::std::os::raw::c_char)
-        -> ::std::os::raw::c_int;
-pub type rdline_validate_t =
-    unsafe extern "C" fn(rdl: *mut Struct_rdline,
-                         buf: *const ::std::os::raw::c_char,
-                         size: ::std::os::raw::c_uint);
-pub type rdline_complete_t =
-    unsafe extern "C" fn(rdl: *mut Struct_rdline,
-                         buf: *const ::std::os::raw::c_char,
-                         dstbuf: *mut ::std::os::raw::c_char,
-                         dstsize: ::std::os::raw::c_uint,
-                         state: *mut ::std::os::raw::c_int)
-        -> ::std::os::raw::c_int;
-#[repr(C)]
-#[derive(Copy)]
-pub struct Struct_rdline {
-    pub status: Enum_rdline_status,
-    pub left: Struct_cirbuf,
-    pub right: Struct_cirbuf,
-    pub left_buf: [::std::os::raw::c_char; 514usize],
-    pub right_buf: [::std::os::raw::c_char; 512usize],
-    pub prompt: [::std::os::raw::c_char; 32usize],
-    pub prompt_size: ::std::os::raw::c_uint,
-    pub kill_buf: [::std::os::raw::c_char; 512usize],
-    pub kill_size: ::std::os::raw::c_uint,
-    pub history: Struct_cirbuf,
-    pub history_buf: [::std::os::raw::c_char; 8192usize],
-    pub history_cur_line: ::std::os::raw::c_int,
-    pub write_char: *mut rdline_write_char_t,
-    pub validate: *mut rdline_validate_t,
-    pub complete: *mut rdline_complete_t,
-    pub vt100: Struct_cmdline_vt100,
-    pub opaque: *mut ::std::os::raw::c_void,
-}
-impl ::std::clone::Clone for Struct_rdline {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_rdline {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-#[repr(C)]
-#[derive(Copy)]
-pub struct Struct_cmdline_token_hdr {
-    pub ops: *mut Struct_cmdline_token_ops,
-    pub offset: ::std::os::raw::c_uint,
-}
-impl ::std::clone::Clone for Struct_cmdline_token_hdr {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_cmdline_token_hdr {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-pub type cmdline_parse_token_hdr_t = Struct_cmdline_token_hdr;
-#[repr(C)]
-#[derive(Copy)]
-pub struct Struct_cmdline_token_ops {
-    pub parse: ::std::option::Option<unsafe extern "C" fn(arg1:
-                                                              *mut cmdline_parse_token_hdr_t,
-                                                          arg2:
-                                                              *const ::std::os::raw::c_char,
-                                                          arg3:
-                                                              *mut ::std::os::raw::c_void,
-                                                          arg4:
-                                                              ::std::os::raw::c_uint)
-                                         -> ::std::os::raw::c_int>,
-    pub complete_get_nb: ::std::option::Option<unsafe extern "C" fn(arg1:
-                                                                        *mut cmdline_parse_token_hdr_t)
-                                                   -> ::std::os::raw::c_int>,
-    pub complete_get_elt: ::std::option::Option<unsafe extern "C" fn(arg1:
-                                                                         *mut cmdline_parse_token_hdr_t,
-                                                                     arg2:
-                                                                         ::std::os::raw::c_int,
-                                                                     arg3:
-                                                                         *mut ::std::os::raw::c_char,
-                                                                     arg4:
-                                                                         ::std::os::raw::c_uint)
-                                                    -> ::std::os::raw::c_int>,
-    pub get_help: ::std::option::Option<unsafe extern "C" fn(arg1:
-                                                                 *mut cmdline_parse_token_hdr_t,
-                                                             arg2:
-                                                                 *mut ::std::os::raw::c_char,
-                                                             arg3:
-                                                                 ::std::os::raw::c_uint)
-                                            -> ::std::os::raw::c_int>,
-}
-impl ::std::clone::Clone for Struct_cmdline_token_ops {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_cmdline_token_ops {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-#[repr(C)]
-#[derive(Copy)]
-pub struct Struct_cmdline_inst {
-    pub f: ::std::option::Option<unsafe extern "C" fn(arg1:
-                                                          *mut ::std::os::raw::c_void,
-                                                      arg2:
-                                                          *mut Struct_cmdline,
-                                                      arg3:
-                                                          *mut ::std::os::raw::c_void)>,
-    pub data: *mut ::std::os::raw::c_void,
-    pub help_str: *const ::std::os::raw::c_char,
-    pub tokens: *mut *mut cmdline_parse_token_hdr_t,
-}
-impl ::std::clone::Clone for Struct_cmdline_inst {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_cmdline_inst {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-pub type cmdline_parse_inst_t = Struct_cmdline_inst;
-pub type cmdline_parse_ctx_t = *mut cmdline_parse_inst_t;
-#[repr(C)]
-#[derive(Copy)]
-pub struct Struct_cmdline_token_etheraddr {
-    pub hdr: Struct_cmdline_token_hdr,
-}
-impl ::std::clone::Clone for Struct_cmdline_token_etheraddr {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_cmdline_token_etheraddr {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-pub type cmdline_parse_token_etheraddr_t = Struct_cmdline_token_etheraddr;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_iovec {
@@ -5217,6 +5079,272 @@ impl ::std::clone::Clone for Struct_in_pktinfo {
 impl ::std::default::Default for Struct_in_pktinfo {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
+#[repr(C, packed)]
+#[derive(Copy)]
+pub struct Struct_ipv4_hdr {
+    pub version_ihl: uint8_t,
+    pub type_of_service: uint8_t,
+    pub total_length: uint16_t,
+    pub packet_id: uint16_t,
+    pub fragment_offset: uint16_t,
+    pub time_to_live: uint8_t,
+    pub next_proto_id: uint8_t,
+    pub hdr_checksum: uint16_t,
+    pub src_addr: uint32_t,
+    pub dst_addr: uint32_t,
+}
+impl ::std::clone::Clone for Struct_ipv4_hdr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ipv4_hdr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C, packed)]
+#[derive(Copy)]
+pub struct Struct_ipv6_hdr {
+    pub vtc_flow: uint32_t,
+    pub payload_len: uint16_t,
+    pub proto: uint8_t,
+    pub hop_limits: uint8_t,
+    pub src_addr: [uint8_t; 16usize],
+    pub dst_addr: [uint8_t; 16usize],
+}
+impl ::std::clone::Clone for Struct_ipv6_hdr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ipv6_hdr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C, packed)]
+#[derive(Copy)]
+pub struct Struct_icmp_hdr {
+    pub icmp_type: uint8_t,
+    pub icmp_code: uint8_t,
+    pub icmp_cksum: uint16_t,
+    pub icmp_ident: uint16_t,
+    pub icmp_seq_nb: uint16_t,
+}
+impl ::std::clone::Clone for Struct_icmp_hdr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_icmp_hdr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C, packed)]
+#[derive(Copy)]
+pub struct Struct_tcp_hdr {
+    pub src_port: uint16_t,
+    pub dst_port: uint16_t,
+    pub sent_seq: uint32_t,
+    pub recv_ack: uint32_t,
+    pub data_off: uint8_t,
+    pub tcp_flags: uint8_t,
+    pub rx_win: uint16_t,
+    pub cksum: uint16_t,
+    pub tcp_urp: uint16_t,
+}
+impl ::std::clone::Clone for Struct_tcp_hdr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_tcp_hdr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C, packed)]
+#[derive(Copy)]
+pub struct Struct_udp_hdr {
+    pub src_port: uint16_t,
+    pub dst_port: uint16_t,
+    pub dgram_len: uint16_t,
+    pub dgram_cksum: uint16_t,
+}
+impl ::std::clone::Clone for Struct_udp_hdr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_udp_hdr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C, packed)]
+#[derive(Copy)]
+pub struct Struct_sctp_hdr {
+    pub src_port: uint16_t,
+    pub dst_port: uint16_t,
+    pub tag: uint32_t,
+    pub cksum: uint32_t,
+}
+impl ::std::clone::Clone for Struct_sctp_hdr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_sctp_hdr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cirbuf {
+    pub maxlen: ::std::os::raw::c_uint,
+    pub start: ::std::os::raw::c_uint,
+    pub end: ::std::os::raw::c_uint,
+    pub len: ::std::os::raw::c_uint,
+    pub buf: *mut ::std::os::raw::c_char,
+}
+impl ::std::clone::Clone for Struct_cirbuf {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cirbuf {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[derive(Clone, Copy)]
+#[repr(u32)]
+pub enum Enum_cmdline_vt100_parser_state {
+    CMDLINE_VT100_INIT = 0,
+    CMDLINE_VT100_ESCAPE = 1,
+    CMDLINE_VT100_ESCAPE_CSI = 2,
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_vt100 {
+    pub bufpos: uint8_t,
+    pub buf: [::std::os::raw::c_char; 8usize],
+    pub state: Enum_cmdline_vt100_parser_state,
+}
+impl ::std::clone::Clone for Struct_cmdline_vt100 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_vt100 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[derive(Clone, Copy)]
+#[repr(u32)]
+pub enum Enum_rdline_status {
+    RDLINE_INIT = 0,
+    RDLINE_RUNNING = 1,
+    RDLINE_EXITED = 2,
+}
+pub type rdline_write_char_t =
+    unsafe extern "C" fn(rdl: *mut Struct_rdline,
+                         arg1: ::std::os::raw::c_char)
+        -> ::std::os::raw::c_int;
+pub type rdline_validate_t =
+    unsafe extern "C" fn(rdl: *mut Struct_rdline,
+                         buf: *const ::std::os::raw::c_char,
+                         size: ::std::os::raw::c_uint);
+pub type rdline_complete_t =
+    unsafe extern "C" fn(rdl: *mut Struct_rdline,
+                         buf: *const ::std::os::raw::c_char,
+                         dstbuf: *mut ::std::os::raw::c_char,
+                         dstsize: ::std::os::raw::c_uint,
+                         state: *mut ::std::os::raw::c_int)
+        -> ::std::os::raw::c_int;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_rdline {
+    pub status: Enum_rdline_status,
+    pub left: Struct_cirbuf,
+    pub right: Struct_cirbuf,
+    pub left_buf: [::std::os::raw::c_char; 514usize],
+    pub right_buf: [::std::os::raw::c_char; 512usize],
+    pub prompt: [::std::os::raw::c_char; 32usize],
+    pub prompt_size: ::std::os::raw::c_uint,
+    pub kill_buf: [::std::os::raw::c_char; 512usize],
+    pub kill_size: ::std::os::raw::c_uint,
+    pub history: Struct_cirbuf,
+    pub history_buf: [::std::os::raw::c_char; 8192usize],
+    pub history_cur_line: ::std::os::raw::c_int,
+    pub write_char: *mut rdline_write_char_t,
+    pub validate: *mut rdline_validate_t,
+    pub complete: *mut rdline_complete_t,
+    pub vt100: Struct_cmdline_vt100,
+    pub opaque: *mut ::std::os::raw::c_void,
+}
+impl ::std::clone::Clone for Struct_rdline {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_rdline {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_token_hdr {
+    pub ops: *mut Struct_cmdline_token_ops,
+    pub offset: ::std::os::raw::c_uint,
+}
+impl ::std::clone::Clone for Struct_cmdline_token_hdr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_token_hdr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type cmdline_parse_token_hdr_t = Struct_cmdline_token_hdr;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_token_ops {
+    pub parse: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                              *mut cmdline_parse_token_hdr_t,
+                                                          arg2:
+                                                              *const ::std::os::raw::c_char,
+                                                          arg3:
+                                                              *mut ::std::os::raw::c_void,
+                                                          arg4:
+                                                              ::std::os::raw::c_uint)
+                                         -> ::std::os::raw::c_int>,
+    pub complete_get_nb: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                        *mut cmdline_parse_token_hdr_t)
+                                                   -> ::std::os::raw::c_int>,
+    pub complete_get_elt: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                         *mut cmdline_parse_token_hdr_t,
+                                                                     arg2:
+                                                                         ::std::os::raw::c_int,
+                                                                     arg3:
+                                                                         *mut ::std::os::raw::c_char,
+                                                                     arg4:
+                                                                         ::std::os::raw::c_uint)
+                                                    -> ::std::os::raw::c_int>,
+    pub get_help: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                 *mut cmdline_parse_token_hdr_t,
+                                                             arg2:
+                                                                 *mut ::std::os::raw::c_char,
+                                                             arg3:
+                                                                 ::std::os::raw::c_uint)
+                                            -> ::std::os::raw::c_int>,
+}
+impl ::std::clone::Clone for Struct_cmdline_token_ops {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_token_ops {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_inst {
+    pub f: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                          *mut ::std::os::raw::c_void,
+                                                      arg2:
+                                                          *mut Struct_cmdline,
+                                                      arg3:
+                                                          *mut ::std::os::raw::c_void)>,
+    pub data: *mut ::std::os::raw::c_void,
+    pub help_str: *const ::std::os::raw::c_char,
+    pub tokens: *mut *mut cmdline_parse_token_hdr_t,
+}
+impl ::std::clone::Clone for Struct_cmdline_inst {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_inst {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type cmdline_parse_inst_t = Struct_cmdline_inst;
+pub type cmdline_parse_ctx_t = *mut cmdline_parse_inst_t;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_cmdline_token_etheraddr {
+    pub hdr: Struct_cmdline_token_hdr,
+}
+impl ::std::clone::Clone for Struct_cmdline_token_etheraddr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_cmdline_token_etheraddr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type cmdline_parse_token_etheraddr_t = Struct_cmdline_token_etheraddr;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_cmdline_ipaddr {
@@ -5440,10 +5568,10 @@ extern "C" {
     pub static mut pci_device_list: Struct_pci_device_list;
     pub static mut devargs_list: Struct_rte_devargs_list;
     pub static mut rte_eth_devices: *mut Struct_rte_eth_dev;
-    pub static mut cmdline_vt100_commands: *mut *const ::std::os::raw::c_char;
-    pub static mut cmdline_token_etheraddr_ops: Struct_cmdline_token_ops;
     pub static in6addr_any: Struct_in6_addr;
     pub static in6addr_loopback: Struct_in6_addr;
+    pub static mut cmdline_vt100_commands: *mut *const ::std::os::raw::c_char;
+    pub static mut cmdline_token_etheraddr_ops: Struct_cmdline_token_ops;
     pub static mut cmdline_token_ipaddr_ops: Struct_cmdline_token_ops;
     pub static mut cmdline_token_num_ops: Struct_cmdline_token_ops;
     pub static mut cmdline_token_portlist_ops: Struct_cmdline_token_ops;
@@ -6540,6 +6668,11 @@ extern "C" {
     pub fn rte_thread_set_affinity(cpusetp: *mut rte_cpuset_t)
      -> ::std::os::raw::c_int;
     pub fn rte_thread_get_affinity(cpusetp: *mut rte_cpuset_t);
+    pub fn rte_cpu_get_flag_name(feature: Enum_rte_cpu_flag_t)
+     -> *const ::std::os::raw::c_char;
+    pub fn rte_cpu_get_flag_enabled(feature: Enum_rte_cpu_flag_t)
+     -> ::std::os::raw::c_int;
+    pub fn rte_cpu_check_supported();
     pub fn rte_ring_get_memsize(count: ::std::os::raw::c_uint) -> ssize_t;
     pub fn rte_ring_init(r: *mut Struct_rte_ring,
                          name: *const ::std::os::raw::c_char,
@@ -6719,11 +6852,6 @@ extern "C" {
                                                                            arg:
                                                                                *mut ::std::os::raw::c_void)>,
                             arg: *mut ::std::os::raw::c_void);
-    pub fn rte_cpu_get_flag_name(feature: Enum_rte_cpu_flag_t)
-     -> *const ::std::os::raw::c_char;
-    pub fn rte_cpu_get_flag_enabled(feature: Enum_rte_cpu_flag_t)
-     -> ::std::os::raw::c_int;
-    pub fn rte_cpu_check_supported();
     pub fn rte_epoll_wait(epfd: ::std::os::raw::c_int,
                           events: *mut Struct_rte_epoll_event,
                           maxevents: ::std::os::raw::c_int,
@@ -7230,6 +7358,87 @@ extern "C" {
      -> ::std::os::raw::c_int;
     pub fn rte_eth_bond_link_up_prop_delay_get(bonded_port_id: uint8_t)
      -> ::std::os::raw::c_int;
+    pub fn readv(__fd: ::std::os::raw::c_int, __iovec: *const Struct_iovec,
+                 __count: ::std::os::raw::c_int) -> ssize_t;
+    pub fn writev(__fd: ::std::os::raw::c_int, __iovec: *const Struct_iovec,
+                  __count: ::std::os::raw::c_int) -> ssize_t;
+    pub fn preadv(__fd: ::std::os::raw::c_int, __iovec: *const Struct_iovec,
+                  __count: ::std::os::raw::c_int, __offset: __off_t)
+     -> ssize_t;
+    pub fn pwritev(__fd: ::std::os::raw::c_int, __iovec: *const Struct_iovec,
+                   __count: ::std::os::raw::c_int, __offset: __off_t)
+     -> ssize_t;
+    pub fn __cmsg_nxthdr(__mhdr: *mut Struct_msghdr,
+                         __cmsg: *mut Struct_cmsghdr) -> *mut Struct_cmsghdr;
+    pub fn socket(__domain: ::std::os::raw::c_int,
+                  __type: ::std::os::raw::c_int,
+                  __protocol: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+    pub fn socketpair(__domain: ::std::os::raw::c_int,
+                      __type: ::std::os::raw::c_int,
+                      __protocol: ::std::os::raw::c_int,
+                      __fds: *mut ::std::os::raw::c_int)
+     -> ::std::os::raw::c_int;
+    pub fn bind(__fd: ::std::os::raw::c_int, __addr: *const Struct_sockaddr,
+                __len: socklen_t) -> ::std::os::raw::c_int;
+    pub fn getsockname(__fd: ::std::os::raw::c_int,
+                       __addr: *mut Struct_sockaddr, __len: *mut socklen_t)
+     -> ::std::os::raw::c_int;
+    pub fn connect(__fd: ::std::os::raw::c_int,
+                   __addr: *const Struct_sockaddr, __len: socklen_t)
+     -> ::std::os::raw::c_int;
+    pub fn getpeername(__fd: ::std::os::raw::c_int,
+                       __addr: *mut Struct_sockaddr, __len: *mut socklen_t)
+     -> ::std::os::raw::c_int;
+    pub fn send(__fd: ::std::os::raw::c_int,
+                __buf: *const ::std::os::raw::c_void, __n: size_t,
+                __flags: ::std::os::raw::c_int) -> ssize_t;
+    pub fn recv(__fd: ::std::os::raw::c_int,
+                __buf: *mut ::std::os::raw::c_void, __n: size_t,
+                __flags: ::std::os::raw::c_int) -> ssize_t;
+    pub fn sendto(__fd: ::std::os::raw::c_int,
+                  __buf: *const ::std::os::raw::c_void, __n: size_t,
+                  __flags: ::std::os::raw::c_int,
+                  __addr: *const Struct_sockaddr, __addr_len: socklen_t)
+     -> ssize_t;
+    pub fn recvfrom(__fd: ::std::os::raw::c_int,
+                    __buf: *mut ::std::os::raw::c_void, __n: size_t,
+                    __flags: ::std::os::raw::c_int,
+                    __addr: *mut Struct_sockaddr, __addr_len: *mut socklen_t)
+     -> ssize_t;
+    pub fn sendmsg(__fd: ::std::os::raw::c_int,
+                   __message: *const Struct_msghdr,
+                   __flags: ::std::os::raw::c_int) -> ssize_t;
+    pub fn recvmsg(__fd: ::std::os::raw::c_int, __message: *mut Struct_msghdr,
+                   __flags: ::std::os::raw::c_int) -> ssize_t;
+    pub fn getsockopt(__fd: ::std::os::raw::c_int,
+                      __level: ::std::os::raw::c_int,
+                      __optname: ::std::os::raw::c_int,
+                      __optval: *mut ::std::os::raw::c_void,
+                      __optlen: *mut socklen_t) -> ::std::os::raw::c_int;
+    pub fn setsockopt(__fd: ::std::os::raw::c_int,
+                      __level: ::std::os::raw::c_int,
+                      __optname: ::std::os::raw::c_int,
+                      __optval: *const ::std::os::raw::c_void,
+                      __optlen: socklen_t) -> ::std::os::raw::c_int;
+    pub fn listen(__fd: ::std::os::raw::c_int, __n: ::std::os::raw::c_int)
+     -> ::std::os::raw::c_int;
+    pub fn accept(__fd: ::std::os::raw::c_int, __addr: *mut Struct_sockaddr,
+                  __addr_len: *mut socklen_t) -> ::std::os::raw::c_int;
+    pub fn shutdown(__fd: ::std::os::raw::c_int, __how: ::std::os::raw::c_int)
+     -> ::std::os::raw::c_int;
+    pub fn sockatmark(__fd: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+    pub fn isfdtype(__fd: ::std::os::raw::c_int,
+                    __fdtype: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
+    pub fn ntohl(__netlong: uint32_t) -> uint32_t;
+    pub fn ntohs(__netshort: uint16_t) -> uint16_t;
+    pub fn htonl(__hostlong: uint32_t) -> uint32_t;
+    pub fn htons(__hostshort: uint16_t) -> uint16_t;
+    pub fn bindresvport(__sockfd: ::std::os::raw::c_int,
+                        __sock_in: *mut Struct_sockaddr_in)
+     -> ::std::os::raw::c_int;
+    pub fn bindresvport6(__sockfd: ::std::os::raw::c_int,
+                         __sock_in: *mut Struct_sockaddr_in6)
+     -> ::std::os::raw::c_int;
     pub fn cirbuf_init(cbuf: *mut Struct_cirbuf,
                        buf: *mut ::std::os::raw::c_char,
                        start: ::std::os::raw::c_uint,
@@ -7326,87 +7535,6 @@ extern "C" {
     pub fn cmdline_get_help_etheraddr(tk: *mut cmdline_parse_token_hdr_t,
                                       dstbuf: *mut ::std::os::raw::c_char,
                                       size: ::std::os::raw::c_uint)
-     -> ::std::os::raw::c_int;
-    pub fn readv(__fd: ::std::os::raw::c_int, __iovec: *const Struct_iovec,
-                 __count: ::std::os::raw::c_int) -> ssize_t;
-    pub fn writev(__fd: ::std::os::raw::c_int, __iovec: *const Struct_iovec,
-                  __count: ::std::os::raw::c_int) -> ssize_t;
-    pub fn preadv(__fd: ::std::os::raw::c_int, __iovec: *const Struct_iovec,
-                  __count: ::std::os::raw::c_int, __offset: __off_t)
-     -> ssize_t;
-    pub fn pwritev(__fd: ::std::os::raw::c_int, __iovec: *const Struct_iovec,
-                   __count: ::std::os::raw::c_int, __offset: __off_t)
-     -> ssize_t;
-    pub fn __cmsg_nxthdr(__mhdr: *mut Struct_msghdr,
-                         __cmsg: *mut Struct_cmsghdr) -> *mut Struct_cmsghdr;
-    pub fn socket(__domain: ::std::os::raw::c_int,
-                  __type: ::std::os::raw::c_int,
-                  __protocol: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
-    pub fn socketpair(__domain: ::std::os::raw::c_int,
-                      __type: ::std::os::raw::c_int,
-                      __protocol: ::std::os::raw::c_int,
-                      __fds: *mut ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn bind(__fd: ::std::os::raw::c_int, __addr: *const Struct_sockaddr,
-                __len: socklen_t) -> ::std::os::raw::c_int;
-    pub fn getsockname(__fd: ::std::os::raw::c_int,
-                       __addr: *mut Struct_sockaddr, __len: *mut socklen_t)
-     -> ::std::os::raw::c_int;
-    pub fn connect(__fd: ::std::os::raw::c_int,
-                   __addr: *const Struct_sockaddr, __len: socklen_t)
-     -> ::std::os::raw::c_int;
-    pub fn getpeername(__fd: ::std::os::raw::c_int,
-                       __addr: *mut Struct_sockaddr, __len: *mut socklen_t)
-     -> ::std::os::raw::c_int;
-    pub fn send(__fd: ::std::os::raw::c_int,
-                __buf: *const ::std::os::raw::c_void, __n: size_t,
-                __flags: ::std::os::raw::c_int) -> ssize_t;
-    pub fn recv(__fd: ::std::os::raw::c_int,
-                __buf: *mut ::std::os::raw::c_void, __n: size_t,
-                __flags: ::std::os::raw::c_int) -> ssize_t;
-    pub fn sendto(__fd: ::std::os::raw::c_int,
-                  __buf: *const ::std::os::raw::c_void, __n: size_t,
-                  __flags: ::std::os::raw::c_int,
-                  __addr: *const Struct_sockaddr, __addr_len: socklen_t)
-     -> ssize_t;
-    pub fn recvfrom(__fd: ::std::os::raw::c_int,
-                    __buf: *mut ::std::os::raw::c_void, __n: size_t,
-                    __flags: ::std::os::raw::c_int,
-                    __addr: *mut Struct_sockaddr, __addr_len: *mut socklen_t)
-     -> ssize_t;
-    pub fn sendmsg(__fd: ::std::os::raw::c_int,
-                   __message: *const Struct_msghdr,
-                   __flags: ::std::os::raw::c_int) -> ssize_t;
-    pub fn recvmsg(__fd: ::std::os::raw::c_int, __message: *mut Struct_msghdr,
-                   __flags: ::std::os::raw::c_int) -> ssize_t;
-    pub fn getsockopt(__fd: ::std::os::raw::c_int,
-                      __level: ::std::os::raw::c_int,
-                      __optname: ::std::os::raw::c_int,
-                      __optval: *mut ::std::os::raw::c_void,
-                      __optlen: *mut socklen_t) -> ::std::os::raw::c_int;
-    pub fn setsockopt(__fd: ::std::os::raw::c_int,
-                      __level: ::std::os::raw::c_int,
-                      __optname: ::std::os::raw::c_int,
-                      __optval: *const ::std::os::raw::c_void,
-                      __optlen: socklen_t) -> ::std::os::raw::c_int;
-    pub fn listen(__fd: ::std::os::raw::c_int, __n: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn accept(__fd: ::std::os::raw::c_int, __addr: *mut Struct_sockaddr,
-                  __addr_len: *mut socklen_t) -> ::std::os::raw::c_int;
-    pub fn shutdown(__fd: ::std::os::raw::c_int, __how: ::std::os::raw::c_int)
-     -> ::std::os::raw::c_int;
-    pub fn sockatmark(__fd: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
-    pub fn isfdtype(__fd: ::std::os::raw::c_int,
-                    __fdtype: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
-    pub fn ntohl(__netlong: uint32_t) -> uint32_t;
-    pub fn ntohs(__netshort: uint16_t) -> uint16_t;
-    pub fn htonl(__hostlong: uint32_t) -> uint32_t;
-    pub fn htons(__hostshort: uint16_t) -> uint16_t;
-    pub fn bindresvport(__sockfd: ::std::os::raw::c_int,
-                        __sock_in: *mut Struct_sockaddr_in)
-     -> ::std::os::raw::c_int;
-    pub fn bindresvport6(__sockfd: ::std::os::raw::c_int,
-                         __sock_in: *mut Struct_sockaddr_in6)
      -> ::std::os::raw::c_int;
     pub fn cmdline_parse_ipaddr(tk: *mut cmdline_parse_token_hdr_t,
                                 srcbuf: *const ::std::os::raw::c_char,

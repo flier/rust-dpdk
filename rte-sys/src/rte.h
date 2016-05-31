@@ -10,6 +10,7 @@
 #include <rte_launch.h>
 #include <rte_atomic.h>
 #include <rte_cycles.h>
+#include <rte_spinlock.h>
 #include <rte_prefetch.h>
 #include <rte_lcore.h>
 #include <rte_per_lcore.h>
@@ -28,10 +29,17 @@
 
 #include <rte_interrupts.h>
 #include <rte_pci.h>
-#include <rte_ether.h>
 #include <rte_ethdev.h>
 #include <rte_kni.h>
 #include <rte_eth_bond.h>
+
+#include <rte_ether.h>
+#include <rte_arp.h>
+#include <rte_ip.h>
+#include <rte_icmp.h>
+#include <rte_tcp.h>
+#include <rte_udp.h>
+#include <rte_sctp.h>
 
 #include <cmdline_rdline.h>
 #include <cmdline_parse.h>
