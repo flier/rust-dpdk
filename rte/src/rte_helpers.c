@@ -5,34 +5,106 @@
 #include <rte_version.h>
 #include <rte_lcore.h>
 #include <rte_errno.h>
+#include <rte_spinlock.h>
 #include <rte_cycles.h>
 #include <rte_ethdev.h>
 
 #include <cmdline_parse.h>
 #include <cmdline.h>
 
-unsigned _rte_lcore_id() {
+unsigned
+_rte_lcore_id() {
     return rte_lcore_id();
 }
 
-int _rte_errno() {
+int
+_rte_errno() {
     return rte_errno;
 }
 
-const char *_rte_version() {
+const char *
+_rte_version() {
     return rte_version();
 }
 
-size_t _rte_cache_line_size() {
+size_t
+_rte_cache_line_size() {
     return RTE_CACHE_LINE_SIZE;
 }
 
-uint64_t _rte_rdtsc() {
+uint64_t
+_rte_rdtsc() {
     return rte_rdtsc();
 }
 
-uint64_t _rte_rdtsc_precise() {
+uint64_t
+_rte_rdtsc_precise() {
     return rte_rdtsc_precise();
+}
+
+void
+_rte_spinlock_lock(rte_spinlock_t *sl) {
+    rte_spinlock_lock(sl);
+}
+
+void
+_rte_spinlock_unlock(rte_spinlock_t *sl) {
+    rte_spinlock_unlock(sl);
+}
+
+int
+_rte_spinlock_trylock(rte_spinlock_t *sl) {
+    return rte_spinlock_trylock(sl);
+}
+
+int
+_rte_tm_supported(void) {
+    return rte_tm_supported();
+}
+
+void
+_rte_spinlock_lock_tm(rte_spinlock_t *sl) {
+    rte_spinlock_lock_tm(sl);
+}
+
+void
+_rte_spinlock_unlock_tm(rte_spinlock_t *sl) {
+    rte_spinlock_unlock_tm(sl);
+}
+
+int
+_rte_spinlock_trylock_tm(rte_spinlock_t *sl) {
+    return rte_spinlock_trylock_tm(sl);
+}
+
+void
+_rte_spinlock_recursive_lock(rte_spinlock_recursive_t *slr) {
+    rte_spinlock_recursive_lock(slr);
+}
+
+void
+_rte_spinlock_recursive_unlock(rte_spinlock_recursive_t *slr) {
+    rte_spinlock_recursive_unlock(slr);
+}
+
+int
+_rte_spinlock_recursive_trylock(rte_spinlock_recursive_t *slr) {
+    return rte_spinlock_recursive_trylock(slr);
+}
+
+void
+_rte_spinlock_recursive_lock_tm(rte_spinlock_recursive_t *slr) {
+    rte_spinlock_recursive_lock_tm(slr);
+}
+
+void
+_rte_spinlock_recursive_unlock_tm(rte_spinlock_recursive_t *slr) {
+    rte_spinlock_recursive_unlock_tm(slr);
+}
+
+int
+_rte_spinlock_recursive_trylock_tm(rte_spinlock_recursive_t *slr) {
+    return rte_spinlock_recursive_trylock_tm(slr);
 }
 
 uint16_t
@@ -47,7 +119,8 @@ _rte_eth_tx_burst(uint8_t port_id, uint16_t queue_id,
     return rte_eth_tx_burst(port_id, queue_id, tx_pkts, nb_pkts);
 }
 
-struct rte_eth_conf* _rte_eth_conf_new() {
+struct rte_eth_conf*
+_rte_eth_conf_new() {
     struct rte_eth_conf *conf = malloc(sizeof(struct rte_eth_conf));
 
     memset(conf, 0, sizeof(struct rte_eth_conf));
@@ -55,11 +128,13 @@ struct rte_eth_conf* _rte_eth_conf_new() {
     return conf;
 }
 
-void _rte_eth_conf_free(struct rte_eth_conf *conf) {
+void
+_rte_eth_conf_free(struct rte_eth_conf *conf) {
     free(conf);
 }
 
-void _rte_eth_conf_set_rx_mode(struct rte_eth_conf *conf,
+void
+_rte_eth_conf_set_rx_mode(struct rte_eth_conf *conf,
     enum rte_eth_rx_mq_mode mq_mode,
     uint16_t split_hdr_size,
     uint8_t hw_ip_checksum,
@@ -85,13 +160,15 @@ void _rte_eth_conf_set_rx_mode(struct rte_eth_conf *conf,
     conf->rxmode.enable_lro = enable_lro;          /**< Enable LRO */
 }
 
-void _rte_eth_conf_set_rss_conf(struct rte_eth_conf *conf, uint8_t *rss_key, uint8_t rss_key_len, uint64_t rss_hf) {
+void
+_rte_eth_conf_set_rss_conf(struct rte_eth_conf *conf, uint8_t *rss_key, uint8_t rss_key_len, uint64_t rss_hf) {
     conf->rx_adv_conf.rss_conf.rss_key = rss_key;
     conf->rx_adv_conf.rss_conf.rss_key_len = rss_key_len;
     conf->rx_adv_conf.rss_conf.rss_hf = rss_hf;
 }
 
-void _rte_eth_conf_set_tx_mode(struct rte_eth_conf *conf,
+void
+_rte_eth_conf_set_tx_mode(struct rte_eth_conf *conf,
     enum rte_eth_tx_mq_mode mq_mode,
     uint8_t hw_vlan_reject_tagged,
     uint8_t hw_vlan_reject_untagged,
@@ -103,10 +180,17 @@ void _rte_eth_conf_set_tx_mode(struct rte_eth_conf *conf,
     conf->txmode.hw_vlan_insert_pvid = hw_vlan_insert_pvid;
 }
 
-size_t _rte_eth_tx_buffer_size(size_t size) {
+size_t
+_rte_eth_tx_buffer_size(size_t size) {
     return RTE_ETH_TX_BUFFER_SIZE(size);
 }
 
-void _cmdline_write(const struct cmdline *cl, const char *str) {
+void
+_rte_pktmbuf_free(struct rte_mbuf *m) {
+    rte_pktmbuf_free(m);
+}
+
+void
+_cmdline_write(const struct cmdline *cl, const char *str) {
     cmdline_printf(cl, str);
 }
