@@ -185,6 +185,11 @@ _rte_eth_tx_buffer_size(size_t size) {
     return RTE_ETH_TX_BUFFER_SIZE(size);
 }
 
+struct rte_mbuf *
+_rte_pktmbuf_alloc(struct rte_mempool *mp) {
+    return rte_pktmbuf_alloc(mp);
+}
+
 void
 _rte_pktmbuf_free(struct rte_mbuf *m) {
     rte_pktmbuf_free(m);

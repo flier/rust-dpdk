@@ -1,3 +1,4 @@
+use std::ops::{Deref, DerefMut};
 use std::ffi::CString;
 
 use ffi;
@@ -159,9 +160,8 @@ bitflags! {
 pub const RTE_MBUF_DEFAULT_BUF_SIZE: u16 =
     (ffi::RTE_MBUF_DEFAULT_DATAROOM + ffi::RTE_PKTMBUF_HEADROOM) as u16;
 
-
+pub type RawMbuf = ffi::Struct_rte_mbuf;
 pub type RawMbufPtr = *mut ffi::Struct_rte_mbuf;
-
 
 /// A macro that points to an offset into the data in the mbuf.
 #[macro_export]
@@ -179,6 +179,29 @@ macro_rules! pktmbuf_mtod {
     )
 }
 
+pub struct PktMbufPool(mempool::RawMemoryPool);
+
+impl Deref for PktMbufPool {
+    type Target = mempool::RawMemoryPool;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for PktMbufPool {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl PktMbufPool {
+    /// Allocate a new mbuf from a mempool.
+    pub fn alloc(&self) -> RawMbufPtr {
+        unsafe { _rte_pktmbuf_alloc(self.as_raw()) }
+    }
+}
+
 /// Create a mbuf pool.
 ///
 /// This function creates and initializes a packet mbuf pool.
@@ -190,7 +213,7 @@ pub fn pktmbuf_pool_create(name: &str,
                            priv_size: u16,
                            data_room_size: u16,
                            socket_id: i32)
-                           -> Result<mempool::RawMemoryPool> {
+                           -> Result<PktMbufPool> {
     let name = try!(CString::new(name))
         .as_bytes_with_nul()
         .as_ptr() as *const i8;
@@ -199,13 +222,16 @@ pub fn pktmbuf_pool_create(name: &str,
         ffi::rte_pktmbuf_pool_create(name, n, cache_size, priv_size, data_room_size, socket_id)
     };
 
-    rte_check!(p, NonNull; ok => { mempool::from_raw(p) })
+    rte_check!(p, NonNull; ok => { PktMbufPool(mempool::from_raw(p)) })
 }
 
+/// Free a packet mbuf back into its original mempool.
 pub fn pktmbuf_free(m: RawMbufPtr) {
     unsafe { _rte_pktmbuf_free(m) }
 }
 
 extern "C" {
+    fn _rte_pktmbuf_alloc(mp: mempool::RawMemoryPoolPtr) -> RawMbufPtr;
+
     fn _rte_pktmbuf_free(m: RawMbufPtr);
 }

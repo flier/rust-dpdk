@@ -67,12 +67,14 @@ pub fn str(s: &FixedStr) -> result::Result<&str, str::Utf8Error> {
     unsafe { str::from_utf8(CStr::from_ptr(s.as_ptr()).to_bytes()) }
 }
 
-pub fn ipaddr(ip: &mut IpNetAddr) -> IpAddr {
+pub fn ipaddr(ip: &IpNetAddr) -> IpAddr {
     unsafe {
+        let p: *mut ffi::cmdline_ipaddr_t = mem::transmute(ip);
+
         if ip.family == libc::AF_INET as u8 {
-            IpAddr::V4(Ipv4Addr::from((*ip.addr.ipv4()).s_addr))
+            IpAddr::V4(Ipv4Addr::from((*((*p).addr.ipv4())).s_addr))
         } else {
-            let a: &[u16] = slice::from_raw_parts(mem::transmute(ip.addr.ipv6()), 8);
+            let a: &[u16] = slice::from_raw_parts(mem::transmute((*p).addr.ipv6()), 8);
 
             IpAddr::V6(Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
         }

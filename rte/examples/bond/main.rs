@@ -42,6 +42,7 @@ struct AppConfig {
     bond_ip: u32,
     bond_mac_addr: ether::EtherAddr,
     bonded_port_id: PortId,
+    pktmbuf_pool: mbuf::PktMbufPool,
     port_packets: [AtomicUsize; 4],
     lock: spinlock::SpinLock,
 }
@@ -268,9 +269,69 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
 
 struct CmdActionResult {
     action: cmdline::FixedStr,
+    ip: cmdline::IpNetAddr,
 }
 
 impl CmdActionResult {
+    fn ip(&self) -> net::IpAddr {
+        cmdline::ipaddr(&self.ip)
+    }
+
+    fn send(&mut self, cl: &cmdline::RawCmdline, data: Option<&AppConfig>) {
+        let app_conf = data.unwrap();
+
+        match self.ip() {
+            net::IpAddr::V4(ip) => {
+                let m = app_conf.pktmbuf_pool.alloc();
+
+                let pkt_size = mem::size_of::<ether::EtherHdr>() + mem::size_of::<arp::ArpHdr>();
+
+                unsafe {
+                    (*m).data_len = pkt_size as u16;
+                    (*m).pkt_len = pkt_size as u32;
+                }
+
+                let p = pktmbuf_mtod!(m, *mut ether::EtherHdr);
+
+                if let Some(mut ether_hdr) = ptr_as_mut_ref!(p) {
+                    ether_hdr.ether_type = (ETHER_TYPE_ARP as u16).to_be();
+
+                    ether::EtherAddr::copy(&app_conf.bond_mac_addr,
+                                           &mut ether_hdr.s_addr.addr_bytes);
+                    ether::EtherAddr::copy(&ether::EtherAddr::broadcast(),
+                                           &mut ether_hdr.d_addr.addr_bytes);
+                }
+
+                if let Some(mut arp_hdr) =
+                       ptr_as_mut_ref!(unsafe {p.offset(1) as *mut arp::ArpHdr}) {
+
+                    arp_hdr.arp_hrd = (ARP_HRD_ETHER as u16).to_be();
+                    arp_hdr.arp_pro = (ETHER_TYPE_IPV4 as u16).to_be();
+                    arp_hdr.arp_hln = ETHER_ADDR_LEN as u8;
+                    arp_hdr.arp_pln = mem::size_of::<u32>() as u8;
+                    arp_hdr.arp_op = (ARP_OP_REQUEST as u16).to_be();
+
+                    ether::EtherAddr::copy(&app_conf.bond_mac_addr,
+                                           &mut arp_hdr.arp_data
+                                               .arp_sha
+                                               .addr_bytes);
+                    ether::EtherAddr::copy(&ether::EtherAddr::zeroed(),
+                                           &mut arp_hdr.arp_data
+                                               .arp_tha
+                                               .addr_bytes);
+
+                    arp_hdr.arp_data.arp_sip = app_conf.bond_ip;
+                    arp_hdr.arp_data.arp_tip = u32::from(ip);
+
+                    ethdev::dev(app_conf.bonded_port_id).tx_burst(0, &mut [m]);
+                }
+            }
+            _ => {
+                cl.println("Wrong IP format. Only IPv4 is supported").unwrap();
+            }
+        }
+    }
+
     fn start(&mut self, cl: &cmdline::RawCmdline, data: Option<&AppConfig>) {
         let app_conf = data.unwrap();
 
@@ -345,34 +406,40 @@ impl CmdActionResult {
 }
 
 fn prompt(app_conf: &AppConfig) {
-    let cmd_action_start = TOKEN_STRING_INITIALIZER!(CmdActionResult, action, "start");
-    let cmd_action_stop = TOKEN_STRING_INITIALIZER!(CmdActionResult, action, "stop");
-    let cmd_action_show = TOKEN_STRING_INITIALIZER!(CmdActionResult, action, "show");
-    let cmd_action_help = TOKEN_STRING_INITIALIZER!(CmdActionResult, action, "help");
-    let cmd_action_quit = TOKEN_STRING_INITIALIZER!(CmdActionResult, action, "quit");
+    let cmd_obj_action_send = TOKEN_STRING_INITIALIZER!(CmdActionResult, action, "send");
+    let cmd_obj_ip = TOKEN_IPV4_INITIALIZER!(CmdActionResult, ip);
+    let cmd_obj_action_start = TOKEN_STRING_INITIALIZER!(CmdActionResult, action, "start");
+    let cmd_obj_action_stop = TOKEN_STRING_INITIALIZER!(CmdActionResult, action, "stop");
+    let cmd_obj_action_show = TOKEN_STRING_INITIALIZER!(CmdActionResult, action, "show");
+    let cmd_obj_action_help = TOKEN_STRING_INITIALIZER!(CmdActionResult, action, "help");
+    let cmd_obj_action_quit = TOKEN_STRING_INITIALIZER!(CmdActionResult, action, "quit");
 
+    let cmd_send = cmdline::inst(CmdActionResult::send,
+                                 Some(app_conf),
+                                 "send client_ip",
+                                 &[&cmd_obj_action_send, &cmd_obj_ip]);
     let cmd_start = cmdline::inst(CmdActionResult::start,
                                   Some(app_conf),
                                   "starts listening if not started at startup",
-                                  &[&cmd_action_start]);
+                                  &[&cmd_obj_action_start]);
     let cmd_stop = cmdline::inst(CmdActionResult::stop,
                                  Some(app_conf),
                                  "stops listening if started at startup",
-                                 &[&cmd_action_stop]);
+                                 &[&cmd_obj_action_stop]);
     let cmd_show = cmdline::inst(CmdActionResult::show,
                                  Some(app_conf),
                                  "show listening status",
-                                 &[&cmd_action_show]);
+                                 &[&cmd_obj_action_show]);
     let cmd_help = cmdline::inst(CmdActionResult::help,
                                  None,
                                  "show help",
-                                 &[&cmd_action_help]);
+                                 &[&cmd_obj_action_help]);
     let cmd_quit = cmdline::inst(CmdActionResult::quit,
                                  Some(app_conf),
                                  "quit",
-                                 &[&cmd_action_quit]);
+                                 &[&cmd_obj_action_quit]);
 
-    let cmds = &[&cmd_start, &cmd_stop, &cmd_show, &cmd_help, &cmd_quit];
+    let cmds = &[&cmd_send, &cmd_start, &cmd_stop, &cmd_show, &cmd_help, &cmd_quit];
 
     cmdline::new(cmds)
         .open_stdin("bond6> ")
@@ -442,11 +509,12 @@ fn main() {
     }
 
     let app_conf = AppConfig {
-        bond_ip: u32::from(net::Ipv4Addr::new(10, 0, 0, 7)),
+        bond_ip: u32::from(net::Ipv4Addr::new(10, 0, 0, 7)).to_be(),
         bond_mac_addr: bonded_dev.mac_addr(),
         bonded_port_id: bonded_dev.portid(),
         lcore_main_is_running: AtomicBool::new(true),
         lcore_main_core_id: slave_core_id,
+        pktmbuf_pool: pktmbuf_pool,
         ..AppConfig::default()
     };
 
