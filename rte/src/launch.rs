@@ -7,23 +7,6 @@ use lcore::LcoreId;
 
 pub type LcoreFunc<T> = extern "C" fn(*const T) -> i32;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum LcoreState {
-    Wait = 0,
-    Running = 1,
-    Finished = 2,
-}
-
-impl From<ffi::Enum_rte_lcore_state_t> for LcoreState {
-    fn from(s: ffi::Enum_rte_lcore_state_t) -> Self {
-        match s {
-            ffi::Enum_rte_lcore_state_t::WAIT => LcoreState::Wait,
-            ffi::Enum_rte_lcore_state_t::RUNNING => LcoreState::Running,
-            ffi::Enum_rte_lcore_state_t::FINISHED => LcoreState::Finished,
-        }
-    }
-}
-
 /// Launch a function on another lcore.
 pub fn remote_launch<T>(f: LcoreFunc<T>, arg: Option<&T>, slave_id: LcoreId) -> Result<()> {
     rte_check!(unsafe {
@@ -44,11 +27,6 @@ pub fn mp_remote_launch<T>(f: LcoreFunc<T>, arg: Option<&T>, skip_master: bool) 
     })
 }
 
-/// Get the state of the lcore identified by slave_id.
-pub fn lcore_state(slave_id: LcoreId) -> LcoreState {
-    LcoreState::from(unsafe { ffi::rte_eal_get_lcore_state(slave_id) })
-}
-
 /// Wait until an lcore finishes its job.
 ///
 /// To be executed on the MASTER lcore only.
@@ -57,8 +35,8 @@ pub fn lcore_state(slave_id: LcoreId) -> LcoreState {
 /// switch to the WAIT state. If the lcore is in RUNNING state, wait until
 /// the lcore finishes its job and moves to the FINISHED state.
 ///
-pub fn wait_lcore(slave_id: LcoreId) -> bool {
-    unsafe { ffi::rte_eal_wait_lcore(slave_id) == 0 }
+pub fn wait_lcore(lcore_id: LcoreId) -> bool {
+    unsafe { ffi::rte_eal_wait_lcore(lcore_id) == 0 }
 }
 
 /// Wait until all lcores finish their jobs.

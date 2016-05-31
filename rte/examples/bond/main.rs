@@ -160,9 +160,9 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
 
             app_conf.port_packets[0].fetch_add(1, Ordering::Relaxed);
 
-            if let Some(mut ether_hdr) =
-                   ptr_as_mut_ref!(pktmbuf_mtod!(*pkt, *mut ether::EtherHdr)) {
+            let p = pktmbuf_mtod!(*pkt, *mut ether::EtherHdr);
 
+            if let Some(mut ether_hdr) = ptr_as_mut_ref!(p) {
                 let (next_hdr, next_proto) = strip_vlan_hdr(ether_hdr);
 
                 match next_proto {
@@ -253,7 +253,8 @@ impl CmdActionResult {
             "stop       - stops lcore_main.\n"
             "show       - shows some bond info: ex. active slaves etc.\n"
             "help       - prints help.\n"
-            "quit       - terminate all threads and quit.\n"#);
+            "quit       - terminate all threads and quit.\n"#)
+            .unwrap();
     }
 
     fn quit(&mut self, cl: &cmdline::RawCmdline, data: Option<&AppConfig>) {
@@ -345,7 +346,7 @@ fn main() {
 
     // check state of lcores
     lcore::foreach_slave(|lcore_id| {
-        if launch::lcore_state(lcore_id) != launch::LcoreState::Wait {
+        if lcore::state(lcore_id) != lcore::State::Wait {
             eal::exit(-libc::EBUSY, "lcores not ready");
         }
     });

@@ -16,6 +16,23 @@ pub enum Role {
     Off = 1, // ROLE_OFF
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum State {
+    Wait = 0,
+    Running = 1,
+    Finished = 2,
+}
+
+impl From<ffi::Enum_rte_lcore_state_t> for State {
+    fn from(s: ffi::Enum_rte_lcore_state_t) -> Self {
+        match s {
+            ffi::Enum_rte_lcore_state_t::WAIT => State::Wait,
+            ffi::Enum_rte_lcore_state_t::RUNNING => State::Running,
+            ffi::Enum_rte_lcore_state_t::FINISHED => State::Finished,
+        }
+    }
+}
+
 extern "C" {
     pub fn _rte_lcore_id() -> ffi::uint32_t;
 }
@@ -69,6 +86,11 @@ pub fn next(lcore_id: LcoreId, skip_master: bool) -> LcoreId {
 /// Get a lcore's role.
 pub fn role(lcore_id: LcoreId) -> Role {
     unsafe { mem::transmute(ffi::rte_eal_lcore_role(lcore_id)) }
+}
+
+/// Get the state of the lcore identified by lcore_id.
+pub fn state(lcore_id: LcoreId) -> State {
+    State::from(unsafe { ffi::rte_eal_get_lcore_state(lcore_id) })
 }
 
 /// Get the ID of the physical socket of the specified lcore

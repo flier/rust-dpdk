@@ -93,7 +93,7 @@ fn test_launch() {
     let mutex = Arc::new(Mutex::new(0));
     let slave_id: u32 = 1;
 
-    assert_eq!(launch::LcoreState::Wait, launch::get_lcore_state(slave_id));
+    assert_eq!(lcore::State::Wait, lcore::state(slave_id));
 
     {
         let data = mutex.lock().unwrap();
@@ -104,8 +104,7 @@ fn test_launch() {
 
         launch::remote_launch(slave_main, Some(&mutex.clone()), slave_id).unwrap();
 
-        assert_eq!(launch::LcoreState::Running,
-                   launch::get_lcore_state(slave_id));
+        assert_eq!(lcore::State::Running, lcore::state(slave_id));
     }
 
     debug!("waiting lcore {} ...", slave_id);
@@ -119,7 +118,7 @@ fn test_launch() {
 
         debug!("remote lcore {} finished", slave_id);
 
-        assert_eq!(launch::LcoreState::Wait, launch::get_lcore_state(slave_id));
+        assert_eq!(lcore::State::Wait, lcore::state(slave_id));
     }
 
     {

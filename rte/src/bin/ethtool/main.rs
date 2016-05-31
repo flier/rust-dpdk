@@ -73,10 +73,13 @@ fn setup_ports(app_cfg: &mut AppConfig) {
 }
 
 fn process_frame(mac_addr: &ether::EtherAddr, frame: mbuf::RawMbufPtr) {
-    let ether_hdr = unsafe { &mut *pktmbuf_mtod!(frame, *mut ether::EtherHdr) };
+    let p = pktmbuf_mtod!(frame, *mut ether::EtherHdr);
 
-    ether::EtherAddr::copy(&ether_hdr.s_addr, &mut ether_hdr.d_addr);
-    ether::EtherAddr::copy(&mac_addr, &mut ether_hdr.s_addr);
+    if let Some(mut ether_hdr) = ptr_as_mut_ref!(p) {
+        ether::EtherAddr::copy(&ether_hdr.s_addr.addr_bytes,
+                               &mut ether_hdr.d_addr.addr_bytes);
+        ether::EtherAddr::copy(&mac_addr, &mut ether_hdr.s_addr.addr_bytes);
+    }
 }
 
 extern "C" fn slave_main(app_cfg: &mut AppConfig) -> i32 {
