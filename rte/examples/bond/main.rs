@@ -72,7 +72,7 @@ impl AppConfig {
 
         info!("Starting lcore_main on core {} Our IP {}",
               self.lcore_main_core_id,
-              net::Ipv4Addr::from(self.bond_ip));
+              net::Ipv4Addr::from(self.bond_ip.to_le()));
     }
 
     fn stop(&self) {
@@ -169,7 +169,7 @@ fn strip_vlan_hdr(ether_hdr: *const ether::EtherHdr) -> (*const libc::c_void, u1
 extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
     debug!("lcore_main is starting @ lcore {}", lcore::id().unwrap());
 
-    let dev = ethdev::dev(app_conf.bonded_port_id);
+    let dev = bond::dev(app_conf.bonded_port_id);
     let mut pkts: [mbuf::RawMbufPtr; MAX_PKT_BURST] = unsafe { mem::zeroed() };
 
     while app_conf.lcore_main_is_running.load(Ordering::Relaxed) {
@@ -178,6 +178,10 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
         // If didn't receive any packets, wait and go to next iteration
         if rx_cnt == 0 {
             eal::delay_us(50);
+        } else {
+            debug!("received {} packets from bonded port {}",
+                   rx_cnt,
+                   dev.portid());
         }
 
         // Search incoming data for ARP packets and prepare response
@@ -323,7 +327,10 @@ impl CmdActionResult {
                     arp_hdr.arp_data.arp_sip = app_conf.bond_ip;
                     arp_hdr.arp_data.arp_tip = u32::from(ip);
 
-                    ethdev::dev(app_conf.bonded_port_id).tx_burst(0, &mut [m]);
+                    if ethdev::dev(app_conf.bonded_port_id).tx_burst(0, &mut [m]) == 1 {
+                        debug!("send ARP request to {}",
+                            net::Ipv4Addr::from(u32::from(ip).to_le()));
+                    }
                 }
             }
             _ => {
