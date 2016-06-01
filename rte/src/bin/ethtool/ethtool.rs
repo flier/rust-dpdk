@@ -19,7 +19,7 @@ pub struct AppPort {
     pub port_id: u8,
     pub port_active: bool,
     pub port_dirty: bool,
-    pub pkt_pool: Option<mempool::RawMemoryPool>,
+    pub pkt_pool: mbuf::PktMbufPool,
 }
 
 impl Default for AppPort {

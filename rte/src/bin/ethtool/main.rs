@@ -39,13 +39,13 @@ fn setup_ports(app_cfg: &mut AppConfig) {
             let size_pktpool = info.rx_desc_lim.nb_max + info.tx_desc_lim.nb_max +
                                PKTPOOL_EXTRA_SIZE;
 
-            app_port.pkt_pool = Some(mbuf::pktmbuf_pool_create(&format!("pkt_pool{}", portid),
-                                                               size_pktpool as u32,
-                                                               PKTPOOL_CACHE,
-                                                               0,
-                                                               mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
-                                                               eal::socket_id())
-                .expect("create mbuf pool failed"));
+            app_port.pkt_pool = mbuf::pktmbuf_pool_create(&format!("pkt_pool_{}", portid),
+                                                          size_pktpool as u32,
+                                                          PKTPOOL_CACHE,
+                                                          0,
+                                                          mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
+                                                          eal::socket_id())
+                .expect("create mbuf pool failed");
 
             println!("Init port {}..\n", portid);
 
@@ -57,7 +57,7 @@ fn setup_ports(app_cfg: &mut AppConfig) {
                 .expect(&format!("fail to configure device: port={}", portid));
 
             // init one RX queue
-            dev.rx_queue_setup(0, PORT_RX_QUEUE_SIZE, None, &app_port.pkt_pool.unwrap())
+            dev.rx_queue_setup(0, PORT_RX_QUEUE_SIZE, None, &app_port.pkt_pool)
                 .expect(&format!("fail to setup device rx queue: port={}", portid));
 
             // init one TX queue on each port
