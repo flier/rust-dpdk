@@ -23,6 +23,7 @@ use std::str::FromStr;
 use nix::sys::signal;
 
 use rte::*;
+use rte::memory::AsMutRef;
 use rte::ethdev::{EthDevice, EthDeviceInfo};
 
 const EXIT_FAILURE: i32 = -1;
@@ -615,15 +616,14 @@ fn main() {
     }
 
     // create the mbuf pool
-    let p = mbuf::pktmbuf_pool_create("mbuf_pool",
-                                      NB_MBUF,
-                                      MEMPOOL_CACHE_SZ,
-                                      0,
-                                      MBUF_DATA_SZ as u16,
-                                      eal::socket_id())
+    let pktmbuf_pool = mbuf::pktmbuf_pool_create("mbuf_pool",
+                                                 NB_MBUF,
+                                                 MEMPOOL_CACHE_SZ,
+                                                 0,
+                                                 MBUF_DATA_SZ as u16,
+                                                 eal::socket_id())
+        .as_mut_ref()
         .expect("fail to initial mbuf pool");
-
-    let pktmbuf_pool = as_mut_ref!(p).unwrap();
 
     let enabled_devices: Vec<ethdev::PortId> = ethdev::devices()
         .filter(|dev| ((1 << dev.portid()) & conf.enabled_port_mask) != 0)

@@ -9,7 +9,7 @@ use libc;
 use ffi;
 
 use errors::{Error, Result};
-use memory::SocketId;
+use memory::{SocketId, AsMutRef};
 use mempool;
 use malloc;
 use mbuf;
@@ -446,7 +446,7 @@ pub trait EthDeviceInfo {
     /// Device Driver name.
     fn driver_name(&self) -> &str;
 
-    fn pci_dev(&self) -> Option<&pci::RawPciDevice>;
+    fn pci_dev(&self) -> Option<&mut pci::RawPciDevice>;
 }
 
 pub type RawEthDeviceInfo = ffi::Struct_rte_eth_dev_info;
@@ -458,8 +458,8 @@ impl EthDeviceInfo for RawEthDeviceInfo {
     }
 
     #[inline]
-    fn pci_dev(&self) -> Option<&pci::RawPciDevice> {
-        as_ref!(self.pci_dev)
+    fn pci_dev(&self) -> Option<&mut pci::RawPciDevice> {
+        self.pci_dev.as_mut_ref()
     }
 }
 

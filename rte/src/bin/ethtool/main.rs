@@ -13,6 +13,7 @@ use std::mem;
 use std::env;
 
 use rte::*;
+use rte::memory::AsMutRef;
 use rte::ethdev::EthDevice;
 
 use ethtool::*;
@@ -59,7 +60,7 @@ fn setup_ports(app_cfg: &mut AppConfig) {
             dev.rx_queue_setup(0,
                                 PORT_RX_QUEUE_SIZE,
                                 None,
-                                as_mut_ref!(app_port.pkt_pool).unwrap())
+                                app_port.pkt_pool.as_mut_ref().unwrap())
                 .expect(&format!("fail to setup device rx queue: port={}", portid));
 
             // init one TX queue on each port
@@ -75,9 +76,7 @@ fn setup_ports(app_cfg: &mut AppConfig) {
 }
 
 fn process_frame(mac_addr: &ether::EtherAddr, frame: mbuf::RawMbufPtr) {
-    let p = pktmbuf_mtod!(frame, *mut ether::EtherHdr);
-
-    if let Some(mut ether_hdr) = as_mut_ref!(p) {
+    if let Some(mut ether_hdr) = pktmbuf_mtod!(frame, *mut ether::EtherHdr).as_mut_ref() {
         ether::EtherAddr::copy(&ether_hdr.s_addr.addr_bytes,
                                &mut ether_hdr.d_addr.addr_bytes);
         ether::EtherAddr::copy(&mac_addr, &mut ether_hdr.s_addr.addr_bytes);

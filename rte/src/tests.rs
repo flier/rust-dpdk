@@ -11,6 +11,7 @@ use cfile;
 use ffi;
 
 use super::*;
+use super::memory::AsMutRef;
 use super::mempool::{MemoryPool, MemoryPoolDebug};
 
 #[test]
@@ -141,23 +142,20 @@ fn test_launch() {
 }
 
 fn test_mempool() {
-    let p = mempool::create::<c_void, c_void>("test", // name
-                                              16, // nll
-                                              128, // elt_size
-                                              0, // cache_size
-                                              32, // private_data_size
-                                              None, // mp_init
-                                              None, // mp_init_arg
-                                              None, // obj_init
-                                              None, // obj_init_arg
-                                              ffi::SOCKET_ID_ANY, // socket_id
+    let p = mempool::create::<c_void, c_void>("test",
+                                              16,
+                                              128,
+                                              0,
+                                              32,
+                                              None,
+                                              None,
+                                              None,
+                                              None,
+                                              ffi::SOCKET_ID_ANY,
                                               mempool::MEMPOOL_F_SP_PUT |
-                                              mempool::MEMPOOL_F_SC_GET) // flags
-                    .unwrap();
-
-    assert!(!p.is_null());
-
-    let p = as_mut_ref!(p).unwrap();
+                                              mempool::MEMPOOL_F_SC_GET)
+        .as_mut_ref()
+        .unwrap();
 
     assert_eq!(p.name(), "test");
     assert_eq!(p.size, 16);
@@ -238,11 +236,8 @@ fn test_mbuf() {
                                       PRIV_SIZE,
                                       mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
                                       eal::socket_id())
+        .as_mut_ref()
         .unwrap();
-
-    assert!(!p.is_null());
-
-    let p = as_mut_ref!(p).unwrap();
 
     assert_eq!(p.name(), "mbuf_pool");
     assert_eq!(p.size, NB_MBUF);

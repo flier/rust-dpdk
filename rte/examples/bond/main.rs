@@ -14,6 +14,7 @@ use std::net;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use rte::*;
+use rte::memory::AsMutRef;
 use rte::mbuf::{PktMbuf, PktMbufPool};
 use rte::ethdev::EthDevice;
 use rte::bond::BondedDevice;
@@ -189,19 +190,18 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
 
         // Search incoming data for ARP packets and prepare response
         for pkt in &pkts[..rx_cnt] {
-            if let Some(m) = as_mut_ref!(*pkt) {
+            if let Some(m) = pkt.as_mut_ref() {
                 let mut has_freed = false;
 
-                let p = pktmbuf_mtod!(*pkt, *mut ether::EtherHdr);
-
-                if let Some(mut ether_hdr) = as_mut_ref!(p) {
+                if let Some(mut ether_hdr) = pktmbuf_mtod!(*pkt, *mut ether::EtherHdr)
+                    .as_mut_ref() {
                     let (next_hdr, next_proto) = strip_vlan_hdr(ether_hdr);
 
                     match next_proto {
                         ether::ETHER_TYPE_ARP_BE => {
                             app_conf.port_packets[1].fetch_add(1, Ordering::Relaxed);
 
-                            if let Some(mut arp_hdr) = as_mut_ref!(next_hdr as *mut arp::ArpHdr) {
+                            if let Some(mut arp_hdr) = (next_hdr as *mut arp::ArpHdr).as_mut_ref() {
                                 if arp_hdr.arp_data.arp_tip == bond_ip {
                                     debug!("received ARP {:x} packet from {}",
                                     arp_hdr.arp_op.to_le(),
@@ -241,7 +241,8 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
                         ether::ETHER_TYPE_IPV4_BE => {
                             app_conf.port_packets[2].fetch_add(1, Ordering::Relaxed);
 
-                            if let Some(mut ipv4_hdr) = as_mut_ref!(next_hdr as *mut ip::Ipv4Hdr) {
+                            if let Some(mut ipv4_hdr) = (next_hdr as *mut ip::Ipv4Hdr)
+                                .as_mut_ref() {
                                 if ipv4_hdr.dst_addr == bond_ip {
                                     debug!("received IP packet from {}",
                                     net::Ipv4Addr::from(ipv4_hdr.src_addr));
@@ -295,7 +296,7 @@ impl CmdActionResult {
 
         match self.ip() {
             net::IpAddr::V4(ip) => {
-                let m = as_mut_ref!(app_conf.pktmbuf_pool).unwrap().alloc();
+                let m = (app_conf.pktmbuf_pool).as_mut_ref().unwrap().alloc();
 
                 let pkt_size = mem::size_of::<ether::EtherHdr>() + mem::size_of::<arp::ArpHdr>();
 
@@ -306,7 +307,7 @@ impl CmdActionResult {
 
                 let p = pktmbuf_mtod!(m, *mut ether::EtherHdr);
 
-                if let Some(mut ether_hdr) = as_mut_ref!(p) {
+                if let Some(mut ether_hdr) = p.as_mut_ref() {
                     ether_hdr.ether_type = (ETHER_TYPE_ARP as u16).to_be();
 
                     ether::EtherAddr::copy(&app_conf.bond_mac_addr,
@@ -317,7 +318,7 @@ impl CmdActionResult {
 
                 let p = unsafe { p.offset(1) as *mut arp::ArpHdr };
 
-                if let Some(mut arp_hdr) = as_mut_ref!(p) {
+                if let Some(mut arp_hdr) = p.as_mut_ref() {
                     arp_hdr.arp_hrd = (ARP_HRD_ETHER as u16).to_be();
                     arp_hdr.arp_pro = (ETHER_TYPE_IPV4 as u16).to_be();
                     arp_hdr.arp_hln = ETHER_ADDR_LEN as u8;
@@ -483,15 +484,14 @@ fn main() {
     }
 
     // create the mbuf pool
-    let p = mbuf::pktmbuf_pool_create("mbuf_pool",
-                                      NB_MBUF,
-                                      MEMPOOL_CACHE_SZ,
-                                      0,
-                                      mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
-                                      eal::socket_id())
+    let pktmbuf_pool = mbuf::pktmbuf_pool_create("mbuf_pool",
+                                                 NB_MBUF,
+                                                 MEMPOOL_CACHE_SZ,
+                                                 0,
+                                                 mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
+                                                 eal::socket_id())
+        .as_mut_ref()
         .expect("fail to initial mbuf pool");
-
-    let pktmbuf_pool = as_mut_ref!(p).unwrap();
 
     let port_conf = ethdev::EthConf {
         rx_adv_conf: Some(ethdev::RxAdvConf {

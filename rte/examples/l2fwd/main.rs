@@ -20,6 +20,7 @@ use std::path::Path;
 use nix::sys::signal;
 
 use rte::*;
+use rte::memory::AsMutRef;
 use rte::ethdev::{TxBuffer, EthDevice, EthDeviceInfo};
 
 const EXIT_FAILURE: i32 = -1;
@@ -285,15 +286,15 @@ fn main() {
     eal::init(&eal_args).expect("fail to initial EAL");
 
     // create the mbuf pool
-    let p = mbuf::pktmbuf_pool_create("mbuf_pool",
-                                      NB_MBUF,
-                                      32,
-                                      0,
-                                      mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
-                                      eal::socket_id())
-        .expect("fail to initial mbuf pool");
-
-    let l2fwd_pktmbuf_pool = as_mut_ref!(p).unwrap();
+    let l2fwd_pktmbuf_pool = mbuf::pktmbuf_pool_create("mbuf_pool",
+                                                       NB_MBUF,
+                                                       32,
+                                                       0,
+                                                       mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
+                                                       eal::socket_id())
+        .expect("fail to initial mbuf pool")
+        .as_mut_ref()
+        .unwrap();
 
     let enabled_devices: Vec<ethdev::PortId> = ethdev::devices()
         .filter(|dev| ((1 << dev.portid()) & enabled_port_mask) != 0)
@@ -388,16 +389,15 @@ fn main() {
             .expect(&format!("fail to setup device tx queue: port={}", portid));
 
         // Initialize TX buffers
-        let p = ethdev::alloc_buffer(MAX_PKT_BURST, dev.socket_id())
+        let buf = ethdev::alloc_buffer(MAX_PKT_BURST, dev.socket_id())
+            .as_mut_ref()
             .expect(&format!("fail to allocate buffer for tx: port={}", portid));
 
-        if let Some(buf) = as_mut_ref!(p) {
-            buf.count_err_packets()
-                .expect(&format!("failt to set error callback for tx buffer: port={}", portid));
-        }
+        buf.count_err_packets()
+            .expect(&format!("failt to set error callback for tx buffer: port={}", portid));
 
         unsafe {
-            l2fwd_tx_buffers[portid] = p;
+            l2fwd_tx_buffers[portid] = buf;
         }
 
         // Start device
@@ -433,9 +433,7 @@ fn main() {
         dev.close();
         println!(" Done");
 
-        let p = unsafe { l2fwd_tx_buffers[dev.portid() as usize] };
-
-        if let Some(buf) = as_mut_ref!(p) {
+        if let Some(buf) = (unsafe { l2fwd_tx_buffers[dev.portid() as usize] }).as_mut_ref() {
             buf.free();
         }
     }
