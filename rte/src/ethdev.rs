@@ -1,6 +1,6 @@
 use std::ptr;
 use std::mem;
-use std::ops::{Deref, Range};
+use std::ops::Range;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 
@@ -13,8 +13,8 @@ use memory::SocketId;
 use mempool;
 use malloc;
 use mbuf;
-use pci;
 use ether;
+use pci;
 
 pub type PortId = u8;
 pub type QueueId = u16;
@@ -42,10 +42,10 @@ pub trait EthDevice {
                  -> Result<&Self>;
 
     /// Retrieve the contextual information of an Ethernet device.
-    fn info(&self) -> EthDeviceInfo;
+    fn info(&self) -> RawEthDeviceInfo;
 
     /// Retrieve the general I/O statistics of an Ethernet device.
-    fn stats(&self) -> Result<EthDeviceStats>;
+    fn stats(&self) -> Result<RawEthDeviceStats>;
 
     /// Reset the general I/O statistics of an Ethernet device.
     fn reset_stats(&self) -> &Self;
@@ -216,20 +216,20 @@ impl EthDevice for PortId {
         }; ok => { self })
     }
 
-    fn info(&self) -> EthDeviceInfo {
+    fn info(&self) -> RawEthDeviceInfo {
         let mut info: RawEthDeviceInfo = Default::default();
 
         unsafe { ffi::rte_eth_dev_info_get(*self, &mut info) }
 
-        EthDeviceInfo(info)
+        info
     }
 
-    fn stats(&self) -> Result<EthDeviceStats> {
+    fn stats(&self) -> Result<RawEthDeviceStats> {
         let mut stats: RawEthDeviceStats = Default::default();
 
         rte_check!(unsafe {
             ffi::rte_eth_stats_get(*self, &mut stats)
-        }; ok => { EthDeviceStats(stats)})
+        }; ok => { stats })
     }
 
     fn reset_stats(&self) -> &Self {
@@ -442,46 +442,32 @@ impl EthDevice for PortId {
     }
 }
 
+pub trait EthDeviceInfo {
+    /// Device Driver name.
+    fn driver_name(&self) -> &str;
+
+    fn pci_dev(&self) -> Option<&pci::RawPciDevice>;
+}
+
 pub type RawEthDeviceInfo = ffi::Struct_rte_eth_dev_info;
 
-pub struct EthDeviceInfo(RawEthDeviceInfo);
+impl EthDeviceInfo for RawEthDeviceInfo {
+    #[inline]
+    fn driver_name(&self) -> &str {
+        unsafe { CStr::from_ptr(self.driver_name).to_str().unwrap() }
+    }
 
-impl Deref for EthDeviceInfo {
-    type Target = RawEthDeviceInfo;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
+    #[inline]
+    fn pci_dev(&self) -> Option<&pci::RawPciDevice> {
+        as_ref!(self.pci_dev)
     }
 }
 
-impl EthDeviceInfo {
-    /// Device Driver name.
-    pub fn driver_name(&self) -> &str {
-        unsafe { CStr::from_ptr(self.0.driver_name).to_str().unwrap() }
-    }
-
-    /// Index to bound host interface, or 0 if none.
-    /// Use if_indextoname() to translate into an interface name.
-    pub fn if_index(&self) -> u32 {
-        self.0.if_index
-    }
-
-    pub fn pci_dev(&self) -> pci::RawDevicePtr {
-        self.0.pci_dev
-    }
-}
+pub trait EthDeviceStats {}
 
 pub type RawEthDeviceStats = ffi::Struct_rte_eth_stats;
 
-pub struct EthDeviceStats(RawEthDeviceStats);
-
-impl Deref for EthDeviceStats {
-    type Target = RawEthDeviceStats;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
+impl EthDeviceStats for RawEthDeviceStats {}
 
 bitflags! {
     /// Definitions used for VMDQ pool rx mode setting

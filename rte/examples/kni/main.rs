@@ -23,7 +23,7 @@ use std::str::FromStr;
 use nix::sys::signal;
 
 use rte::*;
-use rte::ethdev::EthDevice;
+use rte::ethdev::{EthDevice, EthDeviceInfo};
 
 const EXIT_FAILURE: i32 = -1;
 
@@ -421,12 +421,12 @@ fn kni_alloc(conf: &Conf, dev: ethdev::PortId, pktmbuf_pool: &mut mempool::RawMe
         conf.group_id = portid as u16;
         conf.mbuf_size = MAX_PACKET_SZ;
 
-
         let mut kni = (if i == 0 {
                 // The first KNI device associated to a port is the master,
                 // for multiple kernel thread environment.
-                let info = dev.info();
-                let pci_dev = unsafe { &*info.pci_dev() };
+                let dev_info = dev.info();
+                let pci_dev = dev_info.pci_dev()
+                    .expect(&format!("port {} haven't PCI dev info", dev.portid()));
 
                 conf.pci_addr = pci_dev.addr;
                 conf.pci_id = pci_dev.id;

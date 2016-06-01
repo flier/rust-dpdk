@@ -20,7 +20,7 @@ use std::path::Path;
 use nix::sys::signal;
 
 use rte::*;
-use rte::ethdev::{TxBuffer, EthDevice};
+use rte::ethdev::{TxBuffer, EthDevice, EthDeviceInfo};
 
 const EXIT_FAILURE: i32 = -1;
 

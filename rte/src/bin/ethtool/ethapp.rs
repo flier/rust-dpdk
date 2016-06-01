@@ -1,7 +1,7 @@
 use std::os::raw::c_void;
 
 use rte::*;
-use rte::ethdev::EthDevice;
+use rte::ethdev::{EthDevice, EthDeviceInfo};
 
 use ethtool::*;
 
@@ -116,7 +116,7 @@ impl CmdIntParams {
             cl.println(format!("Error: port {} is invalid", self.port)).unwrap();
         } else {
             // Set VF vf_rx_mode, VF unsupport status is discard
-            for vf in 0..(*dev.info()).max_vfs {
+            for vf in 0..dev.info().max_vfs {
                 if let Err(err) = dev.set_vf_rxmode(vf, ethdev::ETH_VMDQ_ACCEPT_UNTAG, false) {
                     cl.println(format!("Error: failed to set VF rx mode for port {}, {}",
                                          self.port,

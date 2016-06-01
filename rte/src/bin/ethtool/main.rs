@@ -35,9 +35,7 @@ fn setup_ports(app_cfg: &mut AppConfig) {
             let dev = portid as ethdev::PortId;
             let dev_info = dev.info();
 
-            let info: &ethdev::RawEthDeviceInfo = &*dev_info;
-
-            let size_pktpool = info.rx_desc_lim.nb_max + info.tx_desc_lim.nb_max +
+            let size_pktpool = dev_info.rx_desc_lim.nb_max + dev_info.tx_desc_lim.nb_max +
                                PKTPOOL_EXTRA_SIZE;
 
             app_port.pkt_pool = mbuf::pktmbuf_pool_create(&format!("pkt_pool_{}", portid),
