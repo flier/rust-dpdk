@@ -80,8 +80,8 @@ fn gen_rte_config(base_dir: &PathBuf) {
 
     let f = File::create(&dest_path).unwrap();
 
-    let name_prefixes = &["RTE_", "ETH_", "CMDLINE_", "RDLINE_", "BONDING_", "BALANCE_", "ETHER_",
-                          "ARP_", "IPV4_"];
+    let name_prefixes = &["RTE_", "ETH_", "CMDLINE_", "RDLINE_", "BONDING_", "BALANCE_", "PKT_",
+                          "ETHER_", "ARP_", "IPV4_"];
 
     fn value_types(sign: bool, long: bool) -> &'static str {
         match (sign, long) {
