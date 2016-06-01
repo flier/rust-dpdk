@@ -72,7 +72,7 @@ pub fn ipaddr(ip: &IpNetAddr) -> IpAddr {
         let p: *mut ffi::cmdline_ipaddr_t = mem::transmute(ip);
 
         if ip.family == libc::AF_INET as u8 {
-            IpAddr::V4(Ipv4Addr::from((*((*p).addr.ipv4())).s_addr))
+            IpAddr::V4(Ipv4Addr::from((*((*p).addr.ipv4())).s_addr.to_be()))
         } else {
             let a: &[u16] = slice::from_raw_parts(mem::transmute((*p).addr.ipv6()), 8);
 

@@ -336,7 +336,14 @@ impl EthDevice {
     /// Send a burst of output packets on a transmit queue of an Ethernet device.
     pub fn tx_burst(&self, queue_id: QueueId, rx_pkts: &mut [mbuf::RawMbufPtr]) -> usize {
         unsafe {
-            _rte_eth_tx_burst(self.0, queue_id, rx_pkts.as_mut_ptr(), rx_pkts.len() as u16) as usize
+            if rx_pkts.is_empty() {
+                _rte_eth_tx_burst(self.0, queue_id, ptr::null_mut(), 0) as usize
+            } else {
+                _rte_eth_tx_burst(self.0,
+                                  queue_id,
+                                  rx_pkts.as_mut_ptr(),
+                                  rx_pkts.len() as u16) as usize
+            }
         }
     }
 

@@ -39,21 +39,16 @@ const RTE_TX_DESC_DEFAULT: u16 = 512;
 struct AppConfig {
     lcore_main_is_running: AtomicBool,
     lcore_main_core_id: LcoreId,
-    bond_ip: u32,
+    bond_ip: net::Ipv4Addr,
     bond_mac_addr: ether::EtherAddr,
     bonded_port_id: PortId,
     pktmbuf_pool: mbuf::PktMbufPool,
     port_packets: [AtomicUsize; 4],
-    lock: spinlock::SpinLock,
 }
 
 impl Default for AppConfig {
     fn default() -> Self {
-        let mut cfg: AppConfig = unsafe { mem::zeroed() };
-
-        cfg.lock.init();
-
-        cfg
+        unsafe { mem::zeroed() }
     }
 }
 
@@ -72,7 +67,7 @@ impl AppConfig {
 
         info!("Starting lcore_main on core {} Our IP {}",
               self.lcore_main_core_id,
-              net::Ipv4Addr::from(self.bond_ip.to_le()));
+              self.bond_ip);
     }
 
     fn stop(&self) {
@@ -151,7 +146,7 @@ fn strip_vlan_hdr(ether_hdr: *const ether::EtherHdr) -> (*const libc::c_void, u1
         if (*ether_hdr).ether_type != ether::ETHER_TYPE_VLAN_BE {
             (ether_hdr.offset(1) as *const libc::c_void, (*ether_hdr).ether_type)
         } else {
-            let mut vlan_hdr: *const ether::VlanHdr = mem::transmute(ether_hdr.offset(1));
+            let mut vlan_hdr = ether_hdr.offset(1) as *const ether::VlanHdr;
 
             while (*vlan_hdr).eth_proto == ether::ETHER_TYPE_VLAN_BE {
                 vlan_hdr = vlan_hdr.offset(1);
@@ -171,6 +166,7 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
 
     let dev = bond::dev(app_conf.bonded_port_id);
     let mut pkts: [mbuf::RawMbufPtr; MAX_PKT_BURST] = unsafe { mem::zeroed() };
+    let bond_ip = u32::from(app_conf.bond_ip).to_be();
 
     while app_conf.lcore_main_is_running.load(Ordering::Relaxed) {
         let rx_cnt = dev.rx_burst(0, &mut pkts[..]);
@@ -178,17 +174,19 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
         // If didn't receive any packets, wait and go to next iteration
         if rx_cnt == 0 {
             eal::delay_us(50);
-        } else {
-            debug!("received {} packets from bonded port {}",
-                   rx_cnt,
-                   dev.portid());
+
+            continue;
         }
+
+        debug!("received {} packets from bonded port {}",
+               rx_cnt,
+               dev.portid());
+
+        app_conf.port_packets[0].fetch_add(rx_cnt, Ordering::Relaxed);
 
         // Search incoming data for ARP packets and prepare response
         for pkt in &pkts[..rx_cnt] {
             let mut has_freed = false;
-
-            app_conf.port_packets[0].fetch_add(1, Ordering::Relaxed);
 
             let p = pktmbuf_mtod!(*pkt, *mut ether::EtherHdr);
 
@@ -200,7 +198,7 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
                         app_conf.port_packets[1].fetch_add(1, Ordering::Relaxed);
 
                         if let Some(mut arp_hdr) = ptr_as_mut_ref!(next_hdr as *mut arp::ArpHdr) {
-                            if arp_hdr.arp_data.arp_tip == app_conf.bond_ip {
+                            if arp_hdr.arp_data.arp_tip == bond_ip {
                                 debug!("received ARP {:x} packet from {}",
                                     arp_hdr.arp_op.to_le(),
                                     ether::EtherAddr::from(arp_hdr.arp_data.arp_sha));
@@ -223,12 +221,14 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
                                                                .addr_bytes);
 
                                     arp_hdr.arp_data.arp_tip = arp_hdr.arp_data.arp_sip;
-                                    arp_hdr.arp_data.arp_sip = app_conf.bond_ip;
+                                    arp_hdr.arp_data.arp_sip = bond_ip;
 
                                     if dev.tx_burst(0, &mut [*pkt]) == 1 {
                                         has_freed = true;
                                     }
                                 }
+                            } else {
+                                dev.tx_burst(0, &mut []);
                             }
                         }
                     }
@@ -236,7 +236,7 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
                         app_conf.port_packets[2].fetch_add(1, Ordering::Relaxed);
 
                         if let Some(mut ipv4_hdr) = ptr_as_mut_ref!(next_hdr as *mut ip::Ipv4Hdr) {
-                            if ipv4_hdr.dst_addr == app_conf.bond_ip {
+                            if ipv4_hdr.dst_addr == bond_ip {
                                 debug!("received IP packet from {}",
                                     net::Ipv4Addr::from(ipv4_hdr.src_addr));
 
@@ -246,7 +246,7 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
                                                        &mut ether_hdr.s_addr.addr_bytes);
 
                                 ipv4_hdr.dst_addr = ipv4_hdr.src_addr;
-                                ipv4_hdr.src_addr = app_conf.bond_ip;
+                                ipv4_hdr.src_addr = bond_ip;
 
                                 if dev.tx_burst(0, &mut [*pkt]) == 1 {
                                     has_freed = true;
@@ -324,12 +324,11 @@ impl CmdActionResult {
                                                .arp_tha
                                                .addr_bytes);
 
-                    arp_hdr.arp_data.arp_sip = app_conf.bond_ip;
-                    arp_hdr.arp_data.arp_tip = u32::from(ip);
+                    arp_hdr.arp_data.arp_sip = u32::from(app_conf.bond_ip).to_be();
+                    arp_hdr.arp_data.arp_tip = u32::from(ip).to_be();
 
                     if ethdev::dev(app_conf.bonded_port_id).tx_burst(0, &mut [m]) == 1 {
-                        debug!("send ARP request to {}",
-                            net::Ipv4Addr::from(u32::from(ip).to_le()));
+                        debug!("send ARP request to {}", ip);
                     }
                 }
             }
@@ -516,7 +515,7 @@ fn main() {
     }
 
     let app_conf = AppConfig {
-        bond_ip: u32::from(net::Ipv4Addr::new(10, 0, 0, 7)).to_be(),
+        bond_ip: net::Ipv4Addr::new(10, 0, 0, 7),
         bond_mac_addr: bonded_dev.mac_addr(),
         bonded_port_id: bonded_dev.portid(),
         lcore_main_is_running: AtomicBool::new(true),
