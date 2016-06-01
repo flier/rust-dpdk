@@ -1,5 +1,4 @@
 use std::mem;
-use std::ops::{Deref, DerefMut};
 
 use ffi;
 
@@ -108,27 +107,11 @@ impl From<u8> for TransmitPolicy {
     }
 }
 
-pub struct BondedDevice(ethdev::EthDevice);
-
-impl Deref for BondedDevice {
-    type Target = ethdev::EthDevice;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for BondedDevice {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
 /// Create a bonded rte_eth_dev device
-pub fn create(name: &str, mode: BondMode, socket_id: SocketId) -> Result<BondedDevice> {
+pub fn create(name: &str, mode: BondMode, socket_id: SocketId) -> Result<ethdev::PortId> {
     let port_id = unsafe { ffi::rte_eth_bond_create(cstr!(name), mode as u8, socket_id as u8) };
 
-    rte_check!(port_id; ok => { dev(port_id as ethdev::PortId) })
+    rte_check!(port_id; ok => { port_id as ethdev::PortId })
 }
 
 /// Free a bonded rte_eth_dev device
@@ -136,106 +119,126 @@ pub fn free(name: &str) -> Result<()> {
     rte_check!(unsafe { ffi::rte_eth_bond_free(cstr!(name)) })
 }
 
-pub fn dev(port_id: ethdev::PortId) -> BondedDevice {
-    BondedDevice(ethdev::dev(port_id))
-}
-
-impl BondedDevice {
+pub trait BondedDevice {
     /// Add a rte_eth_dev device as a slave to the bonded device
-    pub fn add_slave(&self, slave: &ethdev::EthDevice) -> Result<&Self> {
-        rte_check!(unsafe {
-            ffi::rte_eth_bond_slave_add(self.0.portid(), slave.portid())
-        }; ok => { self })
-    }
+    fn add_slave(&self, slave: ethdev::PortId) -> Result<&Self>;
 
     /// Remove a slave rte_eth_dev device from the bonded device
-    pub fn remove_slave(&self, slave: &ethdev::EthDevice) -> Result<&Self> {
+    fn remove_slave(&self, slave: ethdev::PortId) -> Result<&Self>;
+
+    /// Get link bonding mode of bonded device
+    fn mode(&self) -> Result<BondMode>;
+
+    /// Set link bonding mode of bonded device
+    fn set_mode(&self, mode: BondMode) -> Result<&Self>;
+
+    /// Get primary slave of bonded device
+    fn primary(&self) -> Result<ethdev::PortId>;
+
+    /// Set slave rte_eth_dev as primary slave of bonded device
+    fn set_primary(&self, dev: ethdev::PortId) -> Result<&Self>;
+
+    /// Populate an array with list of the slaves port id's of the bonded device
+    fn slaves(&self) -> Result<Vec<ethdev::PortId>>;
+
+    /// Populate an array with list of the active slaves port id's of the bonded device.
+    fn active_slaves(&self) -> Result<Vec<ethdev::PortId>>;
+
+    /// Set explicit MAC address to use on bonded device and it's slaves.
+    fn set_mac_addr(&self, mac_addr: &ether::EtherAddr) -> Result<&Self>;
+
+    /// Reset bonded device to use MAC from primary slave on bonded device and it's slaves.
+    fn reset_mac_addr(&self) -> Result<&Self>;
+
+    /// Get the transmit policy set on bonded device for balance mode operation
+    fn xmit_policy(&self) -> Result<TransmitPolicy>;
+
+    /// Set the transmit policy for bonded device to use when it is operating in balance mode,
+    /// this parameter is otherwise ignored in other modes of operation.
+    fn set_xmit_policy(&self, policy: TransmitPolicy) -> Result<&Self>;
+}
+
+impl BondedDevice for ethdev::PortId {
+    fn add_slave(&self, slave: ethdev::PortId) -> Result<&Self> {
         rte_check!(unsafe {
-            ffi::rte_eth_bond_slave_remove(self.0.portid(), slave.portid())
+            ffi::rte_eth_bond_slave_add(*self, slave)
         }; ok => { self })
     }
 
-    /// Get link bonding mode of bonded device
-    pub fn mode(&self) -> Result<BondMode> {
-        let mode = unsafe { ffi::rte_eth_bond_mode_get(self.0.portid()) };
+    fn remove_slave(&self, slave: ethdev::PortId) -> Result<&Self> {
+        rte_check!(unsafe {
+            ffi::rte_eth_bond_slave_remove(*self, slave)
+        }; ok => { self })
+    }
+
+    fn mode(&self) -> Result<BondMode> {
+        let mode = unsafe { ffi::rte_eth_bond_mode_get(*self) };
 
         rte_check!(mode; ok => { BondMode::from(mode as u8) })
     }
 
-    /// Set link bonding mode of bonded device
-    pub fn set_mode(&self, mode: BondMode) -> Result<&Self> {
+    fn set_mode(&self, mode: BondMode) -> Result<&Self> {
         rte_check!(unsafe {
-            ffi::rte_eth_bond_mode_set(self.0.portid(), mode as u8)
+            ffi::rte_eth_bond_mode_set(*self, mode as u8)
         }; ok => { self })
     }
 
-    /// Get primary slave of bonded device
-    pub fn primary(&self) -> Result<ethdev::EthDevice> {
-        let portid = unsafe { ffi::rte_eth_bond_primary_get(self.0.portid()) };
+    fn primary(&self) -> Result<ethdev::PortId> {
+        let portid = unsafe { ffi::rte_eth_bond_primary_get(*self) };
 
-        rte_check!(portid; ok => { ethdev::dev(portid as u8) })
+        rte_check!(portid; ok => { portid as ethdev::PortId })
     }
 
-    /// Set slave rte_eth_dev as primary slave of bonded device
-    pub fn set_primary(&self, dev: &ethdev::EthDevice) -> Result<&Self> {
+    fn set_primary(&self, dev: ethdev::PortId) -> Result<&Self> {
         rte_check!(unsafe {
-            ffi::rte_eth_bond_primary_set(self.0.portid(), dev.portid())
+            ffi::rte_eth_bond_primary_set(*self, dev)
         }; ok => { self })
     }
 
-    /// Populate an array with list of the slaves port id's of the bonded device
-    pub fn slaves(&self) -> Result<Vec<ethdev::EthDevice>> {
+    fn slaves(&self) -> Result<Vec<ethdev::PortId>> {
         let mut slaves = [0u8; ffi::RTE_MAX_ETHPORTS as usize];
 
-        let num = unsafe {
-            ffi::rte_eth_bond_slaves_get(self.0.portid(), slaves.as_mut_ptr(), slaves.len() as u8)
-        };
+        let num =
+            unsafe { ffi::rte_eth_bond_slaves_get(*self, slaves.as_mut_ptr(), slaves.len() as u8) };
 
         rte_check!(num; ok => {
-            slaves[..num as usize].iter().map(|portid| ethdev::dev(*portid)).collect()
+            Vec::from(&slaves[..num as usize])
         })
     }
 
-    /// Populate an array with list of the active slaves port id's of the bonded device.
-    pub fn active_slaves(&self) -> Result<Vec<ethdev::EthDevice>> {
+    fn active_slaves(&self) -> Result<Vec<ethdev::PortId>> {
         let mut slaves = [0u8; ffi::RTE_MAX_ETHPORTS as usize];
 
-        let num = unsafe {
-            ffi::rte_eth_bond_slaves_get(self.0.portid(), slaves.as_mut_ptr(), slaves.len() as u8)
-        };
+        let num =
+            unsafe { ffi::rte_eth_bond_slaves_get(*self, slaves.as_mut_ptr(), slaves.len() as u8) };
 
         rte_check!(num; ok => {
-            slaves[..num as usize].iter().map(|portid| ethdev::dev(*portid)).collect()
+            Vec::from(&slaves[..num as usize])
         })
     }
 
-    /// Set explicit MAC address to use on bonded device and it's slaves.
-    pub fn set_mac_addr(&self, mac_addr: &ether::EtherAddr) -> Result<&Self> {
+    fn set_mac_addr(&self, mac_addr: &ether::EtherAddr) -> Result<&Self> {
         rte_check!(unsafe {
-            ffi::rte_eth_bond_mac_address_set(self.0.portid(),
+            ffi::rte_eth_bond_mac_address_set(*self,
                                               mem::transmute(mac_addr.octets().as_ptr()))
         }; ok => { self })
     }
 
-    /// Reset bonded device to use MAC from primary slave on bonded device and it's slaves.
-    pub fn reset_mac_addr(&self) -> Result<&Self> {
+    fn reset_mac_addr(&self) -> Result<&Self> {
         rte_check!(unsafe {
-            ffi::rte_eth_bond_mac_address_reset(self.0.portid())
+            ffi::rte_eth_bond_mac_address_reset(*self)
         }; ok => { self })
     }
 
-    /// Get the transmit policy set on bonded device for balance mode operation
-    pub fn xmit_policy(&self) -> Result<TransmitPolicy> {
-        let policy = unsafe { ffi::rte_eth_bond_xmit_policy_get(self.0.portid()) };
+    fn xmit_policy(&self) -> Result<TransmitPolicy> {
+        let policy = unsafe { ffi::rte_eth_bond_xmit_policy_get(*self) };
 
         rte_check!(policy; ok => { TransmitPolicy::from(policy as u8) })
     }
 
-    /// Set the transmit policy for bonded device to use when it is operating in balance mode,
-    /// this parameter is otherwise ignored in other modes of operation.
-    pub fn set_xmit_policy(&self, policy: TransmitPolicy) -> Result<&Self> {
+    fn set_xmit_policy(&self, policy: TransmitPolicy) -> Result<&Self> {
         rte_check!(unsafe {
-            ffi::rte_eth_bond_xmit_policy_set(self.0.portid(), policy as u8)
+            ffi::rte_eth_bond_xmit_policy_set(*self, policy as u8)
         }; ok => { self })
     }
 }

@@ -23,6 +23,7 @@ use std::str::FromStr;
 use nix::sys::signal;
 
 use rte::*;
+use rte::ethdev::EthDevice;
 
 const EXIT_FAILURE: i32 = -1;
 
@@ -286,7 +287,7 @@ fn init_kni(conf: &Conf) {
 
 // Initialise a single port on an Ethernet device
 fn init_port(conf: &Conf,
-             dev: &ethdev::EthDevice,
+             dev: ethdev::PortId,
              port_conf: &ethdev::EthConf,
              pktmbuf_pool: &mut mempool::RawMemoryPool) {
     let portid = dev.portid();
@@ -327,7 +328,7 @@ extern "C" fn kni_change_mtu(port_id: u8, new_mtu: libc::c_uint) -> libc::c_int 
     }
 
     if new_mtu > ETHER_MAX_LEN {
-        let dev = ethdev::EthDevice::from(port_id);
+        let dev = port_id as ethdev::PortId;
 
         dev.stop();
 
@@ -377,7 +378,7 @@ extern "C" fn kni_config_network_interface(port_id: u8, if_up: u8) -> libc::c_in
         return -libc::EINVAL;
     }
 
-    let dev = ethdev::EthDevice::from(port_id);
+    let dev = port_id as ethdev::PortId;
 
     dev.stop();
 
@@ -394,7 +395,7 @@ extern "C" fn kni_config_network_interface(port_id: u8, if_up: u8) -> libc::c_in
     0
 }
 
-fn kni_alloc(conf: &Conf, dev: &ethdev::EthDevice, pktmbuf_pool: &mut mempool::RawMemoryPool) {
+fn kni_alloc(conf: &Conf, dev: ethdev::PortId, pktmbuf_pool: &mut mempool::RawMemoryPool) {
     let portid = dev.portid();
 
     let param = unsafe {
@@ -451,8 +452,8 @@ fn kni_alloc(conf: &Conf, dev: &ethdev::EthDevice, pktmbuf_pool: &mut mempool::R
     }
 }
 
-fn kni_free_kni(conf: &Conf, dev: &ethdev::EthDevice) {
-    let portid = dev.portid();
+fn kni_free_kni(conf: &Conf, dev: ethdev::PortId) {
+    let portid = dev;
 
     let param = unsafe {
         if conf.port_params[portid as usize].is_null() {
@@ -470,7 +471,7 @@ fn kni_free_kni(conf: &Conf, dev: &ethdev::EthDevice) {
 }
 
 // Check the link status of all ports in up to 9s, and print them finally
-fn check_all_ports_link_status(enabled_devices: &Vec<ethdev::EthDevice>) {
+fn check_all_ports_link_status(enabled_devices: &Vec<ethdev::PortId>) {
     print!("Checking link status");
 
     const CHECK_INTERVAL: u32 = 100;
@@ -551,7 +552,7 @@ extern "C" fn main_loop(conf: *const Conf) -> i32 {
     let lcore_id = lcore::id().unwrap();
     let mut lcore_type: Option<LcoreType> = None;
 
-    for portid in ethdev::ports() {
+    for portid in ethdev::devices() {
         if unsafe { (*conf).port_params[portid as usize].is_null() } {
             continue;
         }
@@ -624,7 +625,7 @@ fn main() {
 
     let pktmbuf_pool = as_mut_ref!(p).unwrap();
 
-    let enabled_devices: Vec<ethdev::EthDevice> = ethdev::devices()
+    let enabled_devices: Vec<ethdev::PortId> = ethdev::devices()
         .filter(|dev| ((1 << dev.portid()) & conf.enabled_port_mask) != 0)
         .collect();
 
@@ -640,9 +641,9 @@ fn main() {
     let port_conf = ethdev::EthConf::default();
 
     for dev in &enabled_devices {
-        init_port(&conf, &dev, &port_conf, pktmbuf_pool);
+        init_port(&conf, dev.portid(), &port_conf, pktmbuf_pool);
 
-        kni_alloc(&conf, &dev, pktmbuf_pool);
+        kni_alloc(&conf, dev.portid(), pktmbuf_pool);
     }
 
     check_all_ports_link_status(&enabled_devices);
@@ -654,7 +655,7 @@ fn main() {
 
     // Release resources
     for dev in &enabled_devices {
-        kni_free_kni(&conf, &dev);
+        kni_free_kni(&conf, dev.portid());
     }
 
     kni::close();

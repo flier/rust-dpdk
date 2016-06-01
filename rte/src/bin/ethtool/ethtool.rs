@@ -3,6 +3,7 @@ use std::result;
 use std::sync::Mutex;
 
 use rte::*;
+use rte::ethdev::EthDevice;
 
 pub const MAX_PORTS: u8 = RTE_MAX_ETHPORTS as u8;
 
@@ -47,21 +48,19 @@ impl AppConfig {
         }
     }
 
-    pub fn lock_port<T, F>(&self, port: u8, callback: F) -> result::Result<T, String>
-        where F: Fn(&mut AppPort, &ethdev::EthDevice) -> result::Result<T, String>
+    pub fn lock_port<T, F>(&self, port: ethdev::PortId, callback: F) -> result::Result<T, String>
+        where F: Fn(&mut AppPort, ethdev::PortId) -> result::Result<T, String>
     {
         match self.ports.iter().nth(port as usize) {
             Some(mutex) => {
-                let dev = ethdev::EthDevice::from(port);
-
-                if !dev.is_valid() {
+                if !port.is_valid() {
                     Err(format!("port {} is invalid", port))
                 } else {
                     match mutex.lock() {
                         Ok(mut guard) => {
                             let app_port = &mut *guard;
 
-                            callback(app_port, &dev)
+                            callback(app_port, port)
                         }
                         Err(err) => Err(format!("fail to lock port {}, {}", port, err)),
                     }

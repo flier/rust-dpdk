@@ -1,6 +1,7 @@
 use std::os::raw::c_void;
 
 use rte::*;
+use rte::ethdev::EthDevice;
 
 use ethtool::*;
 
@@ -66,14 +67,14 @@ impl CmdIntParams {
         cmdline::str(&self.cmd).unwrap()
     }
 
-    fn dev(&self) -> ethdev::EthDevice {
-        ethdev::dev(self.port as u8)
+    fn dev(&self) -> ethdev::PortId {
+        self.port as ethdev::PortId
     }
 
     fn open(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<&AppConfig>) {
         debug!("execute `{}` command for port {}", self.cmd(), self.port);
 
-        let res = app_cfg.unwrap().lock_port(self.port as u8, |app_port, dev| {
+        let res = app_cfg.unwrap().lock_port(self.dev(), |app_port, dev| {
             dev.stop();
 
             if let Err(err) = dev.start() {
@@ -91,7 +92,7 @@ impl CmdIntParams {
     fn stop(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<&AppConfig>) {
         debug!("execute `{}` command for port {}", self.cmd(), self.port);
 
-        let res = app_cfg.unwrap().lock_port(self.port as u8, |app_port, dev| {
+        let res = app_cfg.unwrap().lock_port(self.dev(), |app_port, dev| {
             if !dev.is_up() {
                 Err(format!("Port {} already stopped", self.port))
             } else {
@@ -175,8 +176,8 @@ impl CmdIntMtuParams {
         cmdline::str(&self.cmd).unwrap()
     }
 
-    fn dev(&self) -> ethdev::EthDevice {
-        ethdev::dev(self.port as u8)
+    fn dev(&self) -> ethdev::PortId {
+        self.port as ethdev::PortId
     }
 
     fn mtu_list(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<&AppConfig>) {
@@ -185,7 +186,7 @@ impl CmdIntMtuParams {
                self.port);
 
         for portid in 0..app_cfg.unwrap().ports.len() {
-            let dev = ethdev::dev(portid as u8);
+            let dev = portid as ethdev::PortId;
 
             cl.println(format!("Port {} MTU: {}", portid, dev.mtu().unwrap()))
                 .unwrap();
@@ -236,8 +237,8 @@ impl CmdIntMacParams {
         cmdline::str(&self.cmd).unwrap()
     }
 
-    fn dev(&self) -> ethdev::EthDevice {
-        ethdev::dev(self.port as u8)
+    fn dev(&self) -> ethdev::PortId {
+        self.port as ethdev::PortId
     }
 
     fn mac_addr(&self) -> ether::EtherAddr {
@@ -250,7 +251,7 @@ impl CmdIntMacParams {
                self.port);
 
         for portid in 0..app_cfg.unwrap().ports.len() {
-            let dev = ethdev::dev(portid as u8);
+            let dev = portid as ethdev::PortId;
 
             cl.println(format!("Port {} MAC Address: {}", portid, dev.mac_addr())).unwrap();
         }
@@ -278,7 +279,7 @@ impl CmdIntMacParams {
 
         let mac_addr = self.mac_addr();
 
-        let res = app_cfg.unwrap().lock_port(self.port as u8, |app_port, dev| {
+        let res = app_cfg.unwrap().lock_port(self.dev(), |app_port, dev| {
             if let Err(err) = dev.set_mac_addr(&mac_addr) {
                 Err(format!("Fail to change mac address of port {}, {}", self.port, err))
             } else {
@@ -319,8 +320,8 @@ impl CmdVlanParams {
         cmdline::str(&self.cmd).unwrap()
     }
 
-    fn dev(&self) -> ethdev::EthDevice {
-        ethdev::dev(self.port as u8)
+    fn dev(&self) -> ethdev::PortId {
+        self.port as ethdev::PortId
     }
 
     fn mode(&self) -> &str {

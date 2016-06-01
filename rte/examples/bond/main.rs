@@ -15,6 +15,8 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use rte::*;
 use rte::mbuf::{PktMbuf, PktMbufPool};
+use rte::ethdev::EthDevice;
+use rte::bond::BondedDevice;
 
 const EXIT_FAILURE: i32 = -1;
 
@@ -78,12 +80,12 @@ impl AppConfig {
     }
 }
 
-fn slave_port_init(port_id: u8,
+fn slave_port_init(port_id: ethdev::PortId,
                    port_conf: &ethdev::EthConf,
                    pktmbuf_pool: &mut mempool::RawMemoryPool) {
     info!("Setup port {}", port_id);
 
-    let dev = ethdev::dev(port_id);
+    let dev = port_id;
 
     dev.configure(1, 1, &port_conf)
         .expect(&format!("fail to configure device: port={}", port_id));
@@ -107,11 +109,11 @@ fn slave_port_init(port_id: u8,
 fn bond_port_init(slave_count: u8,
                   port_conf: &ethdev::EthConf,
                   pktmbuf_pool: &mut mempool::RawMemoryPool)
-                  -> bond::BondedDevice {
+                  -> ethdev::PortId {
     let dev = bond::create("bond0", bond::BondMode::AdaptiveLB, 0)
         .expect("Faled to create bond port");
 
-    let bonded_port_id = dev.portid();
+    let bonded_port_id = dev;
 
     dev.configure(1, 1, &port_conf)
         .expect(&format!("fail to configure device: port={}", bonded_port_id));
@@ -125,7 +127,7 @@ fn bond_port_init(slave_count: u8,
         .expect(&format!("fail to setup device tx queue: port={}", bonded_port_id));
 
     for slave_port_id in 0..slave_count {
-        dev.add_slave(&ethdev::dev(slave_port_id))
+        dev.add_slave(slave_port_id)
             .expect(&format!("Oooops! adding slave {} to bond {} failed!",
                              slave_port_id,
                              bonded_port_id));
@@ -165,7 +167,7 @@ fn strip_vlan_hdr(ether_hdr: *const ether::EtherHdr) -> (*const libc::c_void, u1
 extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
     debug!("lcore_main is starting @ lcore {}", lcore::id().unwrap());
 
-    let dev = bond::dev(app_conf.bonded_port_id);
+    let dev = app_conf.bonded_port_id;
     let mut pkts: [mbuf::RawMbufPtr; MAX_PKT_BURST] = unsafe { mem::zeroed() };
     let bond_ip = u32::from(app_conf.bond_ip).to_be();
 
@@ -334,7 +336,7 @@ impl CmdActionResult {
                     arp_hdr.arp_data.arp_sip = u32::from(app_conf.bond_ip).to_be();
                     arp_hdr.arp_data.arp_tip = u32::from(ip).to_be();
 
-                    if ethdev::dev(app_conf.bonded_port_id).tx_burst(0, &mut [m]) == 1 {
+                    if app_conf.bonded_port_id.tx_burst(0, &mut [m]) == 1 {
                         debug!("send ARP request to {}", ip);
                     }
                 }
@@ -374,7 +376,7 @@ impl CmdActionResult {
     fn show(&mut self, cl: &cmdline::RawCmdline, data: Option<&AppConfig>) {
         let app_conf = data.unwrap();
 
-        let dev = bond::dev(app_conf.bonded_port_id);
+        let dev = app_conf.bonded_port_id;
 
         let active_slaves = dev.active_slaves().unwrap();
         let primary = dev.primary().unwrap();

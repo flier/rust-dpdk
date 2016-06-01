@@ -13,6 +13,7 @@ use std::mem;
 use std::env;
 
 use rte::*;
+use rte::ethdev::EthDevice;
 
 use ethtool::*;
 
@@ -31,7 +32,7 @@ fn setup_ports(app_cfg: &mut AppConfig) {
         if let Ok(mut guard) = mutex.lock() {
             let app_port: &mut AppPort = &mut *guard;
 
-            let dev = ethdev::EthDevice::from(portid as u8);
+            let dev = portid as ethdev::PortId;
             let dev_info = dev.info();
 
             let info: &ethdev::RawEthDeviceInfo = &*dev_info;
@@ -96,7 +97,7 @@ extern "C" fn slave_main(app_cfg: &mut AppConfig) -> i32 {
                     continue;
                 }
 
-                let dev = ethdev::EthDevice::from(portid as u8);
+                let dev = portid as ethdev::PortId;
 
                 // MAC address was updated
                 if app_port.port_dirty {

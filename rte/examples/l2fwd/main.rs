@@ -20,7 +20,7 @@ use std::path::Path;
 use nix::sys::signal;
 
 use rte::*;
-use rte::ethdev::TxBuffer;
+use rte::ethdev::{TxBuffer, EthDevice};
 
 const EXIT_FAILURE: i32 = -1;
 
@@ -145,7 +145,7 @@ fn parse_args(args: &Vec<String>) -> (u32, u32, u32) {
 }
 
 // Check the link status of all ports in up to 9s, and print them finally
-fn check_all_ports_link_status(enabled_devices: &Vec<ethdev::EthDevice>) {
+fn check_all_ports_link_status(enabled_devices: &Vec<ethdev::PortId>) {
     print!("Checking link status");
 
     const CHECK_INTERVAL: u32 = 100;
@@ -295,7 +295,7 @@ fn main() {
 
     let l2fwd_pktmbuf_pool = as_mut_ref!(p).unwrap();
 
-    let enabled_devices: Vec<ethdev::EthDevice> = ethdev::devices()
+    let enabled_devices: Vec<ethdev::PortId> = ethdev::devices()
         .filter(|dev| ((1 << dev.portid()) & enabled_port_mask) != 0)
         .collect();
 
