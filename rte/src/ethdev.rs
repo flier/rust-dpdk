@@ -1,6 +1,6 @@
 use std::ptr;
 use std::mem;
-use std::ops::{Deref, DerefMut, Range};
+use std::ops::{Deref, Range};
 use std::iter::Map;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
@@ -738,110 +738,75 @@ impl<'a> From<&'a EthConf> for RawEthConf {
 pub type RawTxBuffer = ffi::Struct_rte_eth_dev_tx_buffer;
 pub type RawTxBufferPtr = *mut ffi::Struct_rte_eth_dev_tx_buffer;
 
-///  Structure used to buffer packets for future TX
-#[derive(Debug, PartialEq, Eq)]
-pub struct TxBuffer(RawTxBufferPtr);
-
-impl TxBuffer {
-    pub fn as_raw(&self) -> RawTxBufferPtr {
-        self.0
-    }
-}
-
-impl From<RawTxBufferPtr> for TxBuffer {
-    fn from(p: RawTxBufferPtr) -> Self {
-        TxBuffer(p)
-    }
-}
-
-impl Drop for TxBuffer {
-    fn drop(&mut self) {
-        malloc::free(self.0 as *mut c_void);
-
-        self.0 = ptr::null_mut();
-    }
-}
-
-impl Deref for TxBuffer {
-    type Target = RawTxBuffer;
-
-    fn deref(&self) -> &Self::Target {
-        unsafe { &*self.0 }
-    }
-}
-
-impl DerefMut for TxBuffer {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { &mut *self.0 }
-    }
-}
-
 pub type TxBufferErrorCallback<T> = fn(unsent: *mut *mut ffi::Struct_rte_mbuf,
                                        count: u16,
                                        userdata: &T);
 
-impl TxBuffer {
-    /// Initialize default values for buffered transmitting
-    pub fn new(size: usize, socket_id: i32) -> Result<TxBuffer> {
-        unsafe {
-            let p = malloc::zmalloc_socket("tx_buffer",
-                                           _rte_eth_tx_buffer_size(size),
-                                           0,
-                                           socket_id) as RawTxBufferPtr;
+pub trait TxBuffer {
+    fn free(&mut self);
 
-            if p.is_null() {
-                Err(Error::OsError(libc::ENOMEM))
+    /// Configure a callback for buffered packets which cannot be sent
+    fn set_err_callback<T>(&mut self,
+                           callback: Option<TxBufferErrorCallback<T>>,
+                           userdata: Option<&T>)
+                           -> Result<&mut Self>;
+
+    /// Silently dropping unsent buffered packets.
+    fn drop_err_packets(&mut self) -> Result<&mut Self>;
+
+    /// Tracking unsent buffered packets.
+    fn count_err_packets(&mut self) -> Result<&mut Self>;
+}
+
+/// Initialize default values for buffered transmitting
+pub fn alloc_buffer(size: usize, socket_id: i32) -> Result<RawTxBufferPtr> {
+    unsafe {
+        let p = malloc::zmalloc_socket("tx_buffer",
+                                       _rte_eth_tx_buffer_size(size),
+                                       0,
+                                       socket_id) as RawTxBufferPtr;
+
+        if p.is_null() {
+            Err(Error::OsError(libc::ENOMEM))
+        } else {
+            let ret = ffi::rte_eth_tx_buffer_init(p, size as u16);
+
+            if ret != 0 {
+                Err(Error::OsError(ret))
             } else {
-                let ret = ffi::rte_eth_tx_buffer_init(p, size as u16);
-
-                if ret != 0 {
-                    Err(Error::OsError(ret))
-                } else {
-                    Ok(TxBuffer(p))
-                }
+                Ok(p)
             }
         }
     }
+}
 
-    /// Extract the raw pointer from an underlying object.
-    pub fn as_raw(&self) -> RawTxBufferPtr {
-        return self.0;
+impl TxBuffer for RawTxBuffer {
+    fn free(&mut self) {
+        malloc::free(self as RawTxBufferPtr as *mut c_void);
     }
 
-    /// Consumes the TxBuffer, returning the wrapped raw pointer.
-    pub fn into_raw(&self) -> RawTxBufferPtr {
-        let p = self.0;
-
-        mem::forget(self);
-
-        return p;
-    }
-
-    /// Configure a callback for buffered packets which cannot be sent
-    pub fn set_err_callback<T>(&self,
-                               callback: Option<TxBufferErrorCallback<T>>,
-                               userdata: Option<&T>)
-                               -> Result<&Self> {
+    fn set_err_callback<T>(&mut self,
+                           callback: Option<TxBufferErrorCallback<T>>,
+                           userdata: Option<&T>)
+                           -> Result<&mut Self> {
         rte_check!(unsafe {
-            ffi::rte_eth_tx_buffer_set_err_callback(self.0,
+            ffi::rte_eth_tx_buffer_set_err_callback(self,
                                                     mem::transmute(callback),
                                                     mem::transmute(userdata))
         }; ok => { self })
     }
 
-    /// Silently dropping unsent buffered packets.
-    pub fn drop_err_packets(&self) -> Result<&Self> {
+    fn drop_err_packets(&mut self) -> Result<&mut Self> {
         rte_check!(unsafe {
-            ffi::rte_eth_tx_buffer_set_err_callback(self.0,
+            ffi::rte_eth_tx_buffer_set_err_callback(self,
                                                     Some(ffi::rte_eth_tx_buffer_drop_callback),
                                                     ptr::null_mut())
         }; ok => { self })
     }
 
-    /// Tracking unsent buffered packets.
-    pub fn count_err_packets(&self) -> Result<&Self> {
+    fn count_err_packets(&mut self) -> Result<&mut Self> {
         rte_check!(unsafe {
-            ffi::rte_eth_tx_buffer_set_err_callback(self.0,
+            ffi::rte_eth_tx_buffer_set_err_callback(self,
                                                     Some(ffi::rte_eth_tx_buffer_count_callback),
                                                     ptr::null_mut())
         }; ok => { self })

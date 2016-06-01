@@ -14,7 +14,7 @@ use std::net;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use rte::*;
-use rte::mbuf::PktMbufPool;
+use rte::mbuf::{PktMbuf, PktMbufPool};
 
 const EXIT_FAILURE: i32 = -1;
 
@@ -187,81 +187,87 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
 
         // Search incoming data for ARP packets and prepare response
         for pkt in &pkts[..rx_cnt] {
-            let mut has_freed = false;
+            if let Some(m) = as_mut_ref!(*pkt) {
+                let mut has_freed = false;
 
-            let p = pktmbuf_mtod!(*pkt, *mut ether::EtherHdr);
+                let p = pktmbuf_mtod!(*pkt, *mut ether::EtherHdr);
 
-            if let Some(mut ether_hdr) = as_mut_ref!(p) {
-                let (next_hdr, next_proto) = strip_vlan_hdr(ether_hdr);
+                if let Some(mut ether_hdr) = as_mut_ref!(p) {
+                    let (next_hdr, next_proto) = strip_vlan_hdr(ether_hdr);
 
-                match next_proto {
-                    ether::ETHER_TYPE_ARP_BE => {
-                        app_conf.port_packets[1].fetch_add(1, Ordering::Relaxed);
+                    match next_proto {
+                        ether::ETHER_TYPE_ARP_BE => {
+                            app_conf.port_packets[1].fetch_add(1, Ordering::Relaxed);
 
-                        if let Some(mut arp_hdr) = as_mut_ref!(next_hdr as *mut arp::ArpHdr) {
-                            if arp_hdr.arp_data.arp_tip == bond_ip {
-                                debug!("received ARP {:x} packet from {}",
+                            if let Some(mut arp_hdr) = as_mut_ref!(next_hdr as *mut arp::ArpHdr) {
+                                if arp_hdr.arp_data.arp_tip == bond_ip {
+                                    debug!("received ARP {:x} packet from {}",
                                     arp_hdr.arp_op.to_le(),
                                     ether::EtherAddr::from(arp_hdr.arp_data.arp_sha));
 
-                                if arp_hdr.arp_op == (ARP_OP_REQUEST as u16).to_be() {
-                                    arp_hdr.arp_op = (ARP_OP_REPLY as u16).to_be();
+                                    if arp_hdr.arp_op == (ARP_OP_REQUEST as u16).to_be() {
+                                        arp_hdr.arp_op = (ARP_OP_REPLY as u16).to_be();
+
+                                        ether::EtherAddr::copy(&ether_hdr.s_addr.addr_bytes,
+                                                               &mut ether_hdr.d_addr.addr_bytes);
+                                        ether::EtherAddr::copy(&app_conf.bond_mac_addr,
+                                                               &mut ether_hdr.s_addr.addr_bytes);
+
+                                        ether::EtherAddr::copy(&arp_hdr.arp_data
+                                                                   .arp_sha
+                                                                   .addr_bytes,
+                                                               &mut arp_hdr.arp_data
+                                                                   .arp_tha
+                                                                   .addr_bytes);
+                                        ether::EtherAddr::copy(&app_conf.bond_mac_addr,
+                                                               &mut arp_hdr.arp_data
+                                                                   .arp_sha
+                                                                   .addr_bytes);
+
+                                        arp_hdr.arp_data.arp_tip = arp_hdr.arp_data.arp_sip;
+                                        arp_hdr.arp_data.arp_sip = bond_ip;
+
+                                        if dev.tx_burst(0, &mut [*pkt]) == 1 {
+                                            has_freed = true;
+                                        }
+                                    }
+                                } else {
+                                    dev.tx_burst(0, &mut []);
+                                }
+                            }
+                        }
+                        ether::ETHER_TYPE_IPV4_BE => {
+                            app_conf.port_packets[2].fetch_add(1, Ordering::Relaxed);
+
+                            if let Some(mut ipv4_hdr) = as_mut_ref!(next_hdr as *mut ip::Ipv4Hdr) {
+                                if ipv4_hdr.dst_addr == bond_ip {
+                                    debug!("received IP packet from {}",
+                                    net::Ipv4Addr::from(ipv4_hdr.src_addr));
 
                                     ether::EtherAddr::copy(&ether_hdr.s_addr.addr_bytes,
                                                            &mut ether_hdr.d_addr.addr_bytes);
                                     ether::EtherAddr::copy(&app_conf.bond_mac_addr,
                                                            &mut ether_hdr.s_addr.addr_bytes);
 
-                                    ether::EtherAddr::copy(&arp_hdr.arp_data.arp_sha.addr_bytes,
-                                                           &mut arp_hdr.arp_data
-                                                               .arp_tha
-                                                               .addr_bytes);
-                                    ether::EtherAddr::copy(&app_conf.bond_mac_addr,
-                                                           &mut arp_hdr.arp_data
-                                                               .arp_sha
-                                                               .addr_bytes);
-
-                                    arp_hdr.arp_data.arp_tip = arp_hdr.arp_data.arp_sip;
-                                    arp_hdr.arp_data.arp_sip = bond_ip;
+                                    ipv4_hdr.dst_addr = ipv4_hdr.src_addr;
+                                    ipv4_hdr.src_addr = bond_ip;
 
                                     if dev.tx_burst(0, &mut [*pkt]) == 1 {
                                         has_freed = true;
                                     }
                                 }
-                            } else {
-                                dev.tx_burst(0, &mut []);
                             }
                         }
+                        _ => {}
                     }
-                    ether::ETHER_TYPE_IPV4_BE => {
-                        app_conf.port_packets[2].fetch_add(1, Ordering::Relaxed);
-
-                        if let Some(mut ipv4_hdr) = as_mut_ref!(next_hdr as *mut ip::Ipv4Hdr) {
-                            if ipv4_hdr.dst_addr == bond_ip {
-                                debug!("received IP packet from {}",
-                                    net::Ipv4Addr::from(ipv4_hdr.src_addr));
-
-                                ether::EtherAddr::copy(&ether_hdr.s_addr.addr_bytes,
-                                                       &mut ether_hdr.d_addr.addr_bytes);
-                                ether::EtherAddr::copy(&app_conf.bond_mac_addr,
-                                                       &mut ether_hdr.s_addr.addr_bytes);
-
-                                ipv4_hdr.dst_addr = ipv4_hdr.src_addr;
-                                ipv4_hdr.src_addr = bond_ip;
-
-                                if dev.tx_burst(0, &mut [*pkt]) == 1 {
-                                    has_freed = true;
-                                }
-                            }
-                        }
-                    }
-                    _ => {}
                 }
-            }
 
-            // Free processed packets
-            if !has_freed {
-                mbuf::pktmbuf_free(*pkt)
+                // Free processed packets
+                if !has_freed {
+                    m.free();
+                }
+            } else {
+                error!("skip empty mbuf");
             }
         }
     }

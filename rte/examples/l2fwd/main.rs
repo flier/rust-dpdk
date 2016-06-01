@@ -5,6 +5,7 @@ extern crate getopts;
 extern crate libc;
 extern crate nix;
 
+#[macro_use]
 extern crate rte;
 
 use std::io;
@@ -19,6 +20,7 @@ use std::path::Path;
 use nix::sys::signal;
 
 use rte::*;
+use rte::ethdev::TxBuffer;
 
 const EXIT_FAILURE: i32 = -1;
 
@@ -386,14 +388,16 @@ fn main() {
             .expect(&format!("fail to setup device tx queue: port={}", portid));
 
         // Initialize TX buffers
-        let buf = ethdev::TxBuffer::new(MAX_PKT_BURST, dev.socket_id())
+        let p = ethdev::alloc_buffer(MAX_PKT_BURST, dev.socket_id())
             .expect(&format!("fail to allocate buffer for tx: port={}", portid));
 
-        buf.count_err_packets()
-            .expect(&format!("failt to set error callback for tx buffer: port={}", portid));
+        if let Some(buf) = as_mut_ref!(p) {
+            buf.count_err_packets()
+                .expect(&format!("failt to set error callback for tx buffer: port={}", portid));
+        }
 
         unsafe {
-            l2fwd_tx_buffers[portid] = buf.into_raw();
+            l2fwd_tx_buffers[portid] = p;
         }
 
         // Start device
@@ -429,8 +433,10 @@ fn main() {
         dev.close();
         println!(" Done");
 
-        unsafe {
-            let _ = ethdev::TxBuffer::from(l2fwd_tx_buffers[dev.portid() as usize]);
+        let p = unsafe { l2fwd_tx_buffers[dev.portid() as usize] };
+
+        if let Some(buf) = as_mut_ref!(p) {
+            buf.free();
         }
     }
 
