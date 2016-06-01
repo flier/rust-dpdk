@@ -155,23 +155,27 @@ fn test_mempool() {
                                               mempool::MEMPOOL_F_SC_GET) // flags
                     .unwrap();
 
+    assert!(!p.is_null());
+
+    let p = as_mut_ref!(p).unwrap();
+
     assert_eq!(p.name(), "test");
-    assert_eq!(p.size(), 16);
-    assert!(p.phys_addr() != 0);
-    assert_eq!(p.cache_size(), 0);
-    assert_eq!(p.cache_flushthresh(), 0);
-    assert_eq!(p.elt_size(), 128);
-    assert_eq!(p.header_size(), 64);
-    assert_eq!(p.trailer_size(), 0);
-    assert_eq!(p.private_data_size(), 64);
-    assert_eq!((p.elt_va_end() - p.elt_va_start()) as u32,
-               (p.header_size() + p.elt_size()) * p.size());
-    assert_eq!(p.elt_pa().len(), 1);
+    assert_eq!(p.size, 16);
+    assert!(p.phys_addr != 0);
+    assert_eq!(p.cache_size, 0);
+    assert_eq!(p.cache_flushthresh, 0);
+    assert_eq!(p.elt_size, 128);
+    assert_eq!(p.header_size, 64);
+    assert_eq!(p.trailer_size, 0);
+    assert_eq!(p.private_data_size, 64);
+    assert_eq!((p.elt_va_end - p.elt_va_start) as u32,
+               (p.header_size + p.elt_size) * p.size);
+    assert_eq!(p.physical_pages().len(), 1);
 
     assert_eq!(p.count(), 16);
     assert_eq!(p.free_count(), 0);
-    assert!(p.full());
-    assert!(!p.empty());
+    assert!(p.is_full());
+    assert!(!p.is_empty());
 
     p.audit();
 
@@ -200,7 +204,9 @@ fn test_mempool() {
 
     assert_eq!(elements.len(), 4);
 
-    assert_eq!(p, mempool::lookup("test").unwrap());
+    let raw_ptr = p as mempool::RawMemoryPoolPtr;
+
+    assert_eq!(raw_ptr, mempool::lookup("test").unwrap());
 
     let mut pools: Vec<mempool::RawMemoryPoolPtr> = Vec::new();
 
@@ -211,7 +217,7 @@ fn test_mempool() {
 
     mempool::walk(Some(walk_mempool), Some(&mut pools));
 
-    assert!(pools.iter().find(|pool| **pool == *p).is_some());
+    assert!(pools.contains(&raw_ptr));
 
     if log_enabled!(Debug) {
         let stdout = cfile::tmpfile().unwrap();
@@ -234,24 +240,28 @@ fn test_mbuf() {
                                       eal::socket_id())
         .unwrap();
 
+    assert!(!p.is_null());
+
+    let p = as_mut_ref!(p).unwrap();
+
     assert_eq!(p.name(), "mbuf_pool");
-    assert_eq!(p.size(), NB_MBUF);
-    assert!(p.phys_addr() != 0);
-    assert_eq!(p.cache_size(), CACHE_SIZE);
-    assert_eq!(p.cache_flushthresh(), 48);
-    assert_eq!(p.elt_size(),
+    assert_eq!(p.size, NB_MBUF);
+    assert!(p.phys_addr != 0);
+    assert_eq!(p.cache_size, CACHE_SIZE);
+    assert_eq!(p.cache_flushthresh, 48);
+    assert_eq!(p.elt_size,
                (mbuf::RTE_MBUF_DEFAULT_BUF_SIZE + PRIV_SIZE + MBUF_SIZE) as u32);
-    assert_eq!(p.header_size(), 64);
-    assert_eq!(p.trailer_size(), 0);
-    assert_eq!(p.private_data_size(), 64);
-    assert_eq!((p.elt_va_end() - p.elt_va_start()) as u32,
-               (p.header_size() + p.elt_size()) * p.size());
-    assert_eq!(p.elt_pa().len(), 1);
+    assert_eq!(p.header_size, 64);
+    assert_eq!(p.trailer_size, 0);
+    assert_eq!(p.private_data_size, 64);
+    assert_eq!((p.elt_va_end - p.elt_va_start) as u32,
+               (p.header_size + p.elt_size) * p.size);
+    assert_eq!(p.physical_pages().len(), 1);
 
     assert_eq!(p.count(), NB_MBUF);
     assert_eq!(p.free_count(), 0);
-    assert!(p.full());
-    assert!(!p.empty());
+    assert!(p.is_full());
+    assert!(!p.is_empty());
 
     p.audit();
 }

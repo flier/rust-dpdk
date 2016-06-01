@@ -283,13 +283,15 @@ fn main() {
     eal::init(&eal_args).expect("fail to initial EAL");
 
     // create the mbuf pool
-    let l2fwd_pktmbuf_pool = mbuf::pktmbuf_pool_create("mbuf_pool",
-                                                       NB_MBUF,
-                                                       32,
-                                                       0,
-                                                       mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
-                                                       eal::socket_id())
+    let p = mbuf::pktmbuf_pool_create("mbuf_pool",
+                                      NB_MBUF,
+                                      32,
+                                      0,
+                                      mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
+                                      eal::socket_id())
         .expect("fail to initial mbuf pool");
+
+    let l2fwd_pktmbuf_pool = as_mut_ref!(p).unwrap();
 
     let enabled_devices: Vec<ethdev::EthDevice> = ethdev::devices()
         .filter(|dev| ((1 << dev.portid()) & enabled_port_mask) != 0)
@@ -376,7 +378,7 @@ fn main() {
         }
 
         // init one RX queue
-        dev.rx_queue_setup(0, conf.nb_rxd, None, &l2fwd_pktmbuf_pool)
+        dev.rx_queue_setup(0, conf.nb_rxd, None, l2fwd_pktmbuf_pool)
             .expect(&format!("fail to setup device rx queue: port={}", portid));
 
         // init one TX queue on each port

@@ -21,12 +21,12 @@ macro_rules! try_cstr {
 }
 
 #[macro_export]
-macro_rules! ptr_as_ref {
+macro_rules! as_ref {
     ($p:expr) => (if ($p).is_null() { None } else { Some(unsafe {&* ($p)}) })
 }
 
 #[macro_export]
-macro_rules! ptr_as_mut_ref {
+macro_rules! as_mut_ref {
     ($p:expr) => (if ($p).is_null() { None } else { Some(unsafe {&mut * ($p)}) })
 }
 

@@ -164,7 +164,7 @@ impl EthDevice {
                           rx_queue_id: QueueId,
                           nb_rx_desc: u16,
                           rx_conf: Option<ffi::Struct_rte_eth_rxconf>,
-                          mb_pool: &mempool::RawMemoryPool)
+                          mb_pool: &mut mempool::RawMemoryPool)
                           -> Result<&Self> {
         rte_check!(unsafe {
             ffi::rte_eth_rx_queue_setup(self.0,
@@ -172,7 +172,7 @@ impl EthDevice {
                                         nb_rx_desc,
                                         self.socket_id() as u32,
                                         mem::transmute(&rx_conf),
-                                        mb_pool.as_raw())
+                                        mb_pool)
         }; ok => { self })
     }
 

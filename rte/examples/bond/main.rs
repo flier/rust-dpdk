@@ -14,6 +14,7 @@ use std::net;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use rte::*;
+use rte::mbuf::PktMbufPool;
 
 const EXIT_FAILURE: i32 = -1;
 
@@ -42,7 +43,7 @@ struct AppConfig {
     bond_ip: net::Ipv4Addr,
     bond_mac_addr: ether::EtherAddr,
     bonded_port_id: PortId,
-    pktmbuf_pool: mbuf::PktMbufPool,
+    pktmbuf_pool: mempool::RawMemoryPoolPtr,
     port_packets: [AtomicUsize; 4],
 }
 
@@ -79,7 +80,7 @@ impl AppConfig {
 
 fn slave_port_init(port_id: u8,
                    port_conf: &ethdev::EthConf,
-                   pktmbuf_pool: &mempool::RawMemoryPool) {
+                   pktmbuf_pool: &mut mempool::RawMemoryPool) {
     info!("Setup port {}", port_id);
 
     let dev = ethdev::dev(port_id);
@@ -88,7 +89,7 @@ fn slave_port_init(port_id: u8,
         .expect(&format!("fail to configure device: port={}", port_id));
 
     // init one RX queue
-    dev.rx_queue_setup(0, RTE_RX_DESC_DEFAULT, None, &pktmbuf_pool)
+    dev.rx_queue_setup(0, RTE_RX_DESC_DEFAULT, None, pktmbuf_pool)
         .expect(&format!("fail to setup device rx queue: port={}", port_id));
 
     // init one TX queue on each port
@@ -105,7 +106,7 @@ fn slave_port_init(port_id: u8,
 
 fn bond_port_init(slave_count: u8,
                   port_conf: &ethdev::EthConf,
-                  pktmbuf_pool: &mempool::RawMemoryPool)
+                  pktmbuf_pool: &mut mempool::RawMemoryPool)
                   -> bond::BondedDevice {
     let dev = bond::create("bond0", bond::BondMode::AdaptiveLB, 0)
         .expect("Faled to create bond port");
@@ -116,7 +117,7 @@ fn bond_port_init(slave_count: u8,
         .expect(&format!("fail to configure device: port={}", bonded_port_id));
 
     // init one RX queue
-    dev.rx_queue_setup(0, RTE_RX_DESC_DEFAULT, None, &pktmbuf_pool)
+    dev.rx_queue_setup(0, RTE_RX_DESC_DEFAULT, None, pktmbuf_pool)
         .expect(&format!("fail to setup device rx queue: port={}", bonded_port_id));
 
     // init one TX queue on each port
@@ -190,14 +191,14 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
 
             let p = pktmbuf_mtod!(*pkt, *mut ether::EtherHdr);
 
-            if let Some(mut ether_hdr) = ptr_as_mut_ref!(p) {
+            if let Some(mut ether_hdr) = as_mut_ref!(p) {
                 let (next_hdr, next_proto) = strip_vlan_hdr(ether_hdr);
 
                 match next_proto {
                     ether::ETHER_TYPE_ARP_BE => {
                         app_conf.port_packets[1].fetch_add(1, Ordering::Relaxed);
 
-                        if let Some(mut arp_hdr) = ptr_as_mut_ref!(next_hdr as *mut arp::ArpHdr) {
+                        if let Some(mut arp_hdr) = as_mut_ref!(next_hdr as *mut arp::ArpHdr) {
                             if arp_hdr.arp_data.arp_tip == bond_ip {
                                 debug!("received ARP {:x} packet from {}",
                                     arp_hdr.arp_op.to_le(),
@@ -235,7 +236,7 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
                     ether::ETHER_TYPE_IPV4_BE => {
                         app_conf.port_packets[2].fetch_add(1, Ordering::Relaxed);
 
-                        if let Some(mut ipv4_hdr) = ptr_as_mut_ref!(next_hdr as *mut ip::Ipv4Hdr) {
+                        if let Some(mut ipv4_hdr) = as_mut_ref!(next_hdr as *mut ip::Ipv4Hdr) {
                             if ipv4_hdr.dst_addr == bond_ip {
                                 debug!("received IP packet from {}",
                                     net::Ipv4Addr::from(ipv4_hdr.src_addr));
@@ -286,7 +287,7 @@ impl CmdActionResult {
 
         match self.ip() {
             net::IpAddr::V4(ip) => {
-                let m = app_conf.pktmbuf_pool.alloc();
+                let m = as_mut_ref!(app_conf.pktmbuf_pool).unwrap().alloc();
 
                 let pkt_size = mem::size_of::<ether::EtherHdr>() + mem::size_of::<arp::ArpHdr>();
 
@@ -297,7 +298,7 @@ impl CmdActionResult {
 
                 let p = pktmbuf_mtod!(m, *mut ether::EtherHdr);
 
-                if let Some(mut ether_hdr) = ptr_as_mut_ref!(p) {
+                if let Some(mut ether_hdr) = as_mut_ref!(p) {
                     ether_hdr.ether_type = (ETHER_TYPE_ARP as u16).to_be();
 
                     ether::EtherAddr::copy(&app_conf.bond_mac_addr,
@@ -306,9 +307,9 @@ impl CmdActionResult {
                                            &mut ether_hdr.d_addr.addr_bytes);
                 }
 
-                if let Some(mut arp_hdr) =
-                       ptr_as_mut_ref!(unsafe {p.offset(1) as *mut arp::ArpHdr}) {
+                let p = unsafe { p.offset(1) as *mut arp::ArpHdr };
 
+                if let Some(mut arp_hdr) = as_mut_ref!(p) {
                     arp_hdr.arp_hrd = (ARP_HRD_ETHER as u16).to_be();
                     arp_hdr.arp_pro = (ETHER_TYPE_IPV4 as u16).to_be();
                     arp_hdr.arp_hln = ETHER_ADDR_LEN as u8;
@@ -474,13 +475,15 @@ fn main() {
     }
 
     // create the mbuf pool
-    let pktmbuf_pool = mbuf::pktmbuf_pool_create("mbuf_pool",
-                                                 NB_MBUF,
-                                                 MEMPOOL_CACHE_SZ,
-                                                 0,
-                                                 mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
-                                                 eal::socket_id())
+    let p = mbuf::pktmbuf_pool_create("mbuf_pool",
+                                      NB_MBUF,
+                                      MEMPOOL_CACHE_SZ,
+                                      0,
+                                      mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
+                                      eal::socket_id())
         .expect("fail to initial mbuf pool");
+
+    let pktmbuf_pool = as_mut_ref!(p).unwrap();
 
     let port_conf = ethdev::EthConf {
         rx_adv_conf: Some(ethdev::RxAdvConf {
@@ -495,10 +498,10 @@ fn main() {
 
     // initialize all ports
     for portid in 0..nb_ports {
-        slave_port_init(portid, &port_conf, &pktmbuf_pool);
+        slave_port_init(portid, &port_conf, pktmbuf_pool);
     }
 
-    let bonded_dev = bond_port_init(nb_ports, &port_conf, &pktmbuf_pool);
+    let bonded_dev = bond_port_init(nb_ports, &port_conf, pktmbuf_pool);
 
     // check state of lcores
     lcore::foreach_slave(|lcore_id| {

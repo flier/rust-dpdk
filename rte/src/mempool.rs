@@ -1,5 +1,4 @@
 use std::mem;
-use std::ops::Deref;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 use std::os::unix::io::AsRawFd;
@@ -24,6 +23,7 @@ bitflags! {
     }
 }
 
+pub type RawMemoryPool = ffi::Struct_rte_mempool;
 pub type RawMemoryPoolPtr = *mut ffi::Struct_rte_mempool;
 
 /// A mempool constructor callback function.
@@ -55,38 +55,8 @@ pub trait MemoryPool {
     /// Name of mempool.
     fn name(&self) -> &str;
 
-    /// Size of the mempool.
-    fn size(&self) -> u32;
-
-    /// Phys. addr. of mempool struct.
-    fn phys_addr(&self) -> ffi::phys_addr_t;
-
-    /// Size of per-lcore local cache.
-    fn cache_size(&self) -> u32;
-
-    /// Threshold before we flush excess elements.
-    fn cache_flushthresh(&self) -> u32;
-
-    /// Size of an element.
-    fn elt_size(&self) -> u32;
-
-    /// Size of header (before elt).
-    fn header_size(&self) -> u32;
-
-    /// Size of trailer (after elt).
-    fn trailer_size(&self) -> u32;
-
-    /// Size of private data.
-    fn private_data_size(&self) -> u32;
-
-    /// Virtual address of the first mempool object.
-    fn elt_va_start(&self) -> ffi::uintptr_t;
-
-    // Virtual address of the <size + 1> mempool object.
-    fn elt_va_end(&self) -> ffi::uintptr_t;
-
     /// Array of physical page addresses for the mempool objects buffer.
-    fn elt_pa(&self) -> &[ffi::phys_addr_t];
+    fn physical_pages(&self) -> &[ffi::phys_addr_t];
 }
 
 pub trait MemoryPoolDebug: MemoryPool {
@@ -101,17 +71,13 @@ pub trait MemoryPoolDebug: MemoryPool {
     ///
     /// i.e. how many entries can be freed back to the mempool.
     ///
-    fn free_count(&self) -> u32 {
-        self.size() - self.count()
-    }
+    fn free_count(&self) -> u32;
 
     /// Test if the mempool is full.
-    fn full(&self) -> bool {
-        self.size() == self.count()
-    }
+    fn is_full(&self) -> bool;
 
     /// Test if the mempool is empty.
-    fn empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.count() == 0
     }
 
@@ -142,9 +108,6 @@ pub trait MemoryPoolDebug: MemoryPool {
                   -> u32;
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct RawMemoryPool(RawMemoryPoolPtr);
-
 /// Create a new mempool named name in memory.
 ///
 /// This function uses memzone_reserve() to allocate memory.
@@ -163,7 +126,7 @@ pub fn create<T, O>(name: &str,
                     obj_init_arg: Option<&O>,
                     socket_id: SocketId,
                     flags: MemoryPoolFlags)
-                    -> Result<RawMemoryPool> {
+                    -> Result<RawMemoryPoolPtr> {
     let name = try!(CString::new(name))
         .as_bytes_with_nul()
         .as_ptr() as *const i8;
@@ -183,20 +146,10 @@ pub fn create<T, O>(name: &str,
                                 flags.bits)
     };
 
-    rte_check!(p, NonNull; ok => { RawMemoryPool(p) })
+    rte_check!(p, NonNull; ok => { p })
 }
 
-pub fn from_raw(p: RawMemoryPoolPtr) -> RawMemoryPool {
-    RawMemoryPool(p)
-}
-
-impl RawMemoryPool {
-    pub fn as_raw(&self) -> RawMemoryPoolPtr {
-        self.0
-    }
-}
-
-pub fn lookup(name: &str) -> Option<RawMemoryPool> {
+pub fn lookup(name: &str) -> Option<RawMemoryPoolPtr> {
     let p = unsafe {
         ffi::rte_mempool_lookup(CString::new(name)
             .unwrap()
@@ -207,7 +160,7 @@ pub fn lookup(name: &str) -> Option<RawMemoryPool> {
     if p.is_null() {
         None
     } else {
-        Some(RawMemoryPool(p))
+        Some(p)
     }
 }
 
@@ -227,93 +180,43 @@ pub fn walk<T>(callback: Option<MemoryPoolWalkCallback<T>>, arg: Option<&T>) {
     }
 }
 
-impl Deref for RawMemoryPool {
-    type Target = RawMemoryPoolPtr;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
 impl MemoryPool for RawMemoryPool {
     #[inline]
     fn name(&self) -> &str {
         unsafe {
-            let name = &((*self.0).name)[..];
+            let name = &(self.name)[..];
 
             CStr::from_ptr(name.as_ptr()).to_str().unwrap()
         }
     }
 
     #[inline]
-    fn size(&self) -> u32 {
-        unsafe { (*self.0).size }
-    }
-
-    #[inline]
-    fn phys_addr(&self) -> ffi::phys_addr_t {
-        unsafe { (*self.0).phys_addr }
-    }
-
-    #[inline]
-    fn cache_size(&self) -> u32 {
-        unsafe { (*self.0).cache_size }
-    }
-
-    #[inline]
-    fn cache_flushthresh(&self) -> u32 {
-        unsafe { (*self.0).cache_flushthresh }
-    }
-
-    #[inline]
-    fn elt_size(&self) -> u32 {
-        unsafe { (*self.0).elt_size }
-    }
-
-    #[inline]
-    fn header_size(&self) -> u32 {
-        unsafe { (*self.0).header_size }
-    }
-
-    #[inline]
-    fn trailer_size(&self) -> u32 {
-        unsafe { (*self.0).trailer_size }
-    }
-
-    #[inline]
-    fn private_data_size(&self) -> u32 {
-        unsafe { (*self.0).private_data_size }
-    }
-
-    #[inline]
-    fn elt_va_start(&self) -> ffi::uintptr_t {
-        unsafe { (*self.0).elt_va_start }
-    }
-
-    #[inline]
-    fn elt_va_end(&self) -> ffi::uintptr_t {
-        unsafe { (*self.0).elt_va_end }
-    }
-
-    #[inline]
-    fn elt_pa(&self) -> &[ffi::phys_addr_t] {
-        unsafe { &(*self.0).elt_pa[..(*self.0).pg_num as usize] }
+    fn physical_pages(&self) -> &[ffi::phys_addr_t] {
+        &self.elt_pa[..self.pg_num as usize]
     }
 }
 
 impl MemoryPoolDebug for RawMemoryPool {
     fn count(&self) -> u32 {
-        unsafe { ffi::rte_mempool_count(self.0) }
+        unsafe { ffi::rte_mempool_count(self) }
+    }
+
+    fn free_count(&self) -> u32 {
+        self.size - self.count()
+    }
+
+    fn is_full(&self) -> bool {
+        self.size == self.count()
     }
 
     fn audit(&self) {
-        unsafe { ffi::rte_mempool_audit(self.0) }
+        unsafe { ffi::rte_mempool_audit(self) }
     }
 
     fn dump<S: AsRawFd>(&self, s: &S) {
         if let Ok(f) = cfile::open_stream(s, "w") {
             unsafe {
-                ffi::rte_mempool_dump(f.stream() as *mut ffi::FILE, self.0);
+                ffi::rte_mempool_dump(f.stream() as *mut ffi::FILE, self);
             }
         }
     }
@@ -324,16 +227,15 @@ impl MemoryPoolDebug for RawMemoryPool {
                   obj_iter_arg: Option<&T>)
                   -> u32 {
         unsafe {
-            let p = *self.0;
-            let elt_sz = (p.header_size + p.elt_size + p.trailer_size) as ffi::size_t;
+            let elt_sz = (self.header_size + self.elt_size + self.trailer_size) as ffi::size_t;
 
-            ffi::rte_mempool_obj_iter(mem::transmute(p.elt_va_start),
+            ffi::rte_mempool_obj_iter(mem::transmute(self.elt_va_start),
                                       elt_num,
                                       elt_sz,
                                       1,
-                                      p.elt_pa.as_ptr(),
-                                      p.pg_num,
-                                      p.pg_shift,
+                                      self.elt_pa.as_ptr(),
+                                      self.pg_num,
+                                      self.pg_shift,
                                       mem::transmute(obj_iter),
                                       mem::transmute(obj_iter_arg))
         }

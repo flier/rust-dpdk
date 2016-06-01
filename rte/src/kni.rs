@@ -29,7 +29,7 @@ pub fn close() {
 /// The KNI interface created in the kernel space is the net interface
 /// the traditional Linux application talking to.
 ///
-pub fn alloc(pktmbuf_pool: &mempool::RawMemoryPool,
+pub fn alloc(pktmbuf_pool: &mut mempool::RawMemoryPool,
              conf: &KniDeviceConf,
              opts: Option<&KniDeviceOps>)
              -> Result<KniDevice> {
@@ -48,7 +48,7 @@ pub fn alloc(pktmbuf_pool: &mempool::RawMemoryPool,
                   kni_conf.name.as_mut_ptr() as *mut u8,
                   cmp::min(conf.name.len(), kni_conf.name.len() - 1));
 
-        let p = ffi::rte_kni_alloc(pktmbuf_pool.as_raw(), &kni_conf, mem::transmute(opts));
+        let p = ffi::rte_kni_alloc(pktmbuf_pool, &kni_conf, mem::transmute(opts));
 
         rte_check!(p, NonNull; ok => { KniDevice(p)})
     }

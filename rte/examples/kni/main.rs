@@ -288,7 +288,7 @@ fn init_kni(conf: &Conf) {
 fn init_port(conf: &Conf,
              dev: &ethdev::EthDevice,
              port_conf: &ethdev::EthConf,
-             pktmbuf_pool: &mempool::RawMemoryPool) {
+             pktmbuf_pool: &mut mempool::RawMemoryPool) {
     let portid = dev.portid();
 
     // Initialise device and RX/TX queues
@@ -298,7 +298,7 @@ fn init_port(conf: &Conf,
         .expect(&format!("fail to configure device: port={}", portid));
 
     // init one RX queue
-    dev.rx_queue_setup(0, NB_RXD, None, &pktmbuf_pool)
+    dev.rx_queue_setup(0, NB_RXD, None, pktmbuf_pool)
         .expect(&format!("fail to setup device rx queue: port={}", portid));
 
     // init one TX queue on each port
@@ -394,7 +394,7 @@ extern "C" fn kni_config_network_interface(port_id: u8, if_up: u8) -> libc::c_in
     0
 }
 
-fn kni_alloc(conf: &Conf, dev: &ethdev::EthDevice, pktmbuf_pool: &mempool::RawMemoryPool) {
+fn kni_alloc(conf: &Conf, dev: &ethdev::EthDevice, pktmbuf_pool: &mut mempool::RawMemoryPool) {
     let portid = dev.portid();
 
     let param = unsafe {
@@ -436,9 +436,9 @@ fn kni_alloc(conf: &Conf, dev: &ethdev::EthDevice, pktmbuf_pool: &mempool::RawMe
                     config_network_if: Some(kni_config_network_interface),
                 };
 
-                kni::alloc(&pktmbuf_pool, &conf, Some(&ops))
+                kni::alloc(pktmbuf_pool, &conf, Some(&ops))
             } else {
-                kni::alloc(&pktmbuf_pool, &conf, None)
+                kni::alloc(pktmbuf_pool, &conf, None)
             })
             .expect(&format!("Fail to create kni for port: {}", portid));
 
@@ -614,13 +614,15 @@ fn main() {
     }
 
     // create the mbuf pool
-    let pktmbuf_pool = mbuf::pktmbuf_pool_create("mbuf_pool",
-                                                 NB_MBUF,
-                                                 MEMPOOL_CACHE_SZ,
-                                                 0,
-                                                 MBUF_DATA_SZ as u16,
-                                                 eal::socket_id())
+    let p = mbuf::pktmbuf_pool_create("mbuf_pool",
+                                      NB_MBUF,
+                                      MEMPOOL_CACHE_SZ,
+                                      0,
+                                      MBUF_DATA_SZ as u16,
+                                      eal::socket_id())
         .expect("fail to initial mbuf pool");
+
+    let pktmbuf_pool = as_mut_ref!(p).unwrap();
 
     let enabled_devices: Vec<ethdev::EthDevice> = ethdev::devices()
         .filter(|dev| ((1 << dev.portid()) & conf.enabled_port_mask) != 0)
@@ -638,9 +640,9 @@ fn main() {
     let port_conf = ethdev::EthConf::default();
 
     for dev in &enabled_devices {
-        init_port(&conf, &dev, &port_conf, &pktmbuf_pool);
+        init_port(&conf, &dev, &port_conf, pktmbuf_pool);
 
-        kni_alloc(&conf, &dev, &pktmbuf_pool);
+        kni_alloc(&conf, &dev, pktmbuf_pool);
     }
 
     check_all_ports_link_status(&enabled_devices);
