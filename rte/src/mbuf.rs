@@ -1,5 +1,8 @@
-use std::ops::{Deref, DerefMut};
 use std::ffi::CString;
+use std::os::unix::io::AsRawFd;
+
+use libc;
+use cfile;
 
 use ffi;
 
@@ -179,26 +182,126 @@ macro_rules! pktmbuf_mtod {
     )
 }
 
-pub struct PktMbufPool(mempool::RawMemoryPool);
+pub trait RefCnt {
+    /// Adds given value to an mbuf's refcnt and returns its new value.
+    fn refcnt_update(&mut self, value: i16) -> u16;
 
-impl Deref for PktMbufPool {
-    type Target = mempool::RawMemoryPool;
+    /// Reads the value of an mbuf's refcnt.
+    fn refcnt_read(&mut self) -> u16;
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
+    /// Sets an mbuf's refcnt to the defined value.
+    fn refcnt_set(&mut self, new_value: u16);
+}
+
+impl RefCnt for RawMbuf {
+    #[inline]
+    fn refcnt_update(&mut self, value: i16) -> u16 {
+        unsafe {
+            *self.refcnt() = (*self.refcnt() as isize + value as isize) as u16;
+
+            *self.refcnt()
+        }
+    }
+
+    #[inline]
+    fn refcnt_read(&mut self) -> u16 {
+        unsafe { *self.refcnt() }
+    }
+
+    #[inline]
+    fn refcnt_set(&mut self, new_value: u16) {
+        unsafe {
+            *self.refcnt() = new_value;
+        }
     }
 }
 
-impl DerefMut for PktMbufPool {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
+pub trait PktMbuf {
+    /// Free a packet mbuf back into its original mempool.
+    fn free(&mut self);
+
+    /// Creates a "clone" of the given packet mbuf.
+    fn clone(&mut self) -> *mut Self;
+
+    /// Prepend len bytes to an mbuf data area.
+    fn prepend(&mut self, len: usize) -> Result<*mut u8>;
+
+    /// Append len bytes to an mbuf.
+    fn append(&mut self, len: usize) -> Result<*mut u8>;
+
+    /// Remove len bytes at the beginning of an mbuf.
+    fn consume(&mut self, len: usize) -> Result<*mut u8>;
+
+    /// Remove len bytes of data at the end of the mbuf.
+    fn trim(&mut self, len: usize) -> Result<()>;
+
+    /// Test if mbuf data is contiguous.
+    fn is_contiguous(&self) -> bool;
+
+    /// Dump an mbuf structure to the console.
+    fn dump<S: AsRawFd>(&self, s: &S, len: usize);
+}
+
+impl PktMbuf for RawMbuf {
+    fn free(&mut self) {
+        unsafe { _rte_pktmbuf_free(self) }
+    }
+
+    fn clone(&mut self) -> *mut Self {
+        unsafe { _rte_pktmbuf_clone(self, self.pool) }
+    }
+
+    fn prepend(&mut self, len: usize) -> Result<*mut u8> {
+        let p = unsafe { _rte_pktmbuf_prepend(self, len as u16) };
+
+        rte_check!(p, NonNull; ok => { p as *mut u8 })
+    }
+
+    fn append(&mut self, len: usize) -> Result<*mut u8> {
+        let p = unsafe { _rte_pktmbuf_append(self, len as u16) };
+
+        rte_check!(p, NonNull; ok => { p as *mut u8 })
+    }
+
+    fn consume(&mut self, len: usize) -> Result<*mut u8> {
+        let p = unsafe { _rte_pktmbuf_adj(self, len as u16) };
+
+        rte_check!(p, NonNull; ok => { p as *mut u8 })
+    }
+
+
+    fn trim(&mut self, len: usize) -> Result<()> {
+        rte_check!(unsafe { _rte_pktmbuf_trim(self, len as u16) })
+    }
+
+    fn is_contiguous(&self) -> bool {
+        self.nb_segs == 1
+    }
+
+    fn dump<S: AsRawFd>(&self, s: &S, len: usize) {
+        if let Ok(f) = cfile::open_stream(s, "w") {
+            unsafe {
+                ffi::rte_pktmbuf_dump(f.stream() as *mut ffi::FILE, self, len as u32);
+            }
+        }
     }
 }
 
-impl PktMbufPool {
+pub trait PktMbufPool {
     /// Allocate a new mbuf from a mempool.
-    pub fn alloc(&self) -> RawMbufPtr {
-        unsafe { _rte_pktmbuf_alloc(self.as_raw()) }
+    fn alloc(&mut self) -> RawMbufPtr;
+
+    /// Allocate a bulk of mbufs, initialize refcnt and reset the fields to default values.
+    fn alloc_bulk(&mut self, mbufs: &mut [RawMbufPtr]) -> Result<()>;
+}
+
+impl PktMbufPool for mempool::RawMemoryPool {
+    fn alloc(&mut self) -> RawMbufPtr {
+        unsafe { _rte_pktmbuf_alloc(self) }
+    }
+
+    fn alloc_bulk(&mut self, mbufs: &mut [RawMbufPtr]) -> Result<()> {
+        rte_check!(unsafe { _rte_pktmbuf_alloc_bulk(self, mbufs.as_mut_ptr(), mbufs.len() as u32) })
     }
 }
 
@@ -213,7 +316,7 @@ pub fn pktmbuf_pool_create(name: &str,
                            priv_size: u16,
                            data_room_size: u16,
                            socket_id: i32)
-                           -> Result<PktMbufPool> {
+                           -> Result<mempool::RawMemoryPoolPtr> {
     let name = try!(CString::new(name))
         .as_bytes_with_nul()
         .as_ptr() as *const i8;
@@ -222,16 +325,26 @@ pub fn pktmbuf_pool_create(name: &str,
         ffi::rte_pktmbuf_pool_create(name, n, cache_size, priv_size, data_room_size, socket_id)
     };
 
-    rte_check!(p, NonNull; ok => { PktMbufPool(mempool::from_raw(p)) })
-}
-
-/// Free a packet mbuf back into its original mempool.
-pub fn pktmbuf_free(m: RawMbufPtr) {
-    unsafe { _rte_pktmbuf_free(m) }
+    rte_check!(p, NonNull; ok => { p })
 }
 
 extern "C" {
     fn _rte_pktmbuf_alloc(mp: mempool::RawMemoryPoolPtr) -> RawMbufPtr;
 
     fn _rte_pktmbuf_free(m: RawMbufPtr);
+
+    fn _rte_pktmbuf_alloc_bulk(mp: mempool::RawMemoryPoolPtr,
+                               mbufs: *mut RawMbufPtr,
+                               count: libc::c_uint)
+                               -> libc::c_int;
+
+    fn _rte_pktmbuf_clone(md: RawMbufPtr, mp: mempool::RawMemoryPoolPtr) -> RawMbufPtr;
+
+    fn _rte_pktmbuf_prepend(m: RawMbufPtr, len: libc::uint16_t) -> *mut libc::c_char;
+
+    fn _rte_pktmbuf_append(m: RawMbufPtr, len: libc::uint16_t) -> *mut libc::c_char;
+
+    fn _rte_pktmbuf_adj(m: RawMbufPtr, len: libc::uint16_t) -> *mut libc::c_char;
+
+    fn _rte_pktmbuf_trim(m: RawMbufPtr, len: libc::uint16_t) -> libc::c_int;
 }

@@ -195,6 +195,46 @@ _rte_pktmbuf_free(struct rte_mbuf *m) {
     rte_pktmbuf_free(m);
 }
 
+int
+_rte_pktmbuf_alloc_bulk(struct rte_mempool *pool, struct rte_mbuf **mbufs, unsigned count) {
+    return rte_pktmbuf_alloc_bulk(pool, mbufs, count);
+}
+
+struct rte_mbuf *
+_rte_pktmbuf_clone(struct rte_mbuf *md, struct rte_mempool *mp) {
+    return rte_pktmbuf_clone(md, mp);
+}
+
+char *
+_rte_pktmbuf_prepend(struct rte_mbuf *m, uint16_t len) {
+    return rte_pktmbuf_prepend(m, len);
+}
+
+char *
+_rte_pktmbuf_append(struct rte_mbuf *m, uint16_t len) {
+    return rte_pktmbuf_append(m, len);
+}
+
+char *
+_rte_pktmbuf_adj(struct rte_mbuf *m, uint16_t len) {
+    return rte_pktmbuf_adj(m, len);
+}
+
+int
+_rte_pktmbuf_trim(struct rte_mbuf *m, uint16_t len) {
+    return rte_pktmbuf_trim(m, len);
+}
+
+int
+_rte_vlan_strip(struct rte_mbuf *m) {
+    return rte_vlan_strip(m);
+}
+
+int
+_rte_vlan_insert(struct rte_mbuf **m) {
+    return rte_vlan_insert(m);
+}
+
 void
 _cmdline_write(const struct cmdline *cl, const char *str) {
     cmdline_printf(cl, str);

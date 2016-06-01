@@ -6,9 +6,14 @@ use std::error;
 use std::result;
 use std::ops::{Deref, DerefMut};
 
+use libc;
 use rand::{Rng, thread_rng};
 
 use ffi;
+
+use mbuf;
+
+use errors::Result;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AddrParseError(());
@@ -211,6 +216,28 @@ pub type VlanHdr = ffi::Struct_vlan_hdr;
 
 /// VXLAN protocol header.
 pub type VxlanHdr = ffi::Struct_vxlan_hdr;
+
+pub trait VlanExt {
+    /// Extract VLAN tag information into mbuf
+    fn vlan_strip(&mut self) -> Result<()>;
+}
+
+impl VlanExt for mbuf::RawMbuf {
+    fn vlan_strip(&mut self) -> Result<()> {
+        rte_check!(unsafe { _rte_vlan_strip(self) })
+    }
+}
+
+/// Insert VLAN tag into mbuf.
+pub fn vlan_insert(m: &mut mbuf::RawMbufPtr) -> Result<()> {
+    rte_check!(unsafe { _rte_vlan_insert(m) })
+}
+
+extern "C" {
+    fn _rte_vlan_strip(m: mbuf::RawMbufPtr) -> libc::c_int;
+
+    fn _rte_vlan_insert(m: *mut mbuf::RawMbufPtr) -> libc::c_int;
+}
 
 #[cfg(test)]
 mod tests {
