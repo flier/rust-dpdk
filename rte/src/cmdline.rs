@@ -9,6 +9,7 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::path::Path;
 use std::ffi::CStr;
 use std::marker::PhantomData;
+use std::ops::{Deref, DerefMut};
 use std::os::raw::{c_char, c_void};
 
 use libc;
@@ -273,7 +274,7 @@ macro_rules! TOKEN_PORTLIST_INITIALIZER {
     )
 }
 
-pub type InstHandler<T, D> = fn(result: &mut T, cmdline: &RawCmdline, data: Option<&D>);
+pub type InstHandler<T, D> = fn(result: &mut T, cmdline: &CmdLine, data: Option<&D>);
 
 struct CommandHandlerContext<'a, T, D>
     where D: 'a
@@ -283,10 +284,16 @@ struct CommandHandlerContext<'a, T, D>
 }
 
 extern "C" fn _command_handler_adapter<T, D>(result: &mut T,
-                                             cl: *mut ffi::Struct_cmdline,
+                                             cl: *mut RawCmdLine,
                                              ctxt: *mut CommandHandlerContext<T, D>) {
     unsafe {
-        ((*ctxt).handler)(result, &RawCmdline(cl, false, false), (*ctxt).data);
+        ((*ctxt).handler)(result,
+                          &CmdLine {
+                              cl: cl,
+                              owned: false,
+                              stdin: false,
+                          },
+                          (*ctxt).data);
     }
 }
 
@@ -368,24 +375,28 @@ impl Drop for Context {
 }
 
 impl Context {
-    pub fn open_stdin(&self, prompt: &str) -> RawCmdline {
-        RawCmdline(unsafe { ffi::cmdline_stdin_new(mem::transmute(self.0), cstr!(prompt)) },
-                   true,
-                   true)
+    pub fn open_stdin(&self, prompt: &str) -> CmdLine {
+        CmdLine {
+            cl: unsafe { ffi::cmdline_stdin_new(mem::transmute(self.0), cstr!(prompt)) },
+            owned: true,
+            stdin: true,
+        }
     }
 
-    pub fn open_file<P: AsRef<Path>>(&self, prompt: &str, path: P) -> RawCmdline {
-        RawCmdline(unsafe {
-                       ffi::cmdline_file_new(mem::transmute(self.0),
+    pub fn open_file<P: AsRef<Path>>(&self, prompt: &str, path: P) -> CmdLine {
+        CmdLine {
+            cl: unsafe {
+                ffi::cmdline_file_new(mem::transmute(self.0),
                                              cstr!(prompt),
                                              path.as_ref()
                                                  .as_os_str()
                                                  .to_str()
                                                  .unwrap()
                                                  .as_ptr() as *const i8)
-                   },
-                   true,
-                   false)
+            },
+            owned: true,
+            stdin: false,
+        }
     }
 }
 
@@ -441,32 +452,51 @@ impl From<i32> for ParseCompleteStatus {
     }
 }
 
-pub type RawCmdlinePtr = *mut ffi::Struct_cmdline;
+pub type RawCmdLine = ffi::Struct_cmdline;
+pub type RawCmdLinePtr = *mut ffi::Struct_cmdline;
 
-pub struct RawCmdline(RawCmdlinePtr, bool, bool);
+pub struct CmdLine {
+    cl: RawCmdLinePtr,
+    owned: bool,
+    stdin: bool,
+}
 
-impl Drop for RawCmdline {
+impl Drop for CmdLine {
     fn drop(&mut self) {
         unsafe {
-            if self.2 {
-                ffi::cmdline_stdin_exit(self.0)
+            if self.stdin {
+                ffi::cmdline_stdin_exit(self.cl)
             }
 
-            if self.1 {
-                ffi::cmdline_free(self.0)
+            if self.owned {
+                ffi::cmdline_free(self.cl)
             }
         }
     }
 }
 
-extern "C" {
-    fn _cmdline_write(cl: *const ffi::Struct_cmdline, s: *const c_char);
+impl Deref for CmdLine {
+    type Target = RawCmdLine;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { &*self.cl }
+    }
 }
 
-impl RawCmdline {
+impl DerefMut for CmdLine {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { &mut *self.cl }
+    }
+}
+
+extern "C" {
+    fn _cmdline_write(cl: *const RawCmdLine, s: *const c_char);
+}
+
+impl CmdLine {
     pub fn print<T: string::ToString>(&self, s: T) -> Result<&Self> {
         unsafe {
-            _cmdline_write(self.0, try_cstr!(s));
+            _cmdline_write(self.cl, try_cstr!(s));
         }
 
         Ok(self)
@@ -474,40 +504,40 @@ impl RawCmdline {
 
     pub fn println<T: string::ToString>(&self, s: T) -> Result<&Self> {
         unsafe {
-            _cmdline_write(self.0, try_cstr!(format!("{}\n", s.to_string())));
+            _cmdline_write(self.cl, try_cstr!(format!("{}\n", s.to_string())));
         }
 
         Ok(self)
     }
 
-    pub fn set_prompt(&self, s: &str) -> &RawCmdline {
+    pub fn set_prompt(&self, s: &str) -> &CmdLine {
         unsafe {
-            ffi::cmdline_set_prompt(self.0, s.as_ptr() as *const i8);
+            ffi::cmdline_set_prompt(self.cl, s.as_ptr() as *const i8);
         }
 
         self
     }
 
-    pub fn interact(&self) -> &RawCmdline {
+    pub fn interact(&self) -> &CmdLine {
         unsafe {
-            ffi::cmdline_interact(self.0);
+            ffi::cmdline_interact(self.cl);
         }
 
         self
     }
 
     pub fn poll(&self) -> Result<ReadlineStatus> {
-        let status = unsafe { ffi::cmdline_poll(self.0) };
+        let status = unsafe { ffi::cmdline_poll(self.cl) };
 
         rte_check!(status; ok => { ReadlineStatus::from(status) })
     }
 
     pub fn quit(&self) {
-        unsafe { ffi::cmdline_quit(self.0) }
+        unsafe { ffi::cmdline_quit(self.cl) }
     }
 
     pub fn parse<T: string::ToString>(&self, buf: T) -> Result<&Self> {
-        let status = unsafe { ffi::cmdline_parse(self.0, try_cstr!(buf)) };
+        let status = unsafe { ffi::cmdline_parse(self.cl, try_cstr!(buf)) };
 
         rte_check!(status; ok => { self }; err => { Error::RteError(status) })
     }
@@ -518,7 +548,7 @@ impl RawCmdline {
                                          dst: &mut [u8])
                                          -> Result<ParseCompleteStatus> {
         let status = unsafe {
-            ffi::cmdline_complete(self.0,
+            ffi::cmdline_complete(self.cl,
                                   try_cstr!(buf),
                                   mem::transmute(state),
                                   dst.as_mut_ptr() as *mut i8,

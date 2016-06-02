@@ -291,7 +291,7 @@ impl CmdActionResult {
         cmdline::ipaddr(&self.ip)
     }
 
-    fn send(&mut self, cl: &cmdline::RawCmdline, data: Option<&AppConfig>) {
+    fn send(&mut self, cl: &cmdline::CmdLine, data: Option<&AppConfig>) {
         let app_conf = data.unwrap();
 
         match self.ip() {
@@ -348,7 +348,7 @@ impl CmdActionResult {
         }
     }
 
-    fn start(&mut self, cl: &cmdline::RawCmdline, data: Option<&AppConfig>) {
+    fn start(&mut self, cl: &cmdline::CmdLine, data: Option<&AppConfig>) {
         let app_conf = data.unwrap();
 
         if app_conf.is_running() {
@@ -360,7 +360,7 @@ impl CmdActionResult {
         }
     }
 
-    fn stop(&mut self, cl: &cmdline::RawCmdline, data: Option<&AppConfig>) {
+    fn stop(&mut self, cl: &cmdline::CmdLine, data: Option<&AppConfig>) {
         let app_conf = data.unwrap();
 
         if !app_conf.is_running() {
@@ -374,7 +374,7 @@ impl CmdActionResult {
         }
     }
 
-    fn show(&mut self, cl: &cmdline::RawCmdline, data: Option<&AppConfig>) {
+    fn show(&mut self, cl: &cmdline::CmdLine, data: Option<&AppConfig>) {
         let app_conf = data.unwrap();
 
         let dev = app_conf.bonded_port_id;
@@ -403,7 +403,7 @@ impl CmdActionResult {
             .unwrap();
     }
 
-    fn help(&mut self, cl: &cmdline::RawCmdline, _: Option<&libc::c_void>) {
+    fn help(&mut self, cl: &cmdline::CmdLine, _: Option<&libc::c_void>) {
         cl.println(r#"ALB - link bonding mode 6 example
     send IP    - sends one ARPrequest thru bonding for IP.
     start      - starts listening ARPs.
@@ -414,7 +414,7 @@ impl CmdActionResult {
             .unwrap();
     }
 
-    fn quit(&mut self, cl: &cmdline::RawCmdline, data: Option<&AppConfig>) {
+    fn quit(&mut self, cl: &cmdline::CmdLine, data: Option<&AppConfig>) {
         self.stop(cl, data);
 
         cl.quit();

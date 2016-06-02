@@ -14,13 +14,13 @@ impl CmdGetParams {
         cmdline::str(&self.cmd).unwrap()
     }
 
-    fn quit(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
+    fn quit(&mut self, cl: &cmdline::CmdLine, _: Option<&c_void>) {
         debug!("execute `{}` command", self.cmd());
 
         cl.quit();
     }
 
-    fn drvinfo(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
+    fn drvinfo(&mut self, cl: &cmdline::CmdLine, _: Option<&c_void>) {
         debug!("execute `{}` command", self.cmd());
 
         for dev in ethdev::devices() {
@@ -34,7 +34,7 @@ impl CmdGetParams {
         }
     }
 
-    fn link(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
+    fn link(&mut self, cl: &cmdline::CmdLine, _: Option<&c_void>) {
         debug!("execute `{}` command", self.cmd());
 
         for dev in ethdev::devices().filter(|dev| dev.is_valid()) {
@@ -71,7 +71,7 @@ impl CmdIntParams {
         self.port as ethdev::PortId
     }
 
-    fn open(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<&AppConfig>) {
+    fn open(&mut self, cl: &cmdline::CmdLine, app_cfg: Option<&AppConfig>) {
         debug!("execute `{}` command for port {}", self.cmd(), self.port);
 
         let res = app_cfg.unwrap().lock_port(self.dev(), |app_port, dev| {
@@ -89,7 +89,7 @@ impl CmdIntParams {
         cl.println(res.unwrap_or_else(|err| format!("Error: {}", err))).unwrap();
     }
 
-    fn stop(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<&AppConfig>) {
+    fn stop(&mut self, cl: &cmdline::CmdLine, app_cfg: Option<&AppConfig>) {
         debug!("execute `{}` command for port {}", self.cmd(), self.port);
 
         let res = app_cfg.unwrap().lock_port(self.dev(), |app_port, dev| {
@@ -107,7 +107,7 @@ impl CmdIntParams {
         cl.println(res.unwrap_or_else(|err| format!("Error: {}", err))).unwrap();
     }
 
-    fn rxmode(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
+    fn rxmode(&mut self, cl: &cmdline::CmdLine, _: Option<&c_void>) {
         debug!("execute `{}` command for port {}", self.cmd(), self.port);
 
         let dev = self.dev();
@@ -135,7 +135,7 @@ impl CmdIntParams {
         }
     }
 
-    fn portstats(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
+    fn portstats(&mut self, cl: &cmdline::CmdLine, _: Option<&c_void>) {
         debug!("execute `{}` command for port {}", self.cmd(), self.port);
 
         let dev = self.dev();
@@ -180,7 +180,7 @@ impl CmdIntMtuParams {
         self.port as ethdev::PortId
     }
 
-    fn mtu_list(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<&AppConfig>) {
+    fn mtu_list(&mut self, cl: &cmdline::CmdLine, app_cfg: Option<&AppConfig>) {
         debug!("execute list `{}` command for port {}",
                self.cmd(),
                self.port);
@@ -193,7 +193,7 @@ impl CmdIntMtuParams {
         }
     }
 
-    fn mtu_get(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
+    fn mtu_get(&mut self, cl: &cmdline::CmdLine, _: Option<&c_void>) {
         debug!("execute get `{}` command for port {}",
                self.cmd(),
                self.port);
@@ -208,7 +208,7 @@ impl CmdIntMtuParams {
             .unwrap();
     }
 
-    fn mtu_set(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
+    fn mtu_set(&mut self, cl: &cmdline::CmdLine, _: Option<&c_void>) {
         debug!("execute set `{}` command for port {}",
                self.cmd(),
                self.port);
@@ -245,7 +245,7 @@ impl CmdIntMacParams {
         cmdline::etheraddr(&self.mac)
     }
 
-    fn list(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<&AppConfig>) {
+    fn list(&mut self, cl: &cmdline::CmdLine, app_cfg: Option<&AppConfig>) {
         debug!("execute list `{}` command for port {}",
                self.cmd(),
                self.port);
@@ -257,7 +257,7 @@ impl CmdIntMacParams {
         }
     }
 
-    fn get(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
+    fn get(&mut self, cl: &cmdline::CmdLine, _: Option<&c_void>) {
         debug!("execute get `{}` command for port {}",
                self.cmd(),
                self.port);
@@ -272,7 +272,7 @@ impl CmdIntMacParams {
             .unwrap();
     }
 
-    fn set(&mut self, cl: &cmdline::RawCmdline, app_cfg: Option<&AppConfig>) {
+    fn set(&mut self, cl: &cmdline::CmdLine, app_cfg: Option<&AppConfig>) {
         debug!("execute set `{}` command for port {}",
                self.cmd(),
                self.port);
@@ -292,7 +292,7 @@ impl CmdIntMacParams {
         cl.println(res.unwrap_or_else(|err| format!("Error: {}", err))).unwrap();
     }
 
-    fn validate(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
+    fn validate(&mut self, cl: &cmdline::CmdLine, _: Option<&c_void>) {
         debug!("execute `{}` command for port {}", self.cmd(), self.port);
 
         let mac_addr = self.mac_addr();
@@ -328,7 +328,7 @@ impl CmdVlanParams {
         cmdline::str(&self.mode).unwrap()
     }
 
-    fn change(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
+    fn change(&mut self, cl: &cmdline::CmdLine, _: Option<&c_void>) {
         debug!("execute `{}` command for port {}", self.cmd(), self.port);
 
         let dev = self.dev();

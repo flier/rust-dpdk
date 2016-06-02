@@ -113,7 +113,7 @@ struct CmdDelShowResult<'a> {
 }
 
 impl<'a> CmdDelShowResult<'a> {
-    fn parsed(&mut self, cl: &cmdline::RawCmdline, objs: Option<&RefCell<ObjectMap>>) {
+    fn parsed(&mut self, cl: &cmdline::CmdLine, objs: Option<&RefCell<ObjectMap>>) {
         let action = cmdline::str(&self.action).unwrap();
 
         match action {
@@ -139,7 +139,7 @@ struct CmdObjAddResult {
 }
 
 impl CmdObjAddResult {
-    fn parsed(&mut self, cl: &cmdline::RawCmdline, objs: Option<&RefCell<ObjectMap>>) {
+    fn parsed(&mut self, cl: &cmdline::CmdLine, objs: Option<&RefCell<ObjectMap>>) {
         let name = cmdline::str(&self.name).unwrap();
 
         if objs.unwrap().borrow().contains_key(name) {
@@ -164,7 +164,7 @@ struct CmdHelpResult {
 }
 
 impl CmdHelpResult {
-    fn parsed(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
+    fn parsed(&mut self, cl: &cmdline::CmdLine, _: Option<&c_void>) {
         cl.print(r#"Demo example of command line interface in RTE
 
 
@@ -189,7 +189,7 @@ struct CmdQuitResult {
 }
 
 impl CmdQuitResult {
-    fn parsed(&mut self, cl: &cmdline::RawCmdline, _: Option<&c_void>) {
+    fn parsed(&mut self, cl: &cmdline::CmdLine, _: Option<&c_void>) {
         cl.quit();
     }
 }
