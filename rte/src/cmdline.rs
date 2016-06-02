@@ -287,13 +287,7 @@ extern "C" fn _command_handler_adapter<T, D>(result: &mut T,
                                              cl: *mut RawCmdLine,
                                              ctxt: *mut CommandHandlerContext<T, D>) {
     unsafe {
-        ((*ctxt).handler)(result,
-                          &CmdLine {
-                              cl: cl,
-                              owned: false,
-                              stdin: false,
-                          },
-                          (*ctxt).data);
+        ((*ctxt).handler)(result, &CmdLine::Borrowed(cl), (*ctxt).data);
     }
 }
 
@@ -375,28 +369,44 @@ impl Drop for Context {
 }
 
 impl Context {
-    pub fn open_stdin(&self, prompt: &str) -> CmdLine {
-        CmdLine {
-            cl: unsafe { ffi::cmdline_stdin_new(mem::transmute(self.0), cstr!(prompt)) },
-            owned: true,
-            stdin: true,
-        }
+    pub fn open_stdin(&self, prompt: &str) -> StdInCmdLine {
+        StdInCmdLine(CmdLine::Owned(unsafe {
+            ffi::cmdline_stdin_new(mem::transmute(self.0), cstr!(prompt))
+        }))
     }
 
     pub fn open_file<P: AsRef<Path>>(&self, prompt: &str, path: P) -> CmdLine {
-        CmdLine {
-            cl: unsafe {
-                ffi::cmdline_file_new(mem::transmute(self.0),
-                                             cstr!(prompt),
-                                             path.as_ref()
-                                                 .as_os_str()
-                                                 .to_str()
-                                                 .unwrap()
-                                                 .as_ptr() as *const i8)
-            },
-            owned: true,
-            stdin: false,
-        }
+        CmdLine::Owned(unsafe {
+            ffi::cmdline_file_new(mem::transmute(self.0),
+                                  cstr!(prompt),
+                                  path.as_ref()
+                                      .as_os_str()
+                                      .to_str()
+                                      .unwrap()
+                                      .as_ptr() as *const i8)
+        })
+    }
+}
+
+pub struct StdInCmdLine(CmdLine);
+
+impl Drop for StdInCmdLine {
+    fn drop(&mut self) {
+        unsafe { ffi::cmdline_stdin_exit(self.0.as_raw()) }
+    }
+}
+
+impl Deref for StdInCmdLine {
+    type Target = CmdLine;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for StdInCmdLine {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 
@@ -455,22 +465,15 @@ impl From<i32> for ParseCompleteStatus {
 pub type RawCmdLine = ffi::Struct_cmdline;
 pub type RawCmdLinePtr = *mut ffi::Struct_cmdline;
 
-pub struct CmdLine {
-    cl: RawCmdLinePtr,
-    owned: bool,
-    stdin: bool,
+pub enum CmdLine {
+    Owned(RawCmdLinePtr),
+    Borrowed(RawCmdLinePtr),
 }
 
 impl Drop for CmdLine {
     fn drop(&mut self) {
-        unsafe {
-            if self.stdin {
-                ffi::cmdline_stdin_exit(self.cl)
-            }
-
-            if self.owned {
-                ffi::cmdline_free(self.cl)
-            }
+        if let &mut CmdLine::Owned(cl) = self {
+            unsafe { ffi::cmdline_free(cl) }
         }
     }
 }
@@ -479,13 +482,13 @@ impl Deref for CmdLine {
     type Target = RawCmdLine;
 
     fn deref(&self) -> &Self::Target {
-        unsafe { &*self.cl }
+        unsafe { &*self.as_raw() }
     }
 }
 
 impl DerefMut for CmdLine {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { &mut *self.cl }
+        unsafe { &mut *self.as_raw() }
     }
 }
 
@@ -494,9 +497,16 @@ extern "C" {
 }
 
 impl CmdLine {
+    pub fn as_raw(&self) -> RawCmdLinePtr {
+        match self {
+            &CmdLine::Owned(cl) |
+            &CmdLine::Borrowed(cl) => cl,
+        }
+    }
+
     pub fn print<T: string::ToString>(&self, s: T) -> Result<&Self> {
         unsafe {
-            _cmdline_write(self.cl, try_cstr!(s));
+            _cmdline_write(self.as_raw(), try_cstr!(s));
         }
 
         Ok(self)
@@ -504,7 +514,7 @@ impl CmdLine {
 
     pub fn println<T: string::ToString>(&self, s: T) -> Result<&Self> {
         unsafe {
-            _cmdline_write(self.cl, try_cstr!(format!("{}\n", s.to_string())));
+            _cmdline_write(self.as_raw(), try_cstr!(format!("{}\n", s.to_string())));
         }
 
         Ok(self)
@@ -512,7 +522,7 @@ impl CmdLine {
 
     pub fn set_prompt(&self, s: &str) -> &CmdLine {
         unsafe {
-            ffi::cmdline_set_prompt(self.cl, s.as_ptr() as *const i8);
+            ffi::cmdline_set_prompt(self.as_raw(), s.as_ptr() as *const i8);
         }
 
         self
@@ -520,24 +530,24 @@ impl CmdLine {
 
     pub fn interact(&self) -> &CmdLine {
         unsafe {
-            ffi::cmdline_interact(self.cl);
+            ffi::cmdline_interact(self.as_raw());
         }
 
         self
     }
 
     pub fn poll(&self) -> Result<ReadlineStatus> {
-        let status = unsafe { ffi::cmdline_poll(self.cl) };
+        let status = unsafe { ffi::cmdline_poll(self.as_raw()) };
 
         rte_check!(status; ok => { ReadlineStatus::from(status) })
     }
 
     pub fn quit(&self) {
-        unsafe { ffi::cmdline_quit(self.cl) }
+        unsafe { ffi::cmdline_quit(self.as_raw()) }
     }
 
     pub fn parse<T: string::ToString>(&self, buf: T) -> Result<&Self> {
-        let status = unsafe { ffi::cmdline_parse(self.cl, try_cstr!(buf)) };
+        let status = unsafe { ffi::cmdline_parse(self.as_raw(), try_cstr!(buf)) };
 
         rte_check!(status; ok => { self }; err => { Error::RteError(status) })
     }
@@ -548,7 +558,7 @@ impl CmdLine {
                                          dst: &mut [u8])
                                          -> Result<ParseCompleteStatus> {
         let status = unsafe {
-            ffi::cmdline_complete(self.cl,
+            ffi::cmdline_complete(self.as_raw(),
                                   try_cstr!(buf),
                                   mem::transmute(state),
                                   dst.as_mut_ptr() as *mut i8,
