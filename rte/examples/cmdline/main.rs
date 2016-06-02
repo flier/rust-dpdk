@@ -250,5 +250,6 @@ fn main() {
 
     cmdline::new(cmds)
         .open_stdin("example> ")
+        .expect("fail to open stdin")
         .interact();
 }

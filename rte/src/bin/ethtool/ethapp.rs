@@ -503,5 +503,6 @@ pub fn main(app_cfg: &mut AppConfig) {
 
     cmdline::new(cmds)
         .open_stdin("EthApp> ")
+        .expect("fail to open stdin")
         .interact();
 }

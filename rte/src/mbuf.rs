@@ -1,4 +1,3 @@
-use std::ffi::CString;
 use std::os::unix::io::AsRawFd;
 
 use libc;
@@ -254,19 +253,19 @@ impl PktMbuf for RawMbuf {
     fn prepend(&mut self, len: usize) -> Result<*mut u8> {
         let p = unsafe { _rte_pktmbuf_prepend(self, len as u16) };
 
-        rte_check!(p, NonNull; ok => { p as *mut u8 })
+        rte_check!(p, NonNull)
     }
 
     fn append(&mut self, len: usize) -> Result<*mut u8> {
         let p = unsafe { _rte_pktmbuf_append(self, len as u16) };
 
-        rte_check!(p, NonNull; ok => { p as *mut u8 })
+        rte_check!(p, NonNull)
     }
 
     fn consume(&mut self, len: usize) -> Result<*mut u8> {
         let p = unsafe { _rte_pktmbuf_adj(self, len as u16) };
 
-        rte_check!(p, NonNull; ok => { p as *mut u8 })
+        rte_check!(p, NonNull)
     }
 
 
@@ -317,15 +316,16 @@ pub fn pktmbuf_pool_create(name: &str,
                            data_room_size: u16,
                            socket_id: i32)
                            -> Result<mempool::RawMemoryPoolPtr> {
-    let name = try!(CString::new(name))
-        .as_bytes_with_nul()
-        .as_ptr() as *const i8;
-
     let p = unsafe {
-        ffi::rte_pktmbuf_pool_create(name, n, cache_size, priv_size, data_room_size, socket_id)
+        ffi::rte_pktmbuf_pool_create(try!(to_cptr!(name)),
+                                     n,
+                                     cache_size,
+                                     priv_size,
+                                     data_room_size,
+                                     socket_id)
     };
 
-    rte_check!(p, NonNull; ok => { p })
+    rte_check!(p, NonNull)
 }
 
 extern "C" {
@@ -340,11 +340,11 @@ extern "C" {
 
     fn _rte_pktmbuf_clone(md: RawMbufPtr, mp: mempool::RawMemoryPoolPtr) -> RawMbufPtr;
 
-    fn _rte_pktmbuf_prepend(m: RawMbufPtr, len: libc::uint16_t) -> *mut libc::c_char;
+    fn _rte_pktmbuf_prepend(m: RawMbufPtr, len: libc::uint16_t) -> *mut libc::c_uchar;
 
-    fn _rte_pktmbuf_append(m: RawMbufPtr, len: libc::uint16_t) -> *mut libc::c_char;
+    fn _rte_pktmbuf_append(m: RawMbufPtr, len: libc::uint16_t) -> *mut libc::c_uchar;
 
-    fn _rte_pktmbuf_adj(m: RawMbufPtr, len: libc::uint16_t) -> *mut libc::c_char;
+    fn _rte_pktmbuf_adj(m: RawMbufPtr, len: libc::uint16_t) -> *mut libc::c_uchar;
 
     fn _rte_pktmbuf_trim(m: RawMbufPtr, len: libc::uint16_t) -> libc::c_int;
 }

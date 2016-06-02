@@ -24,7 +24,7 @@ impl From<DevType> for ffi::Enum_rte_devtype {
 
 /// Add a device to the user device list
 pub fn add(devtype: DevType, devargs: &str) -> Result<()> {
-    rte_check!(unsafe { ffi::rte_eal_devargs_add(devtype.into(), cstr!(devargs)) })
+    rte_check!(unsafe { ffi::rte_eal_devargs_add(devtype.into(), try!(to_cptr!(devargs))) })
 }
 
 /// Count the number of user devices of a specified type

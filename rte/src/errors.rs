@@ -31,13 +31,13 @@ macro_rules! rte_check {
     });
 
     ( $ret:expr, NonNull ) => (
-        rte_check!($ret, NonNull; ok => {()}; err => {$crate::errors::Error::rte_error()})
+        rte_check!($ret, NonNull; ok => {$ret}; err => {$crate::errors::Error::rte_error()})
     );
     ( $ret:expr, NonNull; ok => $ok:block) => (
         rte_check!($ret, NonNull; ok => $ok; err => {$crate::errors::Error::rte_error()})
     );
     ( $ret:expr, NonNull; err => $err:block) => (
-        rte_check!($ret, NonNull; ok => {()}; err => $err)
+        rte_check!($ret, NonNull; ok => {$ret}; err => $err)
     );
     ( $ret:expr, NonNull; ok => $ok:block; err => $err:block ) => ({
         if !$ret.is_null() {

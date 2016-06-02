@@ -7,16 +7,9 @@ macro_rules! bool_value {
 }
 
 #[macro_export]
-macro_rules! cstr {
+macro_rules! to_cptr {
     ($s:expr) => (
-        ::std::ffi::CString::new($s).unwrap().as_ptr() as *const i8
-    )
-}
-
-#[macro_export]
-macro_rules! try_cstr {
-    ($s:expr) => (
-        try!(::std::ffi::CString::new($s.to_string())).as_ptr() as *const i8
+        ::std::ffi::CString::new($s).map(|s| s.as_ptr() as *const i8)
     )
 }
 

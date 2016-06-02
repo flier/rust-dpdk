@@ -369,22 +369,24 @@ impl Drop for Context {
 }
 
 impl Context {
-    pub fn open_stdin(&self, prompt: &str) -> StdInCmdLine {
-        StdInCmdLine(CmdLine::Owned(unsafe {
-            ffi::cmdline_stdin_new(mem::transmute(self.0), cstr!(prompt))
-        }))
+    pub fn open_stdin(&self, prompt: &str) -> Result<StdInCmdLine> {
+        let cl = unsafe { ffi::cmdline_stdin_new(mem::transmute(self.0), try!(to_cptr!(prompt))) };
+
+        rte_check!(cl, NonNull; ok => { StdInCmdLine(CmdLine::Owned(cl)) })
     }
 
-    pub fn open_file<P: AsRef<Path>>(&self, prompt: &str, path: P) -> CmdLine {
-        CmdLine::Owned(unsafe {
+    pub fn open_file<P: AsRef<Path>>(&self, prompt: &str, path: P) -> Result<CmdLine> {
+        let cl = unsafe {
             ffi::cmdline_file_new(mem::transmute(self.0),
-                                  cstr!(prompt),
+                                  try!(to_cptr!(prompt)),
                                   path.as_ref()
                                       .as_os_str()
                                       .to_str()
                                       .unwrap()
                                       .as_ptr() as *const i8)
-        })
+        };
+
+        rte_check!(cl, NonNull; ok => { CmdLine::Owned(cl) })
     }
 }
 
@@ -506,7 +508,7 @@ impl CmdLine {
 
     pub fn print<T: string::ToString>(&self, s: T) -> Result<&Self> {
         unsafe {
-            _cmdline_write(self.as_raw(), try_cstr!(s));
+            _cmdline_write(self.as_raw(), try!(to_cptr!(s.to_string())));
         }
 
         Ok(self)
@@ -514,7 +516,8 @@ impl CmdLine {
 
     pub fn println<T: string::ToString>(&self, s: T) -> Result<&Self> {
         unsafe {
-            _cmdline_write(self.as_raw(), try_cstr!(format!("{}\n", s.to_string())));
+            _cmdline_write(self.as_raw(),
+                           try!(to_cptr!(format!("{}\n", s.to_string()))));
         }
 
         Ok(self)
@@ -547,7 +550,7 @@ impl CmdLine {
     }
 
     pub fn parse<T: string::ToString>(&self, buf: T) -> Result<&Self> {
-        let status = unsafe { ffi::cmdline_parse(self.as_raw(), try_cstr!(buf)) };
+        let status = unsafe { ffi::cmdline_parse(self.as_raw(), try!(to_cptr!(buf.to_string()))) };
 
         rte_check!(status; ok => { self }; err => { Error::RteError(status) })
     }
@@ -559,7 +562,7 @@ impl CmdLine {
                                          -> Result<ParseCompleteStatus> {
         let status = unsafe {
             ffi::cmdline_complete(self.as_raw(),
-                                  try_cstr!(buf),
+                                  try!(to_cptr!(buf.to_string())),
                                   mem::transmute(state),
                                   dst.as_mut_ptr() as *mut i8,
                                   dst.len() as u32)

@@ -459,6 +459,7 @@ fn prompt(app_conf: &AppConfig) {
 
     cmdline::new(cmds)
         .open_stdin("bond6> ")
+        .expect("fail to open stdin")
         .interact();
 }
 

@@ -1,7 +1,7 @@
 use std::ptr;
 use std::mem;
 use std::ops::Range;
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
 use std::os::raw::c_void;
 
 use libc;
@@ -193,7 +193,7 @@ pub fn devices() -> Range<PortId> {
 pub fn attach(devargs: &str) -> Result<PortId> {
     let mut portid: u8 = 0;
 
-    let ret = unsafe { ffi::rte_eth_dev_attach(try!(CString::new(devargs)).as_ptr(), &mut portid) };
+    let ret = unsafe { ffi::rte_eth_dev_attach(try!(to_cptr!(devargs)), &mut portid) };
 
     rte_check!(ret; ok => { portid })
 }
