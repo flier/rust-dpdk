@@ -8,12 +8,15 @@ build = "build.rs"
 [dependencies]
 log = "0.3"
 env_logger = "0.3"
+
 bitflags = "0.6"
 lazy_static = "0.1"
+
 libc = "0.2"
 errno = "0.1"
 cfile = "0.2"
 rand = "0.3"
+
 rte-sys = { version = "0.1", path = "../rte-sys" }
 
 [build-dependencies]
@@ -26,10 +29,6 @@ nix = "0.5"
 
 [lib]
 name = "rte"
-
-[[bin]]
-name = "ethtool"
-path = "src/bin/ethtool/main.rs"
 
 [[example]]
 name = "helloworld"
@@ -50,3 +49,7 @@ path = "examples/bond/main.rs"
 [[example]]
 name = "cmdline"
 path = "examples/cmdline/main.rs"
+
+[[example]]
+name = "ethtool"
+path = "examples/ethtool/main.rs"
