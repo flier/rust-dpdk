@@ -114,7 +114,7 @@ struct CmdDelShowResult<'a> {
 
 impl<'a> CmdDelShowResult<'a> {
     fn parsed(&mut self, cl: &cmdline::CmdLine, objs: Option<&RefCell<ObjectMap>>) {
-        let action = cmdline::str(&self.action).unwrap();
+        let action = self.action.to_str();
 
         match action {
             "show" => {
@@ -140,7 +140,7 @@ struct CmdObjAddResult {
 
 impl CmdObjAddResult {
     fn parsed(&mut self, cl: &cmdline::CmdLine, objs: Option<&RefCell<ObjectMap>>) {
-        let name = cmdline::str(&self.name).unwrap();
+        let name = self.name.to_str();
 
         if objs.unwrap().borrow().contains_key(name) {
             cl.print(format!("Object {} already exist\n", name)).unwrap();
@@ -150,7 +150,7 @@ impl CmdObjAddResult {
 
         let obj = Object {
             name: String::from(name),
-            ip: cmdline::ipaddr(&mut self.ip),
+            ip: self.ip.to_ipaddr(),
         };
 
         cl.print(format!("Object {} added, ip={}\n", name, obj.ip)).unwrap();

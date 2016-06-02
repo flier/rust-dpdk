@@ -1,10 +1,7 @@
 use std::mem;
 use std::ptr;
-use std::str;
-use std::result;
-use std::slice;
+use std::fmt;
 use std::string;
-use std::iter::Iterator;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::path::Path;
 use std::ffi::CStr;
@@ -59,35 +56,106 @@ impl<T> Drop for Token<T> {
 
 pub type NumType = ffi::Enum_cmdline_numtype;
 
-pub type FixedStr = ffi::cmdline_fixed_string_t;
-pub type IpNetAddr = ffi::cmdline_ipaddr_t;
-pub type EtherAddr = ffi::Struct_ether_addr;
-pub type PortList = ffi::cmdline_portlist_t;
+pub type RawFixedStr = ffi::cmdline_fixed_string_t;
+pub type RawIpNetAddr = ffi::cmdline_ipaddr_t;
+pub type RawEtherAddr = ffi::Struct_ether_addr;
+pub type RawPortList = ffi::cmdline_portlist_t;
 
-pub fn str(s: &FixedStr) -> result::Result<&str, str::Utf8Error> {
-    unsafe { str::from_utf8(CStr::from_ptr(s.as_ptr()).to_bytes()) }
+pub struct FixedStr(RawFixedStr);
+
+impl Deref for FixedStr {
+    type Target = RawFixedStr;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
-pub fn ipaddr(ip: &IpNetAddr) -> IpAddr {
-    unsafe {
-        let p: *mut ffi::cmdline_ipaddr_t = mem::transmute(ip);
+impl fmt::Display for FixedStr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.to_str())
+    }
+}
 
-        if ip.family == libc::AF_INET as u8 {
-            IpAddr::V4(Ipv4Addr::from((*((*p).addr.ipv4())).s_addr.to_be()))
+impl FixedStr {
+    pub fn to_str(&self) -> &str {
+        unsafe { CStr::from_ptr(self.0.as_ptr()).to_str().unwrap() }
+    }
+}
+
+pub struct IpNetAddr(RawIpNetAddr);
+
+impl Deref for IpNetAddr {
+    type Target = RawIpNetAddr;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl fmt::Display for IpNetAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.to_ipaddr())
+    }
+}
+
+impl IpNetAddr {
+    pub fn as_ipv4(&self) -> &Ipv4Addr {
+        unsafe { mem::transmute(&self.0.addr) }
+    }
+
+    pub fn as_ipv6(&self) -> &Ipv6Addr {
+        unsafe { mem::transmute(&self.0.addr) }
+    }
+
+    pub fn to_ipaddr(&self) -> IpAddr {
+        if self.0.family == libc::AF_INET as u8 {
+            IpAddr::V4(*self.as_ipv4())
         } else {
-            let a: &[u16] = slice::from_raw_parts(mem::transmute((*p).addr.ipv6()), 8);
-
-            IpAddr::V6(Ipv6Addr::new(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+            IpAddr::V6(*self.as_ipv6())
         }
     }
 }
 
-pub fn etheraddr(addr: &EtherAddr) -> ether::EtherAddr {
-    ether::EtherAddr::from(addr.addr_bytes)
+pub struct EtherAddr(RawEtherAddr);
+
+impl Deref for EtherAddr {
+    type Target = ether::EtherAddr;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { mem::transmute(&self.0) }
+    }
 }
 
-pub fn portlist(ports: &PortList) -> Vec<u32> {
-    (0..32).filter(|portid| ((1 << portid) as u32 & ports.map) != 0).collect()
+impl fmt::Display for EtherAddr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.to_etheraddr())
+    }
+}
+
+impl EtherAddr {
+    pub fn to_etheraddr(&self) -> ether::EtherAddr {
+        ether::EtherAddr::from(self.0.addr_bytes)
+    }
+}
+
+pub struct PortList(RawPortList);
+
+impl PortList {
+    pub fn to_portlist<'a>(&'a self) -> Box<Iterator<Item = u32> + 'a> {
+        Box::new((0..32).filter(move |portid| ((1 << portid) as u32 & self.0.map) != 0))
+    }
+}
+
+impl fmt::Display for PortList {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f,
+               "{}",
+               self.to_portlist()
+                   .map(|portid| portid.to_string())
+                   .collect::<Vec<String>>()
+                   .join(","))
+    }
 }
 
 pub fn is_end_of_token(c: u8) -> bool {

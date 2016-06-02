@@ -287,14 +287,10 @@ struct CmdActionResult {
 }
 
 impl CmdActionResult {
-    fn ip(&self) -> net::IpAddr {
-        cmdline::ipaddr(&self.ip)
-    }
-
     fn send(&mut self, cl: &cmdline::CmdLine, data: Option<&AppConfig>) {
         let app_conf = data.unwrap();
 
-        match self.ip() {
+        match self.ip.to_ipaddr() {
             net::IpAddr::V4(ip) => {
                 let m = (app_conf.pktmbuf_pool).as_mut_ref().unwrap().alloc();
 
