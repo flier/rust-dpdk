@@ -1,3 +1,5 @@
+#![allow(improper_ctypes)]
+
 use std::ptr;
 use std::mem;
 use std::ops::Range;
@@ -71,7 +73,7 @@ pub trait EthDevice {
     fn rx_queue_setup(&self,
                       rx_queue_id: QueueId,
                       nb_rx_desc: u16,
-                      rx_conf: Option<ffi::Struct_rte_eth_rxconf>,
+                      rx_conf: Option<ffi::rte_eth_rxconf>,
                       mb_pool: &mut mempool::RawMemoryPool)
                       -> Result<&Self>;
 
@@ -79,7 +81,7 @@ pub trait EthDevice {
     fn tx_queue_setup(&self,
                       tx_queue_id: QueueId,
                       nb_tx_desc: u16,
-                      tx_conf: Option<ffi::Struct_rte_eth_txconf>)
+                      tx_conf: Option<ffi::rte_eth_txconf>)
                       -> Result<&Self>;
 
     /// Enable receipt in promiscuous mode for an Ethernet device.
@@ -217,7 +219,7 @@ impl EthDevice for PortId {
     }
 
     fn info(&self) -> RawEthDeviceInfo {
-        let mut info: RawEthDeviceInfo = Default::default();
+        let mut info: RawEthDeviceInfo = unsafe { mem::zeroed() };
 
         unsafe { ffi::rte_eth_dev_info_get(*self, &mut info) }
 
@@ -225,7 +227,7 @@ impl EthDevice for PortId {
     }
 
     fn stats(&self) -> Result<RawEthDeviceStats> {
-        let mut stats: RawEthDeviceStats = Default::default();
+        let mut stats: RawEthDeviceStats = unsafe { mem::zeroed() };
 
         rte_check!(unsafe {
             ffi::rte_eth_stats_get(*self, &mut stats)
@@ -240,7 +242,7 @@ impl EthDevice for PortId {
 
     fn mac_addr(&self) -> ether::EtherAddr {
         unsafe {
-            let mut addr: ffi::Struct_ether_addr = mem::zeroed();
+            let mut addr: ffi::ether_addr = mem::zeroed();
 
             ffi::rte_eth_macaddr_get(*self, &mut addr);
 
@@ -265,7 +267,7 @@ impl EthDevice for PortId {
     fn rx_queue_setup(&self,
                       rx_queue_id: QueueId,
                       nb_rx_desc: u16,
-                      rx_conf: Option<ffi::Struct_rte_eth_rxconf>,
+                      rx_conf: Option<ffi::rte_eth_rxconf>,
                       mb_pool: &mut mempool::RawMemoryPool)
                       -> Result<&Self> {
         rte_check!(unsafe {
@@ -281,7 +283,7 @@ impl EthDevice for PortId {
     fn tx_queue_setup(&self,
                       tx_queue_id: QueueId,
                       nb_tx_desc: u16,
-                      tx_conf: Option<ffi::Struct_rte_eth_txconf>)
+                      tx_conf: Option<ffi::rte_eth_txconf>)
                       -> Result<&Self> {
         rte_check!(unsafe {
             ffi::rte_eth_tx_queue_setup(*self,
@@ -403,10 +405,8 @@ impl EthDevice for PortId {
             if rx_pkts.is_empty() {
                 _rte_eth_tx_burst(*self, queue_id, ptr::null_mut(), 0) as usize
             } else {
-                _rte_eth_tx_burst(*self,
-                                  queue_id,
-                                  rx_pkts.as_mut_ptr(),
-                                  rx_pkts.len() as u16) as usize
+                _rte_eth_tx_burst(*self, queue_id, rx_pkts.as_mut_ptr(), rx_pkts.len() as u16) as
+                usize
             }
         }
     }
@@ -449,7 +449,7 @@ pub trait EthDeviceInfo {
     fn pci_dev(&self) -> Option<&mut pci::RawPciDevice>;
 }
 
-pub type RawEthDeviceInfo = ffi::Struct_rte_eth_dev_info;
+pub type RawEthDeviceInfo = ffi::rte_eth_dev_info;
 
 impl EthDeviceInfo for RawEthDeviceInfo {
     #[inline]
@@ -465,7 +465,7 @@ impl EthDeviceInfo for RawEthDeviceInfo {
 
 pub trait EthDeviceStats {}
 
-pub type RawEthDeviceStats = ffi::Struct_rte_eth_stats;
+pub type RawEthDeviceStats = ffi::rte_eth_stats;
 
 impl EthDeviceStats for RawEthDeviceStats {}
 
@@ -549,7 +549,7 @@ impl Default for EthRxMode {
  * A set of values to identify what method is to be used to transmit
  * packets using multi-TCs.
  */
-pub type EthTxMultiQueueMode = ffi::Enum_rte_eth_tx_mq_mode;
+pub type EthTxMultiQueueMode = ffi::rte_eth_tx_mq_mode;
 
 pub struct EthTxMode {
     /// TX multi-queues mode.
@@ -574,22 +574,22 @@ impl Default for EthTxMode {
 /// rte_eth_dev_info_get().
 bitflags! {
     pub flags RssHashFunc: u64 {
-        const ETH_RSS_IPV4               = 1 << ::ffi::consts::RTE_ETH_FLOW_IPV4,
-        const ETH_RSS_FRAG_IPV4          = 1 << ::ffi::consts::RTE_ETH_FLOW_FRAG_IPV4,
-        const ETH_RSS_NONFRAG_IPV4_TCP   = 1 << ::ffi::consts::RTE_ETH_FLOW_NONFRAG_IPV4_TCP,
-        const ETH_RSS_NONFRAG_IPV4_UDP   = 1 << ::ffi::consts::RTE_ETH_FLOW_NONFRAG_IPV4_UDP,
-        const ETH_RSS_NONFRAG_IPV4_SCTP  = 1 << ::ffi::consts::RTE_ETH_FLOW_NONFRAG_IPV4_SCTP,
-        const ETH_RSS_NONFRAG_IPV4_OTHER = 1 << ::ffi::consts::RTE_ETH_FLOW_NONFRAG_IPV4_OTHER,
-        const ETH_RSS_IPV6               = 1 << ::ffi::consts::RTE_ETH_FLOW_IPV6,
-        const ETH_RSS_FRAG_IPV6          = 1 << ::ffi::consts::RTE_ETH_FLOW_FRAG_IPV6,
-        const ETH_RSS_NONFRAG_IPV6_TCP   = 1 << ::ffi::consts::RTE_ETH_FLOW_NONFRAG_IPV6_TCP,
-        const ETH_RSS_NONFRAG_IPV6_UDP   = 1 << ::ffi::consts::RTE_ETH_FLOW_NONFRAG_IPV6_UDP,
-        const ETH_RSS_NONFRAG_IPV6_SCTP  = 1 << ::ffi::consts::RTE_ETH_FLOW_NONFRAG_IPV6_SCTP,
-        const ETH_RSS_NONFRAG_IPV6_OTHER = 1 << ::ffi::consts::RTE_ETH_FLOW_NONFRAG_IPV6_OTHER,
-        const ETH_RSS_L2_PAYLOAD         = 1 << ::ffi::consts::RTE_ETH_FLOW_L2_PAYLOAD,
-        const ETH_RSS_IPV6_EX            = 1 << ::ffi::consts::RTE_ETH_FLOW_IPV6_EX,
-        const ETH_RSS_IPV6_TCP_EX        = 1 << ::ffi::consts::RTE_ETH_FLOW_IPV6_TCP_EX,
-        const ETH_RSS_IPV6_UDP_EX        = 1 << ::ffi::consts::RTE_ETH_FLOW_IPV6_UDP_EX,
+        const ETH_RSS_IPV4               = 1 << ::ffi::RTE_ETH_FLOW_IPV4,
+        const ETH_RSS_FRAG_IPV4          = 1 << ::ffi::RTE_ETH_FLOW_FRAG_IPV4,
+        const ETH_RSS_NONFRAG_IPV4_TCP   = 1 << ::ffi::RTE_ETH_FLOW_NONFRAG_IPV4_TCP,
+        const ETH_RSS_NONFRAG_IPV4_UDP   = 1 << ::ffi::RTE_ETH_FLOW_NONFRAG_IPV4_UDP,
+        const ETH_RSS_NONFRAG_IPV4_SCTP  = 1 << ::ffi::RTE_ETH_FLOW_NONFRAG_IPV4_SCTP,
+        const ETH_RSS_NONFRAG_IPV4_OTHER = 1 << ::ffi::RTE_ETH_FLOW_NONFRAG_IPV4_OTHER,
+        const ETH_RSS_IPV6               = 1 << ::ffi::RTE_ETH_FLOW_IPV6,
+        const ETH_RSS_FRAG_IPV6          = 1 << ::ffi::RTE_ETH_FLOW_FRAG_IPV6,
+        const ETH_RSS_NONFRAG_IPV6_TCP   = 1 << ::ffi::RTE_ETH_FLOW_NONFRAG_IPV6_TCP,
+        const ETH_RSS_NONFRAG_IPV6_UDP   = 1 << ::ffi::RTE_ETH_FLOW_NONFRAG_IPV6_UDP,
+        const ETH_RSS_NONFRAG_IPV6_SCTP  = 1 << ::ffi::RTE_ETH_FLOW_NONFRAG_IPV6_SCTP,
+        const ETH_RSS_NONFRAG_IPV6_OTHER = 1 << ::ffi::RTE_ETH_FLOW_NONFRAG_IPV6_OTHER,
+        const ETH_RSS_L2_PAYLOAD         = 1 << ::ffi::RTE_ETH_FLOW_L2_PAYLOAD,
+        const ETH_RSS_IPV6_EX            = 1 << ::ffi::RTE_ETH_FLOW_IPV6_EX,
+        const ETH_RSS_IPV6_TCP_EX        = 1 << ::ffi::RTE_ETH_FLOW_IPV6_TCP_EX,
+        const ETH_RSS_IPV6_UDP_EX        = 1 << ::ffi::RTE_ETH_FLOW_IPV6_UDP_EX,
 
         const ETH_RSS_IP =
             ETH_RSS_IPV4.bits |
@@ -650,9 +650,9 @@ impl Default for EthRssConf {
 pub struct RxAdvConf {
     /// Port RSS configuration
     pub rss_conf: Option<EthRssConf>,
-    pub vmdq_dcb_conf: Option<ffi::Struct_rte_eth_vmdq_dcb_conf>,
-    pub dcb_rx_conf: Option<ffi::Struct_rte_eth_dcb_rx_conf>,
-    pub vmdq_rx_conf: Option<ffi::Struct_rte_eth_vmdq_rx_conf>,
+    pub vmdq_dcb_conf: Option<ffi::rte_eth_vmdq_dcb_conf>,
+    pub dcb_rx_conf: Option<ffi::rte_eth_dcb_rx_conf>,
+    pub vmdq_rx_conf: Option<ffi::rte_eth_vmdq_rx_conf>,
 }
 
 pub enum TxAdvConf {
@@ -719,11 +719,11 @@ pub struct EthConf {
     /// Currently,Priority Flow Control(PFC) are supported,
     /// if DCB with PFC is needed, and the variable must be set ETH_DCB_PFC_SUPPORT.
     pub dcb_capability_en: u32,
-    pub fdir_conf: Option<ffi::Struct_rte_fdir_conf>,
-    pub intr_conf: Option<ffi::Struct_rte_intr_conf>,
+    pub fdir_conf: Option<ffi::rte_fdir_conf>,
+    pub intr_conf: Option<ffi::rte_intr_conf>,
 }
 
-pub type RawEthConfPtr = *const ffi::Struct_rte_eth_conf;
+pub type RawEthConfPtr = *const ffi::rte_eth_conf;
 
 pub struct RawEthConf(RawEthConfPtr);
 
@@ -780,12 +780,10 @@ impl<'a> From<&'a EthConf> for RawEthConf {
     }
 }
 
-pub type RawTxBuffer = ffi::Struct_rte_eth_dev_tx_buffer;
-pub type RawTxBufferPtr = *mut ffi::Struct_rte_eth_dev_tx_buffer;
+pub type RawTxBuffer = ffi::rte_eth_dev_tx_buffer;
+pub type RawTxBufferPtr = *mut ffi::rte_eth_dev_tx_buffer;
 
-pub type TxBufferErrorCallback<T> = fn(unsent: *mut *mut ffi::Struct_rte_mbuf,
-                                       count: u16,
-                                       userdata: &T);
+pub type TxBufferErrorCallback<T> = fn(unsent: *mut *mut ffi::rte_mbuf, count: u16, userdata: &T);
 
 pub trait TxBuffer {
     fn free(&mut self);
@@ -806,10 +804,9 @@ pub trait TxBuffer {
 /// Initialize default values for buffered transmitting
 pub fn alloc_buffer(size: usize, socket_id: i32) -> Result<RawTxBufferPtr> {
     unsafe {
-        let p = malloc::zmalloc_socket("tx_buffer",
-                                       _rte_eth_tx_buffer_size(size),
-                                       0,
-                                       socket_id) as RawTxBufferPtr;
+        let p =
+            malloc::zmalloc_socket("tx_buffer", _rte_eth_tx_buffer_size(size), 0, socket_id) as
+            RawTxBufferPtr;
 
         if p.is_null() {
             Err(Error::OsError(libc::ENOMEM))
@@ -871,11 +868,11 @@ extern "C" {
                          nb_pkts: libc::uint16_t)
                          -> libc::uint16_t;
 
-    fn _rte_eth_conf_new() -> RawEthConfPtr;
+    fn _rte_eth_conf_new() -> *const ffi::rte_eth_conf;
 
-    fn _rte_eth_conf_free(conf: RawEthConfPtr);
+    fn _rte_eth_conf_free(conf: *const ffi::rte_eth_conf);
 
-    fn _rte_eth_conf_set_rx_mode(conf: RawEthConfPtr,
+    fn _rte_eth_conf_set_rx_mode(conf: *const ffi::rte_eth_conf,
                                  mq_mode: libc::uint32_t,
                                  split_hdr_size: libc::uint16_t,
                                  hw_ip_checksum: libc::uint8_t,
@@ -887,13 +884,13 @@ extern "C" {
                                  enable_scatter: libc::uint8_t,
                                  enable_lro: libc::uint8_t);
 
-    fn _rte_eth_conf_set_tx_mode(conf: RawEthConfPtr,
+    fn _rte_eth_conf_set_tx_mode(conf: *const ffi::rte_eth_conf,
                                  mq_mode: libc::uint32_t,
                                  hw_vlan_reject_tagged: libc::uint8_t,
                                  hw_vlan_reject_untagged: libc::uint8_t,
                                  hw_vlan_insert_pvid: libc::uint8_t);
 
-    fn _rte_eth_conf_set_rss_conf(conf: RawEthConfPtr,
+    fn _rte_eth_conf_set_rss_conf(conf: *const ffi::rte_eth_conf,
                                   rss_key: *const libc::uint8_t,
                                   rss_key_len: libc::uint8_t,
                                   rss_hf: libc::uint64_t);

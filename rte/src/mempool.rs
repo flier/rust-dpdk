@@ -1,6 +1,6 @@
 use std::mem;
 use std::ffi::CStr;
-use std::os::raw::c_void;
+use std::os::raw::c_uint;
 use std::os::unix::io::AsRawFd;
 
 use cfile;
@@ -23,26 +23,26 @@ bitflags! {
     }
 }
 
-pub type RawMemoryPool = ffi::Struct_rte_mempool;
-pub type RawMemoryPoolPtr = *mut ffi::Struct_rte_mempool;
+pub type RawMemoryPool = ffi::rte_mempool_objhdr_rte_mempool;
+pub type RawMemoryPoolPtr = *mut RawMemoryPool;
 
 /// A mempool constructor callback function.
-pub type MemoryPoolConstructor<T> = fn(pool: RawMemoryPoolPtr, arg: Option<&mut T>);
+pub type MemoryPoolConstructor<T> = fn(mp: RawMemoryPoolPtr, arg: Option<&mut T>);
 
 /// An object constructor callback function for mempool.
-pub type MemoryPoolObjectContructor<T> = fn(pool: RawMemoryPoolPtr,
-                                            arg: Option<&mut T>,
-                                            elt: *mut c_void,
-                                            u32);
+pub type MemoryPoolObjectContructor<T, P> = fn(mp: RawMemoryPoolPtr,
+                                               arg: Option<&mut T>,
+                                               elt: *mut P,
+                                               u32);
 
 /// A mempool walk callback function.
-pub type MemoryPoolWalkCallback<T> = fn(pool: RawMemoryPoolPtr, arg: Option<&mut T>);
+pub type MemoryPoolWalkCallback<T> = fn(mp: RawMemoryPoolPtr, arg: Option<&mut T>);
 
 /// A mempool object iterator callback function.
-pub type MemoryPoolObjectIterator<T, P> = fn(arg: Option<&mut T>,
-                                             obj_start: *mut P,
-                                             obj_end: *mut P,
-                                             obj_index: u32);
+pub type MemoryPoolObjectIterator<T, P> = fn(mp: RawMemoryPoolPtr,
+                                             arg: Option<&mut T>,
+                                             obj: *mut P,
+                                             obj_index: c_uint);
 
 /// RTE Mempool.
 ///
@@ -54,9 +54,6 @@ pub type MemoryPoolObjectIterator<T, P> = fn(arg: Option<&mut T>,
 pub trait MemoryPool {
     /// Name of mempool.
     fn name(&self) -> &str;
-
-    /// Array of physical page addresses for the mempool objects buffer.
-    fn physical_pages(&self) -> &[ffi::phys_addr_t];
 }
 
 pub trait MemoryPoolDebug: MemoryPool {
@@ -65,13 +62,13 @@ pub trait MemoryPoolDebug: MemoryPool {
     /// When cache is enabled, this function has to browse the length of all lcores,
     /// so it should not be used in a data path, but only for debug purposes.
     ///
-    fn count(&self) -> u32;
+    fn count(&self) -> usize;
 
     /// Return the number of free entries in the mempool ring.
     ///
     /// i.e. how many entries can be freed back to the mempool.
     ///
-    fn free_count(&self) -> u32;
+    fn free_count(&self) -> usize;
 
     /// Test if the mempool is full.
     fn is_full(&self) -> bool;
@@ -87,10 +84,10 @@ pub trait MemoryPoolDebug: MemoryPool {
     /// Also check that the cookies of mempool objects (even the ones that are not present in pool)
     /// have a correct value. If not, a panic will occur.
     ///
-    fn audit(&self);
+    fn audit(&mut self);
 
     /// Dump the status of the mempool to the console.
-    fn dump<S: AsRawFd>(&self, s: &S);
+    fn dump<S: AsRawFd>(&mut self, s: &S);
 
     /// Call a function for each mempool object in a memory chunk
     ///
@@ -101,11 +98,10 @@ pub trait MemoryPoolDebug: MemoryPool {
     /// This function is used to populate a mempool, or walk through all the elements of a mempool,
     /// or estimate how many elements of the given size could be created in the given memory buffer.
     ///
-    fn walk<T, P>(&self,
-                  elt_num: u32,
+    fn walk<T, P>(&mut self,
                   obj_iter: Option<MemoryPoolObjectIterator<T, P>>,
                   obj_iter_arg: Option<&T>)
-                  -> u32;
+                  -> usize;
 }
 
 /// Create a new mempool named name in memory.
@@ -115,18 +111,18 @@ pub trait MemoryPoolDebug: MemoryPool {
 /// All elements of the mempool are allocated together with the mempool header,
 /// in one physically continuous chunk of memory.
 ///
-pub fn create<T, O>(name: &str,
-                    n: u32,
-                    elt_size: u32,
-                    cache_size: u32,
-                    private_data_size: u32,
-                    mp_init: Option<MemoryPoolConstructor<T>>,
-                    mp_init_arg: Option<&T>,
-                    obj_init: Option<MemoryPoolObjectContructor<O>>,
-                    obj_init_arg: Option<&O>,
-                    socket_id: SocketId,
-                    flags: MemoryPoolFlags)
-                    -> Result<RawMemoryPoolPtr> {
+pub fn create<T, O, P>(name: &str,
+                       n: u32,
+                       elt_size: u32,
+                       cache_size: u32,
+                       private_data_size: u32,
+                       mp_init: Option<MemoryPoolConstructor<T>>,
+                       mp_init_arg: Option<&T>,
+                       obj_init: Option<MemoryPoolObjectContructor<O, P>>,
+                       obj_init_arg: Option<&O>,
+                       socket_id: SocketId,
+                       flags: MemoryPoolFlags)
+                       -> Result<RawMemoryPoolPtr> {
     let p = unsafe {
         ffi::rte_mempool_create(try!(to_cptr!(name)),
                                 n,
@@ -175,31 +171,26 @@ impl MemoryPool for RawMemoryPool {
             CStr::from_ptr(name.as_ptr()).to_str().unwrap()
         }
     }
-
-    #[inline]
-    fn physical_pages(&self) -> &[ffi::phys_addr_t] {
-        &self.elt_pa[..self.pg_num as usize]
-    }
 }
 
 impl MemoryPoolDebug for RawMemoryPool {
-    fn count(&self) -> u32 {
-        unsafe { ffi::rte_mempool_count(self) }
+    fn count(&self) -> usize {
+        unsafe { ffi::rte_mempool_count(self) as usize }
     }
 
-    fn free_count(&self) -> u32 {
-        self.size - self.count()
+    fn free_count(&self) -> usize {
+        self.size as usize - self.count()
     }
 
     fn is_full(&self) -> bool {
-        self.size == self.count()
+        self.size as usize == self.count()
     }
 
-    fn audit(&self) {
+    fn audit(&mut self) {
         unsafe { ffi::rte_mempool_audit(self) }
     }
 
-    fn dump<S: AsRawFd>(&self, s: &S) {
+    fn dump<S: AsRawFd>(&mut self, s: &S) {
         if let Ok(f) = cfile::open_stream(s, "w") {
             unsafe {
                 ffi::rte_mempool_dump(f.stream() as *mut ffi::FILE, self);
@@ -207,23 +198,14 @@ impl MemoryPoolDebug for RawMemoryPool {
         }
     }
 
-    fn walk<T, P>(&self,
-                  elt_num: u32,
+    fn walk<T, P>(&mut self,
                   obj_iter: Option<MemoryPoolObjectIterator<T, P>>,
                   obj_iter_arg: Option<&T>)
-                  -> u32 {
+                  -> usize {
         unsafe {
-            let elt_sz = (self.header_size + self.elt_size + self.trailer_size) as ffi::size_t;
-
-            ffi::rte_mempool_obj_iter(mem::transmute(self.elt_va_start),
-                                      elt_num,
-                                      elt_sz,
-                                      1,
-                                      self.elt_pa.as_ptr(),
-                                      self.pg_num,
-                                      self.pg_shift,
+            ffi::rte_mempool_obj_iter(self,
                                       mem::transmute(obj_iter),
-                                      mem::transmute(obj_iter_arg))
+                                      mem::transmute(obj_iter_arg)) as usize
         }
     }
 }

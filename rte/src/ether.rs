@@ -15,6 +15,16 @@ use mbuf;
 
 use errors::Result;
 
+pub use ffi::{ETHER_TYPE_IPv4, ETHER_TYPE_IPv6, ETHER_TYPE_ARP, ETHER_TYPE_RARP, ETHER_TYPE_VLAN,
+              ETHER_TYPE_QINQ, ETHER_TYPE_1588, ETHER_TYPE_SLOW, ETHER_TYPE_TEB};
+
+pub const ETHER_TYPE_IPV4: u32 = ffi::ETHER_TYPE_IPv4;
+pub const ETHER_TYPE_IPV6: u32 = ffi::ETHER_TYPE_IPv6;
+
+pub use ffi::ETHER_MAX_LEN;
+
+pub const ETHER_ADDR_LEN: usize = ffi::ETHER_ADDR_LEN as usize;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct AddrParseError(());
 
@@ -30,9 +40,7 @@ impl error::Error for AddrParseError {
     }
 }
 
-pub const ETHER_ADDR_LEN: usize = 6;
-
-pub type RawEtherAddr = ffi::Struct_ether_addr;
+pub type RawEtherAddr = ffi::ether_addr;
 
 /// A 48-bit (6 byte) buffer containing the MAC address
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, Hash)]
@@ -192,30 +200,30 @@ impl str::FromStr for EtherAddr {
 // Ethernet frame types
 
 /// IPv4 Protocol.
-pub const ETHER_TYPE_IPV4_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_IPV4 as u16);
+pub const ETHER_TYPE_IPV4_BE: u16 = rte_cpu_to_be_16!(::ffi::ETHER_TYPE_IPv4 as u16);
 /// IPv6 Protocol.
-pub const ETHER_TYPE_IPV6_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_IPV6 as u16);
+pub const ETHER_TYPE_IPV6_BE: u16 = rte_cpu_to_be_16!(::ffi::ETHER_TYPE_IPv6 as u16);
 /// Arp Protocol.
-pub const ETHER_TYPE_ARP_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_ARP as u16);
+pub const ETHER_TYPE_ARP_BE: u16 = rte_cpu_to_be_16!(::ffi::ETHER_TYPE_ARP as u16);
 /// Reverse Arp Protocol.
-pub const ETHER_TYPE_RARP_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_RARP as u16);
+pub const ETHER_TYPE_RARP_BE: u16 = rte_cpu_to_be_16!(::ffi::ETHER_TYPE_RARP as u16);
 /// IEEE 802.1Q VLAN tagging.
-pub const ETHER_TYPE_VLAN_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_VLAN as u16);
+pub const ETHER_TYPE_VLAN_BE: u16 = rte_cpu_to_be_16!(::ffi::ETHER_TYPE_VLAN as u16);
 /// IEEE 802.1AS 1588 Precise Time Protocol.
-pub const ETHER_TYPE_1588_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_1588 as u16);
+pub const ETHER_TYPE_1588_BE: u16 = rte_cpu_to_be_16!(::ffi::ETHER_TYPE_1588 as u16);
 /// Slow protocols (LACP and Marker).
-pub const ETHER_TYPE_SLOW_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_SLOW as u16);
+pub const ETHER_TYPE_SLOW_BE: u16 = rte_cpu_to_be_16!(::ffi::ETHER_TYPE_SLOW as u16);
 /// Transparent Ethernet Bridging.
-pub const ETHER_TYPE_TEB_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_TEB as u16);
+pub const ETHER_TYPE_TEB_BE: u16 = rte_cpu_to_be_16!(::ffi::ETHER_TYPE_TEB as u16);
 
 /// Ethernet header: Contains the destination address, source address and frame type.
-pub type EtherHdr = ffi::Struct_ether_hdr;
+pub type EtherHdr = ffi::ether_hdr;
 
 /// Ethernet VLAN Header.
-pub type VlanHdr = ffi::Struct_vlan_hdr;
+pub type VlanHdr = ffi::vlan_hdr;
 
 /// VXLAN protocol header.
-pub type VxlanHdr = ffi::Struct_vxlan_hdr;
+pub type VxlanHdr = ffi::vxlan_hdr;
 
 pub trait VlanExt {
     /// Extract VLAN tag information into mbuf
@@ -233,6 +241,7 @@ pub fn vlan_insert(m: &mut mbuf::RawMbufPtr) -> Result<()> {
     rte_check!(unsafe { _rte_vlan_insert(m) })
 }
 
+#[allow(improper_ctypes)]
 extern "C" {
     fn _rte_vlan_strip(m: mbuf::RawMbufPtr) -> libc::c_int;
 

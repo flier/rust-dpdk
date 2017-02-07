@@ -49,7 +49,6 @@ pub mod ip;
 pub mod cmdline;
 
 pub use errors::{Error, Result};
-pub use ffi::consts::*;
 pub use memory::SocketId;
 pub use lcore::LcoreId;
 pub use ethdev::PortId;
@@ -58,6 +57,8 @@ pub use ethdev::QueueId;
 pub mod raw {
     pub use ffi::*;
 }
+
+pub use ffi::{RTE_MAX_LCORE, RTE_MAX_ETHPORTS};
 
 #[cfg(test)]
 mod tests;

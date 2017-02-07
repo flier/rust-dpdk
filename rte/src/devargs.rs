@@ -16,7 +16,7 @@ pub enum DevType {
     Virtual = 2, // RTE_DEVTYPE_VIRTUAL,
 }
 
-impl From<DevType> for ffi::Enum_rte_devtype {
+impl From<DevType> for ffi::rte_devtype {
     fn from(v: DevType) -> Self {
         unsafe { mem::transmute(v) }
     }

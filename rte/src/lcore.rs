@@ -1,5 +1,7 @@
 use std::mem;
 
+use libc::uint32_t;
+
 use ffi;
 
 use config;
@@ -23,18 +25,18 @@ pub enum State {
     Finished = 2,
 }
 
-impl From<ffi::Enum_rte_lcore_state_t> for State {
-    fn from(s: ffi::Enum_rte_lcore_state_t) -> Self {
+impl From<ffi::rte_lcore_state_t> for State {
+    fn from(s: ffi::rte_lcore_state_t) -> Self {
         match s {
-            ffi::Enum_rte_lcore_state_t::WAIT => State::Wait,
-            ffi::Enum_rte_lcore_state_t::RUNNING => State::Running,
-            ffi::Enum_rte_lcore_state_t::FINISHED => State::Finished,
+            ffi::rte_lcore_state_t::WAIT => State::Wait,
+            ffi::rte_lcore_state_t::RUNNING => State::Running,
+            ffi::rte_lcore_state_t::FINISHED => State::Finished,
         }
     }
 }
 
 extern "C" {
-    pub fn _rte_lcore_id() -> ffi::uint32_t;
+    pub fn _rte_lcore_id() -> uint32_t;
 }
 
 /// Return the ID of the execution unit we are running on.

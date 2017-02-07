@@ -32,24 +32,24 @@ impl<'a, T: 'a> AsMutRef<'a, T> for *mut T {
 
 impl<'a, T: 'a> AsRef<'a, T> for Option<*const T> {
     fn as_ref(self) -> Option<&'a T> {
-        self.map(|p| { unsafe { &*p } })
+        self.map(|p| unsafe { &*p })
     }
 }
 
 impl<'a, T: 'a> AsMutRef<'a, T> for Option<*mut T> {
     fn as_mut_ref(self) -> Option<&'a mut T> {
-        self.map(|p| { unsafe { &mut *p } })
+        self.map(|p| unsafe { &mut *p })
     }
 }
 
 impl<'a, T: 'a, E> AsRef<'a, T> for Result<*const T, E> {
     fn as_ref(self) -> Option<&'a T> {
-        self.ok().map(|p| { unsafe { &*p } })
+        self.ok().map(|p| unsafe { &*p })
     }
 }
 
 impl<'a, T: 'a, E> AsMutRef<'a, T> for Result<*mut T, E> {
     fn as_mut_ref(self) -> Option<&'a mut T> {
-        self.ok().map(|p| { unsafe { &mut *p } })
+        self.ok().map(|p| unsafe { &mut *p })
     }
 }

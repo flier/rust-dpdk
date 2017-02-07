@@ -8,6 +8,8 @@ use std::os::raw::c_void;
 use log::LogLevel::Debug;
 use cfile;
 
+use libc::c_uint;
+
 use ffi;
 
 use super::*;
@@ -142,33 +144,30 @@ fn test_launch() {
 }
 
 fn test_mempool() {
-    let p = mempool::create::<c_void, c_void>("test",
-                                              16,
-                                              128,
-                                              0,
-                                              32,
-                                              None,
-                                              None,
-                                              None,
-                                              None,
-                                              ffi::SOCKET_ID_ANY,
-                                              mempool::MEMPOOL_F_SP_PUT |
-                                              mempool::MEMPOOL_F_SC_GET)
+    let p = mempool::create::<c_void, c_void, c_void>("test",
+                                                      16,
+                                                      128,
+                                                      0,
+                                                      32,
+                                                      None,
+                                                      None,
+                                                      None,
+                                                      None,
+                                                      ffi::SOCKET_ID_ANY,
+                                                      mempool::MEMPOOL_F_SP_PUT |
+                                                      mempool::MEMPOOL_F_SC_GET)
         .as_mut_ref()
         .unwrap();
 
     assert_eq!(p.name(), "test");
     assert_eq!(p.size, 16);
-    assert!(p.phys_addr != 0);
+    assert!(unsafe { (*p.mz).phys_addr } != 0);
     assert_eq!(p.cache_size, 0);
-    assert_eq!(p.cache_flushthresh, 0);
+    assert_eq!(unsafe { (*p.local_cache).flushthresh }, 0);
     assert_eq!(p.elt_size, 128);
     assert_eq!(p.header_size, 64);
     assert_eq!(p.trailer_size, 0);
     assert_eq!(p.private_data_size, 64);
-    assert_eq!((p.elt_va_end - p.elt_va_start) as u32,
-               (p.header_size + p.elt_size) * p.size);
-    assert_eq!(p.physical_pages().len(), 1);
 
     assert_eq!(p.count(), 16);
     assert_eq!(p.free_count(), 0);
@@ -185,20 +184,16 @@ fn test_mempool() {
 
     let mut elements: Vec<(u32, usize)> = Vec::new();
 
-    fn walk_element(elements: Option<&mut Vec<(u32, usize)>>,
-                    obj_start: *mut c_void,
-                    obj_end: *mut c_void,
-                    obj_index: u32) {
+    fn walk_element(_: mempool::RawMemoryPoolPtr,
+                    elements: Option<&mut Vec<(u32, usize)>>,
+                    obj: *mut c_void,
+                    obj_index: c_uint) {
         unsafe {
-            let obj_addr: usize = mem::transmute(obj_start);
-            let obj_end: usize = mem::transmute(obj_end);
-
-            elements.unwrap()
-                .push((obj_index, obj_end - obj_addr));
+            elements.unwrap().push((obj_index, mem::transmute(obj)));
         }
     }
 
-    assert_eq!(p.walk(4, Some(walk_element), Some(&mut elements)), 4);
+    assert_eq!(p.walk(Some(walk_element), Some(&mut elements)), 4);
 
     assert_eq!(elements.len(), 4);
 
@@ -241,19 +236,16 @@ fn test_mbuf() {
 
     assert_eq!(p.name(), "mbuf_pool");
     assert_eq!(p.size, NB_MBUF);
-    assert!(p.phys_addr != 0);
+    assert!(unsafe { (*p.mz).phys_addr } != 0);
     assert_eq!(p.cache_size, CACHE_SIZE);
-    assert_eq!(p.cache_flushthresh, 48);
+    assert_eq!(unsafe { (*p.local_cache).flushthresh }, 48);
     assert_eq!(p.elt_size,
                (mbuf::RTE_MBUF_DEFAULT_BUF_SIZE + PRIV_SIZE + MBUF_SIZE) as u32);
     assert_eq!(p.header_size, 64);
     assert_eq!(p.trailer_size, 0);
     assert_eq!(p.private_data_size, 64);
-    assert_eq!((p.elt_va_end - p.elt_va_start) as u32,
-               (p.header_size + p.elt_size) * p.size);
-    assert_eq!(p.physical_pages().len(), 1);
 
-    assert_eq!(p.count(), NB_MBUF);
+    assert_eq!(p.count(), NB_MBUF as usize);
     assert_eq!(p.free_count(), 0);
     assert!(p.is_full());
     assert!(!p.is_empty());

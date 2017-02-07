@@ -34,14 +34,14 @@ pub fn alloc(pktmbuf_pool: &mut mempool::RawMemoryPool,
              opts: Option<&KniDeviceOps>)
              -> Result<KniDevice> {
     unsafe {
-        let mut kni_conf = ffi::Struct_rte_kni_conf {
+        let mut kni_conf = ffi::rte_kni_conf {
             name: mem::zeroed(),
             core_id: conf.core_id,
             group_id: conf.group_id,
             mbuf_size: conf.mbuf_size,
             addr: conf.pci_addr,
             id: conf.pci_id,
-            _bindgen_bitfield_1_: conf.flags.bits,
+            _bitfield_1: conf.flags.bits,
         };
 
         ptr::copy(conf.name.as_ptr(),
@@ -91,10 +91,10 @@ pub type ChangeMtuCallback = fn(port_id: u8, new_mut: libc::c_uint) -> libc::c_i
 /// Pointer to function of configuring network interface
 pub type ConfigNetworkInterfaceCallback = fn(port_id: u8, if_up: u8) -> libc::c_int;
 
-pub type KniDeviceOps = ffi::Struct_rte_kni_ops;
+pub type KniDeviceOps = ffi::rte_kni_ops;
 
-pub type RawKniDevice = ffi::Struct_rte_kni;
-pub type RawKniDevicePtr = *mut ffi::Struct_rte_kni;
+pub type RawKniDevice = ffi::rte_kni;
+pub type RawKniDevicePtr = *mut ffi::rte_kni;
 
 pub struct KniDevice(RawKniDevicePtr);
 

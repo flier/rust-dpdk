@@ -14,6 +14,8 @@ use std::net;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use rte::*;
+use rte::arp::{ARP_OP_REQUEST, ARP_OP_REPLY, ARP_HRD_ETHER};
+use rte::ether::{ETHER_ADDR_LEN, ETHER_TYPE_ARP, ETHER_TYPE_IPV4};
 use rte::memory::AsMutRef;
 use rte::mbuf::{PktMbuf, PktMbufPool};
 use rte::ethdev::EthDevice;
@@ -193,8 +195,8 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
             if let Some(m) = pkt.as_mut_ref() {
                 let mut has_freed = false;
 
-                if let Some(mut ether_hdr) = pktmbuf_mtod!(*pkt, *mut ether::EtherHdr)
-                    .as_mut_ref() {
+                if let Some(mut ether_hdr) =
+                    pktmbuf_mtod!(*pkt, *mut ether::EtherHdr).as_mut_ref() {
                     let (next_hdr, next_proto) = strip_vlan_hdr(ether_hdr);
 
                     match next_proto {
@@ -204,8 +206,8 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
                             if let Some(mut arp_hdr) = (next_hdr as *mut arp::ArpHdr).as_mut_ref() {
                                 if arp_hdr.arp_data.arp_tip == bond_ip {
                                     debug!("received ARP {:x} packet from {}",
-                                    arp_hdr.arp_op.to_le(),
-                                    ether::EtherAddr::from(arp_hdr.arp_data.arp_sha));
+                                           arp_hdr.arp_op.to_le(),
+                                           ether::EtherAddr::from(arp_hdr.arp_data.arp_sha));
 
                                     if arp_hdr.arp_op == (ARP_OP_REQUEST as u16).to_be() {
                                         arp_hdr.arp_op = (ARP_OP_REPLY as u16).to_be();
@@ -241,11 +243,11 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
                         ether::ETHER_TYPE_IPV4_BE => {
                             app_conf.port_packets[2].fetch_add(1, Ordering::Relaxed);
 
-                            if let Some(mut ipv4_hdr) = (next_hdr as *mut ip::Ipv4Hdr)
-                                .as_mut_ref() {
+                            if let Some(mut ipv4_hdr) =
+                                (next_hdr as *mut ip::Ipv4Hdr).as_mut_ref() {
                                 if ipv4_hdr.dst_addr == bond_ip {
                                     debug!("received IP packet from {}",
-                                    net::Ipv4Addr::from(ipv4_hdr.src_addr));
+                                           net::Ipv4Addr::from(ipv4_hdr.src_addr));
 
                                     ether::EtherAddr::copy(&ether_hdr.s_addr.addr_bytes,
                                                            &mut ether_hdr.d_addr.addr_bytes);
@@ -349,7 +351,7 @@ impl CmdActionResult {
 
         if app_conf.is_running() {
             cl.println(&format!("lcore_main already running on core: {}",
-                app_conf.lcore_main_core_id))
+                                  app_conf.lcore_main_core_id))
                 .unwrap();
         } else {
             app_conf.start();
@@ -360,12 +362,14 @@ impl CmdActionResult {
         let app_conf = data.unwrap();
 
         if !app_conf.is_running() {
-            cl.println(&format!("lcore_main not running on core: {}", app_conf.lcore_main_core_id))
+            cl.println(&format!("lcore_main not running on core: {}",
+                                  app_conf.lcore_main_core_id))
                 .unwrap();
         } else {
             app_conf.stop();
 
-            cl.println(&format!("lcore_main stopped on core: {}", app_conf.lcore_main_core_id))
+            cl.println(&format!("lcore_main stopped on core: {}",
+                                  app_conf.lcore_main_core_id))
                 .unwrap();
         }
     }
@@ -387,15 +391,18 @@ impl CmdActionResult {
                 "unused"
             };
 
-            cl.println(&format!("Slave {}, MAC={}, {}", slave.portid(), slave.mac_addr(), role))
+            cl.println(&format!("Slave {}, MAC={}, {}",
+                                  slave.portid(),
+                                  slave.mac_addr(),
+                                  role))
                 .unwrap();
         }
 
         cl.println(&format!("Active_slaves: {}, packets received:Tot: {}, Arp: {}, IPv4: {}",
-            active_slaves.len(),
-            app_conf.port_packets[0].load(Ordering::Relaxed),
-            app_conf.port_packets[1].load(Ordering::Relaxed),
-            app_conf.port_packets[2].load(Ordering::Relaxed)))
+                              active_slaves.len(),
+                              app_conf.port_packets[0].load(Ordering::Relaxed),
+                              app_conf.port_packets[1].load(Ordering::Relaxed),
+                              app_conf.port_packets[2].load(Ordering::Relaxed)))
             .unwrap();
     }
 
@@ -509,10 +516,8 @@ fn main() {
     let bonded_dev = bond_port_init(nb_ports, &port_conf, pktmbuf_pool);
 
     // check state of lcores
-    lcore::foreach_slave(|lcore_id| {
-        if lcore::state(lcore_id) != lcore::State::Wait {
-            eal::exit(-libc::EBUSY, "lcores not ready");
-        }
+    lcore::foreach_slave(|lcore_id| if lcore::state(lcore_id) != lcore::State::Wait {
+        eal::exit(-libc::EBUSY, "lcores not ready");
     });
 
     // start lcore main on core != master_core - ARP response thread

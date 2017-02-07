@@ -8,6 +8,8 @@ use ffi;
 use errors::Result;
 use mempool;
 
+pub use ffi::RTE_PKTMBUF_HEADROOM;
+
 // Packet Offload Features Flags. It also carry packet type information.
 // Critical resources. Both rx/tx shared these bits. Be cautious on any change
 //
@@ -162,8 +164,8 @@ bitflags! {
 pub const RTE_MBUF_DEFAULT_BUF_SIZE: u16 =
     (ffi::RTE_MBUF_DEFAULT_DATAROOM + ffi::RTE_PKTMBUF_HEADROOM) as u16;
 
-pub type RawMbuf = ffi::Struct_rte_mbuf;
-pub type RawMbufPtr = *mut ffi::Struct_rte_mbuf;
+pub type RawMbuf = ffi::rte_mbuf;
+pub type RawMbufPtr = *mut ffi::rte_mbuf;
 
 /// A macro that points to an offset into the data in the mbuf.
 #[macro_export]
@@ -181,46 +183,9 @@ macro_rules! pktmbuf_mtod {
     )
 }
 
-pub trait RefCnt {
-    /// Adds given value to an mbuf's refcnt and returns its new value.
-    fn refcnt_update(&mut self, value: i16) -> u16;
-
-    /// Reads the value of an mbuf's refcnt.
-    fn refcnt_read(&mut self) -> u16;
-
-    /// Sets an mbuf's refcnt to the defined value.
-    fn refcnt_set(&mut self, new_value: u16);
-}
-
-impl RefCnt for RawMbuf {
-    #[inline]
-    fn refcnt_update(&mut self, value: i16) -> u16 {
-        unsafe {
-            *self.refcnt() = (*self.refcnt() as isize + value as isize) as u16;
-
-            *self.refcnt()
-        }
-    }
-
-    #[inline]
-    fn refcnt_read(&mut self) -> u16 {
-        unsafe { *self.refcnt() }
-    }
-
-    #[inline]
-    fn refcnt_set(&mut self, new_value: u16) {
-        unsafe {
-            *self.refcnt() = new_value;
-        }
-    }
-}
-
 pub trait PktMbuf {
     /// Free a packet mbuf back into its original mempool.
     fn free(&mut self);
-
-    /// Creates a "clone" of the given packet mbuf.
-    fn clone(&mut self) -> *mut Self;
 
     /// Prepend len bytes to an mbuf data area.
     fn prepend(&mut self, len: usize) -> Result<*mut u8>;
@@ -234,9 +199,6 @@ pub trait PktMbuf {
     /// Remove len bytes of data at the end of the mbuf.
     fn trim(&mut self, len: usize) -> Result<()>;
 
-    /// Test if mbuf data is contiguous.
-    fn is_contiguous(&self) -> bool;
-
     /// Dump an mbuf structure to the console.
     fn dump<S: AsRawFd>(&self, s: &S, len: usize);
 }
@@ -244,10 +206,6 @@ pub trait PktMbuf {
 impl PktMbuf for RawMbuf {
     fn free(&mut self) {
         unsafe { _rte_pktmbuf_free(self) }
-    }
-
-    fn clone(&mut self) -> *mut Self {
-        unsafe { _rte_pktmbuf_clone(self, self.pool) }
     }
 
     fn prepend(&mut self, len: usize) -> Result<*mut u8> {
@@ -271,10 +229,6 @@ impl PktMbuf for RawMbuf {
 
     fn trim(&mut self, len: usize) -> Result<()> {
         rte_check!(unsafe { _rte_pktmbuf_trim(self, len as u16) })
-    }
-
-    fn is_contiguous(&self) -> bool {
-        self.nb_segs == 1
     }
 
     fn dump<S: AsRawFd>(&self, s: &S, len: usize) {
@@ -328,23 +282,26 @@ pub fn pktmbuf_pool_create(name: &str,
     rte_check!(p, NonNull)
 }
 
+#[allow(improper_ctypes)]
 extern "C" {
-    fn _rte_pktmbuf_alloc(mp: mempool::RawMemoryPoolPtr) -> RawMbufPtr;
+    fn _rte_pktmbuf_alloc(mp: *mut ffi::rte_mempool_objhdr_rte_mempool) -> *mut ffi::rte_mbuf;
 
-    fn _rte_pktmbuf_free(m: RawMbufPtr);
+    fn _rte_pktmbuf_free(m: *mut ffi::rte_mbuf);
 
-    fn _rte_pktmbuf_alloc_bulk(mp: mempool::RawMemoryPoolPtr,
+    fn _rte_pktmbuf_alloc_bulk(mp: *mut ffi::rte_mempool_objhdr_rte_mempool,
                                mbufs: *mut RawMbufPtr,
                                count: libc::c_uint)
                                -> libc::c_int;
 
-    fn _rte_pktmbuf_clone(md: RawMbufPtr, mp: mempool::RawMemoryPoolPtr) -> RawMbufPtr;
+    fn _rte_pktmbuf_clone(md: *mut ffi::rte_mbuf,
+                          mp: *mut ffi::rte_mempool_objhdr_rte_mempool)
+                          -> *mut ffi::rte_mbuf;
 
-    fn _rte_pktmbuf_prepend(m: RawMbufPtr, len: libc::uint16_t) -> *mut libc::c_uchar;
+    fn _rte_pktmbuf_prepend(m: *mut ffi::rte_mbuf, len: libc::uint16_t) -> *mut libc::c_uchar;
 
-    fn _rte_pktmbuf_append(m: RawMbufPtr, len: libc::uint16_t) -> *mut libc::c_uchar;
+    fn _rte_pktmbuf_append(m: *mut ffi::rte_mbuf, len: libc::uint16_t) -> *mut libc::c_uchar;
 
-    fn _rte_pktmbuf_adj(m: RawMbufPtr, len: libc::uint16_t) -> *mut libc::c_uchar;
+    fn _rte_pktmbuf_adj(m: *mut ffi::rte_mbuf, len: libc::uint16_t) -> *mut libc::c_uchar;
 
-    fn _rte_pktmbuf_trim(m: RawMbufPtr, len: libc::uint16_t) -> libc::c_int;
+    fn _rte_pktmbuf_trim(m: *mut ffi::rte_mbuf, len: libc::uint16_t) -> libc::c_int;
 }

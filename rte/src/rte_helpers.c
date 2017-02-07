@@ -237,5 +237,5 @@ _rte_vlan_insert(struct rte_mbuf **m) {
 
 void
 _cmdline_write(const struct cmdline *cl, const char *str) {
-    cmdline_printf(cl, str);
+    cmdline_printf(cl, "%s", str);
 }

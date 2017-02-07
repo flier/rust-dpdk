@@ -16,13 +16,13 @@ use ffi;
 use errors::{Error, Result};
 use ether;
 
-pub type RawTokenHeader = ffi::Struct_cmdline_token_hdr;
+pub type RawTokenHeader = ffi::cmdline_token_hdr;
 pub type RawTokenPtr = *const RawTokenHeader;
-pub type RawStrToken = ffi::Struct_cmdline_token_string;
-pub type RawNumToken = ffi::Struct_cmdline_token_num;
-pub type RawIpAddrToken = ffi::Struct_cmdline_token_ipaddr;
-pub type RawEtherAddrToken = ffi::Struct_cmdline_token_etheraddr;
-pub type RawPortListToken = ffi::Struct_cmdline_token_portlist;
+pub type RawStrToken = ffi::cmdline_token_string;
+pub type RawNumToken = ffi::cmdline_token_num;
+pub type RawIpAddrToken = ffi::cmdline_token_ipaddr;
+pub type RawEtherAddrToken = ffi::cmdline_token_etheraddr;
+pub type RawPortListToken = ffi::cmdline_token_portlist;
 
 pub enum Token<T> {
     Raw(RawTokenPtr, PhantomData<T>),
@@ -49,16 +49,16 @@ impl<T> Token<T> {
 impl<T> Drop for Token<T> {
     fn drop(&mut self) {
         if let &mut Token::Str(ref token, _) = self {
-            unsafe { libc::free(token.string_data._str as *mut libc::c_void) }
+            unsafe { libc::free(token.string_data.str as *mut libc::c_void) }
         }
     }
 }
 
-pub type NumType = ffi::Enum_cmdline_numtype;
+pub type NumType = ffi::cmdline_numtype;
 
 pub type RawFixedStr = ffi::cmdline_fixed_string_t;
 pub type RawIpNetAddr = ffi::cmdline_ipaddr_t;
-pub type RawEtherAddr = ffi::Struct_ether_addr;
+pub type RawEtherAddr = ffi::ether_addr;
 pub type RawPortList = ffi::cmdline_portlist_t;
 
 pub struct FixedStr(RawFixedStr);
@@ -162,19 +162,19 @@ pub fn is_end_of_token(c: u8) -> bool {
     unsafe { ffi::cmdline_isendoftoken(c as i8) != 0 }
 }
 
-pub type RawTokenOps = ffi::Struct_cmdline_token_ops;
+pub type RawTokenOps = ffi::cmdline_token_hdr_cmdline_token_ops;
 
 #[macro_export]
 macro_rules! TOKEN_STRING_INITIALIZER {
     ($container:path, $field:ident) => ({
         $crate::cmdline::Token::Str(
-            $crate::raw::Struct_cmdline_token_string {
-                hdr: $crate::raw::Struct_cmdline_token_hdr {
+            $crate::raw::cmdline_token_string {
+                hdr: $crate::raw::cmdline_token_hdr {
                     ops: unsafe { &mut $crate::raw::cmdline_token_string_ops },
                     offset: offset_of!($container, $field) as u32,
                 },
-                string_data: $crate::raw::Struct_cmdline_token_string_data {
-                    _str: ::std::ptr::null(),
+                string_data: $crate::raw::cmdline_token_string_data {
+                    str: ::std::ptr::null(),
                 },
             }, ::std::marker::PhantomData
         )
@@ -186,13 +186,13 @@ macro_rules! TOKEN_STRING_INITIALIZER {
         unsafe { ::std::ptr::copy_nonoverlapping($string.as_ptr(), p, $string.len()); }
 
         $crate::cmdline::Token::Str(
-            $crate::raw::Struct_cmdline_token_string {
-                hdr: $crate::raw::Struct_cmdline_token_hdr {
+            $crate::raw::cmdline_token_string {
+                hdr: $crate::raw::cmdline_token_hdr {
                     ops: unsafe { &mut $crate::raw::cmdline_token_string_ops },
                     offset: offset_of!($container, $field) as u32,
                 },
-                string_data: $crate::raw::Struct_cmdline_token_string_data {
-                    _str: p as *const i8,
+                string_data: $crate::raw::cmdline_token_string_data {
+                    str: p as *const i8,
                 },
             }, ::std::marker::PhantomData
         )
@@ -202,39 +202,39 @@ macro_rules! TOKEN_STRING_INITIALIZER {
 #[macro_export]
 macro_rules! TOKEN_NUM_INITIALIZER {
     ($container:path, $field:ident, u8) => (
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::Enum_cmdline_numtype::UINT8)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::cmdline_numtype::UINT8)
     );
     ($container:path, $field:ident, u16) => (
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::Enum_cmdline_numtype::UINT16)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::cmdline_numtype::UINT16)
     );
     ($container:path, $field:ident, u32) => (
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::Enum_cmdline_numtype::UINT32)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::cmdline_numtype::UINT32)
     );
     ($container:path, $field:ident, u64) => (
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::Enum_cmdline_numtype::UINT64)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::cmdline_numtype::UINT64)
     );
     ($container:path, $field:ident, i8) => (
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::Enum_cmdline_numtype::INT8)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::cmdline_numtype::INT8)
     );
     ($container:path, $field:ident, i16) => (
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::Enum_cmdline_numtype::INT16)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::cmdline_numtype::INT16)
     );
     ($container:path, $field:ident, i32) => (
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::Enum_cmdline_numtype::INT32)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::cmdline_numtype::INT32)
     );
     ($container:path, $field:ident, i64) => (
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::Enum_cmdline_numtype::INT64)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::cmdline_numtype::INT64)
     );
 
     ($container:path, $field:ident, $numtype:expr) => (
         $crate::cmdline::Token::Num(
-            $crate::raw::Struct_cmdline_token_num {
-                hdr: $crate::raw::Struct_cmdline_token_hdr {
+            $crate::raw::cmdline_token_num {
+                hdr: $crate::raw::cmdline_token_hdr {
                     ops: unsafe { &mut $crate::raw::cmdline_token_num_ops },
                     offset: offset_of!($container, $field) as u32,
                 },
-                num_data: $crate::raw::Struct_cmdline_token_num_data {
-                    _type: $numtype,
+                num_data: $crate::raw::cmdline_token_num_data {
+                    type_: $numtype,
                 },
             }, ::std::marker::PhantomData
         )
@@ -252,14 +252,14 @@ macro_rules! TOKEN_IPADDR_INITIALIZER {
 
     ($container:path, $field:ident, $flags:expr) => (
         $crate::cmdline::Token::IpAddr(
-            $crate::raw::Struct_cmdline_token_ipaddr {
-                hdr: $crate::raw::Struct_cmdline_token_hdr {
+            $crate::raw::cmdline_token_ipaddr {
+                hdr: $crate::raw::cmdline_token_hdr {
                     ops: unsafe { &mut $crate::raw::cmdline_token_ipaddr_ops },
                     offset: offset_of!($container, $field) as u32,
                 },
-                ipaddr_data: $crate::raw::Struct_cmdline_token_ipaddr_data {
+                ipaddr_data: $crate::raw::cmdline_token_ipaddr_data {
                     flags: $flags as u8,
-                }
+                },
             }, ::std::marker::PhantomData
         )
     )
@@ -318,8 +318,8 @@ macro_rules! TOKEN_IPV6NET_INITIALIZER {
 macro_rules! TOKEN_ETHERADDR_INITIALIZER {
     ($container:path, $field:ident) => (
         $crate::cmdline::Token::EtherAddr(
-            $crate::raw::Struct_cmdline_token_etheraddr {
-                hdr: $crate::raw::Struct_cmdline_token_hdr {
+            $crate::raw::cmdline_token_etheraddr {
+                hdr: $crate::raw::cmdline_token_hdr {
                     ops: unsafe { &mut $crate::raw::cmdline_token_etheraddr_ops },
                     offset: offset_of!($container, $field) as u32,
                 }
@@ -332,8 +332,8 @@ macro_rules! TOKEN_ETHERADDR_INITIALIZER {
 macro_rules! TOKEN_PORTLIST_INITIALIZER {
     ($container:path, $field:ident) => (
         $crate::cmdline::Token::PortList(
-            $crate::raw::Struct_cmdline_token_portlist {
-                hdr: $crate::raw::Struct_cmdline_token_hdr {
+            $crate::raw::cmdline_token_portlist {
+                hdr: $crate::raw::cmdline_token_hdr {
                     ops: unsafe { &mut $crate::raw::cmdline_token_portlist_ops },
                     offset: offset_of!($container, $field) as u32,
                 }
@@ -351,15 +351,19 @@ struct CommandHandlerContext<'a, T, D>
     handler: InstHandler<T, D>,
 }
 
-extern "C" fn _command_handler_adapter<T, D>(result: &mut T,
+extern "C" fn _command_handler_adapter<T, D>(result: *mut c_void,
                                              cl: *mut RawCmdLine,
-                                             ctxt: *mut CommandHandlerContext<T, D>) {
+                                             ctxt: *mut c_void) {
     unsafe {
-        ((*ctxt).handler)(result, &CmdLine::Borrowed(cl), (*ctxt).data);
+        let ctxt = ctxt as *mut CommandHandlerContext<T, D>;
+
+        ((*ctxt).handler)(&mut *(result as *mut T),
+                          &CmdLine::Borrowed(cl),
+                          (*ctxt).data);
     }
 }
 
-pub type RawInstPtr = *const ffi::Struct_cmdline_inst;
+pub type RawInstPtr = *const ffi::cmdline_inst;
 
 pub struct Inst(RawInstPtr);
 
@@ -388,18 +392,18 @@ pub fn inst<T, D>(handler: InstHandler<T, D>,
 
         ptr::copy_nonoverlapping(help.as_ptr(), help_str as *mut u8, help.len());
 
-        let size = mem::size_of::<ffi::Struct_cmdline_inst>() +
+        let size = mem::size_of::<ffi::cmdline_inst>() +
                    mem::size_of::<RawTokenPtr>() * tokens.len();
-        let inst = libc::calloc(1, size) as *mut ffi::Struct_cmdline_inst;
+        let inst = libc::calloc(1, size) as *mut ffi::cmdline_inst;
 
-        *inst = ffi::Struct_cmdline_inst {
-            f: mem::transmute(_command_handler_adapter::<T, D>),
+        *inst = ffi::cmdline_inst {
+            f: Some(_command_handler_adapter::<T, D>),
             data: Box::into_raw(Box::new(CommandHandlerContext {
                 data: data,
                 handler: handler,
             })) as *mut c_void,
             help_str: help_str,
-            tokens: ptr::null_mut(),
+            tokens: ffi::__IncompleteArrayField::new(),
         };
 
         ptr::copy_nonoverlapping(tokens.iter()
@@ -532,8 +536,8 @@ impl From<i32> for ParseCompleteStatus {
     }
 }
 
-pub type RawCmdLine = ffi::Struct_cmdline;
-pub type RawCmdLinePtr = *mut ffi::Struct_cmdline;
+pub type RawCmdLine = ffi::cmdline;
+pub type RawCmdLinePtr = *mut ffi::cmdline;
 
 pub enum CmdLine {
     Owned(RawCmdLinePtr),

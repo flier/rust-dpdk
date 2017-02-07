@@ -118,7 +118,7 @@ int kni_ingress(struct kni_port_params *p) {
             nb_rx = rte_eth_rx_burst(port_id, 0, pkts_burst, PKT_BURST_SZ);
             if (unlikely(nb_rx > PKT_BURST_SZ)) {
                 RTE_LOG(ERR, APP, "Error receiving from eth\n");
-                return;
+                return -1;
             }
             /* Burst tx to kni */
             num = rte_kni_tx_burst(p->kni[i], pkts_burst, nb_rx);
@@ -146,7 +146,7 @@ int kni_egress(struct kni_port_params *p) {
     struct rte_mbuf *pkts_burst[PKT_BURST_SZ];
 
     if (p == NULL)
-        return;
+        return -1;
 
     nb_kni = p->nb_kni;
     port_id = p->port_id;
@@ -157,7 +157,7 @@ int kni_egress(struct kni_port_params *p) {
             num = rte_kni_rx_burst(p->kni[i], pkts_burst, PKT_BURST_SZ);
             if (unlikely(num > PKT_BURST_SZ)) {
                 RTE_LOG(ERR, APP, "Error receiving from KNI\n");
-                return;
+                return -1;
             }
             /* Burst tx to eth */
             nb_tx = rte_eth_tx_burst(port_id, 0, pkts_burst, (uint16_t)num);

@@ -4,7 +4,6 @@ extern crate env_logger;
 extern crate getopts;
 extern crate libc;
 extern crate nix;
-
 #[macro_use]
 extern crate rte;
 
@@ -23,6 +22,7 @@ use std::str::FromStr;
 use nix::sys::signal;
 
 use rte::*;
+use rte::mbuf::RTE_PKTMBUF_HEADROOM;
 use rte::memory::AsMutRef;
 use rte::ethdev::{EthDevice, EthDeviceInfo};
 
@@ -58,7 +58,7 @@ const KNI_ENET_FCS_SIZE: u32 = 4;
 const KNI_MAX_KTHREAD: usize = 32;
 
 #[repr(C)]
-struct Struct_kni_port_params {
+struct kni_port_params {
     // Port ID
     port_id: libc::uint8_t,
     // lcore ID for RX
@@ -81,7 +81,7 @@ struct Conf {
 
     promiscuous_on: bool,
 
-    port_params: [*mut Struct_kni_port_params; RTE_MAX_ETHPORTS as usize],
+    port_params: [*mut kni_port_params; RTE_MAX_ETHPORTS as usize],
 }
 
 impl fmt::Debug for Conf {
@@ -127,7 +127,7 @@ impl Conf {
             return Err(format!("Port {} has been configured", port_id));
         }
 
-        let param: &mut Struct_kni_port_params = rte_new!(Struct_kni_port_params);
+        let param: &mut kni_port_params = rte_new!(kni_port_params);
 
         param.port_id = port_id as u8;
         param.lcore_rx = try!(fields.next()
@@ -328,7 +328,7 @@ extern "C" fn kni_change_mtu(port_id: u8, new_mtu: libc::c_uint) -> libc::c_int 
         return -libc::EINVAL;
     }
 
-    if new_mtu > ETHER_MAX_LEN {
+    if new_mtu > ether::ETHER_MAX_LEN {
         let dev = port_id as ethdev::PortId;
 
         dev.stop();
@@ -365,11 +365,7 @@ extern "C" fn kni_change_mtu(port_id: u8, new_mtu: libc::c_uint) -> libc::c_int 
 extern "C" fn kni_config_network_interface(port_id: u8, if_up: u8) -> libc::c_int {
     debug!("port {} change status to {}",
            port_id,
-           if if_up != 0 {
-               "up"
-           } else {
-               "down"
-           });
+           if if_up != 0 { "up" } else { "down" });
 
     let nb_sys_ports = ethdev::count();
 
@@ -515,7 +511,7 @@ fn check_all_ports_link_status(enabled_devices: &Vec<ethdev::PortId>) {
 }
 
 #[repr(C)]
-struct Struct_kni_interface_stats {
+struct kni_interface_stats {
     // number of pkts received from NIC, and sent to KNI
     rx_packets: libc::uint64_t,
 
@@ -533,21 +529,21 @@ struct Struct_kni_interface_stats {
 extern "C" {
     static mut kni_stop: libc::c_int;
 
-    static mut kni_port_params_array: *const *mut Struct_kni_port_params;
+    static mut kni_port_params_array: *const *mut kni_port_params;
 
-    static mut kni_stats: [Struct_kni_interface_stats; RTE_MAX_ETHPORTS as usize];
+    static mut kni_stats: [kni_interface_stats; RTE_MAX_ETHPORTS as usize];
 
     fn kni_print_stats();
 
-    fn kni_ingress(param: *const Struct_kni_port_params) -> libc::c_int;
+    fn kni_ingress(param: *const kni_port_params) -> libc::c_int;
 
-    fn kni_egress(param: *const Struct_kni_port_params) -> libc::c_int;
+    fn kni_egress(param: *const kni_port_params) -> libc::c_int;
 }
 
 extern "C" fn main_loop(conf: *const Conf) -> i32 {
     enum LcoreType<'a> {
-        Rx(&'a Struct_kni_port_params),
-        Tx(&'a Struct_kni_port_params),
+        Rx(&'a kni_port_params),
+        Tx(&'a kni_port_params),
     };
 
     let lcore_id = lcore::id().unwrap();

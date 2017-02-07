@@ -1,4 +1,4 @@
-use ffi::Struct_rte_memzone;
+use ffi::rte_memzone;
 
 /// RTE Memzone
 ///
@@ -14,8 +14,8 @@ use ffi::Struct_rte_memzone;
 /// A reserved memory zone cannot be unreserved.
 /// The reservation shall be done at initialization time only.
 ///
-pub struct MemoryZone(*const Struct_rte_memzone);
+pub struct MemoryZone(*const rte_memzone);
 
-pub fn from_raw(zone: *const Struct_rte_memzone) -> MemoryZone {
+pub fn from_raw(zone: *const rte_memzone) -> MemoryZone {
     MemoryZone(zone)
 }

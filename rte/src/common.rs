@@ -1,6 +1,8 @@
 use std::os::unix::io::AsRawFd;
 
-use ffi::{size_t, FILE, rte_openlog_stream};
+use libc::size_t;
+
+use ffi::{FILE, rte_openlog_stream};
 
 use errors::Result;
 use cfile;

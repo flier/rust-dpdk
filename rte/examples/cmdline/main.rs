@@ -207,10 +207,10 @@ fn main() {
 
     let mut token_obj_list_ops = unsafe {
         cmdline::RawTokenOps {
-            parse: Some(mem::transmute(parse_obj_list)),
-            complete_get_nb: Some(mem::transmute(complete_get_nb_obj_list)),
-            complete_get_elt: Some(mem::transmute(complete_get_elt_obj_list)),
-            get_help: Some(mem::transmute(get_help_obj_list)),
+            parse: Some(parse_obj_list),
+            complete_get_nb: Some(complete_get_nb_obj_list),
+            complete_get_elt: Some(complete_get_elt_obj_list),
+            get_help: Some(get_help_obj_list),
         }
     };
 

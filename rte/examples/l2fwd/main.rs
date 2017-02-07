@@ -188,6 +188,7 @@ fn check_all_ports_link_status(enabled_devices: &Vec<ethdev::PortId>) {
     }
 }
 
+#[allow(improper_ctypes)]
 #[link(name = "l2fwd_core")]
 extern "C" {
     static mut l2fwd_force_quit: libc::c_int;
@@ -198,8 +199,7 @@ extern "C" {
 
     static mut l2fwd_dst_ports: [libc::uint32_t; RTE_MAX_ETHPORTS as usize];
 
-    static mut l2fwd_tx_buffers: [*mut rte::raw::Struct_rte_eth_dev_tx_buffer;
-                                  RTE_MAX_ETHPORTS as usize];
+    static mut l2fwd_tx_buffers: [*mut rte::raw::rte_eth_dev_tx_buffer; RTE_MAX_ETHPORTS as usize];
 
     static mut l2fwd_timer_period: libc::int64_t;
 
@@ -411,11 +411,7 @@ fn main() {
                  portid,
                  mac_addr,
                  dev.is_promiscuous_enabled()
-                     .map(|enabled| if enabled {
-                         "enabled"
-                     } else {
-                         "disabled"
-                     })
+                     .map(|enabled| if enabled { "enabled" } else { "disabled" })
                      .expect(&format!("fail to enable promiscuous mode for device: port={}",
                                       portid)));
     }

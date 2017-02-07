@@ -8,24 +8,24 @@ fn rte_config(base_dir: &PathBuf) -> gcc::Config {
     let mut cfg = gcc::Config::new();
 
     cfg.include(base_dir.join("include"))
-       .flag("-march=native")
-       .flag("-DRTE_MACHINE_CPUFLAG_SSE")
-       .flag("-DRTE_MACHINE_CPUFLAG_SSE2")
-       .flag("-DRTE_MACHINE_CPUFLAG_SSE3")
-       .flag("-DRTE_MACHINE_CPUFLAG_SSSE3")
-       .flag("-DRTE_MACHINE_CPUFLAG_SSE4_1")
-       .flag("-DRTE_MACHINE_CPUFLAG_SSE4_2")
-       .flag("-DRTE_MACHINE_CPUFLAG_AES")
-       .flag("-DRTE_MACHINE_CPUFLAG_PCLMULQDQ")
-       .flag("-DRTE_MACHINE_CPUFLAG_AVX")
-       .flag("-DRTE_MACHINE_CPUFLAG_RDRAND")
-       .flag("-DRTE_MACHINE_CPUFLAG_FSGSBASE")
-       .flag("-DRTE_MACHINE_CPUFLAG_F16C")
-       .flag("-DRTE_MACHINE_CPUFLAG_AVX2")
-       .flag("-DRTE_COMPILE_TIME_CPUFLAGS=RTE_CPUFLAG_SSE,RTE_CPUFLAG_SSE2,RTE_CPUFLAG_SSE3,\
-              RTE_CPUFLAG_SSSE3,RTE_CPUFLAG_SSE4_1,RTE_CPUFLAG_SSE4_2,RTE_CPUFLAG_AES,\
-              RTE_CPUFLAG_PCLMULQDQ,RTE_CPUFLAG_AVX,RTE_CPUFLAG_RDRAND,RTE_CPUFLAG_FSGSBASE,\
-              RTE_CPUFLAG_F16C,RTE_CPUFLAG_AVX2");
+        .flag("-march=native")
+        .flag("-DRTE_MACHINE_CPUFLAG_SSE")
+        .flag("-DRTE_MACHINE_CPUFLAG_SSE2")
+        .flag("-DRTE_MACHINE_CPUFLAG_SSE3")
+        .flag("-DRTE_MACHINE_CPUFLAG_SSSE3")
+        .flag("-DRTE_MACHINE_CPUFLAG_SSE4_1")
+        .flag("-DRTE_MACHINE_CPUFLAG_SSE4_2")
+        .flag("-DRTE_MACHINE_CPUFLAG_AES")
+        .flag("-DRTE_MACHINE_CPUFLAG_PCLMULQDQ")
+        .flag("-DRTE_MACHINE_CPUFLAG_AVX")
+        .flag("-DRTE_MACHINE_CPUFLAG_RDRAND")
+        .flag("-DRTE_MACHINE_CPUFLAG_FSGSBASE")
+        .flag("-DRTE_MACHINE_CPUFLAG_F16C")
+        .flag("-DRTE_MACHINE_CPUFLAG_AVX2")
+        .flag("-DRTE_COMPILE_TIME_CPUFLAGS=RTE_CPUFLAG_SSE,RTE_CPUFLAG_SSE2,RTE_CPUFLAG_SSE3,\
+               RTE_CPUFLAG_SSSE3,RTE_CPUFLAG_SSE4_1,RTE_CPUFLAG_SSE4_2,RTE_CPUFLAG_AES,\
+               RTE_CPUFLAG_PCLMULQDQ,RTE_CPUFLAG_AVX,RTE_CPUFLAG_RDRAND,RTE_CPUFLAG_FSGSBASE,\
+               RTE_CPUFLAG_F16C,RTE_CPUFLAG_AVX2");
     cfg
 }
 
@@ -41,6 +41,7 @@ fn gen_cargo_config(base_dir: &PathBuf) {
                     "rte_pmd_ixgbe",
                     "rte_pmd_null",
                     "rte_pmd_null_crypto",
+                    "rte_pmd_qede",
                     "rte_pmd_ring",
                     "rte_pmd_vhost",
                     "rte_pmd_virtio",
@@ -58,9 +59,9 @@ fn gen_cargo_config(base_dir: &PathBuf) {
 
 fn main() {
     let root_dir = env::var("RTE_SDK")
-                       .expect("RTE_SDK - Points to the DPDK installation directory.");
+        .expect("RTE_SDK - Points to the DPDK installation directory.");
     let target = env::var("RTE_TARGET")
-                     .unwrap_or(String::from(format!("{}-native-{}app-gcc", ARCH, OS)));
+        .unwrap_or(String::from(format!("{}-native-{}app-gcc", ARCH, OS)));
 
     let base_dir = PathBuf::from(root_dir).join(target);
 
@@ -68,7 +69,7 @@ fn main() {
         .file("src/rte_helpers.c")
         .compile("librte_helpers.a");
 
-    gen_cargo_config(&base_dir);
+    //gen_cargo_config(&base_dir);
 
     rte_config(&base_dir)
         .file("examples/l2fwd/l2fwd_core.c")
@@ -77,4 +78,6 @@ fn main() {
     rte_config(&base_dir)
         .file("examples/kni/kni_core.c")
         .compile("libkni_core.a");
+
+    gen_cargo_config(&base_dir);
 }

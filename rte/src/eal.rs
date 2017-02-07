@@ -14,48 +14,30 @@ pub use launch::*;
 
 extern "C" {
     fn _rte_version() -> *const c_char;
-
-    fn devinitfn_pmd_af_packet_drv();
-    fn devinitfn_bond_drv();
-    fn devinitfn_rte_cxgbe_driver();
-    fn devinitfn_pmd_igb_drv();
-    fn devinitfn_pmd_igbvf_drv();
-    fn devinitfn_em_pmd_drv();
-    fn devinitfn_ena_pmd_drv();
-    fn devinitfn_rte_enic_driver();
-    fn devinitfn_rte_fm10k_driver();
-    fn devinitfn_rte_i40e_driver();
-    fn devinitfn_rte_i40evf_driver();
-    fn devinitfn_rte_ixgbe_driver();
-    fn devinitfn_rte_ixgbevf_driver();
-    fn devinitfn_pmd_null_drv();
-    fn devinitfn_cryptodev_null_pmd_drv();
-    fn devinitfn_pmd_ring_drv();
-    fn devinitfn_pmd_vhost_drv();
-    fn devinitfn_rte_virtio_driver();
-    fn devinitfn_rte_vmxnet3_driver();
 }
 
 unsafe fn init_pmd_drivers() {
-    devinitfn_pmd_af_packet_drv();
-    devinitfn_bond_drv();
-    devinitfn_rte_cxgbe_driver();
-    devinitfn_pmd_igb_drv();
-    devinitfn_pmd_igbvf_drv();
-    devinitfn_em_pmd_drv();
-    devinitfn_ena_pmd_drv();
-    devinitfn_rte_enic_driver();
-    devinitfn_rte_fm10k_driver();
-    devinitfn_rte_i40e_driver();
-    devinitfn_rte_i40evf_driver();
-    devinitfn_rte_ixgbe_driver();
-    devinitfn_rte_ixgbevf_driver();
-    devinitfn_pmd_null_drv();
-    devinitfn_cryptodev_null_pmd_drv();
-    devinitfn_pmd_ring_drv();
-    devinitfn_pmd_vhost_drv();
-    devinitfn_rte_virtio_driver();
-    devinitfn_rte_vmxnet3_driver();
+    // ffi::vdrvinitfn_pmd_af_packet_drv();
+    // ffi::vdrvinitfn_bond_drv();
+    // ffi::vdrvinitfn_pmd_null_drv();
+    // ffi::vdrvinitfn_cryptodev_null_pmd_drv();
+    // ffi::vdrvinitfn_pmd_ring_drv();
+    // ffi::vdrvinitfn_pmd_vhost_drv();
+    // ffi::vdrvinitfn_virtio_user_driver();
+    // ffi::pciinitfn_net_cxgbe();
+    // ffi::pciinitfn_net_e1000_igb();
+    // ffi::pciinitfn_net_e1000_igb_vf();
+    // ffi::pciinitfn_net_e1000_em();
+    // ffi::pciinitfn_net_ena();
+    // ffi::pciinitfn_net_enic();
+    // ffi::pciinitfn_net_fm10k();
+    // ffi::pciinitfn_net_i40e();
+    // ffi::pciinitfn_net_i40e_vf();
+    // ffi::pciinitfn_net_ixgbe();
+    // ffi::pciinitfn_net_ixgbe_vf();
+    // ffi::pciinitfn_net_qede();
+    // ffi::pciinitfn_net_qede_vf();
+    // ffi::pciinitfn_net_vmxnet3();
 }
 
 pub fn version<'a>() -> &'a str {

@@ -20,9 +20,9 @@ pub fn mp_remote_launch<T>(f: LcoreFunc<T>, arg: Option<&T>, skip_master: bool) 
         ffi::rte_eal_mp_remote_launch(mem::transmute(f),
                                       mem::transmute(arg),
                                       if skip_master {
-                                          ffi::Enum_rte_rmt_call_master_t::SKIP_MASTER
+                                          ffi::rte_rmt_call_master_t::SKIP_MASTER
                                       } else {
-                                          ffi::Enum_rte_rmt_call_master_t::CALL_MASTER
+                                          ffi::rte_rmt_call_master_t::CALL_MASTER
                                       })
     })
 }

@@ -7,10 +7,10 @@ use lcore;
 use memzone;
 
 /// the structure for the memory configuration for the RTE.
-pub struct MemoryConfig(*mut ffi::Struct_rte_mem_config);
+pub struct MemoryConfig(*mut ffi::rte_config_rte_mem_config);
 
 impl MemoryConfig {
-    fn from_ptr(cfg: *mut ffi::Struct_rte_mem_config) -> MemoryConfig {
+    fn from_ptr(cfg: *mut ffi::rte_config_rte_mem_config) -> MemoryConfig {
         MemoryConfig(cfg)
     }
 
@@ -36,10 +36,10 @@ impl MemoryConfig {
 }
 
 /// The global RTE configuration structure.
-pub struct RteConfig(*mut ffi::Struct_rte_config);
+pub struct RteConfig(*mut ffi::rte_config);
 
 impl RteConfig {
-    fn from_ptr(cfg: *mut ffi::Struct_rte_config) -> RteConfig {
+    fn from_ptr(cfg: *mut ffi::rte_config) -> RteConfig {
         RteConfig(cfg)
     }
 
