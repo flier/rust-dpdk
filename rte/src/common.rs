@@ -21,7 +21,7 @@ extern "C" {
 }
 
 pub fn openlog_stream<S: AsRawFd>(s: &S) -> Result<cfile::CFile> {
-    let f = try!(cfile::open_stream(s, "w"));
+    let f = cfile::open_stream(s, "w")?;
 
     rte_check!(unsafe { rte_openlog_stream(f.stream() as *mut FILE) }; ok => {f})
 }

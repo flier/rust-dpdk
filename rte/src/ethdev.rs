@@ -195,7 +195,7 @@ pub fn devices() -> Range<PortId> {
 pub fn attach(devargs: &str) -> Result<PortId> {
     let mut portid: u8 = 0;
 
-    let ret = unsafe { ffi::rte_eth_dev_attach(try!(to_cptr!(devargs)), &mut portid) };
+    let ret = unsafe { ffi::rte_eth_dev_attach(to_cptr!(devargs)?, &mut portid) };
 
     rte_check!(ret; ok => { portid })
 }

@@ -157,7 +157,7 @@ impl KniDevice {
 
     /// Get the KNI context of its name.
     pub fn get(name: &str) -> Result<KniDevice> {
-        let p = unsafe { ffi::rte_kni_get(try!(to_cptr!(name))) };
+        let p = unsafe { ffi::rte_kni_get(to_cptr!(name)?) };
 
         rte_check!(p, NonNull; ok => { KniDevice(p) })
     }

@@ -109,15 +109,14 @@ impl From<u8> for TransmitPolicy {
 
 /// Create a bonded rte_eth_dev device
 pub fn create(name: &str, mode: BondMode, socket_id: SocketId) -> Result<ethdev::PortId> {
-    let port_id =
-        unsafe { ffi::rte_eth_bond_create(try!(to_cptr!(name)), mode as u8, socket_id as u8) };
+    let port_id = unsafe { ffi::rte_eth_bond_create(to_cptr!(name)?, mode as u8, socket_id as u8) };
 
     rte_check!(port_id; ok => { port_id as ethdev::PortId })
 }
 
 /// Free a bonded rte_eth_dev device
 pub fn free(name: &str) -> Result<()> {
-    rte_check!(unsafe { ffi::rte_eth_bond_free(try!(to_cptr!(name))) })
+    rte_check!(unsafe { ffi::rte_eth_bond_free(to_cptr!(name)?) })
 }
 
 pub trait BondedDevice {

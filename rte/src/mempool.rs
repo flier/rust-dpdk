@@ -124,7 +124,7 @@ pub fn create<T, O, P>(name: &str,
                        flags: MemoryPoolFlags)
                        -> Result<RawMemoryPoolPtr> {
     let p = unsafe {
-        ffi::rte_mempool_create(try!(to_cptr!(name)),
+        ffi::rte_mempool_create(to_cptr!(name)?,
                                 n,
                                 elt_size,
                                 cache_size,
@@ -141,7 +141,7 @@ pub fn create<T, O, P>(name: &str,
 }
 
 pub fn lookup(name: &str) -> Result<RawMemoryPoolPtr> {
-    let p = unsafe { ffi::rte_mempool_lookup(try!(to_cptr!(name))) };
+    let p = unsafe { ffi::rte_mempool_lookup(to_cptr!(name)?) };
 
     rte_check!(p, NonNull)
 }

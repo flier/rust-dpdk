@@ -271,7 +271,7 @@ pub fn pktmbuf_pool_create(name: &str,
                            socket_id: i32)
                            -> Result<mempool::RawMemoryPoolPtr> {
     let p = unsafe {
-        ffi::rte_pktmbuf_pool_create(try!(to_cptr!(name)),
+        ffi::rte_pktmbuf_pool_create(to_cptr!(name)?,
                                      n,
                                      cache_size,
                                      priv_size,
