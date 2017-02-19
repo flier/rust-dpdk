@@ -6,11 +6,14 @@ use common::ProcType;
 use lcore;
 use memzone;
 
+pub type RawMemoryConfig = ffi::rte_mem_config;
+pub type RawMemoryConfigPtr = *mut RawMemoryConfig;
+
 /// the structure for the memory configuration for the RTE.
-pub struct MemoryConfig(*mut ffi::rte_config_rte_mem_config);
+pub struct MemoryConfig(RawMemoryConfigPtr);
 
 impl MemoryConfig {
-    fn from_ptr(cfg: *mut ffi::rte_config_rte_mem_config) -> MemoryConfig {
+    fn from_ptr(cfg: RawMemoryConfigPtr) -> MemoryConfig {
         MemoryConfig(cfg)
     }
 

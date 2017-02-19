@@ -284,18 +284,16 @@ pub fn pktmbuf_pool_create(name: &str,
 
 #[allow(improper_ctypes)]
 extern "C" {
-    fn _rte_pktmbuf_alloc(mp: *mut ffi::rte_mempool_objhdr_rte_mempool) -> *mut ffi::rte_mbuf;
+    fn _rte_pktmbuf_alloc(mp: *mut ffi::rte_mempool) -> *mut ffi::rte_mbuf;
 
     fn _rte_pktmbuf_free(m: *mut ffi::rte_mbuf);
 
-    fn _rte_pktmbuf_alloc_bulk(mp: *mut ffi::rte_mempool_objhdr_rte_mempool,
+    fn _rte_pktmbuf_alloc_bulk(mp: *mut ffi::rte_mempool,
                                mbufs: *mut RawMbufPtr,
                                count: libc::c_uint)
                                -> libc::c_int;
 
-    fn _rte_pktmbuf_clone(md: *mut ffi::rte_mbuf,
-                          mp: *mut ffi::rte_mempool_objhdr_rte_mempool)
-                          -> *mut ffi::rte_mbuf;
+    fn _rte_pktmbuf_clone(md: *mut ffi::rte_mbuf, mp: *mut ffi::rte_mempool) -> *mut ffi::rte_mbuf;
 
     fn _rte_pktmbuf_prepend(m: *mut ffi::rte_mbuf, len: libc::uint16_t) -> *mut libc::c_uchar;
 

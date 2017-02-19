@@ -23,7 +23,7 @@ bitflags! {
     }
 }
 
-pub type RawMemoryPool = ffi::rte_mempool_objhdr_rte_mempool;
+pub type RawMemoryPool = ffi::rte_mempool;
 pub type RawMemoryPoolPtr = *mut RawMemoryPool;
 
 /// A mempool constructor callback function.

@@ -162,7 +162,7 @@ pub fn is_end_of_token(c: u8) -> bool {
     unsafe { ffi::cmdline_isendoftoken(c as i8) != 0 }
 }
 
-pub type RawTokenOps = ffi::cmdline_token_hdr_cmdline_token_ops;
+pub type RawTokenOps = ffi::cmdline_token_ops;
 
 #[macro_export]
 macro_rules! TOKEN_STRING_INITIALIZER {
@@ -567,7 +567,7 @@ impl DerefMut for CmdLine {
 }
 
 extern "C" {
-    fn _cmdline_write(cl: *const RawCmdLine, s: *const c_char);
+    fn _cmdline_write(cl: *const ffi::cmdline, s: *const c_char);
 }
 
 impl CmdLine {

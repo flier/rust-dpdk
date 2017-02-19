@@ -41,7 +41,7 @@ pub fn alloc(pktmbuf_pool: &mut mempool::RawMemoryPool,
             mbuf_size: conf.mbuf_size,
             addr: conf.pci_addr,
             id: conf.pci_id,
-            _bitfield_1: conf.flags.bits,
+            ..Default::default()
         };
 
         ptr::copy(conf.name.as_ptr(),
