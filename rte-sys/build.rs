@@ -29,6 +29,7 @@ fn gen_binding(base_dir: &Path, out_file: &Path) {
         .no_unstable_rust()
         .disable_name_namespacing()
         .derive_debug(true)
+        .derive_default(true)
         .whitelisted_type("^\\w+_hdr$")
         .whitelisted_type("^(rte|pci|cmdline)_.*")
         .whitelisted_function("^(rte|cmdline|pciinitfn|vdrvinitfn|tailqinitfn)_.*")

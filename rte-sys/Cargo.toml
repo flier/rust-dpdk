@@ -6,6 +6,10 @@ description = "FFI bindings to DPDK"
 links = "dpdk"
 build = "build.rs"
 
+[lib]
+name = "rte_sys"
+doctest = false
+
 [features]
 default = ["sse42"]
 gen = ["bindgen"]
@@ -24,7 +28,4 @@ libc = "0.2"
 log = "0.3"
 env_logger = "0.3"
 gcc = "0.3"
-bindgen = { git="https://github.com/flier/rust-bindgen.git", rev="7fd7070", optional=true }
-
-[lib]
-name = "rte_sys"
+bindgen = { git="https://github.com/flier/rust-bindgen.git", rev="0494698", optional=true }
