@@ -129,3 +129,17 @@
 // timer
 #include <rte_timer.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define MEMPOOL_REGISTER_OPS(ops)   void mp_hdlr_init_##ops(void);
+
+MEMPOOL_REGISTER_OPS(ops_mp_mc);
+MEMPOOL_REGISTER_OPS(ops_sp_sc);
+MEMPOOL_REGISTER_OPS(ops_mp_sc);
+MEMPOOL_REGISTER_OPS(ops_sp_mc);
+
+#ifdef __cplusplus
+}
+#endif

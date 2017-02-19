@@ -9,6 +9,7 @@ use std::fs;
 use std::env;
 use std::env::consts::*;
 use std::path::{Path, PathBuf};
+#[cfg(feature = "dpdk")]
 use std::process::Command;
 
 #[cfg(feature = "gen")]
@@ -32,7 +33,7 @@ fn gen_binding(base_dir: &Path, out_file: &Path) {
         .derive_default(true)
         .whitelisted_type("^\\w+_hdr$")
         .whitelisted_type("^(rte|pci|cmdline)_.*")
-        .whitelisted_function("^(rte|cmdline|pciinitfn|vdrvinitfn|tailqinitfn)_.*")
+        .whitelisted_function("^(rte|cmdline|mp|pciinitfn|vdrvinitfn|tailqinitfn)_.*")
         .whitelisted_var("^(lcore|cmdline|RTE|SOCKET|CMDLINE|BONDING|ETHER|PKT|ARP)_.*")
         .link_static("rte_pmd_af_packet")
         .generate()
@@ -46,6 +47,7 @@ fn gen_binding(_: &Path, out_file: &Path) {
     fs::copy("src/raw.rs", out_file).expect("fail to copy bindings");
 }
 
+#[cfg(feature = "dpdk")]
 fn build_dpdk(base_dir: &PathBuf) {
     let target = base_dir.file_name().unwrap().to_str().unwrap();
 
@@ -60,12 +62,18 @@ fn build_dpdk(base_dir: &PathBuf) {
                 if cfg!(feature = "debug") {
                     "EXTRA_CFLAGS='-fPIC -g -ggdb'"
                 } else {
-                    "EXTRA_CFLAGS='-fPIC -O3'"
-                },
-                "-j 4"])
+                    "EXTRA_CFLAGS='-fPIC -O3 -ggdb'"
+                }])
         .current_dir(base_dir.parent().unwrap())
         .status()
         .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
+}
+
+#[cfg(not(feature = "dpdk"))]
+fn build_dpdk(base_dir: &PathBuf) {
+    if !base_dir.is_dir() {
+        panic!("DPDK build not ready at {}", base_dir.to_str().unwrap());
+    }
 }
 
 fn gen_cargo_config(base_dir: &PathBuf) {
@@ -133,9 +141,7 @@ fn main() {
 
     let base_dir = PathBuf::from(root_dir).join(target);
 
-    if !base_dir.exists() {
-        build_dpdk(&base_dir);
-    }
+    build_dpdk(&base_dir);
 
     let out_dir = env::var("OUT_DIR").unwrap();
     let out_file = Path::new(&out_dir).join("raw.rs");

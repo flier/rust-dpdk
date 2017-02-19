@@ -25850,6 +25850,18 @@ fn bindgen_test_layout_rte_table_lpm_key() {
 impl Clone for rte_table_lpm_key {
     fn clone(&self) -> Self { *self }
 }
+extern "C" {
+    pub fn mp_hdlr_init_ops_mp_mc();
+}
+extern "C" {
+    pub fn mp_hdlr_init_ops_sp_sc();
+}
+extern "C" {
+    pub fn mp_hdlr_init_ops_mp_sc();
+}
+extern "C" {
+    pub fn mp_hdlr_init_ops_sp_mc();
+}
 #[repr(C)]
 #[derive(Debug, Copy)]
 pub struct __va_list_tag {

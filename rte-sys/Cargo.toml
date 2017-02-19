@@ -13,6 +13,7 @@ doctest = false
 [features]
 default = ["sse42"]
 gen = ["bindgen"]
+dpdk = []
 sse42 = []
 avx = ["sse42"]
 debug = []

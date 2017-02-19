@@ -162,6 +162,15 @@ pub fn walk<T>(callback: Option<MemoryPoolWalkCallback<T>>, arg: Option<&T>) {
     }
 }
 
+pub fn init() {
+    unsafe {
+        ffi::mp_hdlr_init_ops_mp_mc();
+        ffi::mp_hdlr_init_ops_sp_sc();
+        ffi::mp_hdlr_init_ops_mp_sc();
+        ffi::mp_hdlr_init_ops_sp_mc();
+    }
+}
+
 impl MemoryPool for RawMemoryPool {
     #[inline]
     fn name(&self) -> &str {

@@ -5,6 +5,7 @@ use std::os::raw::c_char;
 
 use ffi;
 
+use mempool;
 use errors::Result;
 
 pub use common::*;
@@ -60,6 +61,7 @@ pub fn init(args: &Vec<String>) -> Result<i32> {
     // rust doesn't support __attribute__((constructor)), we need to invoke those static initializer
     unsafe {
         init_pmd_drivers();
+        mempool::init();
     }
 
     let parsed = if args.is_empty() {
