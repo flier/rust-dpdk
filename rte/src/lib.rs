@@ -32,6 +32,7 @@ pub mod mbuf;
 pub mod lcore;
 pub mod cycles;
 pub mod spinlock;
+#[macro_use]
 pub mod launch;
 pub mod eal;
 

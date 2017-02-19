@@ -208,9 +208,9 @@ extern "C" {
                        -> libc::c_int;
 }
 
-extern "C" fn l2fwd_launch_one_lcore(conf: *const Conf) -> i32 {
+extern "C" fn l2fwd_launch_one_lcore(conf: Option<&Conf>) -> i32 {
     let lcore_id = lcore::id().unwrap();
-    let qconf = unsafe { &(*conf).queue_conf[lcore_id as usize] };
+    let qconf = &conf.unwrap().queue_conf[lcore_id as usize];
 
     if qconf.n_rx_port == 0 {
         info!("lcore {} has nothing to do", lcore_id);

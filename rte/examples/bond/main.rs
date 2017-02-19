@@ -64,10 +64,9 @@ impl AppConfig {
     }
 
     fn start(&self) {
-        launch::remote_launch(unsafe { mem::transmute(lcore_main) },
-                              Some(self),
-                              self.lcore_main_core_id)
-            .expect("Cannot launch task");
+        let core_id = self.lcore_main_core_id;
+
+        launch::remote_launch(lcore_main, Some(self), core_id).expect("Cannot launch task");
 
         self.lcore_main_is_running.store(true, Ordering::Relaxed);
 
@@ -167,9 +166,10 @@ fn strip_vlan_hdr(ether_hdr: *const ether::EtherHdr) -> (*const libc::c_void, u1
 }
 
 // Main thread that does the work, reading from INPUT_PORT and writing to OUTPUT_PORT
-extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
+extern "C" fn lcore_main(conf: Option<&AppConfig>) -> i32 {
     debug!("lcore_main is starting @ lcore {}", lcore::id().unwrap());
 
+    let app_conf: &AppConfig = conf.unwrap();
     let dev = app_conf.bonded_port_id;
     let mut pkts: [mbuf::RawMbufPtr; MAX_PKT_BURST] = unsafe { mem::zeroed() };
     let bond_ip = u32::from(app_conf.bond_ip).to_be();

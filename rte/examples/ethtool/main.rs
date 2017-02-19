@@ -9,7 +9,6 @@ extern crate rte;
 mod ethtool;
 mod ethapp;
 
-use std::mem;
 use std::env;
 
 use rte::*;
@@ -83,7 +82,9 @@ fn process_frame(mac_addr: &ether::EtherAddr, frame: mbuf::RawMbufPtr) {
     }
 }
 
-extern "C" fn slave_main(app_cfg: &mut AppConfig) -> i32 {
+extern "C" fn slave_main(cfg: Option<&AppConfig>) -> i32 {
+    let app_cfg: &AppConfig = cfg.unwrap();
+
     while !app_cfg.exit_now {
         for (portid, mutex) in app_cfg.ports.iter().enumerate() {
             // Check that port is active and unlocked
@@ -166,10 +167,7 @@ fn main() {
     // Assume there is an available slave..
     let lcore_id = lcore::next(lcore::id().unwrap(), true);
 
-    launch::remote_launch(unsafe { mem::transmute(slave_main) },
-                          Some(&app_cfg),
-                          lcore_id)
-        .unwrap();
+    launch::remote_launch(slave_main, Some(&app_cfg), lcore_id).unwrap();
 
     ethapp::main(&mut app_cfg);
 

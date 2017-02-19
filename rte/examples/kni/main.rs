@@ -540,7 +540,7 @@ extern "C" {
     fn kni_egress(param: *const kni_port_params) -> libc::c_int;
 }
 
-extern "C" fn main_loop(conf: *const Conf) -> i32 {
+extern "C" fn main_loop(conf: Option<&Conf>) -> i32 {
     enum LcoreType<'a> {
         Rx(&'a kni_port_params),
         Tx(&'a kni_port_params),
@@ -550,19 +550,21 @@ extern "C" fn main_loop(conf: *const Conf) -> i32 {
     let mut lcore_type: Option<LcoreType> = None;
 
     for portid in ethdev::devices() {
-        if unsafe { (*conf).port_params[portid as usize].is_null() } {
+        let param = conf.unwrap().port_params[portid as usize];
+
+        if param.is_null() {
             continue;
         }
 
-        let param = unsafe { &*(*conf).port_params[portid as usize] };
+        let port_param = unsafe { &*param };
 
-        if param.lcore_rx == lcore_id {
-            lcore_type = Some(LcoreType::Rx(param));
+        if port_param.lcore_rx == lcore_id {
+            lcore_type = Some(LcoreType::Rx(port_param));
             break;
         }
 
-        if (*param).lcore_tx == lcore_id {
-            lcore_type = Some(LcoreType::Tx(param));
+        if port_param.lcore_tx == lcore_id {
+            lcore_type = Some(LcoreType::Tx(port_param));
             break;
         }
     }

@@ -342,6 +342,11 @@ macro_rules! TOKEN_PORTLIST_INITIALIZER {
     )
 }
 
+#[macro_export]
+macro_rules! inst_func {
+    ($func:expr) => (::std::mem::transmute($func as fn(result: &mut _, cmdline: &$crate::cmdline::CmdLine, data: Option<&_>) ))
+}
+
 pub type InstHandler<T, D> = fn(result: &mut T, cmdline: &CmdLine, data: Option<&D>);
 
 struct CommandHandlerContext<'a, T, D>
@@ -403,7 +408,7 @@ pub fn inst<T, D>(handler: InstHandler<T, D>,
                 handler: handler,
             })) as *mut c_void,
             help_str: help_str,
-            tokens: ffi::__IncompleteArrayField::new(),
+            ..Default::default()
         };
 
         ptr::copy_nonoverlapping(tokens.iter()

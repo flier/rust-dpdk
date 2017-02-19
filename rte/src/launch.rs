@@ -5,18 +5,24 @@ use ffi;
 use errors::Result;
 use lcore::LcoreId;
 
-pub type LcoreFunc<T> = extern "C" fn(*const T) -> i32;
+pub type LcoreFunc<T> = extern "C" fn(Option<&T>) -> i32;
+
+#[macro_export]
+macro_rules! lcore_func {
+    ($func:ident) => (unsafe { mem::transmute($func as extern "C" fn(_) -> i32) })
+}
 
 /// Launch a function on another lcore.
 pub fn remote_launch<T>(f: LcoreFunc<T>, arg: Option<&T>, slave_id: LcoreId) -> Result<()> {
-    rte_check!(unsafe {
-        ffi::rte_eal_remote_launch(mem::transmute(f), mem::transmute(arg), slave_id)
-    })
+    let ret =
+        unsafe { ffi::rte_eal_remote_launch(mem::transmute(f), mem::transmute(arg), slave_id) };
+
+    rte_check!(ret)
 }
 
 /// Launch a function on all lcores.
 pub fn mp_remote_launch<T>(f: LcoreFunc<T>, arg: Option<&T>, skip_master: bool) -> Result<()> {
-    rte_check!(unsafe {
+    let ret = unsafe {
         ffi::rte_eal_mp_remote_launch(mem::transmute(f),
                                       mem::transmute(arg),
                                       if skip_master {
@@ -24,7 +30,9 @@ pub fn mp_remote_launch<T>(f: LcoreFunc<T>, arg: Option<&T>, skip_master: bool) 
                                       } else {
                                           ffi::rte_rmt_call_master_t::CALL_MASTER
                                       })
-    })
+    };
+
+    rte_check!(ret)
 }
 
 /// Wait until an lcore finishes its job.

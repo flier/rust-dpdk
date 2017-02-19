@@ -81,10 +81,10 @@ fn test_lcore() {
 }
 
 fn test_launch() {
-    extern "C" fn slave_main(mutex: *const Arc<Mutex<usize>>) -> i32 {
+    extern "C" fn slave_main(mutex: Option<&Arc<Mutex<usize>>>) -> i32 {
         debug!("lcore {} is running", lcore::id().unwrap());
 
-        let mut data = unsafe { (*mutex).lock().unwrap() };
+        let mut data = mutex.unwrap().lock().unwrap();
 
         *data += 1;
 
@@ -105,7 +105,7 @@ fn test_launch() {
 
         debug!("remote launch lcore {}", slave_id);
 
-        launch::remote_launch(slave_main, Some(&mutex.clone()), slave_id).unwrap();
+        launch::remote_launch(lcore_func!(slave_main), Some(&mutex.clone()), slave_id).unwrap();
 
         assert_eq!(lcore::State::Running, lcore::state(slave_id));
     }
@@ -129,7 +129,9 @@ fn test_launch() {
 
         debug!("remote launch lcores");
 
-        launch::mp_remote_launch(slave_main, Some(&mutex.clone()), true).unwrap();
+        let mut m = mutex.clone();
+
+        launch::mp_remote_launch(lcore_func!(slave_main), Some(&mut m), true).unwrap();
     }
 
     launch::mp_wait_lcore();
