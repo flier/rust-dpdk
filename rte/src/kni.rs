@@ -2,7 +2,7 @@ use std::ptr;
 use std::mem;
 use std::cmp;
 use std::ops::{Deref, DerefMut};
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 
 use libc;
 
@@ -157,7 +157,8 @@ impl KniDevice {
 
     /// Get the KNI context of its name.
     pub fn get(name: &str) -> Result<KniDevice> {
-        let p = unsafe { ffi::rte_kni_get(to_cptr!(name)?) };
+        let s = CString::new(name)?;
+        let p = unsafe { ffi::rte_kni_get(s.as_ptr()) };
 
         rte_check!(p, NonNull; ok => { KniDevice(p) })
     }

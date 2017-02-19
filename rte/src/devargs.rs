@@ -1,4 +1,5 @@
 use std::mem;
+use std::ffi::CString;
 use std::os::unix::io::AsRawFd;
 
 use cfile;
@@ -24,7 +25,9 @@ impl From<DevType> for ffi::rte_devtype {
 
 /// Add a device to the user device list
 pub fn add(devtype: DevType, devargs: &str) -> Result<()> {
-    rte_check!(unsafe { ffi::rte_eal_devargs_add(devtype.into(), to_cptr!(devargs)?) })
+    let s = CString::new(devargs)?;
+
+    rte_check!(unsafe { ffi::rte_eal_devargs_add(devtype.into(), s.as_ptr()) })
 }
 
 /// Count the number of user devices of a specified type

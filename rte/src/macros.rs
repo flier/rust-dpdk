@@ -6,13 +6,6 @@ macro_rules! bool_value {
     ($b:expr) => ( if $b { $crate::macros::BOOL_TRUE } else { $crate::macros::BOOL_FALSE } )
 }
 
-#[macro_export]
-macro_rules! to_cptr {
-    ($s:expr) => (
-        ::std::ffi::CString::new($s).map(|s| s.as_ptr() as *const i8)
-    )
-}
-
 /// Macro to get the offset of a struct field in bytes from the address of the
 /// struct.
 ///

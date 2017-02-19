@@ -1,5 +1,5 @@
 use std::mem;
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::os::raw::c_uint;
 use std::os::unix::io::AsRawFd;
 
@@ -123,8 +123,9 @@ pub fn create<T, O, P>(name: &str,
                        socket_id: SocketId,
                        flags: MemoryPoolFlags)
                        -> Result<RawMemoryPoolPtr> {
+    let s = CString::new(name)?;
     let p = unsafe {
-        ffi::rte_mempool_create(to_cptr!(name)?,
+        ffi::rte_mempool_create(s.as_ptr(),
                                 n,
                                 elt_size,
                                 cache_size,
@@ -137,11 +138,16 @@ pub fn create<T, O, P>(name: &str,
                                 flags.bits)
     };
 
+    unsafe {
+        debug!("mempool `{}` created, {:?}", name, *p);
+    }
+
     rte_check!(p, NonNull)
 }
 
 pub fn lookup(name: &str) -> Result<RawMemoryPoolPtr> {
-    let p = unsafe { ffi::rte_mempool_lookup(to_cptr!(name)?) };
+    let s = CString::new(name)?;
+    let p = unsafe { ffi::rte_mempool_lookup(s.as_ptr()) };
 
     rte_check!(p, NonNull)
 }

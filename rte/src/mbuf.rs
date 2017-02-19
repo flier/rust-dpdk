@@ -1,3 +1,4 @@
+use std::ffi::CString;
 use std::os::unix::io::AsRawFd;
 
 use libc;
@@ -270,8 +271,9 @@ pub fn pktmbuf_pool_create(name: &str,
                            data_room_size: u16,
                            socket_id: i32)
                            -> Result<mempool::RawMemoryPoolPtr> {
+    let s = CString::new(name)?;
     let p = unsafe {
-        ffi::rte_pktmbuf_pool_create(to_cptr!(name)?,
+        ffi::rte_pktmbuf_pool_create(s.as_ptr(),
                                      n,
                                      cache_size,
                                      priv_size,

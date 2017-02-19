@@ -3,7 +3,7 @@
 use std::ptr;
 use std::mem;
 use std::ops::Range;
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 
 use libc;
@@ -194,8 +194,9 @@ pub fn devices() -> Range<PortId> {
 /// Attach a new Ethernet device specified by aruguments.
 pub fn attach(devargs: &str) -> Result<PortId> {
     let mut portid: u8 = 0;
+    let s = CString::new(devargs)?;
 
-    let ret = unsafe { ffi::rte_eth_dev_attach(to_cptr!(devargs)?, &mut portid) };
+    let ret = unsafe { ffi::rte_eth_dev_attach(s.as_ptr(), &mut portid) };
 
     rte_check!(ret; ok => { portid })
 }

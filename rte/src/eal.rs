@@ -1,6 +1,6 @@
 use std::mem;
 use std::ptr;
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
 use ffi;
@@ -90,8 +90,10 @@ pub fn init(args: &Vec<String>) -> Result<i32> {
 /// Function to terminate the application immediately,
 /// printing an error message and returning the exit_code back to the shell.
 pub fn exit(code: i32, msg: &str) {
+    let s = CString::new(msg).unwrap();
+
     unsafe {
-        ffi::rte_exit(code, to_cptr!(msg).unwrap());
+        ffi::rte_exit(code, s.as_ptr());
     }
 }
 

@@ -1,4 +1,5 @@
 use std::mem;
+use std::ffi::CString;
 
 use ffi;
 
@@ -109,14 +110,18 @@ impl From<u8> for TransmitPolicy {
 
 /// Create a bonded rte_eth_dev device
 pub fn create(name: &str, mode: BondMode, socket_id: SocketId) -> Result<ethdev::PortId> {
-    let port_id = unsafe { ffi::rte_eth_bond_create(to_cptr!(name)?, mode as u8, socket_id as u8) };
+    let s = CString::new(name)?;
+
+    let port_id = unsafe { ffi::rte_eth_bond_create(s.as_ptr(), mode as u8, socket_id as u8) };
 
     rte_check!(port_id; ok => { port_id as ethdev::PortId })
 }
 
 /// Free a bonded rte_eth_dev device
 pub fn free(name: &str) -> Result<()> {
-    rte_check!(unsafe { ffi::rte_eth_bond_free(to_cptr!(name)?) })
+    let s = CString::new(name)?;
+
+    rte_check!(unsafe { ffi::rte_eth_bond_free(s.as_ptr()) })
 }
 
 pub trait BondedDevice {

@@ -193,9 +193,9 @@ fn test_mempool() {
         }
     }
 
-    assert_eq!(p.walk(Some(walk_element), Some(&mut elements)), 4);
+    assert_eq!(p.walk(Some(walk_element), Some(&mut elements)), 16);
 
-    assert_eq!(elements.len(), 4);
+    assert_eq!(elements.len(), 16);
 
     let raw_ptr = p as mempool::RawMemoryPoolPtr;
 
