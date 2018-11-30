@@ -1,7 +1,5 @@
 #[macro_use]
 extern crate log;
-#[macro_use]
-extern crate lazy_static;
 extern crate cc;
 
 extern crate rte_build;
@@ -35,11 +33,9 @@ fn main() {
     rte_config(&rte_sdk_dir)
         .file("src/rte_helpers.c")
         .compile("librte_helpers.a");
-
     rte_config(&rte_sdk_dir)
         .file("examples/l2fwd/l2fwd_core.c")
         .compile("libl2fwd_core.a");
-
     rte_config(&rte_sdk_dir)
         .file("examples/kni/kni_core.c")
         .compile("libkni_core.a");

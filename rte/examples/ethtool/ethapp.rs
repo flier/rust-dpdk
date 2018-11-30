@@ -2,7 +2,6 @@ use std::os::raw::c_void;
 
 use rte::cmdline::*;
 use rte::ethdev::{EthDevice, EthDeviceInfo};
-use rte::raw::*;
 use rte::*;
 
 use ethtool::*;

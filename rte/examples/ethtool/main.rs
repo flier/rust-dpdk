@@ -2,15 +2,12 @@
 extern crate log;
 extern crate libc;
 extern crate pretty_env_logger;
-
-#[macro_use]
 extern crate rte;
 
 mod ethapp;
 mod ethtool;
 
 use std::env;
-use std::mem;
 
 use rte::ethdev::EthDevice;
 use rte::memory::AsMutRef;
@@ -79,7 +76,7 @@ fn setup_ports(app_cfg: &mut AppConfig) {
 }
 
 fn process_frame(mac_addr: &ether::EtherAddr, frame: mbuf::RawMbufPtr) {
-    if let Some(mut ether_hdr) = pktmbuf_mtod!(frame, *mut ether::EtherHdr).as_mut_ref() {
+    if let Some(ether_hdr) = pktmbuf_mtod!(frame, *mut ether::EtherHdr).as_mut_ref() {
         ether::EtherAddr::copy(
             &ether_hdr.s_addr.addr_bytes,
             &mut ether_hdr.d_addr.addr_bytes,
@@ -88,7 +85,9 @@ fn process_frame(mac_addr: &ether::EtherAddr, frame: mbuf::RawMbufPtr) {
     }
 }
 
-fn slave_main(app_cfg: Option<&mut AppConfig>) -> i32 {
+fn slave_main(app_cfg: Option<&AppConfig>) -> i32 {
+    let app_cfg = app_cfg.unwrap();
+
     while !app_cfg.exit_now {
         for (portid, mutex) in app_cfg.ports.iter().enumerate() {
             // Check that port is active and unlocked

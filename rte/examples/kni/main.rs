@@ -22,7 +22,7 @@ use std::str::FromStr;
 
 use nix::sys::signal;
 
-use rte::ethdev::{EthDevice, EthDeviceInfo};
+use rte::ethdev::EthDevice;
 use rte::memory::AsMutRef;
 use rte::*;
 
@@ -58,6 +58,7 @@ const KNI_ENET_FCS_SIZE: u32 = 4;
 const KNI_MAX_KTHREAD: usize = 32;
 
 #[repr(C)]
+#[derive(Clone, Debug)]
 struct kni_port_params {
     // Port ID
     port_id: libc::uint8_t,
@@ -81,25 +82,21 @@ struct Conf {
 
     promiscuous_on: bool,
 
-    port_params: [*mut kni_port_params; RTE_MAX_ETHPORTS as usize],
+    port_params: [Option<kni_port_params>; RTE_MAX_ETHPORTS as usize],
 }
 
 impl fmt::Debug for Conf {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        unsafe {
-            for p in self.port_params.iter().filter(|p| !p.is_null()) {
-                let conf = &**p;
+        for conf in self.port_params.iter().flatten() {
+            try!(write!(f, "Port ID: {}\n", conf.port_id));
+            try!(write!(
+                f,
+                "  Rx lcore ID: {}, Tx lcore ID: {}\n",
+                conf.lcore_rx, conf.lcore_tx
+            ));
 
-                try!(write!(f, "Port ID: {}\n", conf.port_id));
-                try!(write!(
-                    f,
-                    "  Rx lcore ID: {}, Tx lcore ID: {}\n",
-                    conf.lcore_rx, conf.lcore_tx
-                ));
-
-                for lcore_id in &conf.lcore_k[..conf.nb_lcore_k as usize] {
-                    try!(write!(f, "    Kernel thread lcore ID: {}\n", lcore_id));
-                }
+            for lcore_id in &conf.lcore_k[..conf.nb_lcore_k as usize] {
+                try!(write!(f, "    Kernel thread lcore ID: {}\n", lcore_id));
             }
         }
 
@@ -130,11 +127,11 @@ impl Conf {
             ));
         }
 
-        if !self.port_params[port_id as usize].is_null() {
+        if self.port_params[port_id as usize].is_some() {
             return Err(format!("Port {} has been configured", port_id));
         }
 
-        let param: &mut kni_port_params = rte_new!(kni_port_params);
+        let mut param: kni_port_params = unsafe { mem::zeroed() };
 
         param.port_id = port_id as u8;
         param.lcore_rx = try!(
@@ -163,7 +160,7 @@ impl Conf {
 
         param.nb_lcore_k = lcores.len() as u32;
 
-        self.port_params[port_id as usize] = param;
+        self.port_params[port_id as usize] = Some(param);
 
         Ok(())
     }
@@ -293,16 +290,15 @@ fn parse_args(args: &Vec<String>) -> result::Result<Conf, String> {
 }
 
 // Initialize KNI subsystem
-fn init_kni(conf: &Conf) {
-    let num_of_kni_ports = unsafe {
-        conf.port_params
-            .iter()
-            .filter(|param| !param.is_null())
-            .fold(0, |acc, param| acc + cmp::max((**param).nb_lcore_k, 1))
-    };
+fn init_kni(conf: &Conf) -> Result<()> {
+    let num_of_kni_ports = conf
+        .port_params
+        .iter()
+        .flatten()
+        .fold(0, |acc, param| acc + cmp::max(param.nb_lcore_k, 1));
 
     // Invoke rte KNI init to preallocate the ports
-    kni::init(num_of_kni_ports as usize);
+    kni::init(num_of_kni_ports as usize)
 }
 
 // Initialise a single port on an Ethernet device
@@ -436,81 +432,67 @@ extern "C" fn kni_config_promiscusity(port_id: u16, on: u8) -> libc::c_int {
     0
 }
 
-fn kni_alloc(conf: &Conf, dev: ethdev::PortId, pktmbuf_pool: &mut mempool::RawMemoryPool) {
+fn kni_alloc(conf: &mut Conf, dev: ethdev::PortId, pktmbuf_pool: &mut mempool::RawMemoryPool) {
     let portid = dev.portid();
 
-    let param = unsafe {
-        if conf.port_params[portid as usize].is_null() {
-            return;
-        }
+    if let Some(ref mut param) = conf.port_params[portid as usize] {
+        param.nb_kni = cmp::max(param.nb_lcore_k, 1);
 
-        &mut *conf.port_params[portid as usize]
-    };
-
-    param.nb_kni = cmp::max(param.nb_lcore_k, 1);
-
-    for i in 0..param.nb_kni {
-        let name = if param.nb_lcore_k > 0 {
-            format!("vEth{}_{}", portid, i)
-        } else {
-            format!("vEth{}", portid)
-        };
-
-        let mut conf = kni::KniDeviceConf::default();
-
-        conf.name = name.as_str();
-        conf.group_id = portid as u16;
-        conf.mbuf_size = MAX_PACKET_SZ;
-
-        let mut kni = (if i == 0 {
-            // The first KNI device associated to a port is the master,
-            // for multiple kernel thread environment.
-            let dev_info = dev.info();
-            // let dev = dev_info
-            //     .dev()
-            //     .expect(&format!("port {} haven't PCI dev info", dev.portid()));
-
-            // conf.pci_addr = dev.addr;
-            // conf.pci_id = dev.id;
-
-            let ops = kni::KniDeviceOps {
-                port_id: portid,
-                change_mtu: Some(kni_change_mtu),
-                config_network_if: Some(kni_config_network_interface),
-                config_mac_address: Some(kni_config_mac_address),
-                config_promiscusity: Some(kni_config_promiscusity),
+        for i in 0..param.nb_kni {
+            let name = if param.nb_lcore_k > 0 {
+                format!("vEth{}_{}", portid, i)
+            } else {
+                format!("vEth{}", portid)
             };
 
-            kni::alloc(pktmbuf_pool, &conf, Some(&ops))
-        } else {
-            kni::alloc(pktmbuf_pool, &conf, None)
-        }).expect(&format!("Fail to create kni for port: {}", portid));
+            let mut conf = kni::KniDeviceConf::default();
 
-        param.kni[i as usize] = kni.into_raw();
+            conf.name = name.as_str();
+            conf.group_id = portid as u16;
+            conf.mbuf_size = MAX_PACKET_SZ;
 
-        debug!(
-            "allocated kni device `{}` @{:p} for port #{}",
-            conf.name, param.kni[i as usize], portid
-        );
+            let mut kni = (if i == 0 {
+                // The first KNI device associated to a port is the master,
+                // for multiple kernel thread environment.
+                // let dev_info = dev.info();
+                // let dev = dev_info
+                //     .dev()
+                //     .expect(&format!("port {} haven't PCI dev info", dev.portid()));
+
+                // conf.pci_addr = dev.addr;
+                // conf.pci_id = dev.id;
+
+                let ops = kni::KniDeviceOps {
+                    port_id: portid,
+                    change_mtu: Some(kni_change_mtu),
+                    config_network_if: Some(kni_config_network_interface),
+                    config_mac_address: Some(kni_config_mac_address),
+                    config_promiscusity: Some(kni_config_promiscusity),
+                };
+
+                kni::alloc(pktmbuf_pool, &conf, Some(&ops))
+            } else {
+                kni::alloc(pktmbuf_pool, &conf, None)
+            }).expect(&format!("Fail to create kni for port: {}", portid));
+
+            param.kni[i as usize] = kni.into_raw();
+
+            debug!(
+                "allocated kni device `{}` @{:p} for port #{}",
+                conf.name, param.kni[i as usize], portid
+            );
+        }
     }
 }
 
 fn kni_free_kni(conf: &Conf, dev: ethdev::PortId) {
-    let portid = dev;
-
-    let param = unsafe {
-        if conf.port_params[portid as usize].is_null() {
-            return;
+    if let Some(ref param) = conf.port_params[dev as usize] {
+        for kni in &param.kni[..param.nb_kni as usize] {
+            let _ = kni::KniDevice::from_raw(*kni);
         }
 
-        &mut *conf.port_params[portid as usize]
-    };
-
-    for kni in &param.kni[..param.nb_kni as usize] {
-        let _ = kni::KniDevice::from_raw(*kni);
+        dev.stop();
     }
-
-    dev.stop();
 }
 
 // Check the link status of all ports in up to 9s, and print them finally
@@ -598,20 +580,16 @@ fn main_loop(conf: Option<&Conf>) -> i32 {
     let mut lcore_type: Option<LcoreType> = None;
 
     for portid in ethdev::devices() {
-        if conf.unwrap().port_params[portid as usize].is_null() {
-            continue;
-        }
+        if let Some(ref param) = conf.unwrap().port_params[portid as usize] {
+            if param.lcore_rx == lcore_id {
+                lcore_type = Some(LcoreType::Rx(param));
+                break;
+            }
 
-        let param = conf.unwrap().port_params[portid as usize];
-
-        if param.lcore_rx == lcore_id {
-            lcore_type = Some(LcoreType::Rx(param));
-            break;
-        }
-
-        if (*param).lcore_tx == lcore_id {
-            lcore_type = Some(LcoreType::Tx(param));
-            break;
+            if param.lcore_tx == lcore_id {
+                lcore_type = Some(LcoreType::Tx(param));
+                break;
+            }
         }
     }
 
@@ -655,10 +633,10 @@ fn main() {
     eal::init(&eal_args).expect("Cannot init EAL");
 
     // Parse application arguments (after the EAL ones)
-    let conf = parse_args(&opt_args).expect("Could not parse input parameters");
+    let mut conf = parse_args(&opt_args).expect("Could not parse input parameters");
 
     unsafe {
-        kni_port_params_array = conf.port_params.as_ptr();
+        kni_port_params_array = conf.port_params.as_ptr() as *const _;
     }
 
     // create the mbuf pool
@@ -684,7 +662,7 @@ fn main() {
     }
 
     // Initialize KNI subsystem
-    init_kni(&conf);
+    init_kni(&conf).expect("initial KNI");
 
     // Initialise each port
     let port_conf = ethdev::EthConf::default();
@@ -692,7 +670,7 @@ fn main() {
     for dev in &enabled_devices {
         init_port(&conf, dev.portid(), &port_conf, pktmbuf_pool);
 
-        kni_alloc(&conf, dev.portid(), pktmbuf_pool);
+        kni_alloc(&mut conf, dev.portid(), pktmbuf_pool);
     }
 
     check_all_ports_link_status(&enabled_devices);
@@ -708,10 +686,4 @@ fn main() {
     }
 
     kni::close();
-
-    for param in &conf.port_params[..] {
-        if !param.is_null() {
-            rte_free!(*param);
-        }
-    }
 }

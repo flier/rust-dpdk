@@ -4,8 +4,6 @@ extern crate cfile;
 extern crate libc;
 extern crate nix;
 extern crate pretty_env_logger;
-
-#[macro_use]
 extern crate rte;
 
 use std::env;

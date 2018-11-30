@@ -18,7 +18,6 @@ rte-sys = { version = "18.11", path = "../rte-sys" }
 [build-dependencies]
 log = "0.4"
 pretty_env_logger = "0.2"
-lazy_static = "1.2"
 cc = "1.0"
 
 rte-build = { version = "18.11", path = "../rte-build" }

@@ -1,9 +1,5 @@
-#[macro_use]
-extern crate log;
 extern crate libc;
 extern crate pretty_env_logger;
-
-#[macro_use]
 extern crate rte;
 
 use std::cell::RefCell;
@@ -70,7 +66,7 @@ unsafe extern "C" fn parse_obj_list(
         .get(name)
     {
         if !res.is_null() {
-            res.write(obj);
+            (res as *mut *const Object).write(obj);
         }
 
         token_len as i32
@@ -80,7 +76,13 @@ unsafe extern "C" fn parse_obj_list(
 }
 
 unsafe extern "C" fn complete_get_nb_obj_list(token: *mut RawTokenHeader) -> i32 {
-    token.obj_list_data.objs.borrow().len() as i32
+    (token as *mut TokenObjectList)
+        .as_ref()
+        .unwrap()
+        .obj_list_data
+        .objs
+        .borrow()
+        .len() as i32
 }
 
 unsafe extern "C" fn complete_get_elt_obj_list(
@@ -99,7 +101,7 @@ unsafe extern "C" fn complete_get_elt_obj_list(
         .nth(idx as usize)
     {
         if (name.len() + 1) < size as usize {
-            let buf = slice::from_raw_parts_mut(dstbuf, size as usize);
+            let buf = slice::from_raw_parts_mut(dstbuf as *mut u8, size as usize);
 
             buf[..name.len()].clone_from_slice(name.as_bytes());
             buf[name.len()] = 0;
@@ -232,13 +234,11 @@ fn main() {
 
     let cmd_obj_action = TOKEN_STRING_INITIALIZER!(CmdDelShowResult, action, "show#del");
 
-    let mut token_obj_list_ops = unsafe {
-        cmdline::RawTokenOps {
-            parse: Some(parse_obj_list),
-            complete_get_nb: Some(complete_get_nb_obj_list),
-            complete_get_elt: Some(complete_get_elt_obj_list),
-            get_help: Some(get_help_obj_list),
-        }
+    let mut token_obj_list_ops = cmdline::RawTokenOps {
+        parse: Some(parse_obj_list),
+        complete_get_nb: Some(complete_get_nb_obj_list),
+        complete_get_elt: Some(complete_get_elt_obj_list),
+        get_help: Some(get_help_obj_list),
     };
 
     let token_obj_list = TokenObjectList {
