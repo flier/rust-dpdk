@@ -1,12 +1,11 @@
 extern crate rte;
 
 use std::env;
-use std::ptr;
 use std::os::raw::c_void;
 
 use rte::*;
 
-extern "C" fn lcore_hello(_: *const c_void) -> i32 {
+fn lcore_hello(_: Option<c_void>) -> i32 {
     println!("hello from core {}", lcore::id().unwrap());
 
     0
@@ -23,7 +22,7 @@ fn main() {
     });
 
     // call it on master lcore too
-    lcore_hello(ptr::null());
+    lcore_hello(None);
 
     launch::mp_wait_lcore();
 }

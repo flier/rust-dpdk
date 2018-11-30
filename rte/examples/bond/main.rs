@@ -1,9 +1,9 @@
 #[macro_use]
 extern crate log;
-extern crate env_logger;
+extern crate cfile;
 extern crate libc;
 extern crate nix;
-extern crate cfile;
+extern crate pretty_env_logger;
 
 #[macro_use]
 extern crate rte;
@@ -13,15 +13,15 @@ use std::mem;
 use std::net;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
-use rte::*;
-use rte::memory::AsMutRef;
-use rte::mbuf::{PktMbuf, PktMbufPool};
-use rte::ethdev::EthDevice;
 use rte::bond::BondedDevice;
+use rte::ethdev::EthDevice;
+use rte::mbuf::{PktMbuf, PktMbufPool};
+use rte::memory::AsMutRef;
+use rte::*;
 
 const EXIT_FAILURE: i32 = -1;
 
-const MAX_PORTS: u8 = 4;
+const MAX_PORTS: u16 = 4;
 
 // Number of mbufs in mempool that is created
 const NB_MBUF: u32 = 8192;
@@ -33,7 +33,6 @@ const PKT_BURST_SZ: u32 = 32;
 
 // How many objects (mbufs) to keep in per-lcore mempool cache
 const MEMPOOL_CACHE_SZ: u32 = PKT_BURST_SZ;
-
 
 // Configurable number of RX/TX ring descriptors
 //
@@ -62,16 +61,15 @@ impl AppConfig {
     }
 
     fn start(&self) {
-        launch::remote_launch(unsafe { mem::transmute(lcore_main) },
-                              Some(self),
-                              self.lcore_main_core_id)
+        launch::remote_launch(lcore_main, Some(self), self.lcore_main_core_id)
             .expect("Cannot launch task");
 
         self.lcore_main_is_running.store(true, Ordering::Relaxed);
 
-        info!("Starting lcore_main on core {} Our IP {}",
-              self.lcore_main_core_id,
-              self.bond_ip);
+        info!(
+            "Starting lcore_main on core {} Our IP {}",
+            self.lcore_main_core_id, self.bond_ip
+        );
     }
 
     fn stop(&self) {
@@ -81,9 +79,11 @@ impl AppConfig {
     }
 }
 
-fn slave_port_init(port_id: ethdev::PortId,
-                   port_conf: &ethdev::EthConf,
-                   pktmbuf_pool: &mut mempool::RawMemoryPool) {
+fn slave_port_init(
+    port_id: ethdev::PortId,
+    port_conf: &ethdev::EthConf,
+    pktmbuf_pool: &mut mempool::RawMemoryPool,
+) {
     info!("Setup port {}", port_id);
 
     let dev = port_id;
@@ -100,38 +100,48 @@ fn slave_port_init(port_id: ethdev::PortId,
         .expect(&format!("fail to setup device tx queue: port={}", port_id));
 
     // Start device
-    dev.start().expect(&format!("fail to start device: port={}", port_id));
+    dev.start()
+        .expect(&format!("fail to start device: port={}", port_id));
 
     dev.promiscuous_enable();
 
     info!("Port {} MAC: {}", port_id, dev.mac_addr());
 }
 
-fn bond_port_init(slave_count: u8,
-                  port_conf: &ethdev::EthConf,
-                  pktmbuf_pool: &mut mempool::RawMemoryPool)
-                  -> ethdev::PortId {
-    let dev = bond::create("bond0", bond::BondMode::AdaptiveLB, 0)
-        .expect("Faled to create bond port");
+fn bond_port_init(
+    slave_count: u16,
+    port_conf: &ethdev::EthConf,
+    pktmbuf_pool: &mut mempool::RawMemoryPool,
+) -> ethdev::PortId {
+    let dev =
+        bond::create("bond0", bond::BondMode::AdaptiveLB, 0).expect("Faled to create bond port");
 
     let bonded_port_id = dev;
 
-    dev.configure(1, 1, &port_conf)
-        .expect(&format!("fail to configure device: port={}", bonded_port_id));
+    dev.configure(1, 1, &port_conf).expect(&format!(
+        "fail to configure device: port={}",
+        bonded_port_id
+    ));
 
     // init one RX queue
     dev.rx_queue_setup(0, RTE_RX_DESC_DEFAULT, None, pktmbuf_pool)
-        .expect(&format!("fail to setup device rx queue: port={}", bonded_port_id));
+        .expect(&format!(
+            "fail to setup device rx queue: port={}",
+            bonded_port_id
+        ));
 
     // init one TX queue on each port
     dev.tx_queue_setup(0, RTE_TX_DESC_DEFAULT, None)
-        .expect(&format!("fail to setup device tx queue: port={}", bonded_port_id));
+        .expect(&format!(
+            "fail to setup device tx queue: port={}",
+            bonded_port_id
+        ));
 
     for slave_port_id in 0..slave_count {
-        dev.add_slave(slave_port_id)
-            .expect(&format!("Oooops! adding slave {} to bond {} failed!",
-                             slave_port_id,
-                             bonded_port_id));
+        dev.add_slave(slave_port_id).expect(&format!(
+            "Oooops! adding slave {} to bond {} failed!",
+            slave_port_id, bonded_port_id
+        ));
     }
 
     // Start device
@@ -148,7 +158,10 @@ fn bond_port_init(slave_count: u8,
 fn strip_vlan_hdr(ether_hdr: *const ether::EtherHdr) -> (*const libc::c_void, u16) {
     unsafe {
         if (*ether_hdr).ether_type != ether::ETHER_TYPE_VLAN_BE {
-            (ether_hdr.offset(1) as *const libc::c_void, (*ether_hdr).ether_type)
+            (
+                ether_hdr.offset(1) as *const libc::c_void,
+                (*ether_hdr).ether_type,
+            )
         } else {
             let mut vlan_hdr = ether_hdr.offset(1) as *const ether::VlanHdr;
 
@@ -156,18 +169,24 @@ fn strip_vlan_hdr(ether_hdr: *const ether::EtherHdr) -> (*const libc::c_void, u1
                 vlan_hdr = vlan_hdr.offset(1);
             }
 
-            debug!("VLAN taged frame, offset: {}",
-                   vlan_hdr as usize - ether_hdr as usize);
+            debug!(
+                "VLAN taged frame, offset: {}",
+                vlan_hdr as usize - ether_hdr as usize
+            );
 
-            (vlan_hdr.offset(1) as *const libc::c_void, (*vlan_hdr).eth_proto)
+            (
+                vlan_hdr.offset(1) as *const libc::c_void,
+                (*vlan_hdr).eth_proto,
+            )
         }
     }
 }
 
 // Main thread that does the work, reading from INPUT_PORT and writing to OUTPUT_PORT
-extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
+fn lcore_main(app_conf: Option<&AppConfig>) -> i32 {
     debug!("lcore_main is starting @ lcore {}", lcore::id().unwrap());
 
+    let app_conf = app_conf.unwrap();
     let dev = app_conf.bonded_port_id;
     let mut pkts: [mbuf::RawMbufPtr; MAX_PKT_BURST] = unsafe { mem::zeroed() };
     let bond_ip = u32::from(app_conf.bond_ip).to_be();
@@ -182,9 +201,11 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
             continue;
         }
 
-        debug!("received {} packets from bonded port {}",
-               rx_cnt,
-               dev.portid());
+        debug!(
+            "received {} packets from bonded port {}",
+            rx_cnt,
+            dev.portid()
+        );
 
         app_conf.port_packets[0].fetch_add(rx_cnt, Ordering::Relaxed);
 
@@ -193,8 +214,8 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
             if let Some(m) = pkt.as_mut_ref() {
                 let mut has_freed = false;
 
-                if let Some(mut ether_hdr) = pktmbuf_mtod!(*pkt, *mut ether::EtherHdr)
-                    .as_mut_ref() {
+                if let Some(mut ether_hdr) = pktmbuf_mtod!(*pkt, *mut ether::EtherHdr).as_mut_ref()
+                {
                     let (next_hdr, next_proto) = strip_vlan_hdr(ether_hdr);
 
                     match next_proto {
@@ -203,28 +224,32 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
 
                             if let Some(mut arp_hdr) = (next_hdr as *mut arp::ArpHdr).as_mut_ref() {
                                 if arp_hdr.arp_data.arp_tip == bond_ip {
-                                    debug!("received ARP {:x} packet from {}",
-                                    arp_hdr.arp_op.to_le(),
-                                    ether::EtherAddr::from(arp_hdr.arp_data.arp_sha));
+                                    debug!(
+                                        "received ARP {:x} packet from {}",
+                                        arp_hdr.arp_op.to_le(),
+                                        ether::EtherAddr::from(arp_hdr.arp_data.arp_sha)
+                                    );
 
                                     if arp_hdr.arp_op == (ARP_OP_REQUEST as u16).to_be() {
                                         arp_hdr.arp_op = (ARP_OP_REPLY as u16).to_be();
 
-                                        ether::EtherAddr::copy(&ether_hdr.s_addr.addr_bytes,
-                                                               &mut ether_hdr.d_addr.addr_bytes);
-                                        ether::EtherAddr::copy(&app_conf.bond_mac_addr,
-                                                               &mut ether_hdr.s_addr.addr_bytes);
+                                        ether::EtherAddr::copy(
+                                            &ether_hdr.s_addr.addr_bytes,
+                                            &mut ether_hdr.d_addr.addr_bytes,
+                                        );
+                                        ether::EtherAddr::copy(
+                                            &app_conf.bond_mac_addr,
+                                            &mut ether_hdr.s_addr.addr_bytes,
+                                        );
 
-                                        ether::EtherAddr::copy(&arp_hdr.arp_data
-                                                                   .arp_sha
-                                                                   .addr_bytes,
-                                                               &mut arp_hdr.arp_data
-                                                                   .arp_tha
-                                                                   .addr_bytes);
-                                        ether::EtherAddr::copy(&app_conf.bond_mac_addr,
-                                                               &mut arp_hdr.arp_data
-                                                                   .arp_sha
-                                                                   .addr_bytes);
+                                        ether::EtherAddr::copy(
+                                            &arp_hdr.arp_data.arp_sha.addr_bytes,
+                                            &mut arp_hdr.arp_data.arp_tha.addr_bytes,
+                                        );
+                                        ether::EtherAddr::copy(
+                                            &app_conf.bond_mac_addr,
+                                            &mut arp_hdr.arp_data.arp_sha.addr_bytes,
+                                        );
 
                                         arp_hdr.arp_data.arp_tip = arp_hdr.arp_data.arp_sip;
                                         arp_hdr.arp_data.arp_sip = bond_ip;
@@ -241,16 +266,22 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
                         ether::ETHER_TYPE_IPV4_BE => {
                             app_conf.port_packets[2].fetch_add(1, Ordering::Relaxed);
 
-                            if let Some(mut ipv4_hdr) = (next_hdr as *mut ip::Ipv4Hdr)
-                                .as_mut_ref() {
+                            if let Some(mut ipv4_hdr) = (next_hdr as *mut ip::Ipv4Hdr).as_mut_ref()
+                            {
                                 if ipv4_hdr.dst_addr == bond_ip {
-                                    debug!("received IP packet from {}",
-                                    net::Ipv4Addr::from(ipv4_hdr.src_addr));
+                                    debug!(
+                                        "received IP packet from {}",
+                                        net::Ipv4Addr::from(ipv4_hdr.src_addr)
+                                    );
 
-                                    ether::EtherAddr::copy(&ether_hdr.s_addr.addr_bytes,
-                                                           &mut ether_hdr.d_addr.addr_bytes);
-                                    ether::EtherAddr::copy(&app_conf.bond_mac_addr,
-                                                           &mut ether_hdr.s_addr.addr_bytes);
+                                    ether::EtherAddr::copy(
+                                        &ether_hdr.s_addr.addr_bytes,
+                                        &mut ether_hdr.d_addr.addr_bytes,
+                                    );
+                                    ether::EtherAddr::copy(
+                                        &app_conf.bond_mac_addr,
+                                        &mut ether_hdr.s_addr.addr_bytes,
+                                    );
 
                                     ipv4_hdr.dst_addr = ipv4_hdr.src_addr;
                                     ipv4_hdr.src_addr = bond_ip;
@@ -280,7 +311,6 @@ extern "C" fn lcore_main(app_conf: &AppConfig) -> i32 {
     0
 }
 
-
 struct CmdActionResult {
     action: cmdline::FixedStr,
     ip: cmdline::IpNetAddr,
@@ -306,29 +336,33 @@ impl CmdActionResult {
                 if let Some(mut ether_hdr) = p.as_mut_ref() {
                     ether_hdr.ether_type = (ETHER_TYPE_ARP as u16).to_be();
 
-                    ether::EtherAddr::copy(&app_conf.bond_mac_addr,
-                                           &mut ether_hdr.s_addr.addr_bytes);
-                    ether::EtherAddr::copy(&ether::EtherAddr::broadcast(),
-                                           &mut ether_hdr.d_addr.addr_bytes);
+                    ether::EtherAddr::copy(
+                        &app_conf.bond_mac_addr,
+                        &mut ether_hdr.s_addr.addr_bytes,
+                    );
+                    ether::EtherAddr::copy(
+                        &ether::EtherAddr::broadcast(),
+                        &mut ether_hdr.d_addr.addr_bytes,
+                    );
                 }
 
                 let p = unsafe { p.offset(1) as *mut arp::ArpHdr };
 
                 if let Some(mut arp_hdr) = p.as_mut_ref() {
                     arp_hdr.arp_hrd = (ARP_HRD_ETHER as u16).to_be();
-                    arp_hdr.arp_pro = (ETHER_TYPE_IPV4 as u16).to_be();
+                    arp_hdr.arp_pro = (ETHER_TYPE_IPv4 as u16).to_be();
                     arp_hdr.arp_hln = ETHER_ADDR_LEN as u8;
                     arp_hdr.arp_pln = mem::size_of::<u32>() as u8;
                     arp_hdr.arp_op = (ARP_OP_REQUEST as u16).to_be();
 
-                    ether::EtherAddr::copy(&app_conf.bond_mac_addr,
-                                           &mut arp_hdr.arp_data
-                                               .arp_sha
-                                               .addr_bytes);
-                    ether::EtherAddr::copy(&ether::EtherAddr::zeroed(),
-                                           &mut arp_hdr.arp_data
-                                               .arp_tha
-                                               .addr_bytes);
+                    ether::EtherAddr::copy(
+                        &app_conf.bond_mac_addr,
+                        &mut arp_hdr.arp_data.arp_sha.addr_bytes,
+                    );
+                    ether::EtherAddr::copy(
+                        &ether::EtherAddr::zeroed(),
+                        &mut arp_hdr.arp_data.arp_tha.addr_bytes,
+                    );
 
                     arp_hdr.arp_data.arp_sip = u32::from(app_conf.bond_ip).to_be();
                     arp_hdr.arp_data.arp_tip = u32::from(ip).to_be();
@@ -339,7 +373,8 @@ impl CmdActionResult {
                 }
             }
             _ => {
-                cl.println("Wrong IP format. Only IPv4 is supported").unwrap();
+                cl.println("Wrong IP format. Only IPv4 is supported")
+                    .unwrap();
             }
         }
     }
@@ -348,9 +383,10 @@ impl CmdActionResult {
         let app_conf = data.unwrap();
 
         if app_conf.is_running() {
-            cl.println(&format!("lcore_main already running on core: {}",
-                app_conf.lcore_main_core_id))
-                .unwrap();
+            cl.println(&format!(
+                "lcore_main already running on core: {}",
+                app_conf.lcore_main_core_id
+            )).unwrap();
         } else {
             app_conf.start();
         }
@@ -360,13 +396,17 @@ impl CmdActionResult {
         let app_conf = data.unwrap();
 
         if !app_conf.is_running() {
-            cl.println(&format!("lcore_main not running on core: {}", app_conf.lcore_main_core_id))
-                .unwrap();
+            cl.println(&format!(
+                "lcore_main not running on core: {}",
+                app_conf.lcore_main_core_id
+            )).unwrap();
         } else {
             app_conf.stop();
 
-            cl.println(&format!("lcore_main stopped on core: {}", app_conf.lcore_main_core_id))
-                .unwrap();
+            cl.println(&format!(
+                "lcore_main stopped on core: {}",
+                app_conf.lcore_main_core_id
+            )).unwrap();
         }
     }
 
@@ -387,27 +427,33 @@ impl CmdActionResult {
                 "unused"
             };
 
-            cl.println(&format!("Slave {}, MAC={}, {}", slave.portid(), slave.mac_addr(), role))
-                .unwrap();
+            cl.println(&format!(
+                "Slave {}, MAC={}, {}",
+                slave.portid(),
+                slave.mac_addr(),
+                role
+            )).unwrap();
         }
 
-        cl.println(&format!("Active_slaves: {}, packets received:Tot: {}, Arp: {}, IPv4: {}",
+        cl.println(&format!(
+            "Active_slaves: {}, packets received:Tot: {}, Arp: {}, IPv4: {}",
             active_slaves.len(),
             app_conf.port_packets[0].load(Ordering::Relaxed),
             app_conf.port_packets[1].load(Ordering::Relaxed),
-            app_conf.port_packets[2].load(Ordering::Relaxed)))
-            .unwrap();
+            app_conf.port_packets[2].load(Ordering::Relaxed)
+        )).unwrap();
     }
 
     fn help(&mut self, cl: &cmdline::CmdLine, _: Option<&libc::c_void>) {
-        cl.println(r#"ALB - link bonding mode 6 example
+        cl.println(
+            r#"ALB - link bonding mode 6 example
     send IP    - sends one ARPrequest thru bonding for IP.
     start      - starts listening ARPs.
     stop       - stops lcore_main.
     show       - shows some bond info: ex. active slaves etc.
     help       - prints help.
-    quit       - terminate all threads and quit."#)
-            .unwrap();
+    quit       - terminate all threads and quit."#,
+        ).unwrap();
     }
 
     fn quit(&mut self, cl: &cmdline::CmdLine, data: Option<&AppConfig>) {
@@ -426,32 +472,46 @@ fn prompt(app_conf: &AppConfig) {
     let cmd_obj_action_help = TOKEN_STRING_INITIALIZER!(CmdActionResult, action, "help");
     let cmd_obj_action_quit = TOKEN_STRING_INITIALIZER!(CmdActionResult, action, "quit");
 
-    let cmd_send = cmdline::inst(CmdActionResult::send,
-                                 Some(app_conf),
-                                 "send client_ip",
-                                 &[&cmd_obj_action_send, &cmd_obj_ip]);
-    let cmd_start = cmdline::inst(CmdActionResult::start,
-                                  Some(app_conf),
-                                  "starts listening if not started at startup",
-                                  &[&cmd_obj_action_start]);
-    let cmd_stop = cmdline::inst(CmdActionResult::stop,
-                                 Some(app_conf),
-                                 "stops listening if started at startup",
-                                 &[&cmd_obj_action_stop]);
-    let cmd_show = cmdline::inst(CmdActionResult::show,
-                                 Some(app_conf),
-                                 "show listening status",
-                                 &[&cmd_obj_action_show]);
-    let cmd_help = cmdline::inst(CmdActionResult::help,
-                                 None,
-                                 "show help",
-                                 &[&cmd_obj_action_help]);
-    let cmd_quit = cmdline::inst(CmdActionResult::quit,
-                                 Some(app_conf),
-                                 "quit",
-                                 &[&cmd_obj_action_quit]);
+    let cmd_send = cmdline::inst(
+        CmdActionResult::send,
+        Some(app_conf),
+        "send client_ip",
+        &[&cmd_obj_action_send, &cmd_obj_ip],
+    );
+    let cmd_start = cmdline::inst(
+        CmdActionResult::start,
+        Some(app_conf),
+        "starts listening if not started at startup",
+        &[&cmd_obj_action_start],
+    );
+    let cmd_stop = cmdline::inst(
+        CmdActionResult::stop,
+        Some(app_conf),
+        "stops listening if started at startup",
+        &[&cmd_obj_action_stop],
+    );
+    let cmd_show = cmdline::inst(
+        CmdActionResult::show,
+        Some(app_conf),
+        "show listening status",
+        &[&cmd_obj_action_show],
+    );
+    let cmd_help = cmdline::inst(
+        CmdActionResult::help,
+        None,
+        "show help",
+        &[&cmd_obj_action_help],
+    );
+    let cmd_quit = cmdline::inst(
+        CmdActionResult::quit,
+        Some(app_conf),
+        "quit",
+        &[&cmd_obj_action_quit],
+    );
 
-    let cmds = &[&cmd_send, &cmd_start, &cmd_stop, &cmd_show, &cmd_help, &cmd_quit];
+    let cmds = &[
+        &cmd_send, &cmd_start, &cmd_stop, &cmd_show, &cmd_help, &cmd_quit,
+    ];
 
     cmdline::new(cmds)
         .open_stdin("bond6> ")
@@ -461,7 +521,7 @@ fn prompt(app_conf: &AppConfig) {
 
 // Main function, does initialisation and calls the per-lcore functions
 fn main() {
-    env_logger::init().unwrap();
+    pretty_env_logger::init();
 
     let args: Vec<String> = env::args().collect();
 
@@ -481,20 +541,21 @@ fn main() {
     }
 
     // create the mbuf pool
-    let pktmbuf_pool = mbuf::pktmbuf_pool_create("mbuf_pool",
-                                                 NB_MBUF,
-                                                 MEMPOOL_CACHE_SZ,
-                                                 0,
-                                                 mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
-                                                 eal::socket_id())
-        .as_mut_ref()
-        .expect("fail to initial mbuf pool");
+    let pktmbuf_pool = mbuf::pktmbuf_pool_create(
+        "mbuf_pool",
+        NB_MBUF,
+        MEMPOOL_CACHE_SZ,
+        0,
+        mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
+        eal::socket_id(),
+    ).as_mut_ref()
+    .expect("fail to initial mbuf pool");
 
     let port_conf = ethdev::EthConf {
         rx_adv_conf: Some(ethdev::RxAdvConf {
             rss_conf: Some(ethdev::EthRssConf {
                 key: None,
-                hash: ethdev::ETH_RSS_IP,
+                hash: ethdev::RssHashFunc::ETH_RSS_IP,
             }),
             ..ethdev::RxAdvConf::default()
         }),

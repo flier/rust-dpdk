@@ -1,20 +1,20 @@
 #[macro_use]
 extern crate log;
-extern crate env_logger;
 extern crate libc;
+extern crate pretty_env_logger;
 
 #[macro_use]
 extern crate rte;
 
-mod ethtool;
 mod ethapp;
+mod ethtool;
 
-use std::mem;
 use std::env;
+use std::mem;
 
-use rte::*;
-use rte::memory::AsMutRef;
 use rte::ethdev::EthDevice;
+use rte::memory::AsMutRef;
+use rte::*;
 
 use ethtool::*;
 
@@ -36,16 +36,17 @@ fn setup_ports(app_cfg: &mut AppConfig) {
             let dev = portid as ethdev::PortId;
             let dev_info = dev.info();
 
-            let size_pktpool = dev_info.rx_desc_lim.nb_max + dev_info.tx_desc_lim.nb_max +
-                               PKTPOOL_EXTRA_SIZE;
+            let size_pktpool =
+                dev_info.rx_desc_lim.nb_max + dev_info.tx_desc_lim.nb_max + PKTPOOL_EXTRA_SIZE;
 
-            app_port.pkt_pool = mbuf::pktmbuf_pool_create(&format!("pkt_pool_{}", portid),
-                                                          size_pktpool as u32,
-                                                          PKTPOOL_CACHE,
-                                                          0,
-                                                          mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
-                                                          eal::socket_id())
-                .expect("create mbuf pool failed");
+            app_port.pkt_pool = mbuf::pktmbuf_pool_create(
+                &format!("pkt_pool_{}", portid),
+                size_pktpool as u32,
+                PKTPOOL_CACHE,
+                0,
+                mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
+                eal::socket_id(),
+            ).expect("create mbuf pool failed");
 
             println!("Init port {}..\n", portid);
 
@@ -57,18 +58,20 @@ fn setup_ports(app_cfg: &mut AppConfig) {
                 .expect(&format!("fail to configure device: port={}", portid));
 
             // init one RX queue
-            dev.rx_queue_setup(0,
-                                PORT_RX_QUEUE_SIZE,
-                                None,
-                                app_port.pkt_pool.as_mut_ref().unwrap())
-                .expect(&format!("fail to setup device rx queue: port={}", portid));
+            dev.rx_queue_setup(
+                0,
+                PORT_RX_QUEUE_SIZE,
+                None,
+                app_port.pkt_pool.as_mut_ref().unwrap(),
+            ).expect(&format!("fail to setup device rx queue: port={}", portid));
 
             // init one TX queue on each port
             dev.tx_queue_setup(0, PORT_TX_QUEUE_SIZE, None)
                 .expect(&format!("fail to setup device tx queue: port={}", portid));
 
             // Start device
-            dev.start().expect(&format!("fail to start device: port={}", portid));
+            dev.start()
+                .expect(&format!("fail to start device: port={}", portid));
 
             dev.promiscuous_enable();
         }
@@ -77,13 +80,15 @@ fn setup_ports(app_cfg: &mut AppConfig) {
 
 fn process_frame(mac_addr: &ether::EtherAddr, frame: mbuf::RawMbufPtr) {
     if let Some(mut ether_hdr) = pktmbuf_mtod!(frame, *mut ether::EtherHdr).as_mut_ref() {
-        ether::EtherAddr::copy(&ether_hdr.s_addr.addr_bytes,
-                               &mut ether_hdr.d_addr.addr_bytes);
+        ether::EtherAddr::copy(
+            &ether_hdr.s_addr.addr_bytes,
+            &mut ether_hdr.d_addr.addr_bytes,
+        );
         ether::EtherAddr::copy(&mac_addr, &mut ether_hdr.s_addr.addr_bytes);
     }
 }
 
-extern "C" fn slave_main(app_cfg: &mut AppConfig) -> i32 {
+fn slave_main(app_cfg: Option<&mut AppConfig>) -> i32 {
     while !app_cfg.exit_now {
         for (portid, mutex) in app_cfg.ports.iter().enumerate() {
             // Check that port is active and unlocked
@@ -132,7 +137,7 @@ extern "C" fn slave_main(app_cfg: &mut AppConfig) -> i32 {
 }
 
 fn main() {
-    env_logger::init().unwrap();
+    pretty_env_logger::init();
 
     let args: Vec<String> = env::args().collect();
 
@@ -166,10 +171,7 @@ fn main() {
     // Assume there is an available slave..
     let lcore_id = lcore::next(lcore::id().unwrap(), true);
 
-    launch::remote_launch(unsafe { mem::transmute(slave_main) },
-                          Some(&app_cfg),
-                          lcore_id)
-        .unwrap();
+    launch::remote_launch(slave_main, Some(&app_cfg), lcore_id).unwrap();
 
     ethapp::main(&mut app_cfg);
 

@@ -1,30 +1,35 @@
-extern crate env_logger;
 extern crate num_cpus;
+extern crate pretty_env_logger;
 
-use std::mem;
-use std::sync::{Arc, Mutex};
 use std::os::raw::c_void;
+use std::sync::{Arc, Mutex};
 
-use log::LogLevel::Debug;
 use cfile;
+use log::Level::Debug;
 
 use ffi;
 
-use super::*;
-use super::memory::AsMutRef;
-use super::mempool::{MemoryPool, MemoryPoolDebug};
+use eal;
+use launch;
+use lcore;
+use mbuf;
+use memory::AsMutRef;
+use mempool::{self, MemoryPool, MemoryPoolDebug, MemoryPoolFlags};
 
 #[test]
 fn test_eal() {
-    let _ = env_logger::init();
+    let _ = pretty_env_logger::try_init_timed();
 
-    assert_eq!(eal::init(&vec![String::from("test"),
-                               String::from("-c"),
-                               format!("{:x}", (1 << num_cpus::get()) - 1),
-                               String::from("--log-level"),
-                               String::from("8")])
-                   .unwrap(),
-               4);
+    assert_eq!(
+        eal::init(&vec![
+            String::from("test"),
+            String::from("-c"),
+            format!("{:x}", (1 << num_cpus::get()) - 1),
+            String::from("--log-level"),
+            String::from("8")
+        ]).unwrap(),
+        4
+    );
 
     assert_eq!(eal::process_type(), eal::ProcType::Primary);
     assert!(!eal::primary_proc_alive());
@@ -43,13 +48,20 @@ fn test_eal() {
 }
 
 fn test_config() {
-    let eal_cfg = eal::get_configuration();
+    let eal_cfg = eal::config();
 
     assert_eq!(eal_cfg.master_lcore(), 0);
     assert_eq!(eal_cfg.lcore_count(), num_cpus::get());
     assert_eq!(eal_cfg.process_type(), eal::ProcType::Primary);
-    assert_eq!(eal_cfg.lcore_roles(),
-               &[lcore::Role::Rte, lcore::Role::Rte, lcore::Role::Rte, lcore::Role::Rte]);
+    assert_eq!(
+        eal_cfg.lcore_roles(),
+        &[
+            lcore::Role::Rte,
+            lcore::Role::Rte,
+            lcore::Role::Rte,
+            lcore::Role::Rte
+        ]
+    );
 
     let mem_cfg = eal_cfg.memory_config();
 
@@ -79,10 +91,11 @@ fn test_lcore() {
 }
 
 fn test_launch() {
-    extern "C" fn slave_main(mutex: *const Arc<Mutex<usize>>) -> i32 {
+    fn slave_main(mutex: Option<Arc<Mutex<usize>>>) -> i32 {
         debug!("lcore {} is running", lcore::id().unwrap());
 
-        let mut data = unsafe { (*mutex).lock().unwrap() };
+        let mutex = mutex.unwrap();
+        let mut data = mutex.lock().unwrap();
 
         *data += 1;
 
@@ -103,7 +116,7 @@ fn test_launch() {
 
         debug!("remote launch lcore {}", slave_id);
 
-        launch::remote_launch(slave_main, Some(&mutex.clone()), slave_id).unwrap();
+        launch::remote_launch(slave_main, Some(mutex.clone()), slave_id).unwrap();
 
         assert_eq!(lcore::State::Running, lcore::state(slave_id));
     }
@@ -127,7 +140,7 @@ fn test_launch() {
 
         debug!("remote launch lcores");
 
-        launch::mp_remote_launch(slave_main, Some(&mutex.clone()), true).unwrap();
+        launch::mp_remote_launch(slave_main, Some(mutex.clone()), true).unwrap();
     }
 
     launch::mp_wait_lcore();
@@ -142,36 +155,31 @@ fn test_launch() {
 }
 
 fn test_mempool() {
-    let p = mempool::create::<c_void, c_void>("test",
-                                              16,
-                                              128,
-                                              0,
-                                              32,
-                                              None,
-                                              None,
-                                              None,
-                                              None,
-                                              ffi::SOCKET_ID_ANY,
-                                              mempool::MEMPOOL_F_SP_PUT |
-                                              mempool::MEMPOOL_F_SC_GET)
-        .as_mut_ref()
-        .unwrap();
+    let p = mempool::create::<c_void, c_void>(
+        "test",
+        16,
+        128,
+        0,
+        32,
+        None,
+        None,
+        None,
+        None,
+        ffi::SOCKET_ID_ANY,
+        MemoryPoolFlags::MEMPOOL_F_SP_PUT | MemoryPoolFlags::MEMPOOL_F_SC_GET,
+    ).as_mut_ref()
+    .unwrap();
 
     assert_eq!(p.name(), "test");
     assert_eq!(p.size, 16);
-    assert!(p.phys_addr != 0);
     assert_eq!(p.cache_size, 0);
-    assert_eq!(p.cache_flushthresh, 0);
     assert_eq!(p.elt_size, 128);
     assert_eq!(p.header_size, 64);
     assert_eq!(p.trailer_size, 0);
     assert_eq!(p.private_data_size, 64);
-    assert_eq!((p.elt_va_end - p.elt_va_start) as u32,
-               (p.header_size + p.elt_size) * p.size);
-    assert_eq!(p.physical_pages().len(), 1);
 
-    assert_eq!(p.count(), 16);
-    assert_eq!(p.free_count(), 0);
+    assert_eq!(p.avail_count(), 16);
+    assert_eq!(p.in_use_count(), 0);
     assert!(p.is_full());
     assert!(!p.is_empty());
 
@@ -183,22 +191,18 @@ fn test_mempool() {
         p.dump(&stdout);
     }
 
-    let mut elements: Vec<(u32, usize)> = Vec::new();
+    let mut elements: Vec<(u32, *mut c_void)> = Vec::new();
 
-    fn walk_element(elements: Option<&mut Vec<(u32, usize)>>,
-                    obj_start: *mut c_void,
-                    obj_end: *mut c_void,
-                    obj_index: u32) {
-        unsafe {
-            let obj_addr: usize = mem::transmute(obj_start);
-            let obj_end: usize = mem::transmute(obj_end);
-
-            elements.unwrap()
-                .push((obj_index, obj_end - obj_addr));
-        }
+    fn walk_element(
+        _pool: mempool::RawMemoryPoolPtr,
+        elements: Option<&mut Vec<(u32, *mut c_void)>>,
+        obj: *mut c_void,
+        obj_index: u32,
+    ) {
+        elements.unwrap().push((obj_index, obj));
     }
 
-    assert_eq!(p.walk(4, Some(walk_element), Some(&mut elements)), 4);
+    assert_eq!(p.walk(walk_element, Some(&mut elements)), 4);
 
     assert_eq!(elements.len(), 4);
 
@@ -208,12 +212,14 @@ fn test_mempool() {
 
     let mut pools: Vec<mempool::RawMemoryPoolPtr> = Vec::new();
 
-    fn walk_mempool(pool: mempool::RawMemoryPoolPtr,
-                    pools: Option<&mut Vec<mempool::RawMemoryPoolPtr>>) {
+    fn walk_mempool(
+        pool: mempool::RawMemoryPoolPtr,
+        pools: Option<&mut Vec<mempool::RawMemoryPoolPtr>>,
+    ) {
         pools.unwrap().push(pool);
     }
 
-    mempool::walk(Some(walk_mempool), Some(&mut pools));
+    mempool::walk(walk_mempool, Some(&mut pools));
 
     assert!(pools.contains(&raw_ptr));
 
@@ -230,31 +236,29 @@ fn test_mbuf() {
     const PRIV_SIZE: u16 = 0;
     const MBUF_SIZE: u16 = 128;
 
-    let p = mbuf::pktmbuf_pool_create("mbuf_pool",
-                                      NB_MBUF,
-                                      CACHE_SIZE,
-                                      PRIV_SIZE,
-                                      mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
-                                      eal::socket_id())
-        .as_mut_ref()
-        .unwrap();
+    let p = mbuf::pktmbuf_pool_create(
+        "mbuf_pool",
+        NB_MBUF,
+        CACHE_SIZE,
+        PRIV_SIZE,
+        mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
+        eal::socket_id(),
+    ).as_mut_ref()
+    .unwrap();
 
     assert_eq!(p.name(), "mbuf_pool");
     assert_eq!(p.size, NB_MBUF);
-    assert!(p.phys_addr != 0);
     assert_eq!(p.cache_size, CACHE_SIZE);
-    assert_eq!(p.cache_flushthresh, 48);
-    assert_eq!(p.elt_size,
-               (mbuf::RTE_MBUF_DEFAULT_BUF_SIZE + PRIV_SIZE + MBUF_SIZE) as u32);
+    assert_eq!(
+        p.elt_size,
+        (mbuf::RTE_MBUF_DEFAULT_BUF_SIZE + PRIV_SIZE + MBUF_SIZE) as u32
+    );
     assert_eq!(p.header_size, 64);
     assert_eq!(p.trailer_size, 0);
     assert_eq!(p.private_data_size, 64);
-    assert_eq!((p.elt_va_end - p.elt_va_start) as u32,
-               (p.header_size + p.elt_size) * p.size);
-    assert_eq!(p.physical_pages().len(), 1);
 
-    assert_eq!(p.count(), NB_MBUF);
-    assert_eq!(p.free_count(), 0);
+    assert_eq!(p.avail_count(), NB_MBUF as usize);
+    assert_eq!(p.in_use_count(), 0);
     assert!(p.is_full());
     assert!(!p.is_empty());
 

@@ -1,27 +1,27 @@
 #[macro_use]
 extern crate log;
-extern crate env_logger;
 extern crate getopts;
 extern crate libc;
 extern crate nix;
+extern crate pretty_env_logger;
 
 #[macro_use]
 extern crate rte;
 
+use std::clone::Clone;
+use std::env;
 use std::io;
 use std::io::prelude::*;
 use std::mem;
-use std::env;
-use std::clone::Clone;
+use std::path::Path;
 use std::process;
 use std::str::FromStr;
-use std::path::Path;
 
 use nix::sys::signal;
 
-use rte::*;
+use rte::ethdev::{EthDevice, EthDeviceInfo, TxBuffer};
 use rte::memory::AsMutRef;
-use rte::ethdev::{TxBuffer, EthDevice, EthDeviceInfo};
+use rte::*;
 
 const EXIT_FAILURE: i32 = -1;
 
@@ -77,19 +77,25 @@ fn parse_args(args: &Vec<String>) -> (u32, u32, u32) {
     let mut opts = getopts::Options::new();
     let program = args[0].clone();
 
-    opts.optopt("p",
-                "",
-                "hexadecimal bitmask of ports to configure",
-                "PORTMASK");
-    opts.optopt("q",
-                "",
-                "number of queue (=ports) per lcore (default is 1)",
-                "NQ");
-    opts.optopt("T",
-                "",
-                "statistics will be refreshed each PERIOD seconds (0 to disable, 10 default, \
-                 86400 maximum)",
-                "PERIOD");
+    opts.optopt(
+        "p",
+        "",
+        "hexadecimal bitmask of ports to configure",
+        "PORTMASK",
+    );
+    opts.optopt(
+        "q",
+        "",
+        "number of queue (=ports) per lcore (default is 1)",
+        "NQ",
+    );
+    opts.optopt(
+        "T",
+        "",
+        "statistics will be refreshed each PERIOD seconds (0 to disable, 10 default, \
+         86400 maximum)",
+        "PERIOD",
+    );
     opts.optflag("h", "help", "print this help menu");
 
     let matches = match opts.parse(&args[1..]) {
@@ -174,14 +180,16 @@ fn check_all_ports_link_status(enabled_devices: &Vec<ethdev::PortId>) {
         let link = dev.link();
 
         if link.up {
-            println!("  Port {} Link Up - speed {} Mbps - {}",
-                     dev.portid(),
-                     link.speed,
-                     if link.duplex {
-                         "full-duplex"
-                     } else {
-                         "half-duplex"
-                     })
+            println!(
+                "  Port {} Link Up - speed {} Mbps - {}",
+                dev.portid(),
+                link.speed,
+                if link.duplex {
+                    "full-duplex"
+                } else {
+                    "half-duplex"
+                }
+            )
         } else {
             println!("  Port {} Link Down", dev.portid());
         }
@@ -198,19 +206,17 @@ extern "C" {
 
     static mut l2fwd_dst_ports: [libc::uint32_t; RTE_MAX_ETHPORTS as usize];
 
-    static mut l2fwd_tx_buffers: [*mut rte::raw::Struct_rte_eth_dev_tx_buffer;
-                                  RTE_MAX_ETHPORTS as usize];
+    static mut l2fwd_tx_buffers: [*mut rte::raw::rte_eth_dev_tx_buffer; RTE_MAX_ETHPORTS as usize];
 
     static mut l2fwd_timer_period: libc::int64_t;
 
-    fn l2fwd_main_loop(rx_port_list: *const libc::uint32_t,
-                       n_rx_port: libc::c_uint)
-                       -> libc::c_int;
+    fn l2fwd_main_loop(rx_port_list: *const libc::uint32_t, n_rx_port: libc::c_uint)
+        -> libc::c_int;
 }
 
-extern "C" fn l2fwd_launch_one_lcore(conf: *const Conf) -> i32 {
+fn l2fwd_launch_one_lcore(conf: Option<&Conf>) -> i32 {
     let lcore_id = lcore::id().unwrap();
-    let qconf = unsafe { &(*conf).queue_conf[lcore_id as usize] };
+    let qconf = &conf.unwrap().queue_conf[lcore_id as usize];
 
     if qconf.n_rx_port == 0 {
         info!("lcore {} has nothing to do", lcore_id);
@@ -227,8 +233,8 @@ extern "C" fn l2fwd_launch_one_lcore(conf: *const Conf) -> i32 {
     unsafe { l2fwd_main_loop(qconf.rx_port_list.as_ptr(), qconf.n_rx_port) }
 }
 
-extern "C" fn handle_sigint(sig: signal::SigNum) {
-    match sig {
+extern "C" fn handle_sigint(sig: libc::c_int) {
+    match signal::Signal::from_c_int(sig).unwrap() {
         signal::SIGINT | signal::SIGTERM => unsafe {
             println!("Signal {} received, preparing to exit...", sig);
 
@@ -239,9 +245,11 @@ extern "C" fn handle_sigint(sig: signal::SigNum) {
 }
 
 fn handle_signals() -> nix::Result<()> {
-    let sig_action = signal::SigAction::new(signal::SigHandler::Handler(handle_sigint),
-                                            signal::SaFlag::empty(),
-                                            signal::SigSet::empty());
+    let sig_action = signal::SigAction::new(
+        signal::SigHandler::Handler(handle_sigint),
+        signal::SaFlags::empty(),
+        signal::SigSet::empty(),
+    );
     unsafe {
         try!(signal::sigaction(signal::SIGINT, &sig_action));
         try!(signal::sigaction(signal::SIGTERM, &sig_action));
@@ -265,7 +273,7 @@ fn prepare_args(args: &mut Vec<String>) -> (Vec<String>, Vec<String>) {
 }
 
 fn main() {
-    env_logger::init().unwrap();
+    pretty_env_logger::init();
 
     handle_signals().expect("fail to handle signals");
 
@@ -286,23 +294,26 @@ fn main() {
     eal::init(&eal_args).expect("fail to initial EAL");
 
     // create the mbuf pool
-    let l2fwd_pktmbuf_pool = mbuf::pktmbuf_pool_create("mbuf_pool",
-                                                       NB_MBUF,
-                                                       32,
-                                                       0,
-                                                       mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
-                                                       eal::socket_id())
-        .expect("fail to initial mbuf pool")
-        .as_mut_ref()
-        .unwrap();
+    let l2fwd_pktmbuf_pool = mbuf::pktmbuf_pool_create(
+        "mbuf_pool",
+        NB_MBUF,
+        32,
+        0,
+        mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
+        eal::socket_id(),
+    ).expect("fail to initial mbuf pool")
+    .as_mut_ref()
+    .unwrap();
 
     let enabled_devices: Vec<ethdev::PortId> = ethdev::devices()
         .filter(|dev| ((1 << dev.portid()) & enabled_port_mask) != 0)
         .collect();
 
     if enabled_devices.is_empty() {
-        eal::exit(EXIT_FAILURE,
-                  "All available ports are disabled. Please set portmask.\n");
+        eal::exit(
+            EXIT_FAILURE,
+            "All available ports are disabled. Please set portmask.\n",
+        );
     }
 
     let mut last_port = 0;
@@ -344,8 +355,9 @@ fn main() {
     for dev in &enabled_devices {
         let portid = dev.portid();
 
-        while !lcore::is_enabled(rx_lcore_id) ||
-              conf.queue_conf[rx_lcore_id as usize].n_rx_port == rx_queue_per_lcore {
+        while !lcore::is_enabled(rx_lcore_id)
+            || conf.queue_conf[rx_lcore_id as usize].n_rx_port == rx_queue_per_lcore
+        {
             rx_lcore_id += 1;
 
             if rx_lcore_id >= RTE_MAX_LCORE {
@@ -393,31 +405,34 @@ fn main() {
             .as_mut_ref()
             .expect(&format!("fail to allocate buffer for tx: port={}", portid));
 
-        buf.count_err_packets()
-            .expect(&format!("failt to set error callback for tx buffer: port={}", portid));
+        buf.count_err_packets().expect(&format!(
+            "failt to set error callback for tx buffer: port={}",
+            portid
+        ));
 
         unsafe {
             l2fwd_tx_buffers[portid] = buf;
         }
 
         // Start device
-        dev.start().expect(&format!("fail to start device: port={}", portid));
+        dev.start()
+            .expect(&format!("fail to start device: port={}", portid));
 
         println!("Done: ");
 
         dev.promiscuous_enable();
 
-        println!("  Port {}, MAC address: {} (promiscuous {})",
-                 portid,
-                 mac_addr,
-                 dev.is_promiscuous_enabled()
-                     .map(|enabled| if enabled {
-                         "enabled"
-                     } else {
-                         "disabled"
-                     })
-                     .expect(&format!("fail to enable promiscuous mode for device: port={}",
-                                      portid)));
+        println!(
+            "  Port {}, MAC address: {} (promiscuous {})",
+            portid,
+            mac_addr,
+            dev.is_promiscuous_enabled()
+                .map(|enabled| if enabled { "enabled" } else { "disabled" })
+                .expect(&format!(
+                    "fail to enable promiscuous mode for device: port={}",
+                    portid
+                ))
+        );
     }
 
     check_all_ports_link_status(&enabled_devices);

@@ -1,23 +1,24 @@
 #[macro_use]
 extern crate log;
-extern crate env_logger;
 extern crate libc;
+extern crate pretty_env_logger;
 
 #[macro_use]
 extern crate rte;
 
-use std::env;
-use std::str;
-use std::mem;
-use std::slice;
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::collections::HashMap;
+use std::env;
 use std::ffi::CString;
+use std::marker::PhantomData;
+use std::mem;
 use std::net::IpAddr;
 use std::os::raw::c_void;
-use std::collections::HashMap;
-use std::marker::PhantomData;
+use std::rc::Rc;
+use std::slice;
+use std::str;
 
+use rte::cmdline::*;
 use rte::*;
 
 struct Object {
@@ -36,11 +37,12 @@ struct TokenObjectList {
     obj_list_data: TokenObjectListData,
 }
 
-unsafe extern "C" fn parse_obj_list(token: &mut TokenObjectList,
-                                    srcbuf: *const u8,
-                                    res: *mut *const Object,
-                                    ressize: u32)
-                                    -> i32 {
+unsafe extern "C" fn parse_obj_list(
+    token: *mut RawParseTokenHeader,
+    srcbuf: *const i8,
+    res: *mut libc::c_void,
+    ressize: u32,
+) -> i32 {
     if srcbuf.is_null() {
         return -1;
     }
@@ -49,7 +51,7 @@ unsafe extern "C" fn parse_obj_list(token: &mut TokenObjectList,
         return -1;
     }
 
-    let mut p = srcbuf;
+    let mut p = srcbuf as *const u8;
     let mut token_len = 0;
 
     while !cmdline::is_end_of_token(*p) {
@@ -57,11 +59,18 @@ unsafe extern "C" fn parse_obj_list(token: &mut TokenObjectList,
         token_len += 1;
     }
 
-    let name = str::from_utf8(slice::from_raw_parts(srcbuf, token_len)).unwrap();
+    let name = str::from_utf8(slice::from_raw_parts(srcbuf as *const u8, token_len)).unwrap();
 
-    if let Some(obj) = token.obj_list_data.objs.borrow().get(name) {
+    if let Some(obj) = (token as *mut TokenObjectList)
+        .as_ref()
+        .unwrap()
+        .obj_list_data
+        .objs
+        .borrow()
+        .get(name)
+    {
         if !res.is_null() {
-            *res = obj;
+            res.write(obj);
         }
 
         token_len as i32
@@ -70,16 +79,25 @@ unsafe extern "C" fn parse_obj_list(token: &mut TokenObjectList,
     }
 }
 
-unsafe extern "C" fn complete_get_nb_obj_list(token: &mut TokenObjectList) -> i32 {
+unsafe extern "C" fn complete_get_nb_obj_list(token: *mut RawTokenHeader) -> i32 {
     token.obj_list_data.objs.borrow().len() as i32
 }
 
-unsafe extern "C" fn complete_get_elt_obj_list(token: &mut TokenObjectList,
-                                               idx: i32,
-                                               dstbuf: *mut u8,
-                                               size: u32)
-                                               -> i32 {
-    if let Some((name, _)) = token.obj_list_data.objs.borrow().iter().nth(idx as usize) {
+unsafe extern "C" fn complete_get_elt_obj_list(
+    token: *mut cmdline::RawTokenHeader,
+    idx: i32,
+    dstbuf: *mut i8,
+    size: u32,
+) -> i32 {
+    if let Some((name, _)) = (token as *mut TokenObjectList)
+        .as_ref()
+        .unwrap()
+        .obj_list_data
+        .objs
+        .borrow()
+        .iter()
+        .nth(idx as usize)
+    {
         if (name.len() + 1) < size as usize {
             let buf = slice::from_raw_parts_mut(dstbuf, size as usize);
 
@@ -93,8 +111,12 @@ unsafe extern "C" fn complete_get_elt_obj_list(token: &mut TokenObjectList,
     -1
 }
 
-unsafe extern "C" fn get_help_obj_list(_: &mut TokenObjectList, dstbuf: *mut u8, size: u32) -> i32 {
-    let dbuf = slice::from_raw_parts_mut(dstbuf, size as usize);
+unsafe extern "C" fn get_help_obj_list(
+    _: *mut cmdline::RawTokenHeader,
+    dstbuf: *mut i8,
+    size: u32,
+) -> i32 {
+    let dbuf = slice::from_raw_parts_mut(dstbuf as *mut u8, size as usize);
     let s = CString::new("Obj-List").unwrap();
     let sbuf = s.as_bytes_with_nul();
 
@@ -118,11 +140,13 @@ impl<'a> CmdDelShowResult<'a> {
 
         match action {
             "show" => {
-                cl.print(format!("Object {}, ip={}\n", self.obj.name, self.obj.ip)).unwrap();
+                cl.print(format!("Object {}, ip={}\n", self.obj.name, self.obj.ip))
+                    .unwrap();
             }
             "del" => {
                 if let Some(ref obj) = objs.unwrap().borrow_mut().remove(&self.obj.name) {
-                    cl.print(format!("Object {} removed, ip={}\n", obj.name, obj.ip)).unwrap();
+                    cl.print(format!("Object {} removed, ip={}\n", obj.name, obj.ip))
+                        .unwrap();
                 }
             }
             _ => {
@@ -143,7 +167,8 @@ impl CmdObjAddResult {
         let name = self.name.to_str();
 
         if objs.unwrap().borrow().contains_key(name) {
-            cl.print(format!("Object {} already exist\n", name)).unwrap();
+            cl.print(format!("Object {} already exist\n", name))
+                .unwrap();
 
             return;
         }
@@ -153,7 +178,8 @@ impl CmdObjAddResult {
             ip: self.ip.to_ipaddr(),
         };
 
-        cl.print(format!("Object {} added, ip={}\n", name, obj.ip)).unwrap();
+        cl.print(format!("Object {} added, ip={}\n", name, obj.ip))
+            .unwrap();
 
         let _ = objs.unwrap().borrow_mut().insert(String::from(name), obj);
     }
@@ -165,7 +191,8 @@ struct CmdHelpResult {
 
 impl CmdHelpResult {
     fn parsed(&mut self, cl: &cmdline::CmdLine, _: Option<&c_void>) {
-        cl.print(r#"Demo example of command line interface in RTE
+        cl.print(
+            r#"Demo example of command line interface in RTE
 
 
 This is a readline-like interface that can be used to
@@ -179,8 +206,8 @@ extended to handle a list of objects. There are
 - add obj_name IP
 - del obj_name
 - show obj_name
-"#)
-            .unwrap();
+"#,
+        ).unwrap();
     }
 }
 
@@ -195,7 +222,7 @@ impl CmdQuitResult {
 }
 
 fn main() {
-    env_logger::init().unwrap();
+    pretty_env_logger::init();
 
     let args: Vec<String> = env::args().collect();
 
@@ -207,10 +234,10 @@ fn main() {
 
     let mut token_obj_list_ops = unsafe {
         cmdline::RawTokenOps {
-            parse: Some(mem::transmute(parse_obj_list)),
-            complete_get_nb: Some(mem::transmute(complete_get_nb_obj_list)),
-            complete_get_elt: Some(mem::transmute(complete_get_elt_obj_list)),
-            get_help: Some(mem::transmute(get_help_obj_list)),
+            parse: Some(parse_obj_list),
+            complete_get_nb: Some(complete_get_nb_obj_list),
+            complete_get_elt: Some(complete_get_elt_obj_list),
+            get_help: Some(get_help_obj_list),
         }
     };
 
@@ -219,24 +246,30 @@ fn main() {
             ops: &mut token_obj_list_ops,
             offset: offset_of!(CmdDelShowResult, obj) as u32,
         },
-        obj_list_data: TokenObjectListData { objs: objects.clone() },
+        obj_list_data: TokenObjectListData {
+            objs: objects.clone(),
+        },
     };
 
     let cmd_obj_obj = cmdline::Token::Raw(&token_obj_list.hdr, PhantomData);
 
-    let cmd_obj_del_show = cmdline::inst(CmdDelShowResult::parsed,
-                                         Some(&objects),
-                                         "Show/del an object",
-                                         &[&cmd_obj_action, &cmd_obj_obj]);
+    let cmd_obj_del_show = cmdline::inst(
+        CmdDelShowResult::parsed,
+        Some(&objects),
+        "Show/del an object",
+        &[&cmd_obj_action, &cmd_obj_obj],
+    );
 
     let cmd_obj_action_add = TOKEN_STRING_INITIALIZER!(CmdObjAddResult, action, "add");
     let cmd_obj_name = TOKEN_STRING_INITIALIZER!(CmdObjAddResult, name);
     let cmd_obj_ip = TOKEN_IPADDR_INITIALIZER!(CmdObjAddResult, ip);
 
-    let cmd_obj_add = cmdline::inst(CmdObjAddResult::parsed,
-                                    Some(&objects),
-                                    "Add an object (name, val)",
-                                    &[&cmd_obj_action_add, &cmd_obj_name, &cmd_obj_ip]);
+    let cmd_obj_add = cmdline::inst(
+        CmdObjAddResult::parsed,
+        Some(&objects),
+        "Add an object (name, val)",
+        &[&cmd_obj_action_add, &cmd_obj_name, &cmd_obj_ip],
+    );
 
     let cmd_help_help = TOKEN_STRING_INITIALIZER!(CmdHelpResult, help, "help");
 

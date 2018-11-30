@@ -1,4 +1,7 @@
+// Build Configuration
 #include <rte_config.h>
+
+// Common Components
 #include <rte_common.h>
 #include <rte_version.h>
 #include <rte_log.h>

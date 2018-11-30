@@ -2,8 +2,6 @@
 extern crate log;
 #[macro_use]
 extern crate bitflags;
-#[macro_use]
-extern crate lazy_static;
 extern crate cfile;
 extern crate errno;
 extern crate libc;

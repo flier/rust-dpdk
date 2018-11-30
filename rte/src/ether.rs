@@ -172,6 +172,30 @@ impl From<[u8; 6]> for EtherAddr {
     }
 }
 
+impl From<*const u8> for EtherAddr {
+    fn from(p: *const u8) -> EtherAddr {
+        let mut mac = [0u8; ETHER_ADDR_LEN];
+
+        unsafe {
+            ptr::copy_nonoverlapping(p, (&mut mac[..]).as_mut_ptr(), ETHER_ADDR_LEN);
+        }
+
+        EtherAddr(mac)
+    }
+}
+
+impl From<*mut u8> for EtherAddr {
+    fn from(p: *mut u8) -> EtherAddr {
+        let mut mac = [0u8; ETHER_ADDR_LEN];
+
+        unsafe {
+            ptr::copy_nonoverlapping(p, (&mut mac[..]).as_mut_ptr(), ETHER_ADDR_LEN);
+        }
+
+        EtherAddr(mac)
+    }
+}
+
 impl From<RawEtherAddr> for EtherAddr {
     fn from(addr: RawEtherAddr) -> EtherAddr {
         EtherAddr(addr.addr_bytes)

@@ -2,7 +2,6 @@ use std::ffi::CStr;
 use std::mem;
 use std::os::raw::c_void;
 use std::os::unix::io::AsRawFd;
-use std::ptr;
 
 use cfile;
 
@@ -39,8 +38,8 @@ pub type MemoryPoolObjectContructor<T> =
 pub type MemoryPoolWalkCallback<T> = fn(pool: RawMemoryPoolPtr, arg: Option<&mut T>);
 
 /// A mempool object iterator callback function.
-pub type MemoryPoolObjectCallback<T, P> =
-    fn(pool: RawMemoryPoolPtr, opaque: *mut T, obj: *mut P, obj_index: u32);
+pub type MemoryPoolObjectCallback<T, O> =
+    fn(pool: RawMemoryPoolPtr, arg: Option<&mut T>, obj: *mut O, idx: u32);
 
 /// RTE Mempool.
 ///
@@ -99,9 +98,9 @@ pub trait MemoryPoolDebug: MemoryPool {
     ///
     fn walk<T, P>(
         &mut self,
-        obj_iter: Option<MemoryPoolObjectCallback<T, P>>,
-        obj_iter_arg: Option<&mut T>,
-    ) -> u32;
+        callback: MemoryPoolObjectCallback<T, P>,
+        arg: Option<&mut T>,
+    ) -> usize;
 }
 
 /// Create a new mempool named name in memory.
@@ -158,10 +157,24 @@ pub fn list_dump<S: AsRawFd>(s: &S) {
     }
 }
 
+struct PoolWalkContext<'a, T: 'a> {
+    callback: MemoryPoolWalkCallback<T>,
+    arg: Option<&'a mut T>,
+}
+
+unsafe extern "C" fn _walk_stub<T>(mp: *mut ffi::rte_mempool, ctxt: *mut libc::c_void) {
+    let ctxt = Box::from_raw(ctxt as *mut PoolWalkContext<T>);
+
+    (ctxt.callback)(mp, ctxt.arg)
+}
+
 /// Walk list of all memory pools
-pub fn walk<T>(callback: Option<MemoryPoolWalkCallback<T>>, arg: Option<&T>) {
+pub fn walk<T>(callback: MemoryPoolWalkCallback<T>, arg: Option<&mut T>) {
     unsafe {
-        ffi::rte_mempool_walk(mem::transmute(callback), mem::transmute(arg));
+        ffi::rte_mempool_walk(
+            Some(_walk_stub::<T>),
+            Box::into_raw(Box::new(PoolWalkContext { callback, arg })) as *mut _,
+        );
     }
 }
 
@@ -201,21 +214,33 @@ impl MemoryPoolDebug for RawMemoryPool {
         }
     }
 
-    fn walk<T, P>(
+    fn walk<T, O>(
         &mut self,
-        obj_iter: Option<MemoryPoolObjectCallback<T, P>>,
-        obj_iter_arg: Option<&mut T>,
-    ) -> u32 {
+        callback: MemoryPoolObjectCallback<T, O>,
+        arg: Option<&mut T>,
+    ) -> usize {
         unsafe {
             ffi::rte_mempool_obj_iter(
                 self,
-                mem::transmute(obj_iter),
-                if let Some(arg) = obj_iter_arg {
-                    arg as *mut _ as *mut libc::c_void
-                } else {
-                    ptr::null_mut()
-                },
-            )
+                Some(_obj_walk_stub::<T, O>),
+                Box::into_raw(Box::new(ObjWalkContext { callback, arg })) as *mut _,
+            ) as usize
         }
     }
+}
+
+struct ObjWalkContext<'a, T: 'a, O: 'a> {
+    callback: MemoryPoolObjectCallback<T, O>,
+    arg: Option<&'a mut T>,
+}
+
+unsafe extern "C" fn _obj_walk_stub<T, O>(
+    mp: *mut ffi::rte_mempool,
+    ctxt: *mut c_void,
+    obj: *mut c_void,
+    idx: u32,
+) {
+    let ctxt = Box::from_raw(ctxt as *mut ObjWalkContext<T, O>);
+
+    (ctxt.callback)(mp, ctxt.arg, obj as *mut _, idx)
 }

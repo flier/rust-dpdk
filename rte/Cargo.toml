@@ -7,10 +7,7 @@ build = "build.rs"
 
 [dependencies]
 log = "0.4"
-
 bitflags = "1.0"
-lazy_static = "1.2"
-
 libc = "0.2"
 errno = "0.2"
 cfile = "0.2"
@@ -23,6 +20,8 @@ log = "0.4"
 pretty_env_logger = "0.2"
 lazy_static = "1.2"
 cc = "1.0"
+
+rte-build = { version = "18.11", path = "../rte-build" }
 
 [dev-dependencies]
 pretty_env_logger = "0.2"

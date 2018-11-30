@@ -5,7 +5,7 @@ use std::sync::Mutex;
 use rte::*;
 use rte::ethdev::EthDevice;
 
-pub const MAX_PORTS: u8 = RTE_MAX_ETHPORTS as u8;
+pub const MAX_PORTS: u16 = RTE_MAX_ETHPORTS as u16;
 
 pub const MAX_BURST_LENGTH: usize = 32;
 

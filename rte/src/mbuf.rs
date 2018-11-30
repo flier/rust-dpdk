@@ -187,34 +187,30 @@ macro_rules! pktmbuf_mtod {
 
 pub trait RefCnt {
     /// Adds given value to an mbuf's refcnt and returns its new value.
-    fn refcnt_update(&mut self, value: i16) -> u16;
+    unsafe fn refcnt_update(&mut self, value: i16) -> u16;
 
     /// Reads the value of an mbuf's refcnt.
-    fn refcnt_read(&mut self) -> u16;
+    unsafe fn refcnt_read(&mut self) -> u16;
 
     /// Sets an mbuf's refcnt to the defined value.
-    fn refcnt_set(&mut self, new_value: u16);
+    unsafe fn refcnt_set(&mut self, new_value: u16);
 }
 
 impl RefCnt for RawMbuf {
     #[inline]
-    fn refcnt_update(&mut self, value: i16) -> u16 {
-        unsafe {
-            self.__bindgen_anon_2.refcnt += value as u16;
-            self.__bindgen_anon_2.refcnt
-        }
+    unsafe fn refcnt_update(&mut self, value: i16) -> u16 {
+        self.__bindgen_anon_2.refcnt += value as u16;
+        self.__bindgen_anon_2.refcnt
     }
 
     #[inline]
-    fn refcnt_read(&mut self) -> u16 {
-        unsafe { self.__bindgen_anon_2.refcnt }
+    unsafe fn refcnt_read(&mut self) -> u16 {
+        self.__bindgen_anon_2.refcnt
     }
 
     #[inline]
-    fn refcnt_set(&mut self, new_value: u16) {
-        unsafe {
-            self.__bindgen_anon_2.refcnt = new_value;
-        }
+    unsafe fn refcnt_set(&mut self, new_value: u16) {
+        self.__bindgen_anon_2.refcnt = new_value;
     }
 }
 
