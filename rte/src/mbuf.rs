@@ -1,7 +1,7 @@
 use std::os::unix::io::AsRawFd;
 
-use libc;
 use cfile;
+use libc;
 
 use ffi;
 
@@ -22,40 +22,40 @@ use mempool;
 // rte_get_tx_ol_flag_name().
 //
 bitflags! {
-    pub flags OffloadFlags: u64 {
+    pub struct OffloadFlags: u64 {
         /// RX packet is a 802.1q VLAN packet.
-        const PKT_RX_VLAN_PKT      = 1 << 0,
+        const PKT_RX_VLAN_PKT      = 1 << 0;
         /// RX packet with RSS hash result.
-        const PKT_RX_RSS_HASH      = 1 << 1,
+        const PKT_RX_RSS_HASH      = 1 << 1;
         /// RX packet with FDIR match indicate.
-        const PKT_RX_FDIR          = 1 << 2,
+        const PKT_RX_FDIR          = 1 << 2;
         /// L4 cksum of RX pkt. is not OK.
-        const PKT_RX_L4_CKSUM_BAD  = 1 << 3,
+        const PKT_RX_L4_CKSUM_BAD  = 1 << 3;
         /// IP cksum of RX pkt. is not OK.
-        const PKT_RX_IP_CKSUM_BAD  = 1 << 4,
+        const PKT_RX_IP_CKSUM_BAD  = 1 << 4;
         /// External IP header checksum error.
-        const PKT_RX_EIP_CKSUM_BAD = 1 << 5,
+        const PKT_RX_EIP_CKSUM_BAD = 1 << 5;
         /// Num of desc of an RX pkt oversize.
-        const PKT_RX_OVERSIZE      = 0 << 0,
+        const PKT_RX_OVERSIZE      = 0 << 0;
         /// Header buffer overflow.
-        const PKT_RX_HBUF_OVERFLOW = 0 << 0,
+        const PKT_RX_HBUF_OVERFLOW = 0 << 0;
         /// Hardware processing error.
-        const PKT_RX_RECIP_ERR     = 0 << 0,
+        const PKT_RX_RECIP_ERR     = 0 << 0;
         /// MAC error.
-        const PKT_RX_MAC_ERR       = 0 << 0,
+        const PKT_RX_MAC_ERR       = 0 << 0;
         /// RX IEEE1588 L2 Ethernet PT Packet.
-        const PKT_RX_IEEE1588_PTP  = 1 << 9,
+        const PKT_RX_IEEE1588_PTP  = 1 << 9;
         /// RX IEEE1588 L2/L4 timestamped packet.
-        const PKT_RX_IEEE1588_TMST = 1 << 10,
+        const PKT_RX_IEEE1588_TMST = 1 << 10;
         /// FD id reported if FDIR match.
-        const PKT_RX_FDIR_ID       = 1 << 13,
+        const PKT_RX_FDIR_ID       = 1 << 13;
         /// Flexible bytes reported if FDIR match.
-        const PKT_RX_FDIR_FLX      = 1 << 14,
+        const PKT_RX_FDIR_FLX      = 1 << 14;
         /// RX packet with double VLAN stripped.
-        const PKT_RX_QINQ_PKT      = 1 << 15,
+        const PKT_RX_QINQ_PKT      = 1 << 15;
 
         /// TX packet with double VLAN inserted.
-        const PKT_TX_QINQ_PKT      = 1 << 49,
+        const PKT_TX_QINQ_PKT      = 1 << 49;
 
         /**
          * TCP segmentation offload. To enable this offload feature for a
@@ -70,9 +70,10 @@ bitflags! {
          *    and set it in the TCP header. Refer to rte_ipv4_phdr_cksum() and
          *    rte_ipv6_phdr_cksum() that can be used as helpers.
          */
-        const PKT_TX_TCP_SEG       = 1 << 50,
+        const PKT_TX_TCP_SEG       = 1 << 50;
 
-        const PKT_TX_IEEE1588_TMST = 1 << 51, /**< TX IEEE1588 packet to timestamp. */
+    /// TX IEEE1588 packet to timestamp.
+        const PKT_TX_IEEE1588_TMST = 1 << 51;
 
         /**
          * Bits 52+53 used for L4 packet type with checksum enabled: 00: Reserved,
@@ -85,11 +86,11 @@ bitflags! {
          *    for TCP or UDP). See rte_ipv4_phdr_cksum() and rte_ipv6_phdr_cksum().
          *    For SCTP, set the crc field to 0.
          */
-        const PKT_TX_L4_NO_CKSUM   = 0 << 52, /**< Disable L4 cksum of TX pkt. */
-        const PKT_TX_TCP_CKSUM     = 1 << 52, /**< TCP cksum of TX pkt. computed by NIC. */
-        const PKT_TX_SCTP_CKSUM    = 2 << 52, /**< SCTP cksum of TX pkt. computed by NIC. */
-        const PKT_TX_UDP_CKSUM     = 3 << 52, /**< UDP cksum of TX pkt. computed by NIC. */
-        const PKT_TX_L4_MASK       = 3 << 52, /**< Mask for L4 cksum offload request. */
+        const PKT_TX_L4_NO_CKSUM   = 0 << 52; /**< Disable L4 cksum of TX pkt. */
+        const PKT_TX_TCP_CKSUM     = 1 << 52; /**< TCP cksum of TX pkt. computed by NIC. */
+        const PKT_TX_SCTP_CKSUM    = 2 << 52; /**< SCTP cksum of TX pkt. computed by NIC. */
+        const PKT_TX_UDP_CKSUM     = 3 << 52; /**< UDP cksum of TX pkt. computed by NIC. */
+        const PKT_TX_L4_MASK       = 3 << 52; /**< Mask for L4 cksum offload request. */
 
         /**
          * Offload the IP checksum in the hardware. The flag PKT_TX_IPV4 should
@@ -98,7 +99,7 @@ bitflags! {
          *  - set the IP checksum field in the packet to 0
          *  - fill the mbuf offload information: l2_len, l3_len
          */
-        const PKT_TX_IP_CKSUM      = 1 << 54,
+        const PKT_TX_IP_CKSUM      = 1 << 54;
 
         /**
          * Packet is IPv4. This flag must be set when using any offload feature
@@ -106,7 +107,7 @@ bitflags! {
          * packet. If the packet is a tunneled packet, this flag is related to
          * the inner headers.
          */
-        const PKT_TX_IPV4          = 1 << 55,
+        const PKT_TX_IPV4          = 1 << 55;
 
         /**
          * Packet is IPv6. This flag must be set when using an offload feature
@@ -114,9 +115,9 @@ bitflags! {
          * packet. If the packet is a tunneled packet, this flag is related to
          * the inner headers.
          */
-        const PKT_TX_IPV6          = 1 << 56,
+        const PKT_TX_IPV6          = 1 << 56;
 
-        const PKT_TX_VLAN_PKT      = 1 << 57, /**< TX packet is a 802.1q VLAN packet. */
+        const PKT_TX_VLAN_PKT      = 1 << 57; /**< TX packet is a 802.1q VLAN packet. */
 
         /**
          * Offload the IP checksum of an external header in the hardware. The
@@ -126,30 +127,30 @@ bitflags! {
          *  - set the outer IP checksum field in the packet to 0
          *  - fill the mbuf offload information: outer_l2_len, outer_l3_len
          */
-        const PKT_TX_OUTER_IP_CKSUM   = 1 << 58,
+        const PKT_TX_OUTER_IP_CKSUM   = 1 << 58;
 
         /**
          * Packet outer header is IPv4. This flag must be set when using any
          * outer offload feature (L3 or L4 checksum) to tell the NIC that the
          * outer header of the tunneled packet is an IPv4 packet.
          */
-        const PKT_TX_OUTER_IPV4   = 1 << 59,
+        const PKT_TX_OUTER_IPV4   = 1 << 59;
 
         /**
          * Packet outer header is IPv6. This flag must be set when using any
          * outer offload feature (L4 checksum) to tell the NIC that the outer
          * header of the tunneled packet is an IPv6 packet.
          */
-        const PKT_TX_OUTER_IPV6    = 1 << 60,
+        const PKT_TX_OUTER_IPV6    = 1 << 60;
         /// reserved for future mbuf use
-        const __RESERVED           = 1 << 61,
+        const __RESERVED           = 1 << 61;
         /// Indirect attached mbuf
-        const IND_ATTACHED_MBUF    = 1 << 62,
+        const IND_ATTACHED_MBUF    = 1 << 62;
 
         /// Use final bit of flags to indicate a control mbuf
         ///
         /// Mbuf contains control data
-        const CTRL_MBUF_FLAG       = 1 << 63,
+        const CTRL_MBUF_FLAG       = 1 << 63;
     }
 }
 
@@ -162,23 +163,26 @@ bitflags! {
 pub const RTE_MBUF_DEFAULT_BUF_SIZE: u16 =
     (ffi::RTE_MBUF_DEFAULT_DATAROOM + ffi::RTE_PKTMBUF_HEADROOM) as u16;
 
-pub type RawMbuf = ffi::Struct_rte_mbuf;
-pub type RawMbufPtr = *mut ffi::Struct_rte_mbuf;
+pub type RawMbuf = ffi::rte_mbuf;
+pub type RawMbufPtr = *mut ffi::rte_mbuf;
 
 /// A macro that points to an offset into the data in the mbuf.
 #[macro_export]
 macro_rules! pktmbuf_mtod_offset {
-    ($m:expr, $t:ty, $off:expr) => (unsafe {
-        (((*$m).buf_addr as *const ::std::os::raw::c_char).offset((*$m).data_off as isize) as $t)
-    })
+    ($m:expr, $t:ty, $off:expr) => {
+        unsafe {
+            (((*$m).buf_addr as *const ::std::os::raw::c_char).offset((*$m).data_off as isize)
+                as $t)
+        }
+    };
 }
 
 /// A macro that points to the start of the data in the mbuf.
 #[macro_export]
 macro_rules! pktmbuf_mtod {
-    ($m:expr, $t:ty) => (
+    ($m:expr, $t:ty) => {
         pktmbuf_mtod_offset!($m, $t, 0)
-    )
+    };
 }
 
 pub trait RefCnt {
@@ -196,21 +200,20 @@ impl RefCnt for RawMbuf {
     #[inline]
     fn refcnt_update(&mut self, value: i16) -> u16 {
         unsafe {
-            *self.refcnt() = (*self.refcnt() as isize + value as isize) as u16;
-
-            *self.refcnt()
+            self.__bindgen_anon_2.refcnt += value as u16;
+            self.__bindgen_anon_2.refcnt
         }
     }
 
     #[inline]
     fn refcnt_read(&mut self) -> u16 {
-        unsafe { *self.refcnt() }
+        unsafe { self.__bindgen_anon_2.refcnt }
     }
 
     #[inline]
     fn refcnt_set(&mut self, new_value: u16) {
         unsafe {
-            *self.refcnt() = new_value;
+            self.__bindgen_anon_2.refcnt = new_value;
         }
     }
 }
@@ -268,7 +271,6 @@ impl PktMbuf for RawMbuf {
         rte_check!(p, NonNull)
     }
 
-
     fn trim(&mut self, len: usize) -> Result<()> {
         rte_check!(unsafe { _rte_pktmbuf_trim(self, len as u16) })
     }
@@ -309,20 +311,23 @@ impl PktMbufPool for mempool::RawMemoryPool {
 /// This function creates and initializes a packet mbuf pool.
 /// It is a wrapper to rte_mempool_create() with the proper packet constructor
 /// and mempool constructor.
-pub fn pktmbuf_pool_create(name: &str,
-                           n: u32,
-                           cache_size: u32,
-                           priv_size: u16,
-                           data_room_size: u16,
-                           socket_id: i32)
-                           -> Result<mempool::RawMemoryPoolPtr> {
+pub fn pktmbuf_pool_create(
+    name: &str,
+    n: u32,
+    cache_size: u32,
+    priv_size: u16,
+    data_room_size: u16,
+    socket_id: i32,
+) -> Result<mempool::RawMemoryPoolPtr> {
     let p = unsafe {
-        ffi::rte_pktmbuf_pool_create(try!(to_cptr!(name)),
-                                     n,
-                                     cache_size,
-                                     priv_size,
-                                     data_room_size,
-                                     socket_id)
+        ffi::rte_pktmbuf_pool_create(
+            try!(to_cptr!(name)),
+            n,
+            cache_size,
+            priv_size,
+            data_room_size,
+            socket_id,
+        )
     };
 
     rte_check!(p, NonNull)
@@ -333,10 +338,11 @@ extern "C" {
 
     fn _rte_pktmbuf_free(m: RawMbufPtr);
 
-    fn _rte_pktmbuf_alloc_bulk(mp: mempool::RawMemoryPoolPtr,
-                               mbufs: *mut RawMbufPtr,
-                               count: libc::c_uint)
-                               -> libc::c_int;
+    fn _rte_pktmbuf_alloc_bulk(
+        mp: mempool::RawMemoryPoolPtr,
+        mbufs: *mut RawMbufPtr,
+        count: libc::c_uint,
+    ) -> libc::c_int;
 
     fn _rte_pktmbuf_clone(md: RawMbufPtr, mp: mempool::RawMemoryPoolPtr) -> RawMbufPtr;
 

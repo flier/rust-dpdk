@@ -1,7 +1,7 @@
-extern crate libc;
+#![allow(non_upper_case_globals)]
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 
-mod raw;
-pub mod consts;
+include!(concat!(env!("OUT_DIR"), "/config.rs"));
 
-pub use raw::*;
-pub use consts::*;
+include!(concat!(env!("OUT_DIR"), "/raw.rs"));

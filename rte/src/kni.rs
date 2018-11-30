@@ -1,21 +1,26 @@
-use std::ptr;
-use std::mem;
 use std::cmp;
-use std::ops::{Deref, DerefMut};
 use std::ffi::CStr;
+use std::mem;
+use std::ops::{Deref, DerefMut};
+use std::ptr;
 
 use libc;
 
 use ffi;
 
-use mempool;
+use errors::{Error, Result};
+use ether;
 use mbuf;
+use mempool;
 use pci;
-use errors::Result;
 
 /// Initialize and preallocate KNI subsystem
-pub fn init(max_kni_ifaces: usize) {
-    unsafe { ffi::rte_kni_init(max_kni_ifaces as u32) }
+pub fn init(max_kni_ifaces: usize) -> Result<()> {
+    if unsafe { ffi::rte_kni_init(max_kni_ifaces as u32) } == 0 {
+        Ok(())
+    } else {
+        Err(Error::rte_error())
+    }
 }
 
 /// Close KNI device.
@@ -29,24 +34,29 @@ pub fn close() {
 /// The KNI interface created in the kernel space is the net interface
 /// the traditional Linux application talking to.
 ///
-pub fn alloc(pktmbuf_pool: &mut mempool::RawMemoryPool,
-             conf: &KniDeviceConf,
-             opts: Option<&KniDeviceOps>)
-             -> Result<KniDevice> {
+pub fn alloc(
+    pktmbuf_pool: &mut mempool::RawMemoryPool,
+    conf: &KniDeviceConf,
+    opts: Option<&KniDeviceOps>,
+) -> Result<KniDevice> {
     unsafe {
-        let mut kni_conf = ffi::Struct_rte_kni_conf {
+        let mut kni_conf = ffi::rte_kni_conf {
             name: mem::zeroed(),
             core_id: conf.core_id,
             group_id: conf.group_id,
             mbuf_size: conf.mbuf_size,
             addr: conf.pci_addr,
             id: conf.pci_id,
-            _bindgen_bitfield_1_: conf.flags.bits,
+            _bitfield_1: ffi::rte_kni_conf::new_bitfield_1(conf.flags.bits),
+            mac_addr: mem::transmute(conf.mac_addr.into_bytes()),
+            mtu: conf.mtu,
         };
 
-        ptr::copy(conf.name.as_ptr(),
-                  kni_conf.name.as_mut_ptr() as *mut u8,
-                  cmp::min(conf.name.len(), kni_conf.name.len() - 1));
+        ptr::copy(
+            conf.name.as_ptr(),
+            kni_conf.name.as_mut_ptr() as *mut u8,
+            cmp::min(conf.name.len(), kni_conf.name.len() - 1),
+        );
 
         let p = ffi::rte_kni_alloc(pktmbuf_pool, &kni_conf, mem::transmute(opts));
 
@@ -55,8 +65,8 @@ pub fn alloc(pktmbuf_pool: &mut mempool::RawMemoryPool,
 }
 
 bitflags! {
-    pub flags KniFlag: u8 {
-        const FORCE_BIND = 1,
+    pub struct KniFlag: u8 {
+        const FORCE_BIND = 1;
     }
 }
 
@@ -77,6 +87,9 @@ pub struct KniDeviceConf<'a> {
 
     /// Flag to bind kernel thread
     pub flags: KniFlag,
+
+    pub mac_addr: ether::EtherAddr,
+    pub mtu: u16,
 }
 
 impl<'a> Default for KniDeviceConf<'a> {
@@ -91,10 +104,10 @@ pub type ChangeMtuCallback = fn(port_id: u8, new_mut: libc::c_uint) -> libc::c_i
 /// Pointer to function of configuring network interface
 pub type ConfigNetworkInterfaceCallback = fn(port_id: u8, if_up: u8) -> libc::c_int;
 
-pub type KniDeviceOps = ffi::Struct_rte_kni_ops;
+pub type KniDeviceOps = ffi::rte_kni_ops;
 
-pub type RawKniDevice = ffi::Struct_rte_kni;
-pub type RawKniDevicePtr = *mut ffi::Struct_rte_kni;
+pub type RawKniDevice = ffi::rte_kni;
+pub type RawKniDevicePtr = *mut ffi::rte_kni;
 
 pub struct KniDevice(RawKniDevicePtr);
 
@@ -164,7 +177,11 @@ impl KniDevice {
 
     /// Get the name given to a KNI device
     pub fn name(&self) -> &str {
-        unsafe { CStr::from_ptr(ffi::rte_kni_get_name(self.0)).to_str().unwrap() }
+        unsafe {
+            CStr::from_ptr(ffi::rte_kni_get_name(self.0))
+                .to_str()
+                .unwrap()
+        }
     }
 
     /// It is used to handle the request mbufs sent from kernel space.

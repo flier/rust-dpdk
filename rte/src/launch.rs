@@ -17,13 +17,15 @@ pub fn remote_launch<T>(f: LcoreFunc<T>, arg: Option<&T>, slave_id: LcoreId) -> 
 /// Launch a function on all lcores.
 pub fn mp_remote_launch<T>(f: LcoreFunc<T>, arg: Option<&T>, skip_master: bool) -> Result<()> {
     rte_check!(unsafe {
-        ffi::rte_eal_mp_remote_launch(mem::transmute(f),
-                                      mem::transmute(arg),
-                                      if skip_master {
-                                          ffi::Enum_rte_rmt_call_master_t::SKIP_MASTER
-                                      } else {
-                                          ffi::Enum_rte_rmt_call_master_t::CALL_MASTER
-                                      })
+        ffi::rte_eal_mp_remote_launch(
+            mem::transmute(f),
+            mem::transmute(arg),
+            if skip_master {
+                ffi::rte_rmt_call_master_t::SKIP_MASTER
+            } else {
+                ffi::rte_rmt_call_master_t::CALL_MASTER
+            },
+        )
     })
 }
 

@@ -2,39 +2,36 @@ use std::mem;
 
 use ffi;
 
-use config;
+use config::config;
 use memory::SocketId;
 
 pub type LcoreId = u32;
 
 pub const LCORE_ID_ANY: LcoreId = !0 as u32;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(u32)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Role {
     Rte = 0, // ROLE_RTE
     Off = 1, // ROLE_OFF
 }
 
+#[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum State {
-    Wait = 0,
-    Running = 1,
-    Finished = 2,
+    Wait = ffi::rte_lcore_state_t::WAIT,
+    Running = ffi::rte_lcore_state_t::RUNNING,
+    Finished = ffi::rte_lcore_state_t::FINISHED,
 }
 
-impl From<ffi::Enum_rte_lcore_state_t> for State {
-    fn from(s: ffi::Enum_rte_lcore_state_t) -> Self {
-        match s {
-            ffi::Enum_rte_lcore_state_t::WAIT => State::Wait,
-            ffi::Enum_rte_lcore_state_t::RUNNING => State::Running,
-            ffi::Enum_rte_lcore_state_t::FINISHED => State::Finished,
-        }
+impl From<ffi::rte_lcore_state_t::Type> for State {
+    fn from(s: ffi::rte_lcore_state_t::Type) -> Self {
+        unsafe { mem::transmute(s) }
     }
 }
 
 extern "C" {
-    pub fn _rte_lcore_id() -> ffi::uint32_t;
+    pub fn _rte_lcore_id() -> u32;
 }
 
 /// Return the ID of the execution unit we are running on.
@@ -47,12 +44,12 @@ pub fn id() -> Option<LcoreId> {
 
 /// Get the id of the master lcore
 pub fn master() -> LcoreId {
-    config::get_configuration().master_lcore()
+    config().master_lcore()
 }
 
 /// Return the number of execution units (lcores) on the system.
 pub fn count() -> usize {
-    config::get_configuration().lcore_count()
+    config().lcore_count()
 }
 
 /// Return the index of the lcore starting from zero.
@@ -114,7 +111,7 @@ pub fn foreach_slave<T, F: Fn(LcoreId) -> T>(f: F) -> Vec<T> {
 }
 
 pub fn foreach_lcores<T, F: Fn(LcoreId) -> T>(f: F, skip_master: bool) -> Vec<T> {
-    let master_lcore = config::get_configuration().master_lcore();
+    let master_lcore = config().master_lcore();
 
     (0..ffi::RTE_MAX_LCORE)
         .filter(|lcore_id| is_enabled(*lcore_id))

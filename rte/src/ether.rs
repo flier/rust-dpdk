@@ -1,13 +1,13 @@
-use std::fmt;
-use std::str;
-use std::mem;
-use std::ptr;
 use std::error;
-use std::result;
+use std::fmt;
+use std::mem;
 use std::ops::{Deref, DerefMut};
+use std::ptr;
+use std::result;
+use std::str;
 
 use libc;
-use rand::{Rng, thread_rng};
+use rand::{thread_rng, Rng};
 
 use ffi;
 
@@ -32,7 +32,7 @@ impl error::Error for AddrParseError {
 
 pub const ETHER_ADDR_LEN: usize = 6;
 
-pub type RawEtherAddr = ffi::Struct_ether_addr;
+pub type RawEtherAddr = ffi::ether_addr;
 
 /// A 48-bit (6 byte) buffer containing the MAC address
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, Hash)]
@@ -73,6 +73,10 @@ impl EtherAddr {
         &self.0
     }
 
+    pub fn into_bytes(self) -> [u8; ETHER_ADDR_LEN] {
+        self.0
+    }
+
     pub fn from_bytes(b: &[u8]) -> result::Result<Self, AddrParseError> {
         if b.len() != ETHER_ADDR_LEN {
             return Err(AddrParseError(()));
@@ -99,7 +103,7 @@ impl EtherAddr {
     pub fn random() -> Self {
         let mut addr = [0u8; ETHER_ADDR_LEN];
 
-        thread_rng().fill_bytes(&mut addr);
+        thread_rng().fill(&mut addr);
 
         addr[0] &= !ffi::ETHER_GROUP_ADDR as u8; // clear multicast bit
         addr[0] |= ffi::ETHER_LOCAL_ADMIN_ADDR as u8; // set local assignment bit
@@ -154,14 +158,11 @@ impl EtherAddr {
 
 impl fmt::Display for EtherAddr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,
-               "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}",
-               self.0[0],
-               self.0[1],
-               self.0[2],
-               self.0[3],
-               self.0[4],
-               self.0[5])
+        write!(
+            f,
+            "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}",
+            self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5]
+        )
     }
 }
 
@@ -181,7 +182,8 @@ impl str::FromStr for EtherAddr {
     type Err = AddrParseError;
 
     fn from_str(s: &str) -> result::Result<Self, Self::Err> {
-        let addr: Vec<u8> = s.split(':')
+        let addr: Vec<u8> = s
+            .split(':')
             .filter_map(|part| u8::from_str_radix(part, 16).ok())
             .collect();
 
@@ -192,9 +194,9 @@ impl str::FromStr for EtherAddr {
 // Ethernet frame types
 
 /// IPv4 Protocol.
-pub const ETHER_TYPE_IPV4_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_IPV4 as u16);
+pub const ETHER_TYPE_IPV4_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_IPv4 as u16);
 /// IPv6 Protocol.
-pub const ETHER_TYPE_IPV6_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_IPV6 as u16);
+pub const ETHER_TYPE_IPV6_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_IPv6 as u16);
 /// Arp Protocol.
 pub const ETHER_TYPE_ARP_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_ARP as u16);
 /// Reverse Arp Protocol.
@@ -209,13 +211,13 @@ pub const ETHER_TYPE_SLOW_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_SLOW as u1
 pub const ETHER_TYPE_TEB_BE: u16 = rte_cpu_to_be_16!(ffi::ETHER_TYPE_TEB as u16);
 
 /// Ethernet header: Contains the destination address, source address and frame type.
-pub type EtherHdr = ffi::Struct_ether_hdr;
+pub type EtherHdr = ffi::ether_hdr;
 
 /// Ethernet VLAN Header.
-pub type VlanHdr = ffi::Struct_vlan_hdr;
+pub type VlanHdr = ffi::vlan_hdr;
 
 /// VXLAN protocol header.
-pub type VxlanHdr = ffi::Struct_vxlan_hdr;
+pub type VxlanHdr = ffi::vxlan_hdr;
 
 pub trait VlanExt {
     /// Extract VLAN tag information into mbuf

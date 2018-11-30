@@ -1,21 +1,22 @@
 use std::os::unix::io::AsRawFd;
 
-use ffi::{size_t, FILE, rte_openlog_stream};
+use ffi::{rte_openlog_stream, FILE};
 
-use errors::Result;
 use cfile;
+use errors::Result;
+use libc;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(i32)]
 pub enum ProcType {
-    Auto = -1, // RTE_PROC_AUTO
-    Primary = 0, // RTE_PROC_PRIMARY
+    Auto = -1,     // RTE_PROC_AUTO
+    Primary = 0,   // RTE_PROC_PRIMARY
     Secondary = 1, // RTE_PROC_SECONDARY
-    Invalid = 2, // RTE_PROC_INVALID
+    Invalid = 2,   // RTE_PROC_INVALID
 }
 
 extern "C" {
-    pub fn _rte_cache_line_size() -> size_t;
+    pub fn _rte_cache_line_size() -> libc::size_t;
 }
 
 pub fn openlog_stream<S: AsRawFd>(s: &S) -> Result<cfile::CFile> {

@@ -1,244 +1,290 @@
 #[macro_use]
 extern crate log;
-extern crate env_logger;
-extern crate gcc;
-extern crate regex;
+#[macro_use]
+extern crate lazy_static;
+extern crate num_cpus;
+extern crate pretty_env_logger;
+
+#[cfg(feature = "gen")]
+extern crate bindgen;
+#[cfg(feature = "gen")]
+extern crate itertools;
+#[cfg(feature = "gen")]
+extern crate raw_cpuid;
 
 use std::env;
 use std::env::consts::*;
-use std::io::Cursor;
-use std::io::prelude::*;
 use std::fs::File;
-use std::path::PathBuf;
+use std::io::prelude::*;
+use std::io::{BufRead, BufReader};
+use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::collections::HashMap;
+use std::str::FromStr;
 
-fn build_dpdk(base_dir: &PathBuf) {
-    let target = base_dir.file_name().unwrap().to_str().unwrap();
+fn build_dpdk(rte_sdk: &Path, rte_target: &str) {
+    let debug_mode = env::var("DEBUG")
+        .map(|s| s.parse().unwrap_or_default())
+        .unwrap_or_default();
 
-    debug!("building DPDK for target {} @ {}",
-           target,
-           base_dir.to_str().unwrap());
+    info!(
+        "building {} mode DPDK {} @ {:?}",
+        if debug_mode { "debug" } else { "release" },
+        rte_target,
+        rte_sdk
+    );
 
     Command::new("make")
-        .args(&["install",
-                format!("T={}", target).as_str(),
-                "CONFIG_RTE_BUILD_COMBINE_LIBS=y",
-                "EXTRA_CFLAGS='-fPIC -g -ggdb'",
-                "-j 4"])
-        .current_dir(base_dir.parent().unwrap())
+        .arg("install")
+        .arg(format!("T={}", rte_target))
+        .args(&["-j", &num_cpus::get().to_string()])
+        .env("CONFIG_RTE_BUILD_COMBINE_LIBS", "y")
+        .env(
+            "EXTRA_CFLAGS",
+            if debug_mode {
+                "-fPIC -O0 -g -ggdb"
+            } else {
+                "-fPIC -O"
+            },
+        ).current_dir(rte_sdk)
         .status()
-        .unwrap_or_else(|e| panic!("failed to execute process: {}", e));
+        .unwrap_or_else(|e| panic!("failed to build DPDK: {}", e));
 }
 
-static RE_NUM: &'static str =
-    r"^[\({]?\s*(?:\([:word:]+\))?\(?(?P<value>-?[:digit:]+)(?P<suffix>[Uu]?[Ll]*)\s*[\)}]?$";
-static RE_HEX: &'static str =
-    r"^[\({]?\s*(?:\([:word:]+\))?\(?(?P<value>0x[:xdigit:]+)(?P<suffix>[Uu]?[Ll]*)\s*[\)}]?$";
-static RE_SHIFT: &'static str = r"^\(?(?P<value>[:digit:]+\s*<<\s*[:digit:]+)\)?$";
+// fn gen_cargo_config(rte_sdk_dir: &PathBuf) {
+//     let libs = vec![
+//         "ethdev",
+//         "rte_acl",
+//         "rte_cfgfile",
+//         "rte_cmdline",
+//         "rte_cryptodev",
+//         "rte_distributor",
+//         "rte_eal",
+//         "rte_hash",
+//         "rte_ip_frag",
+//         "rte_jobstats",
+//         "rte_kni",
+//         "rte_kvargs",
+//         "rte_lpm",
+//         "rte_mbuf",
+//         "rte_mempool",
+//         "rte_meter",
+//         "rte_pipeline",
+//         "rte_port",
+//         "rte_ring",
+//         "rte_table",
+//         "rte_timer",
+//         "rte_vhost",
+//     ];
 
-fn gen_rte_config(base_dir: &PathBuf) {
-    let dest_path = PathBuf::from("src/rte_config.rs");
+//     for lib in libs {
+//         println!("cargo:rustc-link-lib=static={}", lib);
+//     }
 
-    debug!("generating rte_config.rs @ {}", dest_path.to_str().unwrap());
+//     println!(
+//         "cargo:rustc-link-search=native={}",
+//         rte_sdk_dir.join("lib").to_str().unwrap()
+//     );
+//     println!(
+//         "cargo:include={}",
+//         rte_sdk_dir.join("include").to_str().unwrap()
+//     );
+// }
 
-    let mut cmd = gcc::Config::new()
-        .include(base_dir.join("include"))
-        .flag("-dM")
-        .flag("-E")
-        .flag("-march=native")
-        .flag("-DRTE_MACHINE_CPUFLAG_SSE")
-        .flag("-DRTE_MACHINE_CPUFLAG_SSE2")
-        .flag("-DRTE_MACHINE_CPUFLAG_SSE3")
-        .flag("-DRTE_MACHINE_CPUFLAG_SSSE3")
-        .flag("-DRTE_MACHINE_CPUFLAG_SSE4_1")
-        .flag("-DRTE_MACHINE_CPUFLAG_SSE4_2")
-        .flag("-DRTE_MACHINE_CPUFLAG_AES")
-        .flag("-DRTE_MACHINE_CPUFLAG_PCLMULQDQ")
-        .flag("-DRTE_MACHINE_CPUFLAG_AVX")
-        .flag("-DRTE_MACHINE_CPUFLAG_RDRAND")
-        .flag("-DRTE_MACHINE_CPUFLAG_FSGSBASE")
-        .flag("-DRTE_MACHINE_CPUFLAG_F16C")
-        .flag("-DRTE_MACHINE_CPUFLAG_AVX2")
-        .flag("-DRTE_COMPILE_TIME_CPUFLAGS=RTE_CPUFLAG_SSE,RTE_CPUFLAG_SSE2,RTE_CPUFLAG_SSE3,\
-               RTE_CPUFLAG_SSSE3,RTE_CPUFLAG_SSE4_1,RTE_CPUFLAG_SSE4_2,RTE_CPUFLAG_AES,\
-               RTE_CPUFLAG_PCLMULQDQ,RTE_CPUFLAG_AVX,RTE_CPUFLAG_RDRAND,RTE_CPUFLAG_FSGSBASE,\
-               RTE_CPUFLAG_F16C,RTE_CPUFLAG_AVX2")
-        .get_compiler()
-        .to_command();
+fn gen_rte_config(rte_sdk_dir: &Path, dest_path: &Path) {
+    let config_file = rte_sdk_dir.join(".config");
 
-    cmd.arg("src/rte.h");
+    info!("generating DPDK config base on {:?}", config_file);
 
-    let re_num = regex::Regex::new(RE_NUM).unwrap();
-    let re_hex = regex::Regex::new(RE_HEX).unwrap();
-    let re_shift = regex::Regex::new(RE_SHIFT).unwrap();
+    let mut f = File::create(&dest_path).unwrap();
 
-    debug!("executing: {:?}", cmd);
+    writeln!(
+        &mut f,
+        "/* automatically generated by {} v{}, DON'T EDIT IT */\n",
+        env::var("CARGO_PKG_NAME").unwrap(),
+        env::var("CARGO_PKG_VERSION").unwrap(),
+    );
 
-    let output = cmd.output()
-        .unwrap_or_else(|err| panic!("failed to generate rte_config.rs, {}", err));
+    let r = BufReader::new(File::open(&config_file).expect("RTE config file"));
 
-    let f = File::create(&dest_path).unwrap();
+    for line in r.lines().flat_map(|line| line) {
+        if line.starts_with("#") {
+            writeln!(&mut f, "///{}", &line[1..]);
+        } else {
+            let mut i = line.splitn(2, "=");
+            let key = i.next().expect("key");
+            let value = i.next().expect("value");
 
-    let name_prefixes = &["RTE_", "ETH_", "CMDLINE_", "RDLINE_", "BONDING_", "BALANCE_", "PKT_",
-                          "ETHER_", "ARP_", "IPV4_"];
+            match value {
+                "" => {
+                    writeln!(&mut f, "pub const {}: () = ();", key);
+                }
+                "y" => {
+                    writeln!(&mut f, "pub const {}: bool = true;", key);
+                }
+                "n" => {
+                    writeln!(&mut f, "pub const {}: bool = false;", key);
+                }
+                s if s.starts_with('"') && s.ends_with('"') => {
+                    writeln!(&mut f, "pub const {}: &str = {};", key, value);
+                }
+                _ => {
+                    if let Ok(n) = u32::from_str(value) {
+                        writeln!(&mut f, "pub const {}: u32 = {};", key, n);
+                    } else {
+                        writeln!(&mut f, "// pub const {}: _ = {};", key, value);
+                    }
+                }
+            }
+        }
+    }
+}
 
-    fn value_types(sign: bool, long: bool) -> &'static str {
-        match (sign, long) {
-            (true, true) => "i64",
-            (false, true) => "u64",
-            (true, false) => "i32",
-            (false, false) => "u32",
+#[cfg(feature = "gen")]
+fn gen_rte_binding(rte_sdk_dir: &Path, dest_path: &Path) {
+    let rte_header = "src/rte.h";
+
+    info!("generating RTE binding file base on \"{}\"", rte_header);
+
+    let rte_sdk_inc_dir = rte_sdk_dir.join("include");
+    let cflags = vec!["-march=native", "-I", rte_sdk_inc_dir.to_str().unwrap()];
+
+    bindgen::Builder::default()
+        .header(rte_header)
+        .generate_comments(true)
+        .derive_copy(true)
+        .derive_debug(true)
+        .derive_default(true)
+        .derive_partialeq(true)
+        .default_enum_style(bindgen::EnumVariation::ModuleConsts)
+        .clang_args(
+            cflags
+                .into_iter()
+                .map(|s| s.to_owned())
+                .chain(gen_cpu_features()),
+        ).rustfmt_bindings(true)
+        .time_phases(true)
+        .generate()
+        .expect("Unable to generate bindings")
+        .write_to_file(dest_path)
+        .expect("Couldn't write bindings!");
+}
+
+#[cfg(feature = "gen")]
+fn gen_cpu_features() -> impl Iterator<Item = String> {
+    use std::iter;
+
+    let mut cflags = vec![];
+    let mut compile_time_cpuflags = vec![];
+
+    let cpuid = raw_cpuid::CpuId::new();
+
+    if let Some(features) = cpuid.get_feature_info() {
+        if features.has_sse() {
+            cflags.push("-DRTE_MACHINE_CPUFLAG_SSE");
+            compile_time_cpuflags.push("RTE_CPUFLAG_SSE");
+        }
+        if features.has_sse2() {
+            cflags.push("-DRTE_MACHINE_CPUFLAG_SSE2");
+            compile_time_cpuflags.push("RTE_CPUFLAG_SSE2");
+        }
+        if features.has_sse3() {
+            cflags.push("-DRTE_MACHINE_CPUFLAG_SSE3");
+            compile_time_cpuflags.push("RTE_CPUFLAG_SSE3");
+        }
+        if features.has_ssse3() {
+            cflags.push("-DRTE_MACHINE_CPUFLAG_SSSE3");
+            compile_time_cpuflags.push("RTE_CPUFLAG_SSSE3");
+        }
+        if features.has_sse41() {
+            cflags.push("-DRTE_MACHINE_CPUFLAG_SSE4_1");
+            compile_time_cpuflags.push("RTE_CPUFLAG_SSE4_1");
+        }
+        if features.has_sse42() {
+            cflags.push("-DRTE_MACHINE_CPUFLAG_SSE4_2");
+            compile_time_cpuflags.push("RTE_CPUFLAG_SSE4_2");
+        }
+        if features.has_aesni() {
+            cflags.push("-DRTE_MACHINE_CPUFLAG_AES");
+            compile_time_cpuflags.push("RTE_CPUFLAG_AES");
+        }
+        if features.has_pclmulqdq() {
+            cflags.push("-DRTE_MACHINE_CPUFLAG_PCLMULQDQ");
+            compile_time_cpuflags.push("RTE_CPUFLAG_PCLMULQDQ");
+        }
+        if features.has_avx() {
+            cflags.push("-DRTE_MACHINE_CPUFLAG_AVX");
+            compile_time_cpuflags.push("RTE_CPUFLAG_AVX");
+        }
+        if features.has_rdrand() {
+            cflags.push("-DRTE_MACHINE_CPUFLAG_RDRAND");
+        }
+        if features.has_f16c() {
+            cflags.push("-DRTE_MACHINE_CPUFLAG_F16C");
         }
     }
 
-    write!(&f,
-           r#"// automatically generated by build.rs script
-
-"#)
-        .unwrap();
-
-    let keyvalues = Cursor::new(output.stdout)
-        .lines()
-        .filter_map(|r| r.ok())
-        .filter_map(|line| {
-            let vars: Vec<&str> = line.splitn(3, " ")
-                .collect();
-
-            if vars[0] == "#define" {
-                Some((String::from(vars[1]), String::from(vars[2])))
-            } else {
-                None
-            }
-        })
-        .filter(|&(ref name, _)| name_prefixes.iter().any(|prefix| name.starts_with(prefix)))
-        .collect::<HashMap<String, String>>();
-
-    let mut skipped_keyvalues = HashMap::<String, String>::new();
-
-    let mut lines = keyvalues.iter()
-        .filter_map(|(name, raw_value)| {
-            if raw_value.starts_with("\"") && raw_value.ends_with("\"") {
-                Some((name, raw_value, raw_value.clone(), "&'static str"))
-            } else if let Some(caps) = re_num.captures(raw_value.as_str()) {
-                let value = caps.name("value").expect("`value` not found");
-
-                Some((name,
-                      raw_value,
-                      String::from(value),
-                      value_types(value.starts_with("-"),
-                                  caps.name("suffix")
-                                      .map_or_else(|| false,
-                                                   |suffix| suffix.to_uppercase() == "ULL"))))
-            } else if let Some(caps) = re_hex.captures(raw_value.as_str()) {
-                let value = caps.name("value").expect("`value` not found");
-
-                Some((name,
-                      raw_value,
-                      String::from(value),
-                      value_types(value.starts_with("-"),
-                                  caps.name("suffix")
-                                      .map_or_else(|| false,
-                                                   |suffix| suffix.to_uppercase() == "ULL"))))
-            } else if let Some(caps) = re_shift.captures(raw_value.as_str()) {
-                let value = caps.name("value").expect("`value` not found");
-
-                Some((name, raw_value, String::from(value), "u32"))
-            } else {
-                skipped_keyvalues.insert(name.clone(), raw_value.clone());
-
-                None
-            }
-        })
-        .map(|(name, raw_value, value, value_type)| {
-            if *value == *raw_value {
-                format!("pub const {}: {} = {}; ",
-                        name.to_uppercase(),
-                        value_type,
-                        value)
-            } else {
-                format!("pub const {}: {} = {}; // {}",
-                        name.to_uppercase(),
-                        value_type,
-                        value,
-                        raw_value)
-            }
-        })
-        .collect::<Vec<String>>();
-
-    lines.sort();
-
-    for line in &lines {
-        write!(&f, "{}\n", line).unwrap();
+    if let Some(features) = cpuid.get_extended_feature_info() {
+        if features.has_fsgsbase() {
+            cflags.push("-DRTE_MACHINE_CPUFLAG_FSGSBASE");
+        }
+        if features.has_avx2() {
+            cflags.push("-DRTE_MACHINE_CPUFLAG_AVX2");
+            compile_time_cpuflags.push("RTE_CPUFLAG_AVX2");
+        }
+        if features.has_avx512f() {
+            cflags.push("-RTE_MACHINE_CPUFLAG_AVX512F");
+            compile_time_cpuflags.push("RTE_CPUFLAG_AVX512F");
+        }
     }
 
-    write!(&f,
-           r#"
-// skipped
-
-"#)
-        .unwrap();
-
-    let mut skipped_lines = skipped_keyvalues.iter()
-        .map(|(name, value)| format!("#define {}\t{}", name, value))
-        .collect::<Vec<String>>();
-
-    skipped_lines.sort();
-
-    for line in &skipped_lines {
-        write!(&f, "// {}\n", line).unwrap();
-    }
+    cflags
+        .into_iter()
+        .map(|s| s.to_owned())
+        .chain(iter::once(format!(
+            "-DRTE_COMPILE_TIME_CPUFLAGS={}",
+            itertools::join(compile_time_cpuflags, ",")
+        )))
 }
 
-fn gen_cargo_config(base_dir: &PathBuf) {
-    let libs = vec!["ethdev",
-                    "rte_acl",
-                    "rte_cfgfile",
-                    "rte_cmdline",
-                    "rte_cryptodev",
-                    "rte_distributor",
-                    "rte_eal",
-                    "rte_hash",
-                    "rte_ip_frag",
-                    "rte_jobstats",
-                    "rte_kni",
-                    "rte_kvargs",
-                    "rte_lpm",
-                    "rte_mbuf",
-                    "rte_mempool",
-                    "rte_meter",
-                    "rte_pipeline",
-                    "rte_port",
-                    "rte_ring",
-                    "rte_table",
-                    "rte_timer",
-                    "rte_vhost"];
+#[cfg(not(feature = "gen"))]
+fn gen_rte_binding(_rte_sdk_dir: &Path, dest_path: &Path) {
+    use std::fs;
 
-    for lib in libs {
-        println!("cargo:rustc-link-lib=static={}", lib);
-    }
+    info!("coping RTE binding file");
 
-    println!("cargo:rustc-link-search=native={}",
-             base_dir.join("lib").to_str().unwrap());
-    println!("cargo:include={}",
-             base_dir.join("include").to_str().unwrap());
+    fs::copy("src/raw.rs", dest_path).expect("copy binding file");
+}
+
+pub const MACHINE: &str = "native";
+pub const TOOLCHAIN: &str = "gcc";
+
+lazy_static! {
+    static ref RTE_SDK: PathBuf = env::var("RTE_SDK")
+        .expect("RTE_SDK - Points to the DPDK installation directory.")
+        .into();
+    static ref RTE_ARCH: String = env::var("RTE_ARCH").unwrap_or(ARCH.to_owned());
+    static ref RTE_MACHINE: String = env::var("RTE_MACHINE").unwrap_or(MACHINE.to_owned());
+    static ref RTE_OS: String = env::var("RTE_OS").unwrap_or(OS.to_owned());
+    static ref RTE_TOOLCHAIN: String = env::var("RTE_TOOLCHAIN").unwrap_or(TOOLCHAIN.to_owned());
+    static ref RTE_TARGET: String = env::var("RTE_TARGET").unwrap_or(format!(
+        "{}-{}-{}app-{}",
+        *RTE_ARCH, *RTE_MACHINE, *RTE_OS, *RTE_TOOLCHAIN,
+    ));
+    static ref OUT_DIR: PathBuf = env::var("OUT_DIR").unwrap().into();
 }
 
 fn main() {
-    env_logger::init().unwrap();
+    pretty_env_logger::init();
 
-    let root_dir = env::var("RTE_SDK")
-        .expect("RTE_SDK - Points to the DPDK installation directory.");
-    let target = env::var("RTE_TARGET")
-        .unwrap_or(String::from(format!("{}-native-{}app-gcc", ARCH, OS)));
+    let rte_sdk_dir = RTE_SDK.join(RTE_TARGET.as_str());
 
-    let base_dir = PathBuf::from(root_dir).join(target);
+    info!("using DPDK @ {:?}", rte_sdk_dir);
 
-    if !base_dir.exists() {
-        build_dpdk(&base_dir);
+    if !rte_sdk_dir.exists() || !rte_sdk_dir.join("lib/libdpdk.a").exists() {
+        build_dpdk(RTE_SDK.as_path(), RTE_TARGET.as_str());
     }
 
-    gen_rte_config(&base_dir);
+    gen_rte_config(&rte_sdk_dir, &OUT_DIR.join("config.rs"));
 
-    gen_cargo_config(&base_dir);
+    gen_rte_binding(&rte_sdk_dir, &OUT_DIR.join("raw.rs"));
 }

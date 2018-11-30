@@ -1,23 +1,27 @@
 [package]
 name = "rte-sys"
-version = "0.1.0"
+version = "18.11.0"
 authors = ["Flier Lu <flier.lu@gmail.com>"]
 description = "FFI bindings to DPDK"
 links = "dpdk"
 build = "build.rs"
 
-[dependencies]
-log = "0.3"
-libc = "0.2"
-
-[dev-dependencies]
-
-
-[build-dependencies]
-log = "0.3"
-env_logger = "0.3"
-gcc = "0.3"
-regex = "0.1"
+[features]
+default = []
+gen = ["bindgen", "raw-cpuid", "itertools"]
 
 [lib]
 name = "rte_sys"
+
+[dependencies]
+log = "0.4"
+
+[build-dependencies]
+log = "0.4"
+pretty_env_logger = "0.2"
+num_cpus = "1.0"
+lazy_static = "1.2"
+
+bindgen = { version = "0.43", optional = true }
+raw-cpuid = { version = "6.1", optional = true }
+itertools = { version = "0.7", optional = true }

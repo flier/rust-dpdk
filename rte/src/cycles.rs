@@ -11,7 +11,7 @@ pub fn get_tsc_hz() -> u64 {
 /// Wait at least us microseconds.
 #[inline]
 pub fn delay_us(us: u32) {
-    unsafe { ffi::rte_delay_us(us) }
+    unsafe { ffi::rte_delay_us.unwrap()(us) }
 }
 
 /// Wait at least ms milliseconds.
