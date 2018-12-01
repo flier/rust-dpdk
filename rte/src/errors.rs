@@ -1,28 +1,105 @@
-use std::error;
-use std::ffi;
+use std::ffi::CStr;
 use std::fmt;
-use std::io;
 use std::os::raw::c_int;
 use std::result;
 
 use errno::errno;
+use failure::{Error, Fail};
 
 use ffi::rte_strerror;
+
+pub type Result<T> = result::Result<T, failure::Error>;
 
 pub trait AsResult {
     type Result;
 
     fn as_result(self) -> Result<Self::Result>;
+
+    fn ok_or<E: Fail>(self, err: E) -> Result<Self::Result>;
+
+    fn ok_or_else<E: Fail, F: FnOnce() -> E>(self, err: F) -> Result<Self::Result>;
+}
+
+impl<T> AsResult for *const T {
+    type Result = Self;
+
+    fn as_result(self) -> Result<Self::Result> {
+        if !self.is_null() {
+            Ok(self)
+        } else {
+            Err(rte_error().into())
+        }
+    }
+
+    fn ok_or<E: Fail>(self, err: E) -> Result<Self::Result> {
+        if !self.is_null() {
+            Ok(self)
+        } else {
+            Err(err.into())
+        }
+    }
+
+    fn ok_or_else<E: Fail, F: FnOnce() -> E>(self, err: F) -> Result<Self::Result> {
+        if !self.is_null() {
+            Ok(self)
+        } else {
+            Err(err().into())
+        }
+    }
+}
+
+impl<T> AsResult for *mut T {
+    type Result = Self;
+
+    fn as_result(self) -> Result<Self::Result> {
+        if !self.is_null() {
+            Ok(self)
+        } else {
+            Err(rte_error().into())
+        }
+    }
+
+    fn ok_or<E: Fail>(self, err: E) -> Result<Self::Result> {
+        if !self.is_null() {
+            Ok(self)
+        } else {
+            Err(err.into())
+        }
+    }
+
+    fn ok_or_else<E: Fail, F: FnOnce() -> E>(self, err: F) -> Result<Self::Result> {
+        if !self.is_null() {
+            Ok(self)
+        } else {
+            Err(err().into())
+        }
+    }
 }
 
 impl AsResult for c_int {
-    type Result = ();
+    type Result = c_int;
 
     fn as_result(self) -> Result<Self::Result> {
         if self == 0 {
-            Ok(())
+            Ok(self)
         } else {
-            Err(Error::RteError(self))
+            Err(RteError(self).into())
+        }
+    }
+
+    fn ok_or<E: Fail>(self, err: E) -> Result<Self::Result> {
+        if self == 0 {
+            Ok(self)
+        } else {
+            Err(err.into())
+        }
+    }
+
+    fn ok_or_else<E: Fail, F: FnOnce() -> E>(self, err: F) -> Result<Self::Result> {
+        if self == 0 {
+            Ok(self)
+        } else {
+            Err(err().into())
         }
     }
 }
@@ -33,16 +110,16 @@ extern "C" {
 
 macro_rules! rte_check {
     ( $ret:expr ) => {
-        rte_check!($ret; ok => {()}; err => {$crate::errors::Error::RteError($ret)})
+        rte_check!($ret; ok => {()}; err => {$crate::errors::RteError($ret).into()})
     };
     ( $ret:expr; ok => $ok:block) => {
-        rte_check!($ret; ok => $ok; err => {$crate::errors::Error::RteError($ret)})
+        rte_check!($ret; ok => $ok; err => {$crate::errors::RteError($ret).into()})
     };
     ( $ret:expr; err => $err:block) => {
         rte_check!($ret; ok => {()}; err => $err)
     };
     ( $ret:expr; ok => $ok:block; err => $err:block ) => {{
-        if $ret >= 0 {
+        if $ret == 0 {
             Ok($ok)
         } else {
             Err($err)
@@ -50,10 +127,10 @@ macro_rules! rte_check {
     }};
 
     ( $ret:expr, NonNull ) => {
-        rte_check!($ret, NonNull; ok => {$ret}; err => {$crate::errors::Error::rte_error()})
+        rte_check!($ret, NonNull; ok => {$ret}; err => {$crate::errors::rte_error()})
     };
     ( $ret:expr, NonNull; ok => $ok:block) => {
-        rte_check!($ret, NonNull; ok => $ok; err => {$crate::errors::Error::rte_error()})
+        rte_check!($ret, NonNull; ok => $ok; err => {$crate::errors::rte_error()})
     };
     ( $ret:expr, NonNull; err => $err:block) => {
         rte_check!($ret, NonNull; ok => {$ret}; err => $err)
@@ -67,58 +144,36 @@ macro_rules! rte_check {
     }};
 }
 
-#[derive(Debug)]
-pub enum Error {
-    RteError(i32),
-    OsError(i32),
-    IoError(io::Error),
-    NulError(ffi::NulError),
-}
+#[derive(Debug, Fail)]
+pub struct RteError(pub i32);
 
-impl Error {
-    pub fn rte_error() -> Error {
-        Error::RteError(unsafe { _rte_errno() })
-    }
-
-    pub fn os_error() -> Error {
-        Error::OsError(errno().0 as i32)
-    }
-}
-
-impl fmt::Display for Error {
+impl fmt::Display for RteError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            &Error::RteError(errno) => write!(f, "RTE error, {}", unsafe {
-                ffi::CStr::from_ptr(rte_strerror(errno)).to_str().unwrap()
-            }),
-            &Error::OsError(ref errno) => write!(f, "OS error, {}", errno),
-            &Error::IoError(ref err) => write!(f, "IO error, {}", err),
-            _ => write!(f, "{}", error::Error::description(self)),
-        }
+        write!(
+            f,
+            "RTE error, {} ({})",
+            unsafe { CStr::from_ptr(rte_strerror(self.0)).to_string_lossy() },
+            self.0
+        )
     }
 }
 
-impl error::Error for Error {
-    fn description(&self) -> &str {
-        match self {
-            &Error::RteError(_) => "RTE error",
-            &Error::OsError(_) => "OS error",
-            &Error::IoError(ref err) => error::Error::description(err),
-            &Error::NulError(ref err) => error::Error::description(err),
-        }
-    }
+#[derive(Debug, Fail)]
+pub enum ErrorKind {
+    #[fail(display = "invalid log type, {}", _0)]
+    InvalidLogType(u32),
+    #[fail(display = "invalid log level, {}", _0)]
+    InvalidLogLevel(u32),
+    #[fail(display = "cmdline parse error, {}", _0)]
+    CmdLineParseError(i32),
+    #[fail(display = "{}", _0)]
+    OsError(i32),
 }
 
-impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error {
-        Error::IoError(err)
-    }
+pub fn rte_error() -> Error {
+    RteError(unsafe { _rte_errno() }).into()
 }
 
-impl From<ffi::NulError> for Error {
-    fn from(err: ffi::NulError) -> Error {
-        Error::NulError(err)
-    }
+pub fn os_error() -> Error {
+    ErrorKind::OsError(errno().0 as i32).into()
 }
-
-pub type Result<T> = result::Result<T, Error>;

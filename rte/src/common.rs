@@ -1,3 +1,5 @@
+use std::ffi::CString;
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(i32)]
 pub enum ProcType {
@@ -7,12 +9,29 @@ pub enum ProcType {
     Invalid = 2,   // RTE_PROC_INVALID
 }
 
+pub trait AsCString {
+    fn as_cstring(&self) -> CString;
+}
+
+impl<T> AsCString for T
+where
+    T: AsRef<str>,
+{
+    fn as_cstring(&self) -> CString {
+        let mut v = self.as_ref().as_bytes().to_owned();
+        v.push(0);
+        unsafe { CString::from_vec_unchecked(v) }
+    }
+}
+
 pub mod log {
+    use std::mem;
     use std::os::unix::io::AsRawFd;
 
     use cfile;
 
-    use errors::{AsResult, Result};
+    use common::AsCString;
+    use errors::{AsResult, ErrorKind::*, Result};
     use ffi;
 
     /// SDK log type
@@ -116,4 +135,73 @@ pub mod log {
             .map(|_| f)
     }
 
+    /// Set the global log level.
+    ///
+    /// After this call, logs with a level lower or equal than the level
+    /// passed as argument will be displayed.
+    pub fn set_global_level(level: Level) {
+        unsafe { ffi::rte_log_set_global_level(level as u32) }
+    }
+
+    /// Get the global log level.
+    pub fn get_global_level() -> Level {
+        unsafe { mem::transmute(ffi::rte_log_get_global_level()) }
+    }
+
+    /// Get the log level for a given type.
+    pub fn get_level(ty: Type) -> Result<Level> {
+        unsafe { ffi::rte_log_get_level(ty as u32) }
+            .ok_or(InvalidLogType(ty as u32))
+            .map(|level| unsafe { mem::transmute(level) })
+    }
+
+    /// Set the log level for a given type.
+    pub fn set_level(ty: Type, level: Level) -> Result<()> {
+        unsafe { ffi::rte_log_set_level(ty as u32, level as u32) }
+            .ok_or(InvalidLogLevel(level as u32))
+            .map(|_| ())
+    }
+
+    /// Get the current loglevel for the message being processed.
+    ///
+    /// Before calling the user-defined stream for logging, the log
+    /// subsystem sets a per-lcore variable containing the loglevel and the
+    /// logtype of the message being processed. This information can be
+    /// accessed by the user-defined log output function through this function.
+    pub fn cur_msg_loglevel() -> Level {
+        unsafe { mem::transmute(ffi::rte_log_cur_msg_loglevel()) }
+    }
+
+    /// Get the current logtype for the message being processed.
+    ///
+    /// Before calling the user-defined stream for logging, the log
+    /// subsystem sets a per-lcore variable containing the loglevel and the
+    /// logtype of the message being processed. This information can be
+    /// accessed by the user-defined log output function through this function.
+    pub fn cur_msg_logtype() -> Type {
+        unsafe { mem::transmute(ffi::rte_log_cur_msg_logtype()) }
+    }
+
+    /// Register a dynamic log type
+    ///
+    /// If a log is already registered with the same type, the returned value
+    /// is the same than the previous one.
+    pub fn register<S: AsRef<str>>(name: S) -> Result<()> {
+        let name = name.as_cstring();
+
+        unsafe { ffi::rte_log_register(name.as_ptr()) }
+            .as_result()
+            .map(|_| ())
+    }
+
+    /// Dump log information.
+    ///
+    /// Dump the global level and the registered log types.
+    pub fn dump<S: AsRawFd>(s: &S) -> Result<()> {
+        let f = cfile::open_stream(s, "w")?;
+
+        unsafe { ffi::rte_log_dump(f.stream() as *mut ffi::FILE) };
+
+        Ok(())
+    }
 }

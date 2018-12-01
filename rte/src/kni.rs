@@ -8,7 +8,7 @@ use libc;
 
 use ffi;
 
-use errors::{Error, Result};
+use errors::{rte_error, Result};
 use ether;
 use mbuf;
 use mempool;
@@ -19,7 +19,7 @@ pub fn init(max_kni_ifaces: usize) -> Result<()> {
     if unsafe { ffi::rte_kni_init(max_kni_ifaces as u32) } == 0 {
         Ok(())
     } else {
-        Err(Error::rte_error())
+        Err(rte_error().into())
     }
 }
 

@@ -9,7 +9,7 @@ use libc;
 use ffi;
 
 use dev;
-use errors::{Error, Result};
+use errors::{AsResult, ErrorKind::OsError, Result};
 use ether;
 use malloc;
 use mbuf;
@@ -712,20 +712,14 @@ pub trait TxBuffer {
 /// Initialize default values for buffered transmitting
 pub fn alloc_buffer(size: usize, socket_id: i32) -> Result<RawTxBufferPtr> {
     unsafe {
-        let p = malloc::zmalloc_socket("tx_buffer", _rte_eth_tx_buffer_size(size), 0, socket_id)
-            as RawTxBufferPtr;
-
-        if p.is_null() {
-            Err(Error::OsError(libc::ENOMEM))
-        } else {
-            let ret = ffi::rte_eth_tx_buffer_init(p, size as u16);
-
-            if ret != 0 {
-                Err(Error::OsError(ret))
-            } else {
-                Ok(p)
-            }
-        }
+        malloc::zmalloc_socket("tx_buffer", _rte_eth_tx_buffer_size(size), 0, socket_id)
+            .ok_or(OsError(libc::ENOMEM))
+            .map(|p| p as RawTxBufferPtr)
+            .and_then(|p| {
+                ffi::rte_eth_tx_buffer_init(p, size as u16)
+                    .as_result()
+                    .map(|_| p)
+            })
     }
 }
 

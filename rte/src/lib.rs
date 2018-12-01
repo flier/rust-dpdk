@@ -2,6 +2,8 @@
 extern crate log;
 #[macro_use]
 extern crate bitflags;
+#[macro_use]
+extern crate failure;
 extern crate cfile;
 extern crate errno;
 extern crate libc;
@@ -47,7 +49,7 @@ pub mod ip;
 #[macro_use]
 pub mod cmdline;
 
-pub use errors::{Error, Result};
+pub use errors::{ErrorKind, Result, RteError};
 pub use ethdev::PortId;
 pub use ethdev::QueueId;
 pub use ffi::*;

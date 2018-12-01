@@ -13,7 +13,7 @@ use libc;
 
 use ffi;
 
-use errors::{Error, Result};
+use errors::{AsResult, ErrorKind::CmdLineParseError, Result};
 use ether;
 
 pub type RawTokenHeader = ffi::cmdline_token_hdr;
@@ -636,7 +636,7 @@ impl CmdLine {
     pub fn parse<T: string::ToString>(&self, buf: T) -> Result<&Self> {
         let status = unsafe { ffi::cmdline_parse(self.as_raw(), try!(to_cptr!(buf.to_string()))) };
 
-        rte_check!(status; ok => { self }; err => { Error::RteError(status) })
+        status.ok_or(CmdLineParseError(status)).map(|_| self)
     }
 
     pub fn complete<T: string::ToString>(

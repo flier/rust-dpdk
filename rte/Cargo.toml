@@ -8,6 +8,7 @@ build = "build.rs"
 [dependencies]
 log = "0.4"
 bitflags = "1.0"
+failure = "0.1"
 libc = "0.2"
 errno = "0.2"
 cfile = "0.2"

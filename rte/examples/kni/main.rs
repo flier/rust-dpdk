@@ -4,8 +4,6 @@ extern crate getopts;
 extern crate libc;
 extern crate nix;
 extern crate pretty_env_logger;
-
-#[macro_use]
 extern crate rte;
 
 use std::cmp;
@@ -363,7 +361,7 @@ extern "C" fn kni_change_mtu(port_id: u16, new_mtu: libc::c_uint) -> libc::c_int
         if let Err(err) = dev.configure(1, 1, &port_conf) {
             error!("Fail to reconfigure port {}, {}", port_id, err);
 
-            if let Error::RteError(errno) = err {
+            if let Some(&RteError(errno)) = err.downcast_ref::<RteError>() {
                 return errno;
             }
         }
@@ -371,7 +369,7 @@ extern "C" fn kni_change_mtu(port_id: u16, new_mtu: libc::c_uint) -> libc::c_int
         if let Err(err) = dev.start() {
             error!("Failed to start port {}, {}", port_id, err);
 
-            if let Error::RteError(errno) = err {
+            if let Some(&RteError(errno)) = err.downcast_ref::<RteError>() {
                 return errno;
             }
         }
@@ -403,7 +401,7 @@ extern "C" fn kni_config_network_interface(port_id: u16, if_up: u8) -> libc::c_i
         if let Err(err) = dev.start() {
             error!("Failed to start port {}, {}", port_id, err);
 
-            if let Error::RteError(errno) = err {
+            if let Some(&RteError(errno)) = err.downcast_ref::<RteError>() {
                 return errno;
             }
         }
