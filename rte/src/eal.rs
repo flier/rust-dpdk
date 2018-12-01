@@ -4,12 +4,11 @@ use std::ptr;
 
 use ffi;
 
+use common::ProcType;
 use errors::Result;
 
-pub use common::*;
-pub use config::*;
-pub use cycles::*;
-pub use launch::*;
+pub use config::config;
+pub use launch::{mp_remote_launch, mp_wait_lcore, remote_launch};
 
 extern "C" {
     // fn vdrvinitfn_pmd_af_packet_drv();

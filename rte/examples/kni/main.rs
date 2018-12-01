@@ -509,7 +509,7 @@ fn check_all_ports_link_status(enabled_devices: &Vec<ethdev::PortId>) {
             break;
         }
 
-        eal::delay_ms(CHECK_INTERVAL);
+        delay_ms(CHECK_INTERVAL);
 
         print!(".");
 

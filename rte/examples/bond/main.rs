@@ -197,7 +197,7 @@ fn lcore_main(app_conf: Option<&AppConfig>) -> i32 {
 
         // If didn't receive any packets, wait and go to next iteration
         if rx_cnt == 0 {
-            eal::delay_us(50);
+            delay_us(50);
 
             continue;
         }

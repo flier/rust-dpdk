@@ -9,6 +9,7 @@ use log::Level::Debug;
 
 use ffi;
 
+use common::ProcType;
 use eal;
 use launch;
 use lcore;
@@ -31,7 +32,7 @@ fn test_eal() {
         4
     );
 
-    assert_eq!(eal::process_type(), eal::ProcType::Primary);
+    assert_eq!(eal::process_type(), ProcType::Primary);
     assert!(!eal::primary_proc_alive());
     assert!(eal::has_hugepages());
     assert_eq!(eal::socket_id(), 0);
@@ -52,7 +53,7 @@ fn test_config() {
 
     assert_eq!(eal_cfg.master_lcore(), 0);
     assert_eq!(eal_cfg.lcore_count(), num_cpus::get());
-    assert_eq!(eal_cfg.process_type(), eal::ProcType::Primary);
+    assert_eq!(eal_cfg.process_type(), ProcType::Primary);
     assert_eq!(
         eal_cfg.lcore_roles(),
         &[

@@ -35,7 +35,7 @@ pub mod mempool;
 pub mod memzone;
 #[macro_use]
 pub mod mbuf;
-pub mod cycles;
+mod cycles;
 pub mod eal;
 pub mod launch;
 pub mod lcore;
@@ -56,6 +56,7 @@ pub mod ip;
 pub mod cmdline;
 
 pub use common::*;
+pub use cycles::*;
 pub use errors::{ErrorKind, Result, RteError};
 pub use ethdev::PortId;
 pub use ethdev::QueueId;

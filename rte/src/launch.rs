@@ -86,7 +86,7 @@ impl lcore::Id {
         if s == 0 {
             JobState::Wait
         } else {
-            JobState::Result(s)
+            JobState::Finished(s)
         }
     }
 }
