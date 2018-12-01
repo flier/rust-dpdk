@@ -9,7 +9,7 @@ use memory::SocketId;
 
 /// Supported modes of operation of link bonding library
 #[repr(u8)]
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq, FromPrimitive, ToPrimitive)]
 pub enum BondMode {
     /// Round Robin (Mode 0).
     ///

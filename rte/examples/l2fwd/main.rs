@@ -213,8 +213,8 @@ extern "C" {
 }
 
 fn l2fwd_launch_one_lcore(conf: Option<&Conf>) -> i32 {
-    let lcore_id = lcore::id().unwrap();
-    let qconf = &conf.unwrap().queue_conf[lcore_id as usize];
+    let lcore_id = lcore::current().unwrap();
+    let qconf = &conf.unwrap().queue_conf[*lcore_id as usize];
 
     if qconf.n_rx_port == 0 {
         info!("lcore {} has nothing to do", lcore_id);
@@ -347,24 +347,24 @@ fn main() {
 
     let mut conf = Conf::default();
 
-    let mut rx_lcore_id = 0;
+    let mut rx_lcore_id = lcore::id(0);
 
     // Initialize the port/queue configuration of each logical core
     for dev in &enabled_devices {
         let portid = dev.portid();
 
-        while !lcore::is_enabled(rx_lcore_id)
-            || conf.queue_conf[rx_lcore_id as usize].n_rx_port == rx_queue_per_lcore
-        {
-            rx_lcore_id += 1;
-
-            if rx_lcore_id >= RTE_MAX_LCORE {
-                eal::exit(EXIT_FAILURE, "Not enough cores\n");
+        loop {
+            if let Some(id) = rx_lcore_id.next() {
+                if conf.queue_conf[*rx_lcore_id as usize].n_rx_port == rx_queue_per_lcore {
+                    rx_lcore_id = id
+                }
             }
+
+            break;
         }
 
         // Assigned a new logical core in the loop above.
-        let qconf = &mut conf.queue_conf[rx_lcore_id as usize];
+        let qconf = &mut conf.queue_conf[*rx_lcore_id as usize];
 
         qconf.rx_port_list[qconf.n_rx_port as usize] = portid as u32;
         qconf.n_rx_port += 1;
@@ -438,7 +438,9 @@ fn main() {
     // launch per-lcore init on every lcore
     launch::mp_remote_launch(l2fwd_launch_one_lcore, Some(&conf), false).unwrap();
 
-    lcore::foreach_slave(|lcore_id| launch::wait_lcore(lcore_id));
+    lcore::foreach_slave(|lcore_id| {
+        launch::wait_lcore(lcore_id);
+    });
 
     for dev in &enabled_devices {
         print!("Closing port {}...", dev.portid());

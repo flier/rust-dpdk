@@ -1,5 +1,7 @@
 //! API for lcore and socket manipulation
 //!
+use std::cmp::Ordering;
+use std::fmt;
 use std::mem;
 use std::ops::Deref;
 
@@ -9,8 +11,22 @@ use config::config;
 use errors::{rte_error, Result};
 use memory::SocketId;
 
+pub use ffi::LCORE_ID_ANY;
+pub use ffi::RTE_MAX_LCORE;
+
+#[repr(transparent)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Id(u32);
+
+impl fmt::Display for Id {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+pub fn id(id: u32) -> Id {
+    Id(id)
+}
 
 impl<T: Into<u32>> From<T> for Id {
     fn from(id: T) -> Self {
@@ -29,6 +45,22 @@ impl Deref for Id {
 impl From<Id> for usize {
     fn from(id: Id) -> Self {
         id.0 as usize
+    }
+}
+
+impl PartialEq<u32> for Id {
+    fn eq(&self, other: &u32) -> bool {
+        self.0 == *other
+    }
+}
+
+impl PartialOrd<u32> for Id {
+    fn partial_cmp(&self, other: &u32) -> Option<Ordering> {
+        if *other == ffi::LCORE_ID_ANY {
+            None
+        } else {
+            Some(self.0.cmp(other))
+        }
     }
 }
 
@@ -52,18 +84,13 @@ impl Id {
         config().lcore_role(self) == Role::Rte
     }
 
-    /// All the enabled lcores.
-    pub fn enabled() -> Vec<Id> {
-        foreach_lcores(false).collect()
-    }
-
-    /// Get the id of the master lcore
-    pub fn master() -> Id {
-        config().master_lcore()
-    }
-
     pub fn is_master(self) -> bool {
         self.0 == config().master_lcore().0
+    }
+
+    /// Get the next enabled lcore ID.
+    pub fn next(self) -> Option<Id> {
+        next_id(self.0, false, true).map(Id)
     }
 
     /// Return the index of the lcore starting from zero.
@@ -84,33 +111,6 @@ impl Id {
     /// Get the state of the lcore identified by lcore_id.
     pub fn state(self) -> State {
         unsafe { ffi::rte_eal_get_lcore_state(self.0) }.into()
-    }
-
-    /// Get the next enabled lcore ID.
-    pub fn next(self, skip_master: bool, wrap: bool) -> Option<Id> {
-        let mut next_id = self.0;
-
-        loop {
-            next_id += 1;
-
-            if wrap {
-                next_id %= ffi::RTE_MAX_LCORE;
-            } else if next_id >= ffi::RTE_MAX_LCORE || next_id == self.0 {
-                return None;
-            }
-
-            if !Id(next_id).is_enabled() {
-                continue;
-            }
-
-            if skip_master && Id(next_id).is_master() {
-                continue;
-            }
-
-            break;
-        }
-
-        Some(Id(next_id))
     }
 }
 
@@ -147,16 +147,66 @@ extern "C" {
 }
 
 /// Return the ID of the execution unit we are running on.
-pub fn id() -> Option<Id> {
+pub fn current() -> Option<Id> {
     match unsafe { _rte_lcore_id() } {
         ffi::LCORE_ID_ANY => None,
         id @ _ => Some(id.into()),
     }
 }
 
+/// All the enabled lcores.
+pub fn enabled() -> Vec<Id> {
+    foreach_lcores(false).collect()
+}
+
+/// Get the id of the master lcore
+pub fn master() -> Id {
+    config().master_lcore()
+}
+
 /// Return the number of execution units (lcores) on the system.
 pub fn count() -> usize {
     config().lcore_count()
+}
+
+/// Return the index of the lcore starting from zero.
+pub fn index(lcore_id: u32) -> Option<usize> {
+    let id = if lcore_id == ffi::LCORE_ID_ANY {
+        current().map(|id| id.0)
+    } else if lcore_id < ffi::RTE_MAX_LCORE {
+        Some(lcore_id)
+    } else {
+        None
+    };
+
+    id.map(|id| unsafe { ffi::lcore_config[id as usize].core_index as usize })
+}
+
+/// Get the next enabled lcore ID.
+pub fn next_id(lcore_id: u32, skip_master: bool, wrap: bool) -> Option<u32> {
+    let mut next_id = lcore_id;
+
+    loop {
+        next_id += 1;
+
+        if wrap {
+            next_id %= ffi::RTE_MAX_LCORE;
+        } else if next_id >= ffi::RTE_MAX_LCORE || next_id == lcore_id {
+            return None;
+        }
+
+        if !Id(next_id).is_enabled() {
+            continue;
+        }
+
+        if skip_master && Id(next_id).is_master() {
+            continue;
+        }
+
+        break;
+    }
+
+    Some(next_id)
 }
 
 /// Return the ID of the physical socket of the logical core we are running on.
@@ -189,12 +239,12 @@ pub fn socket_id_by_idx(idx: u32) -> Result<SocketId> {
 }
 
 /// Browse all running lcores.
-pub fn foreach<T, F: FnMut(Id)>(f: F) {
+pub fn foreach<F: FnMut(Id)>(f: F) {
     foreach_lcores(false).for_each(f)
 }
 
 /// Browse all running lcores except the master lcore.
-pub fn foreach_slave<T, F: FnMut(Id)>(f: F) {
+pub fn foreach_slave<F: FnMut(Id)>(f: F) {
     foreach_lcores(true).for_each(f)
 }
 
@@ -202,5 +252,5 @@ fn foreach_lcores(skip_master: bool) -> impl Iterator<Item = Id> {
     (0..ffi::RTE_MAX_LCORE)
         .map(Id)
         .filter(|lcore_id| lcore_id.is_enabled())
-        .filter(|lcore_id| !skip_master || !lcore_id.is_master())
+        .filter(move |lcore_id| !skip_master || !lcore_id.is_master())
 }

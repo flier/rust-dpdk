@@ -2,7 +2,7 @@ use std::os::raw::c_void;
 
 use rte::cmdline::*;
 use rte::ethdev::{EthDevice, EthDeviceInfo};
-use rte::*;
+use rte::{self, *};
 
 use ethtool::*;
 
@@ -27,7 +27,7 @@ impl CmdGetParams {
                 "Port {} driver: {} (ver: {})",
                 dev.portid(),
                 info.driver_name(),
-                eal::version()
+                rte::version()
             )).unwrap();
         }
     }

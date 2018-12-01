@@ -74,40 +74,45 @@ fn test_config() {
 }
 
 fn test_lcore() {
-    assert_eq!(lcore::id(), Some(0));
+    assert_eq!(lcore::current().unwrap(), 0);
 
-    let lcore_id = lcore::id().unwrap();
+    let lcore_id = lcore::current().unwrap();
 
-    assert_eq!(lcore::role(lcore_id), lcore::Role::Rte);
+    assert_eq!(lcore_id.role(), lcore::Role::Rte);
+    assert_eq!(lcore_id.socket_id(), 0);
+    assert!(lcore_id.is_enabled());
+
     assert_eq!(lcore::master(), 0);
     assert_eq!(lcore::count(), num_cpus::get());
-    assert_eq!(lcore::socket_id(lcore_id), 0);
-    assert!(lcore::is_enabled(lcore_id));
-    assert_eq!(lcore::enabled_lcores().len(), num_cpus::get());
+    assert_eq!(lcore::enabled().len(), num_cpus::get());
 
     assert_eq!(lcore::index(256), None);
-    assert_eq!(lcore::index(lcore::LCORE_ID_ANY), Some(lcore_id));
-    assert_eq!(lcore::index(0), Some(lcore_id));
+    assert_eq!(lcore::Id::any().index(), 0);
+    assert_eq!(lcore::id(0).index(), 0);
 }
 
 fn test_launch() {
     fn slave_main(mutex: Option<Arc<Mutex<usize>>>) -> i32 {
-        debug!("lcore {} is running", lcore::id().unwrap());
+        debug!("lcore {} is running", lcore::current().unwrap());
 
         let mutex = mutex.unwrap();
         let mut data = mutex.lock().unwrap();
 
         *data += 1;
 
-        debug!("lcore {} finished, data={}", lcore::id().unwrap(), *data);
+        debug!(
+            "lcore {} finished, data={}",
+            lcore::current().unwrap(),
+            *data
+        );
 
         0
     }
 
     let mutex = Arc::new(Mutex::new(0));
-    let slave_id: u32 = 1;
+    let slave_id = lcore::id(1);
 
-    assert_eq!(lcore::State::Wait, lcore::state(slave_id));
+    assert_eq!(slave_id.state(), lcore::State::Wait);
 
     {
         let data = mutex.lock().unwrap();
@@ -118,7 +123,7 @@ fn test_launch() {
 
         launch::remote_launch(slave_main, Some(mutex.clone()), slave_id).unwrap();
 
-        assert_eq!(lcore::State::Running, lcore::state(slave_id));
+        assert_eq!(slave_id.state(), lcore::State::Running);
     }
 
     debug!("waiting lcore {} ...", slave_id);
@@ -132,7 +137,7 @@ fn test_launch() {
 
         debug!("remote lcore {} finished", slave_id);
 
-        assert_eq!(lcore::State::Wait, lcore::state(slave_id));
+        assert_eq!(slave_id.state(), lcore::State::Wait);
     }
 
     {

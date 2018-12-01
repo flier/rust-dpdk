@@ -168,7 +168,7 @@ fn main() {
     setup_ports(&mut app_cfg);
 
     // Assume there is an available slave..
-    let lcore_id = lcore::next(lcore::id().unwrap(), true);
+    let lcore_id = lcore::current().unwrap().next().unwrap();
 
     launch::remote_launch(slave_main, Some(&app_cfg), lcore_id).unwrap();
 
@@ -176,5 +176,7 @@ fn main() {
 
     app_cfg.exit_now = true;
 
-    lcore::foreach_slave(|lcore_id| launch::wait_lcore(lcore_id));
+    lcore::foreach_slave(|lcore_id| {
+        launch::wait_lcore(lcore_id);
+    });
 }

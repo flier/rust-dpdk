@@ -39,7 +39,7 @@ const RTE_TX_DESC_DEFAULT: u16 = 512;
 
 struct AppConfig {
     lcore_main_is_running: AtomicBool,
-    lcore_main_core_id: LcoreId,
+    lcore_main_core_id: lcore::Id,
     bond_ip: net::Ipv4Addr,
     bond_mac_addr: ether::EtherAddr,
     bonded_port_id: PortId,
@@ -182,7 +182,10 @@ fn strip_vlan_hdr(ether_hdr: *const ether::EtherHdr) -> (*const libc::c_void, u1
 
 // Main thread that does the work, reading from INPUT_PORT and writing to OUTPUT_PORT
 fn lcore_main(app_conf: Option<&AppConfig>) -> i32 {
-    debug!("lcore_main is starting @ lcore {}", lcore::id().unwrap());
+    debug!(
+        "lcore_main is starting @ lcore {}",
+        lcore::current().unwrap()
+    );
 
     let app_conf = app_conf.unwrap();
     let dev = app_conf.bonded_port_id;
@@ -569,13 +572,13 @@ fn main() {
 
     // check state of lcores
     lcore::foreach_slave(|lcore_id| {
-        if lcore::state(lcore_id) != lcore::State::Wait {
+        if lcore_id.state() != lcore::State::Wait {
             eal::exit(-libc::EBUSY, "lcores not ready");
         }
     });
 
     // start lcore main on core != master_core - ARP response thread
-    let slave_core_id = lcore::next(lcore::id().unwrap(), true);
+    let slave_core_id = lcore::current().unwrap().next().unwrap();
 
     if slave_core_id == 0 || slave_core_id >= RTE_MAX_LCORE {
         eal::exit(-libc::EPERM, "missing slave core");
@@ -595,5 +598,7 @@ fn main() {
 
     prompt(&app_conf);
 
-    lcore::foreach_slave(|lcore_id| launch::wait_lcore(lcore_id));
+    lcore::foreach_slave(|lcore_id| {
+        launch::wait_lcore(lcore_id);
+    });
 }

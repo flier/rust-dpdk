@@ -574,17 +574,17 @@ fn main_loop(conf: Option<&Conf>) -> i32 {
         Tx(&'a kni_port_params),
     };
 
-    let lcore_id = lcore::id().unwrap();
+    let lcore_id = lcore::current().unwrap();
     let mut lcore_type: Option<LcoreType> = None;
 
     for portid in ethdev::devices() {
         if let Some(ref param) = conf.unwrap().port_params[portid as usize] {
-            if param.lcore_rx == lcore_id {
+            if lcore_id == param.lcore_rx {
                 lcore_type = Some(LcoreType::Rx(param));
                 break;
             }
 
-            if param.lcore_tx == lcore_id {
+            if lcore_id == param.lcore_tx {
                 lcore_type = Some(LcoreType::Tx(param));
                 break;
             }
@@ -676,7 +676,9 @@ fn main() {
     // launch per-lcore init on every lcore
     launch::mp_remote_launch(main_loop, Some(&conf), false).unwrap();
 
-    lcore::foreach_slave(|lcore_id| launch::wait_lcore(lcore_id));
+    lcore::foreach_slave(|lcore_id| {
+        launch::wait_lcore(lcore_id);
+    });
 
     // Release resources
     for dev in &enabled_devices {

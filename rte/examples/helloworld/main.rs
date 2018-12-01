@@ -6,7 +6,7 @@ use std::os::raw::c_void;
 use rte::*;
 
 fn lcore_hello(_: Option<c_void>) -> i32 {
-    println!("hello from core {}", lcore::id().unwrap());
+    println!("hello from core {}", lcore::current().unwrap());
 
     0
 }
