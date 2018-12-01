@@ -1,4 +1,7 @@
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
+
+use errors::{AsResult, Result};
+use ffi;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(i32)]
@@ -24,62 +27,56 @@ where
     }
 }
 
-pub mod version {
-    use std::ffi::CStr;
+/// Patch level number i.e. the z in yy.mm.z
+pub use ffi::RTE_VER_MINOR;
+/// Minor version/month number i.e. the mm in yy.mm.z
+pub use ffi::RTE_VER_MONTH;
+/// Patch release number
+pub use ffi::RTE_VER_RELEASE;
+/// Major version/year number i.e. the yy in yy.mm.z
+pub use ffi::RTE_VER_YEAR;
 
-    use ffi;
+/// Macro to compute a version number usable for comparisons
+macro_rules! RTE_VERSION_NUM {
+    ($a:expr, $b:expr, $c:expr, $d:expr) => {
+        (($a) << 24 | ($b) << 16 | ($c) << 8 | ($d))
+    };
+}
 
-    /// Patch level number i.e. the z in yy.mm.z
-    pub use ffi::RTE_VER_MINOR;
-    /// Minor version/month number i.e. the mm in yy.mm.z
-    pub use ffi::RTE_VER_MONTH;
-    /// Patch release number
-    pub use ffi::RTE_VER_RELEASE;
-    /// Major version/year number i.e. the yy in yy.mm.z
-    pub use ffi::RTE_VER_YEAR;
+lazy_static! {
+    /// String that appears before the version number
+    pub static ref RTE_VER_PREFIX: &'static str = unsafe { CStr::from_bytes_with_nul_unchecked(ffi::RTE_VER_PREFIX).to_str().unwrap() };
+    /// Extra string to be appended to version number
+    pub static ref RTE_VER_SUFFIX: &'static str = unsafe { CStr::from_bytes_with_nul_unchecked(ffi::RTE_VER_SUFFIX).to_str().unwrap() };
 
-    /// Macro to compute a version number usable for comparisons
-    macro_rules! RTE_VERSION_NUM {
-        ($a:expr, $b:expr, $c:expr, $d:expr) => {
-            (($a) << 24 | ($b) << 16 | ($c) << 8 | ($d))
-        };
-    }
+    /// All version numbers in one to compare with RTE_VERSION_NUM()
+    pub static ref RTE_VERSION: u32 =
+        RTE_VERSION_NUM!(RTE_VER_YEAR, RTE_VER_MONTH, RTE_VER_MINOR, RTE_VER_RELEASE);
 
-    lazy_static! {
-        /// String that appears before the version number
-        pub static ref RTE_VER_PREFIX: &'static str = unsafe { CStr::from_bytes_with_nul_unchecked(ffi::RTE_VER_PREFIX).to_str().unwrap() };
-        /// Extra string to be appended to version number
-        pub static ref RTE_VER_SUFFIX: &'static str = unsafe { CStr::from_bytes_with_nul_unchecked(ffi::RTE_VER_SUFFIX).to_str().unwrap() };
+    pub static ref RTE_VERSION_STR: String = rte_version();
+}
 
-        /// All version numbers in one to compare with RTE_VERSION_NUM()
-        pub static ref RTE_VERSION: u32 =
-            RTE_VERSION_NUM!(RTE_VER_YEAR, RTE_VER_MONTH, RTE_VER_MINOR, RTE_VER_RELEASE);
-
-        pub static ref RTE_VERSION_STR: String = rte_version();
-    }
-
-    /// Function returning version string
-    pub fn rte_version() -> String {
-        if ffi::RTE_VER_SUFFIX.is_empty() {
-            format!(
-                "{} {}.{:02}.{}",
-                *RTE_VER_PREFIX, RTE_VER_YEAR, RTE_VER_MONTH, RTE_VER_MINOR
-            )
-        } else {
-            format!(
-                "{} {}.{:02}.{}{}{}",
-                *RTE_VER_PREFIX,
-                RTE_VER_YEAR,
-                RTE_VER_MONTH,
-                RTE_VER_MINOR,
-                *RTE_VER_SUFFIX,
-                if RTE_VER_RELEASE < 16 {
-                    RTE_VER_RELEASE
-                } else {
-                    RTE_VER_RELEASE - 16
-                }
-            )
-        }
+/// Function returning version string
+pub fn rte_version() -> String {
+    if ffi::RTE_VER_SUFFIX.is_empty() {
+        format!(
+            "{} {}.{:02}.{}",
+            *RTE_VER_PREFIX, RTE_VER_YEAR, RTE_VER_MONTH, RTE_VER_MINOR
+        )
+    } else {
+        format!(
+            "{} {}.{:02}.{}{}{}",
+            *RTE_VER_PREFIX,
+            RTE_VER_YEAR,
+            RTE_VER_MONTH,
+            RTE_VER_MINOR,
+            *RTE_VER_SUFFIX,
+            if RTE_VER_RELEASE < 16 {
+                RTE_VER_RELEASE
+            } else {
+                RTE_VER_RELEASE - 16
+            }
+        )
     }
 }
 
@@ -263,22 +260,44 @@ pub mod log {
 
         Ok(())
     }
+}
 
-    /// Generates a log message.
-    ///
-    /// The message will be sent in the stream defined by the previous call
-    /// to rte_openlog_stream().
-    ///
-    /// The level argument determines if the log should be displayed or
-    /// not, depending on the global rte_logs variable.
-    ///
-    /// The preferred alternative is the RTE_LOG() because it adds the
-    /// level and type in the logged string.
-    pub fn log(level: Level, ty: Type, msg: &str) -> Result<()> {
-        let msg = msg.as_cstring();
+/// Generates a log message.
+///
+/// The message will be sent in the stream defined by the previous call
+/// to rte_openlog_stream().
+///
+/// The level argument determines if the log should be displayed or
+/// not, depending on the global rte_logs variable.
+///
+/// The preferred alternative is the RTE_LOG() because it adds the
+/// level and type in the logged string.
+pub fn log(level: log::Level, ty: log::Type, msg: &str) -> Result<()> {
+    let msg = msg.as_cstring();
 
-        unsafe { ffi::rte_log(level as u32, ty as u32, msg.as_ptr()) }
-            .as_result()
-            .map(|_| ())
+    unsafe { ffi::rte_log(level as u32, ty as u32, msg.as_ptr()) }
+        .as_result()
+        .map(|_| ())
+}
+
+/// Seed the pseudo-random generator.
+///
+/// The generator is automatically seeded by the EAL init with a timer
+/// value. It may need to be re-seeded by the user with a real random value.
+pub fn srand(seed: i64) {
+    unsafe { ffi::srand48(seed) }
+}
+
+/// Get a pseudo-random value.
+///
+/// This function generates pseudo-random numbers using the linear
+/// congruential algorithm and 48-bit integer arithmetic, called twice
+/// to generate a 64-bit value.
+pub fn rand() -> u64 {
+    unsafe {
+        let mut v = ffi::lrand48() as u64;
+        v <<= 32;
+        v += ffi::lrand48() as u64;
+        v
     }
 }
