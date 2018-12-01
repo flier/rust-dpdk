@@ -3,7 +3,7 @@ use std::ffi::{CStr, CString};
 use errors::{AsResult, Result};
 use ffi;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, FromPrimitive, ToPrimitive)]
 #[repr(i32)]
 pub enum ProcType {
     Auto = -1,     // RTE_PROC_AUTO
@@ -53,11 +53,11 @@ lazy_static! {
     pub static ref RTE_VERSION: u32 =
         RTE_VERSION_NUM!(RTE_VER_YEAR, RTE_VER_MONTH, RTE_VER_MINOR, RTE_VER_RELEASE);
 
-    pub static ref RTE_VERSION_STR: String = rte_version();
+    pub static ref RTE_VERSION_STR: String = version();
 }
 
 /// Function returning version string
-pub fn rte_version() -> String {
+pub fn version() -> String {
     if ffi::RTE_VER_SUFFIX.is_empty() {
         format!(
             "{} {}.{:02}.{}",
@@ -93,7 +93,7 @@ pub mod log {
 
     /// SDK log type
     #[repr(u32)]
-    #[derive(Clone, Copy, Debug, PartialEq)]
+    #[derive(Clone, Copy, Debug, PartialEq, FromPrimitive, ToPrimitive)]
     pub enum Type {
         /// Log related to eal.
         Eal = ffi::RTE_LOGTYPE_EAL,
@@ -159,7 +159,7 @@ pub mod log {
     }
 
     #[repr(u32)]
-    #[derive(Clone, Copy, Debug, PartialEq)]
+    #[derive(Clone, Copy, Debug, PartialEq, FromPrimitive, ToPrimitive)]
     pub enum Level {
         /// System is unusable.
         Emerge = ffi::RTE_LOG_EMERG,

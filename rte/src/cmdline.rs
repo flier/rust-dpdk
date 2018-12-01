@@ -499,20 +499,22 @@ impl DerefMut for StdInCmdLine {
     }
 }
 
-#[repr(i32)]
+#[repr(u32)]
+#[derive(Clone, Copy, Debug, PartialEq, FromPrimitive, ToPrimitive)]
 pub enum ReadlineStatus {
-    Init = 0,    // RDLINE_INIT
-    Running = 1, // RDLINE_RUNNING
-    Exited = 2,  // RDLINE_EXITED
+    Init = ffi::rdline_status::RDLINE_INIT,
+    Running = ffi::rdline_status::RDLINE_RUNNING,
+    Exited = ffi::rdline_status::RDLINE_EXITED,
 }
 
-impl From<i32> for ReadlineStatus {
-    fn from(status: i32) -> Self {
+impl From<u32> for ReadlineStatus {
+    fn from(status: u32) -> Self {
         unsafe { mem::transmute(status) }
     }
 }
 
 #[repr(i32)]
+#[derive(Clone, Copy, Debug, PartialEq, FromPrimitive, ToPrimitive)]
 pub enum ParseStatus {
     Success = ffi::CMDLINE_PARSE_SUCCESS as i32,
     Ambiguous = ffi::CMDLINE_PARSE_AMBIGUOUS,
@@ -527,6 +529,7 @@ impl From<i32> for ParseStatus {
 }
 
 #[repr(i32)]
+#[derive(Clone, Copy, Debug, PartialEq, FromPrimitive, ToPrimitive)]
 pub enum ParseCompleteState {
     TryToComplete = 0,
     DisplayChoice = -1,
@@ -539,14 +542,15 @@ impl From<i32> for ParseCompleteState {
 }
 
 #[repr(u32)]
+#[derive(Clone, Copy, Debug, PartialEq, FromPrimitive, ToPrimitive)]
 pub enum ParseCompleteStatus {
     Finished = ffi::CMDLINE_PARSE_COMPLETE_FINISHED,
     Again = ffi::CMDLINE_PARSE_COMPLETE_AGAIN,
     Buffer = ffi::CMDLINE_PARSE_COMPLETED_BUFFER,
 }
 
-impl From<i32> for ParseCompleteStatus {
-    fn from(status: i32) -> Self {
+impl From<u32> for ParseCompleteStatus {
+    fn from(status: u32) -> Self {
         unsafe { mem::transmute(status) }
     }
 }
@@ -626,7 +630,7 @@ impl CmdLine {
     pub fn poll(&self) -> Result<ReadlineStatus> {
         let status = unsafe { ffi::cmdline_poll(self.as_raw()) };
 
-        rte_check!(status; ok => { ReadlineStatus::from(status) })
+        rte_check!(status; ok => { ReadlineStatus::from(status as u32) })
     }
 
     pub fn quit(&self) {
@@ -655,6 +659,6 @@ impl CmdLine {
             )
         };
 
-        rte_check!(status; ok => { ParseCompleteStatus::from(status) })
+        rte_check!(status; ok => { ParseCompleteStatus::from(status as u32) })
     }
 }
