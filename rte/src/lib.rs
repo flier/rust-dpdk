@@ -10,6 +10,9 @@ extern crate cfile;
 extern crate errno;
 extern crate libc;
 extern crate rand;
+#[macro_use]
+extern crate num_derive;
+extern crate itertools;
 
 extern crate rte_sys as ffi;
 
@@ -51,11 +54,11 @@ pub mod ip;
 #[macro_use]
 pub mod cmdline;
 
+pub use common::*;
 pub use errors::{ErrorKind, Result, RteError};
 pub use ethdev::PortId;
 pub use ethdev::QueueId;
 pub use ffi::*;
-pub use lcore::LcoreId;
 pub use memory::SocketId;
 
 pub mod raw {

@@ -14,6 +14,9 @@ libc = "0.2"
 errno = "0.2"
 cfile = "0.2"
 rand = "0.6"
+num-traits = "0.2"
+num-derive = "0.2"
+itertools = "0.7"
 
 rte-sys = { version = "18.11", path = "../rte-sys" }
 

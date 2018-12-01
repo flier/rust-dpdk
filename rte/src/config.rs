@@ -69,8 +69,8 @@ impl Deref for Config {
 
 impl Config {
     /// Id of the master lcore
-    pub fn master_lcore(&self) -> u32 {
-        self.master_lcore
+    pub fn master_lcore(&self) -> lcore::Id {
+        self.master_lcore.into()
     }
 
     /// Number of available logical cores.
@@ -86,6 +86,11 @@ impl Config {
     /// State of cores.
     pub fn lcore_roles(&self) -> &'static [lcore::Role] {
         unsafe { mem::transmute(&self.lcore_role[..(*self.0).lcore_count as usize]) }
+    }
+
+    /// State of core.
+    pub fn lcore_role(&self, lcore_id: lcore::Id) -> lcore::Role {
+        self.lcore_role[usize::from(lcore_id)].into()
     }
 
     /// Memory configuration, which may be shared across multiple DPDK instances

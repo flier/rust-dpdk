@@ -3,7 +3,7 @@ use std::os::raw::{c_int, c_void};
 use ffi;
 
 use errors::Result;
-use lcore::LcoreId;
+use lcore;
 
 pub type LcoreFunc<T> = fn(Option<T>) -> i32;
 
@@ -19,10 +19,10 @@ unsafe extern "C" fn lcore_stub<T>(arg: *mut c_void) -> c_int {
 }
 
 /// Launch a function on another lcore.
-pub fn remote_launch<T>(callback: LcoreFunc<T>, arg: Option<T>, slave_id: LcoreId) -> Result<()> {
+pub fn remote_launch<T>(callback: LcoreFunc<T>, arg: Option<T>, slave_id: lcore::Id) -> Result<()> {
     let ctxt = Box::into_raw(Box::new(LcoreContext::<T> { callback, arg })) as *mut c_void;
 
-    rte_check!(unsafe { ffi::rte_eal_remote_launch(Some(lcore_stub::<T>), ctxt, slave_id) })
+    rte_check!(unsafe { ffi::rte_eal_remote_launch(Some(lcore_stub::<T>), ctxt, *slave_id) })
 }
 
 /// Launch a function on all lcores.
@@ -49,8 +49,8 @@ pub fn mp_remote_launch<T>(
 /// switch to the WAIT state. If the lcore is in RUNNING state, wait until
 /// the lcore finishes its job and moves to the FINISHED state.
 ///
-pub fn wait_lcore(lcore_id: LcoreId) -> bool {
-    unsafe { ffi::rte_eal_wait_lcore(lcore_id) == 0 }
+pub fn wait_lcore(lcore_id: lcore::Id) -> bool {
+    unsafe { ffi::rte_eal_wait_lcore(*lcore_id) == 0 }
 }
 
 /// Wait until all lcores finish their jobs.

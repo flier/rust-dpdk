@@ -80,6 +80,7 @@ pub fn rte_version() -> String {
     }
 }
 
+/// RTE Logs API
 pub mod log {
     use std::mem;
     use std::os::unix::io::AsRawFd;
@@ -279,6 +280,8 @@ pub fn log(level: log::Level, ty: log::Type, msg: &str) -> Result<()> {
         .as_result()
         .map(|_| ())
 }
+
+//  Pseudo-random Generators in RTE
 
 /// Seed the pseudo-random generator.
 ///
