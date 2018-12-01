@@ -1,4 +1,3 @@
-use std::ffi::CStr;
 use std::mem;
 use std::os::raw::c_char;
 use std::ptr;
@@ -13,35 +12,33 @@ pub use cycles::*;
 pub use launch::*;
 
 extern "C" {
-    fn _rte_version() -> *const c_char;
-
-// fn vdrvinitfn_pmd_af_packet_drv();
-// fn vdrvinitfn_bbdev_null_pmd_drv();
-// fn vdrvinitfn_pmd_bond_drv();
-// fn vdrvinitfn_cryptodev_caam_jr_drv();
-// fn vdrvinitfn_cryptodev_scheduler_pmd_drv();
-// fn vdrvinitfn_dpaa2_cmdif_drv();
-// fn vdrvinitfn_vdev_eventdev_dpaa2_pmd();
-// fn vdrvinitfn_vdev_eventdev_dpaa_pmd();
-// fn vdrvinitfn_evdev_dsw_pmd_drv();
-// fn vdrvinitfn_failsafe_drv();
-// fn vdrvinitfn_ifpga_cfg_driver();
-// fn vdrvinitfn_eth_kni_drv();
-// fn vdrvinitfn_pmd_null_drv();
-// fn vdrvinitfn_cryptodev_null_pmd_drv();
-// fn vdrvinitfn_octeontx_pmd_drv();
-// fn vdrvinitfn_vdev_ssovf_pmd();
-// fn vdrvinitfn_evdev_opdl_pmd_drv();
-// fn vdrvinitfn_pmd_ring_drv();
-// fn vdrvinitfn_vdev_eventdev_skeleton_pmd();
-// fn vdrvinitfn_skeleton_pmd_drv();
-// fn vdrvinitfn_pmd_softnic_drv();
-// fn vdrvinitfn_evdev_sw_pmd_drv();
-// fn vdrvinitfn_pmd_tap_drv();
-// fn vdrvinitfn_pmd_tun_drv();
-// fn vdrvinitfn_vdev_netvsc_vdev();
-// fn vdrvinitfn_pmd_vhost_drv();
-// fn vdrvinitfn_virtio_user_driver();
+    // fn vdrvinitfn_pmd_af_packet_drv();
+    // fn vdrvinitfn_bbdev_null_pmd_drv();
+    // fn vdrvinitfn_pmd_bond_drv();
+    // fn vdrvinitfn_cryptodev_caam_jr_drv();
+    // fn vdrvinitfn_cryptodev_scheduler_pmd_drv();
+    // fn vdrvinitfn_dpaa2_cmdif_drv();
+    // fn vdrvinitfn_vdev_eventdev_dpaa2_pmd();
+    // fn vdrvinitfn_vdev_eventdev_dpaa_pmd();
+    // fn vdrvinitfn_evdev_dsw_pmd_drv();
+    // fn vdrvinitfn_failsafe_drv();
+    // fn vdrvinitfn_ifpga_cfg_driver();
+    // fn vdrvinitfn_eth_kni_drv();
+    // fn vdrvinitfn_pmd_null_drv();
+    // fn vdrvinitfn_cryptodev_null_pmd_drv();
+    // fn vdrvinitfn_octeontx_pmd_drv();
+    // fn vdrvinitfn_vdev_ssovf_pmd();
+    // fn vdrvinitfn_evdev_opdl_pmd_drv();
+    // fn vdrvinitfn_pmd_ring_drv();
+    // fn vdrvinitfn_vdev_eventdev_skeleton_pmd();
+    // fn vdrvinitfn_skeleton_pmd_drv();
+    // fn vdrvinitfn_pmd_softnic_drv();
+    // fn vdrvinitfn_evdev_sw_pmd_drv();
+    // fn vdrvinitfn_pmd_tap_drv();
+    // fn vdrvinitfn_pmd_tun_drv();
+    // fn vdrvinitfn_vdev_netvsc_vdev();
+    // fn vdrvinitfn_pmd_vhost_drv();
+    // fn vdrvinitfn_virtio_user_driver();
 }
 
 unsafe fn init_pmd_drivers() {
@@ -72,10 +69,6 @@ unsafe fn init_pmd_drivers() {
     // vdrvinitfn_vdev_netvsc_vdev();
     // vdrvinitfn_pmd_vhost_drv();
     // vdrvinitfn_virtio_user_driver();
-}
-
-pub fn version<'a>() -> &'a str {
-    unsafe { CStr::from_ptr(_rte_version()).to_str().unwrap() }
 }
 
 /// Initialize the Environment Abstraction Layer (EAL).

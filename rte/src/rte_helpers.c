@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 #include <rte_config.h>
-#include <rte_version.h>
 #include <rte_lcore.h>
 #include <rte_errno.h>
 #include <rte_spinlock.h>
@@ -18,12 +17,6 @@ _rte_lcore_id()
 int _rte_errno()
 {
     return rte_errno;
-}
-
-const char *
-_rte_version()
-{
-    return rte_version();
 }
 
 size_t
