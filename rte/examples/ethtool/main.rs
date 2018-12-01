@@ -176,7 +176,5 @@ fn main() {
 
     app_cfg.exit_now = true;
 
-    lcore::foreach_slave(|lcore_id| {
-        launch::wait_lcore(lcore_id);
-    });
+    launch::mp_wait_lcore();
 }

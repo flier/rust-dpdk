@@ -676,9 +676,7 @@ fn main() {
     // launch per-lcore init on every lcore
     launch::mp_remote_launch(main_loop, Some(&conf), false).unwrap();
 
-    lcore::foreach_slave(|lcore_id| {
-        launch::wait_lcore(lcore_id);
-    });
+    launch::mp_wait_lcore();
 
     // Release resources
     for dev in &enabled_devices {

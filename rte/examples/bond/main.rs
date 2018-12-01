@@ -73,7 +73,7 @@ impl AppConfig {
     fn stop(&self) {
         self.lcore_main_is_running.store(false, Ordering::Relaxed);
 
-        launch::wait_lcore(self.lcore_main_core_id);
+        self.lcore_main_core_id.wait();
     }
 }
 
@@ -572,7 +572,7 @@ fn main() {
 
     // check state of lcores
     lcore::foreach_slave(|lcore_id| {
-        if lcore_id.state() != lcore::State::Wait {
+        if lcore_id.state() != launch::State::Wait {
             eal::exit(-libc::EBUSY, "lcores not ready");
         }
     });
@@ -598,7 +598,5 @@ fn main() {
 
     prompt(&app_conf);
 
-    lcore::foreach_slave(|lcore_id| {
-        launch::wait_lcore(lcore_id);
-    });
+    launch::mp_wait_lcore();
 }

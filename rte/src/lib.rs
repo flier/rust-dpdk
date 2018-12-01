@@ -8,11 +8,12 @@ extern crate failure;
 extern crate lazy_static;
 extern crate cfile;
 extern crate errno;
+extern crate itertools;
 extern crate libc;
 extern crate rand;
 #[macro_use]
 extern crate num_derive;
-extern crate itertools;
+extern crate num_traits;
 
 extern crate rte_sys as ffi;
 

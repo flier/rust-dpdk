@@ -438,9 +438,7 @@ fn main() {
     // launch per-lcore init on every lcore
     launch::mp_remote_launch(l2fwd_launch_one_lcore, Some(&conf), false).unwrap();
 
-    lcore::foreach_slave(|lcore_id| {
-        launch::wait_lcore(lcore_id);
-    });
+    launch::mp_wait_lcore();
 
     for dev in &enabled_devices {
         print!("Closing port {}...", dev.portid());

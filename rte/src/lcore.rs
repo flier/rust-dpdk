@@ -107,11 +107,6 @@ impl Id {
     pub fn role(self) -> Role {
         config().lcore_role(self)
     }
-
-    /// Get the state of the lcore identified by lcore_id.
-    pub fn state(self) -> State {
-        unsafe { ffi::rte_eal_get_lcore_state(self.0) }.into()
-    }
 }
 
 #[repr(u32)]
@@ -125,20 +120,6 @@ pub enum Role {
 impl From<u32> for Role {
     fn from(role: u32) -> Self {
         unsafe { mem::transmute(role) }
-    }
-}
-
-#[repr(u32)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, FromPrimitive, ToPrimitive)]
-pub enum State {
-    Wait = ffi::rte_lcore_state_t::WAIT,
-    Running = ffi::rte_lcore_state_t::RUNNING,
-    Finished = ffi::rte_lcore_state_t::FINISHED,
-}
-
-impl From<ffi::rte_lcore_state_t::Type> for State {
-    fn from(s: ffi::rte_lcore_state_t::Type) -> Self {
-        unsafe { mem::transmute(s) }
     }
 }
 
