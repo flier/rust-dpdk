@@ -3,7 +3,7 @@ use std::ops::Deref;
 
 use ffi;
 
-use common::ProcType;
+use eal::ProcType;
 use lcore;
 use memzone;
 

@@ -9,8 +9,7 @@ use log::Level::Debug;
 
 use ffi;
 
-use common::ProcType;
-use eal;
+use eal::{self, ProcType};
 use launch;
 use lcore;
 use mbuf;

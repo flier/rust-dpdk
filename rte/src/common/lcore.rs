@@ -7,7 +7,7 @@ use std::ops::Deref;
 
 use ffi;
 
-use config::config;
+use common::config;
 use errors::{rte_error, Result};
 use memory::SocketId;
 

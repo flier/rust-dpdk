@@ -2,22 +2,21 @@
 #include <rte_config.h>
 
 // Common Components
+#include <rte_atomic.h>
 #include <rte_common.h>
-#include <rte_version.h>
-#include <rte_log.h>
-#include <rte_malloc.h>
-#include <rte_memory.h>
-#include <rte_memcpy.h>
+#include <rte_cycles.h>
 #include <rte_errno.h>
 #include <rte_keepalive.h>
-
 #include <rte_launch.h>
-#include <rte_atomic.h>
-#include <rte_cycles.h>
-#include <rte_spinlock.h>
-#include <rte_prefetch.h>
 #include <rte_lcore.h>
+#include <rte_log.h>
+#include <rte_malloc.h>
+#include <rte_memcpy.h>
+#include <rte_memory.h>
 #include <rte_per_lcore.h>
+#include <rte_prefetch.h>
+#include <rte_spinlock.h>
+#include <rte_version.h>
 
 // Core Components
 #include <rte_ring.h>

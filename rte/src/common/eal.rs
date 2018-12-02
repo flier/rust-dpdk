@@ -2,13 +2,21 @@ use std::mem;
 use std::os::raw::c_char;
 use std::ptr;
 
-use ffi;
+use ffi::{self, rte_proc_type_t::*};
 
-use common::ProcType;
 use errors::Result;
 
-pub use config::config;
+pub use common::config;
 pub use launch::{mp_remote_launch, mp_wait_lcore, remote_launch};
+
+#[derive(Clone, Copy, Debug, PartialEq, FromPrimitive, ToPrimitive)]
+#[repr(i32)]
+pub enum ProcType {
+    Auto = RTE_PROC_AUTO,
+    Primary = RTE_PROC_PRIMARY,
+    Secondary = RTE_PROC_SECONDARY,
+    Invalid = RTE_PROC_INVALID,
+}
 
 extern "C" {
     // fn vdrvinitfn_pmd_af_packet_drv();
