@@ -11,8 +11,11 @@ use std::mem;
 use std::net;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
+use rte::arp::{ARP_HRD_ETHER, ARP_OP_REPLY, ARP_OP_REQUEST};
 use rte::bond::BondedDevice;
 use rte::ethdev::EthDevice;
+use rte::ether::{ETHER_TYPE_IPv4, ETHER_ADDR_LEN, ETHER_TYPE_ARP};
+use rte::lcore::RTE_MAX_LCORE;
 use rte::mbuf::{PktMbuf, PktMbufPool};
 use rte::memory::AsMutRef;
 use rte::*;

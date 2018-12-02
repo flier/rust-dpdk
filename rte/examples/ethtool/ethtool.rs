@@ -2,8 +2,9 @@ use std::mem;
 use std::result;
 use std::sync::Mutex;
 
-use rte::*;
 use rte::ethdev::EthDevice;
+use rte::raw::RTE_MAX_ETHPORTS;
+use rte::*;
 
 pub const MAX_PORTS: u16 = RTE_MAX_ETHPORTS as u16;
 
@@ -49,7 +50,8 @@ impl AppConfig {
     }
 
     pub fn lock_port<T, F>(&self, port: ethdev::PortId, callback: F) -> result::Result<T, String>
-        where F: Fn(&mut AppPort, ethdev::PortId) -> result::Result<T, String>
+    where
+        F: Fn(&mut AppPort, ethdev::PortId) -> result::Result<T, String>,
     {
         match self.ports.iter().nth(port as usize) {
             Some(mutex) => {

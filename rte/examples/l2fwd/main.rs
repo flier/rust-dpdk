@@ -18,7 +18,9 @@ use std::str::FromStr;
 use nix::sys::signal;
 
 use rte::ethdev::{EthDevice, EthDeviceInfo, TxBuffer};
+use rte::lcore::RTE_MAX_LCORE;
 use rte::memory::AsMutRef;
+use rte::raw::RTE_MAX_ETHPORTS;
 use rte::*;
 
 const EXIT_FAILURE: i32 = -1;

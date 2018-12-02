@@ -47,8 +47,6 @@ pub use self::common::*;
 pub use self::errors::{ErrorKind, Result, RteError};
 pub use self::ethdev::PortId;
 pub use self::ethdev::QueueId;
-pub use self::memory::SocketId;
-pub use ffi::*;
 
 pub mod raw {
     pub use ffi::*;

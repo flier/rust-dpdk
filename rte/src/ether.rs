@@ -15,6 +15,17 @@ use mbuf;
 
 use errors::Result;
 
+pub use ffi::{
+    ETHER_TYPE_IPv4, ETHER_TYPE_IPv6, ETHER_ADDR_FMT_SIZE, ETHER_CRC_LEN, ETHER_GROUP_ADDR,
+    ETHER_HDR_LEN, ETHER_LOCAL_ADMIN_ADDR, ETHER_MAX_JUMBO_FRAME_LEN, ETHER_MAX_LEN,
+    ETHER_MAX_VLAN_FRAME_LEN, ETHER_MAX_VLAN_ID, ETHER_MIN_LEN, ETHER_MIN_MTU, ETHER_MTU,
+    ETHER_TYPE_1588, ETHER_TYPE_ARP, ETHER_TYPE_ETAG, ETHER_TYPE_LEN, ETHER_TYPE_LLDP,
+    ETHER_TYPE_MPLS, ETHER_TYPE_MPLSM, ETHER_TYPE_QINQ, ETHER_TYPE_RARP, ETHER_TYPE_SLOW,
+    ETHER_TYPE_TEB, ETHER_TYPE_VLAN,
+};
+
+pub const ETHER_ADDR_LEN: usize = ffi::ETHER_ADDR_LEN as usize;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct AddrParseError(());
 
@@ -29,8 +40,6 @@ impl error::Error for AddrParseError {
         "invalid MAC address syntax"
     }
 }
-
-pub const ETHER_ADDR_LEN: usize = 6;
 
 pub type RawEtherAddr = ffi::ether_addr;
 
