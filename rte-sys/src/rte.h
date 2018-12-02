@@ -9,6 +9,7 @@
 #include <rte_memory.h>
 #include <rte_memcpy.h>
 #include <rte_errno.h>
+#include <rte_keepalive.h>
 
 #include <rte_launch.h>
 #include <rte_atomic.h>

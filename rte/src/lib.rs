@@ -7,6 +7,7 @@ extern crate failure;
 #[macro_use]
 extern crate lazy_static;
 extern crate cfile;
+extern crate time;
 extern crate errno;
 extern crate itertools;
 extern crate libc;
@@ -27,6 +28,7 @@ pub mod common;
 #[macro_use]
 pub mod debug;
 pub mod config;
+pub mod keepalive;
 
 #[macro_use]
 pub mod malloc;

@@ -9,7 +9,6 @@ where
     storage: Storage,
     align: [Align; 0],
 }
-
 impl<Storage, Align> __BindgenBitfieldUnit<Storage, Align>
 where
     Storage: AsRef<[u8]> + AsMut<[u8]>,
@@ -18,38 +17,29 @@ where
     pub fn new(storage: Storage) -> Self {
         Self { storage, align: [] }
     }
-
     #[inline]
     pub fn get_bit(&self, index: usize) -> bool {
         debug_assert!(index / 8 < self.storage.as_ref().len());
-
         let byte_index = index / 8;
         let byte = self.storage.as_ref()[byte_index];
-
         let bit_index = if cfg!(target_endian = "big") {
             7 - (index % 8)
         } else {
             index % 8
         };
-
         let mask = 1 << bit_index;
-
         byte & mask == mask
     }
-
     #[inline]
     pub fn set_bit(&mut self, index: usize, val: bool) {
         debug_assert!(index / 8 < self.storage.as_ref().len());
-
         let byte_index = index / 8;
         let byte = &mut self.storage.as_mut()[byte_index];
-
         let bit_index = if cfg!(target_endian = "big") {
             7 - (index % 8)
         } else {
             index % 8
         };
-
         let mask = 1 << bit_index;
         if val {
             *byte |= mask;
@@ -57,15 +47,12 @@ where
             *byte &= !mask;
         }
     }
-
     #[inline]
     pub fn get(&self, bit_offset: usize, bit_width: u8) -> u64 {
         debug_assert!(bit_width <= 64);
         debug_assert!(bit_offset / 8 < self.storage.as_ref().len());
         debug_assert!((bit_offset + (bit_width as usize)) / 8 <= self.storage.as_ref().len());
-
         let mut val = 0;
-
         for i in 0..(bit_width as usize) {
             if self.get_bit(i + bit_offset) {
                 let index = if cfg!(target_endian = "big") {
@@ -76,16 +63,13 @@ where
                 val |= 1 << index;
             }
         }
-
         val
     }
-
     #[inline]
     pub fn set(&mut self, bit_offset: usize, bit_width: u8, val: u64) {
         debug_assert!(bit_width <= 64);
         debug_assert!(bit_offset / 8 < self.storage.as_ref().len());
         debug_assert!((bit_offset + (bit_width as usize)) / 8 <= self.storage.as_ref().len());
-
         for i in 0..(bit_width as usize) {
             let mask = 1 << i;
             let val_bit_is_set = val & mask == mask;
@@ -973,6 +957,7 @@ pub const _BITS_SETJMP_H: u32 = 1;
 pub const PTHREAD_ONCE_INIT: u32 = 0;
 pub const PTHREAD_BARRIER_SERIAL_THREAD: i32 = -1;
 pub const __ELASTERROR: u32 = 1000;
+pub const RTE_KEEPALIVE_MAXCORES: u32 = 128;
 pub const MPLOCKED: &'static [u8; 8usize] = b"lock ; \0";
 pub const MS_PER_S: u32 = 1000;
 pub const US_PER_S: u32 = 1000000;
@@ -4549,17 +4534,17 @@ pub type unaligned_uint64_t = u64;
 pub type unaligned_uint32_t = u32;
 pub type unaligned_uint16_t = u16;
 extern "C" {
-    /// Function to terminate the application immediately, printing an error
-    /// message and returning the exit_code back to the shell.
-    ///
-    /// This function never returns
-    ///
-    /// @param exit_code
-    ///     The exit code to be returned by the application
-    /// @param format
-    ///     The format string to be used for printing the message. This can include
-    ///     printf format characters which will be expanded using any further parameters
-    ///     to the function.
+    #[doc = " Function to terminate the application immediately, printing an error"]
+    #[doc = " message and returning the exit_code back to the shell."]
+    #[doc = ""]
+    #[doc = " This function never returns"]
+    #[doc = ""]
+    #[doc = " @param exit_code"]
+    #[doc = "     The exit code to be returned by the application"]
+    #[doc = " @param format"]
+    #[doc = "     The format string to be used for printing the message. This can include"]
+    #[doc = "     printf format characters which will be expanded using any further parameters"]
+    #[doc = "     to the function."]
     pub fn rte_exit(exit_code: ::std::os::raw::c_int, format: *const ::std::os::raw::c_char, ...);
 }
 extern "C" {
@@ -6022,15 +6007,15 @@ extern "C" {
 pub struct rte_log_dynamic_type {
     _unused: [u8; 0],
 }
-/// The rte_log structure.
+#[doc = " The rte_log structure."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_logs {
-    ///< Bitfield with enabled logs.
+    #[doc = "< Bitfield with enabled logs."]
     pub type_: u32,
-    ///< Log level.
+    #[doc = "< Log level."]
     pub level: u32,
-    ///< Output file set by rte_openlog_stream, or NULL.
+    #[doc = "< Output file set by rte_openlog_stream, or NULL."]
     pub file: *mut FILE,
     pub dynamic_types_len: usize,
     pub dynamic_types: *mut rte_log_dynamic_type,
@@ -6108,177 +6093,177 @@ extern "C" {
     pub static mut rte_logs: rte_logs;
 }
 extern "C" {
-    /// Change the stream that will be used by the logging system.
-    ///
-    /// This can be done at any time. The f argument represents the stream
-    /// to be used to send the logs. If f is NULL, the default output is
-    /// used (stderr).
-    ///
-    /// @param f
-    ///   Pointer to the stream.
-    /// @return
-    ///   - 0 on success.
-    ///   - Negative on error.
+    #[doc = " Change the stream that will be used by the logging system."]
+    #[doc = ""]
+    #[doc = " This can be done at any time. The f argument represents the stream"]
+    #[doc = " to be used to send the logs. If f is NULL, the default output is"]
+    #[doc = " used (stderr)."]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   Pointer to the stream."]
+    #[doc = " @return"]
+    #[doc = "   - 0 on success."]
+    #[doc = "   - Negative on error."]
     pub fn rte_openlog_stream(f: *mut FILE) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set the global log level.
-    ///
-    /// After this call, logs with a level lower or equal than the level
-    /// passed as argument will be displayed.
-    ///
-    /// @param level
-    ///   Log level. A value between RTE_LOG_EMERG (1) and RTE_LOG_DEBUG (8).
+    #[doc = " Set the global log level."]
+    #[doc = ""]
+    #[doc = " After this call, logs with a level lower or equal than the level"]
+    #[doc = " passed as argument will be displayed."]
+    #[doc = ""]
+    #[doc = " @param level"]
+    #[doc = "   Log level. A value between RTE_LOG_EMERG (1) and RTE_LOG_DEBUG (8)."]
     pub fn rte_log_set_global_level(level: u32);
 }
 extern "C" {
-    /// Get the global log level.
-    ///
-    /// @return
-    ///   The current global log level.
+    #[doc = " Get the global log level."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   The current global log level."]
     pub fn rte_log_get_global_level() -> u32;
 }
 extern "C" {
-    /// Get the log level for a given type.
-    ///
-    /// @param logtype
-    ///   The log type identifier.
-    /// @return
-    ///   0 on success, a negative value if logtype is invalid.
+    #[doc = " Get the log level for a given type."]
+    #[doc = ""]
+    #[doc = " @param logtype"]
+    #[doc = "   The log type identifier."]
+    #[doc = " @return"]
+    #[doc = "   0 on success, a negative value if logtype is invalid."]
     pub fn rte_log_get_level(logtype: u32) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set the log level for a given type based on shell pattern.
-    ///
-    /// @param pattern
-    ///   The match pattern identifying the log type.
-    /// @param level
-    ///   The level to be set.
-    /// @return
-    ///   0 on success, a negative value if level is invalid.
+    #[doc = " Set the log level for a given type based on shell pattern."]
+    #[doc = ""]
+    #[doc = " @param pattern"]
+    #[doc = "   The match pattern identifying the log type."]
+    #[doc = " @param level"]
+    #[doc = "   The level to be set."]
+    #[doc = " @return"]
+    #[doc = "   0 on success, a negative value if level is invalid."]
     pub fn rte_log_set_level_pattern(
         pattern: *const ::std::os::raw::c_char,
         level: u32,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set the log level for a given type based on regular expression.
-    ///
-    /// @param regex
-    ///   The regular expression identifying the log type.
-    /// @param level
-    ///   The level to be set.
-    /// @return
-    ///   0 on success, a negative value if level is invalid.
+    #[doc = " Set the log level for a given type based on regular expression."]
+    #[doc = ""]
+    #[doc = " @param regex"]
+    #[doc = "   The regular expression identifying the log type."]
+    #[doc = " @param level"]
+    #[doc = "   The level to be set."]
+    #[doc = " @return"]
+    #[doc = "   0 on success, a negative value if level is invalid."]
     pub fn rte_log_set_level_regexp(
         regex: *const ::std::os::raw::c_char,
         level: u32,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set the log level for a given type.
-    ///
-    /// @param logtype
-    ///   The log type identifier.
-    /// @param level
-    ///   The level to be set.
-    /// @return
-    ///   0 on success, a negative value if logtype or level is invalid.
+    #[doc = " Set the log level for a given type."]
+    #[doc = ""]
+    #[doc = " @param logtype"]
+    #[doc = "   The log type identifier."]
+    #[doc = " @param level"]
+    #[doc = "   The level to be set."]
+    #[doc = " @return"]
+    #[doc = "   0 on success, a negative value if logtype or level is invalid."]
     pub fn rte_log_set_level(logtype: u32, level: u32) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get the current loglevel for the message being processed.
-    ///
-    /// Before calling the user-defined stream for logging, the log
-    /// subsystem sets a per-lcore variable containing the loglevel and the
-    /// logtype of the message being processed. This information can be
-    /// accessed by the user-defined log output function through this
-    /// function.
-    ///
-    /// @return
-    ///   The loglevel of the message being processed.
+    #[doc = " Get the current loglevel for the message being processed."]
+    #[doc = ""]
+    #[doc = " Before calling the user-defined stream for logging, the log"]
+    #[doc = " subsystem sets a per-lcore variable containing the loglevel and the"]
+    #[doc = " logtype of the message being processed. This information can be"]
+    #[doc = " accessed by the user-defined log output function through this"]
+    #[doc = " function."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   The loglevel of the message being processed."]
     pub fn rte_log_cur_msg_loglevel() -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get the current logtype for the message being processed.
-    ///
-    /// Before calling the user-defined stream for logging, the log
-    /// subsystem sets a per-lcore variable containing the loglevel and the
-    /// logtype of the message being processed. This information can be
-    /// accessed by the user-defined log output function through this
-    /// function.
-    ///
-    /// @return
-    ///   The logtype of the message being processed.
+    #[doc = " Get the current logtype for the message being processed."]
+    #[doc = ""]
+    #[doc = " Before calling the user-defined stream for logging, the log"]
+    #[doc = " subsystem sets a per-lcore variable containing the loglevel and the"]
+    #[doc = " logtype of the message being processed. This information can be"]
+    #[doc = " accessed by the user-defined log output function through this"]
+    #[doc = " function."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   The logtype of the message being processed."]
     pub fn rte_log_cur_msg_logtype() -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Register a dynamic log type
-    ///
-    /// If a log is already registered with the same type, the returned value
-    /// is the same than the previous one.
-    ///
-    /// @param name
-    ///   The string identifying the log type.
-    /// @return
-    ///   - >0: success, the returned value is the log type identifier.
-    ///   - (-ENOMEM): cannot allocate memory.
+    #[doc = " Register a dynamic log type"]
+    #[doc = ""]
+    #[doc = " If a log is already registered with the same type, the returned value"]
+    #[doc = " is the same than the previous one."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   The string identifying the log type."]
+    #[doc = " @return"]
+    #[doc = "   - >0: success, the returned value is the log type identifier."]
+    #[doc = "   - (-ENOMEM): cannot allocate memory."]
     pub fn rte_log_register(name: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// Register a dynamic log type and try to pick its level from EAL options
-    ///
-    /// rte_log_register() is called inside. If successful, the function tries
-    /// to search for matching regexp in the list of EAL log level options and
-    /// pick the level from the last matching entry. If nothing can be applied
-    /// from the list, the level will be set to the user-defined default value.
-    ///
-    /// @param name
-    ///    Name for the log type to be registered
-    /// @param level_def
-    ///    Fallback level to be set if the global list has no matching options
-    /// @return
-    ///    - >=0: the newly registered log type
-    ///    - <0: rte_log_register() error value
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Register a dynamic log type and try to pick its level from EAL options"]
+    #[doc = ""]
+    #[doc = " rte_log_register() is called inside. If successful, the function tries"]
+    #[doc = " to search for matching regexp in the list of EAL log level options and"]
+    #[doc = " pick the level from the last matching entry. If nothing can be applied"]
+    #[doc = " from the list, the level will be set to the user-defined default value."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "    Name for the log type to be registered"]
+    #[doc = " @param level_def"]
+    #[doc = "    Fallback level to be set if the global list has no matching options"]
+    #[doc = " @return"]
+    #[doc = "    - >=0: the newly registered log type"]
+    #[doc = "    - <0: rte_log_register() error value"]
     pub fn rte_log_register_type_and_pick_level(
         name: *const ::std::os::raw::c_char,
         level_def: u32,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Dump log information.
-    ///
-    /// Dump the global level and the registered log types.
-    ///
-    /// @param f
-    ///   The output stream where the dump should be sent.
+    #[doc = " Dump log information."]
+    #[doc = ""]
+    #[doc = " Dump the global level and the registered log types."]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   The output stream where the dump should be sent."]
     pub fn rte_log_dump(f: *mut FILE);
 }
 extern "C" {
-    /// Generates a log message.
-    ///
-    /// The message will be sent in the stream defined by the previous call
-    /// to rte_openlog_stream().
-    ///
-    /// The level argument determines if the log should be displayed or
-    /// not, depending on the global rte_logs variable.
-    ///
-    /// The preferred alternative is the RTE_LOG() because it adds the
-    /// level and type in the logged string.
-    ///
-    /// @param level
-    ///   Log level. A value between RTE_LOG_EMERG (1) and RTE_LOG_DEBUG (8).
-    /// @param logtype
-    ///   The log type, for example, RTE_LOGTYPE_EAL.
-    /// @param format
-    ///   The format string, as in printf(3), followed by the variable arguments
-    ///   required by the format.
-    /// @return
-    ///   - 0: Success.
-    ///   - Negative on error.
+    #[doc = " Generates a log message."]
+    #[doc = ""]
+    #[doc = " The message will be sent in the stream defined by the previous call"]
+    #[doc = " to rte_openlog_stream()."]
+    #[doc = ""]
+    #[doc = " The level argument determines if the log should be displayed or"]
+    #[doc = " not, depending on the global rte_logs variable."]
+    #[doc = ""]
+    #[doc = " The preferred alternative is the RTE_LOG() because it adds the"]
+    #[doc = " level and type in the logged string."]
+    #[doc = ""]
+    #[doc = " @param level"]
+    #[doc = "   Log level. A value between RTE_LOG_EMERG (1) and RTE_LOG_DEBUG (8)."]
+    #[doc = " @param logtype"]
+    #[doc = "   The log type, for example, RTE_LOGTYPE_EAL."]
+    #[doc = " @param format"]
+    #[doc = "   The format string, as in printf(3), followed by the variable arguments"]
+    #[doc = "   required by the format."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success."]
+    #[doc = "   - Negative on error."]
     pub fn rte_log(
         level: u32,
         logtype: u32,
@@ -6287,30 +6272,30 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Generates a log message.
-    ///
-    /// The message will be sent in the stream defined by the previous call
-    /// to rte_openlog_stream().
-    ///
-    /// The level argument determines if the log should be displayed or
-    /// not, depending on the global rte_logs variable. A trailing
-    /// newline may be added if needed.
-    ///
-    /// The preferred alternative is the RTE_LOG() because it adds the
-    /// level and type in the logged string.
-    ///
-    /// @param level
-    ///   Log level. A value between RTE_LOG_EMERG (1) and RTE_LOG_DEBUG (8).
-    /// @param logtype
-    ///   The log type, for example, RTE_LOGTYPE_EAL.
-    /// @param format
-    ///   The format string, as in printf(3), followed by the variable arguments
-    ///   required by the format.
-    /// @param ap
-    ///   The va_list of the variable arguments required by the format.
-    /// @return
-    ///   - 0: Success.
-    ///   - Negative on error.
+    #[doc = " Generates a log message."]
+    #[doc = ""]
+    #[doc = " The message will be sent in the stream defined by the previous call"]
+    #[doc = " to rte_openlog_stream()."]
+    #[doc = ""]
+    #[doc = " The level argument determines if the log should be displayed or"]
+    #[doc = " not, depending on the global rte_logs variable. A trailing"]
+    #[doc = " newline may be added if needed."]
+    #[doc = ""]
+    #[doc = " The preferred alternative is the RTE_LOG() because it adds the"]
+    #[doc = " level and type in the logged string."]
+    #[doc = ""]
+    #[doc = " @param level"]
+    #[doc = "   Log level. A value between RTE_LOG_EMERG (1) and RTE_LOG_DEBUG (8)."]
+    #[doc = " @param logtype"]
+    #[doc = "   The log type, for example, RTE_LOGTYPE_EAL."]
+    #[doc = " @param format"]
+    #[doc = "   The format string, as in printf(3), followed by the variable arguments"]
+    #[doc = "   required by the format."]
+    #[doc = " @param ap"]
+    #[doc = "   The va_list of the variable arguments required by the format."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success."]
+    #[doc = "   - Negative on error."]
     pub fn rte_vlog(
         level: u32,
         logtype: u32,
@@ -6371,36 +6356,36 @@ pub mod rte_page_sizes {
     pub const RTE_PGSIZE_16G: Type = 17179869184;
 }
 pub type phys_addr_t = u64;
-/// IO virtual address type.
-/// When the physical addressing mode (IOVA as PA) is in use,
-/// the translation from an IO virtual address (IOVA) to a physical address
-/// is a direct mapping, i.e. the same value.
-/// Otherwise, in virtual mode (IOVA as VA), an IOMMU may do the translation.
+#[doc = " IO virtual address type."]
+#[doc = " When the physical addressing mode (IOVA as PA) is in use,"]
+#[doc = " the translation from an IO virtual address (IOVA) to a physical address"]
+#[doc = " is a direct mapping, i.e. the same value."]
+#[doc = " Otherwise, in virtual mode (IOVA as VA), an IOMMU may do the translation."]
 pub type rte_iova_t = u64;
 #[repr(C, packed)]
 #[derive(Copy, Clone)]
 pub struct rte_memseg {
     pub __bindgen_anon_1: rte_memseg__bindgen_ty_1,
     pub __bindgen_anon_2: rte_memseg__bindgen_ty_2,
-    ///< Length of the segment.
+    #[doc = "< Length of the segment."]
     pub len: usize,
-    ///< The pagesize of underlying memory
+    #[doc = "< The pagesize of underlying memory"]
     pub hugepage_sz: u64,
-    ///< NUMA socket ID.
+    #[doc = "< NUMA socket ID."]
     pub socket_id: i32,
-    ///< Number of channels.
+    #[doc = "< Number of channels."]
     pub nchannel: u32,
-    ///< Number of ranks.
+    #[doc = "< Number of ranks."]
     pub nrank: u32,
-    ///< Memseg-specific flags
+    #[doc = "< Memseg-specific flags"]
     pub flags: u32,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_memseg__bindgen_ty_1 {
-    ///< deprecated - Start physical address.
+    #[doc = "< deprecated - Start physical address."]
     pub phys_addr: phys_addr_t,
-    ///< Start IO address.
+    #[doc = "< Start IO address."]
     pub iova: rte_iova_t,
     _bindgen_union_align: u64,
 }
@@ -6447,9 +6432,9 @@ impl Default for rte_memseg__bindgen_ty_1 {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_memseg__bindgen_ty_2 {
-    ///< Start virtual address.
+    #[doc = "< Start virtual address."]
     pub addr: *mut ::std::os::raw::c_void,
-    ///< Makes sure addr is always 64 bits
+    #[doc = "< Makes sure addr is always 64 bits"]
     pub addr_64: u64,
     _bindgen_union_align: u64,
 }
@@ -6572,76 +6557,76 @@ impl Default for rte_memseg {
     }
 }
 extern "C" {
-    /// Lock page in physical memory and prevent from swapping.
-    ///
-    /// @param virt
-    ///   The virtual address.
-    /// @return
-    ///   0 on success, negative on error.
+    #[doc = " Lock page in physical memory and prevent from swapping."]
+    #[doc = ""]
+    #[doc = " @param virt"]
+    #[doc = "   The virtual address."]
+    #[doc = " @return"]
+    #[doc = "   0 on success, negative on error."]
     pub fn rte_mem_lock_page(virt: *const ::std::os::raw::c_void) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get physical address of any mapped virtual address in the current process.
-    /// It is found by browsing the /proc/self/pagemap special file.
-    /// The page must be locked.
-    ///
-    /// @param virt
-    ///   The virtual address.
-    /// @return
-    ///   The physical address or RTE_BAD_IOVA on error.
+    #[doc = " Get physical address of any mapped virtual address in the current process."]
+    #[doc = " It is found by browsing the /proc/self/pagemap special file."]
+    #[doc = " The page must be locked."]
+    #[doc = ""]
+    #[doc = " @param virt"]
+    #[doc = "   The virtual address."]
+    #[doc = " @return"]
+    #[doc = "   The physical address or RTE_BAD_IOVA on error."]
     pub fn rte_mem_virt2phy(virt: *const ::std::os::raw::c_void) -> phys_addr_t;
 }
 extern "C" {
-    /// Get IO virtual address of any mapped virtual address in the current process.
-    ///
-    /// @param virt
-    ///   The virtual address.
-    /// @return
-    ///   The IO address or RTE_BAD_IOVA on error.
+    #[doc = " Get IO virtual address of any mapped virtual address in the current process."]
+    #[doc = ""]
+    #[doc = " @param virt"]
+    #[doc = "   The virtual address."]
+    #[doc = " @return"]
+    #[doc = "   The IO address or RTE_BAD_IOVA on error."]
     pub fn rte_mem_virt2iova(virt: *const ::std::os::raw::c_void) -> rte_iova_t;
 }
 extern "C" {
-    /// Get virtual memory address corresponding to iova address.
-    ///
-    /// @note This function read-locks the memory hotplug subsystem, and thus cannot
-    ///       be used within memory-related callback functions.
-    ///
-    /// @param iova
-    ///   The iova address.
-    /// @return
-    ///   Virtual address corresponding to iova address (or NULL if address does not
-    ///   exist within DPDK memory map).
+    #[doc = " Get virtual memory address corresponding to iova address."]
+    #[doc = ""]
+    #[doc = " @note This function read-locks the memory hotplug subsystem, and thus cannot"]
+    #[doc = "       be used within memory-related callback functions."]
+    #[doc = ""]
+    #[doc = " @param iova"]
+    #[doc = "   The iova address."]
+    #[doc = " @return"]
+    #[doc = "   Virtual address corresponding to iova address (or NULL if address does not"]
+    #[doc = "   exist within DPDK memory map)."]
     pub fn rte_mem_iova2virt(iova: rte_iova_t) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
-    /// Get memseg to which a particular virtual address belongs.
-    ///
-    /// @param virt
-    ///   The virtual address.
-    /// @param msl
-    ///   The memseg list in which to look up based on ``virt`` address
-    ///   (can be NULL).
-    /// @return
-    ///   Memseg pointer on success, or NULL on error.
+    #[doc = " Get memseg to which a particular virtual address belongs."]
+    #[doc = ""]
+    #[doc = " @param virt"]
+    #[doc = "   The virtual address."]
+    #[doc = " @param msl"]
+    #[doc = "   The memseg list in which to look up based on ``virt`` address"]
+    #[doc = "   (can be NULL)."]
+    #[doc = " @return"]
+    #[doc = "   Memseg pointer on success, or NULL on error."]
     pub fn rte_mem_virt2memseg(
         virt: *const ::std::os::raw::c_void,
         msl: *const rte_memseg_list,
     ) -> *mut rte_memseg;
 }
 extern "C" {
-    /// Get memseg list corresponding to virtual memory address.
-    ///
-    /// @param virt
-    ///   The virtual address.
-    /// @return
-    ///   Memseg list to which this virtual address belongs to.
+    #[doc = " Get memseg list corresponding to virtual memory address."]
+    #[doc = ""]
+    #[doc = " @param virt"]
+    #[doc = "   The virtual address."]
+    #[doc = " @return"]
+    #[doc = "   Memseg list to which this virtual address belongs to."]
     pub fn rte_mem_virt2memseg_list(virt: *const ::std::os::raw::c_void) -> *mut rte_memseg_list;
 }
-/// Memseg walk function prototype.
-///
-/// Returning 0 will continue walk
-/// Returning 1 will stop the walk
-/// Returning -1 will stop the walk and report error
+#[doc = " Memseg walk function prototype."]
+#[doc = ""]
+#[doc = " Returning 0 will continue walk"]
+#[doc = " Returning 1 will stop the walk"]
+#[doc = " Returning -1 will stop the walk and report error"]
 pub type rte_memseg_walk_t = ::std::option::Option<
     unsafe extern "C" fn(
         msl: *const rte_memseg_list,
@@ -6649,13 +6634,13 @@ pub type rte_memseg_walk_t = ::std::option::Option<
         arg: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int,
 >;
-/// Memseg contig walk function prototype. This will trigger a callback on every
-/// VA-contiguous are starting at memseg ``ms``, so total valid VA space at each
-/// callback call will be [``ms->addr``, ``ms->addr + len``).
-///
-/// Returning 0 will continue walk
-/// Returning 1 will stop the walk
-/// Returning -1 will stop the walk and report error
+#[doc = " Memseg contig walk function prototype. This will trigger a callback on every"]
+#[doc = " VA-contiguous are starting at memseg ``ms``, so total valid VA space at each"]
+#[doc = " callback call will be [``ms->addr``, ``ms->addr + len``)."]
+#[doc = ""]
+#[doc = " Returning 0 will continue walk"]
+#[doc = " Returning 1 will stop the walk"]
+#[doc = " Returning -1 will stop the walk and report error"]
 pub type rte_memseg_contig_walk_t = ::std::option::Option<
     unsafe extern "C" fn(
         msl: *const rte_memseg_list,
@@ -6664,326 +6649,326 @@ pub type rte_memseg_contig_walk_t = ::std::option::Option<
         arg: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int,
 >;
-/// Memseg list walk function prototype. This will trigger a callback on every
-/// allocated memseg list.
-///
-/// Returning 0 will continue walk
-/// Returning 1 will stop the walk
-/// Returning -1 will stop the walk and report error
+#[doc = " Memseg list walk function prototype. This will trigger a callback on every"]
+#[doc = " allocated memseg list."]
+#[doc = ""]
+#[doc = " Returning 0 will continue walk"]
+#[doc = " Returning 1 will stop the walk"]
+#[doc = " Returning -1 will stop the walk and report error"]
 pub type rte_memseg_list_walk_t = ::std::option::Option<
     unsafe extern "C" fn(msl: *const rte_memseg_list, arg: *mut ::std::os::raw::c_void)
         -> ::std::os::raw::c_int,
 >;
 extern "C" {
-    /// Walk list of all memsegs.
-    ///
-    /// @note This function read-locks the memory hotplug subsystem, and thus cannot
-    ///       be used within memory-related callback functions.
-    ///
-    /// @note This function will also walk through externally allocated segments. It
-    ///       is up to the user to decide whether to skip through these segments.
-    ///
-    /// @param func
-    ///   Iterator function
-    /// @param arg
-    ///   Argument passed to iterator
-    /// @return
-    ///   0 if walked over the entire list
-    ///   1 if stopped by the user
-    ///   -1 if user function reported error
+    #[doc = " Walk list of all memsegs."]
+    #[doc = ""]
+    #[doc = " @note This function read-locks the memory hotplug subsystem, and thus cannot"]
+    #[doc = "       be used within memory-related callback functions."]
+    #[doc = ""]
+    #[doc = " @note This function will also walk through externally allocated segments. It"]
+    #[doc = "       is up to the user to decide whether to skip through these segments."]
+    #[doc = ""]
+    #[doc = " @param func"]
+    #[doc = "   Iterator function"]
+    #[doc = " @param arg"]
+    #[doc = "   Argument passed to iterator"]
+    #[doc = " @return"]
+    #[doc = "   0 if walked over the entire list"]
+    #[doc = "   1 if stopped by the user"]
+    #[doc = "   -1 if user function reported error"]
     pub fn rte_memseg_walk(
         func: rte_memseg_walk_t,
         arg: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Walk each VA-contiguous area.
-    ///
-    /// @note This function read-locks the memory hotplug subsystem, and thus cannot
-    ///       be used within memory-related callback functions.
-    ///
-    /// @note This function will also walk through externally allocated segments. It
-    ///       is up to the user to decide whether to skip through these segments.
-    ///
-    /// @param func
-    ///   Iterator function
-    /// @param arg
-    ///   Argument passed to iterator
-    /// @return
-    ///   0 if walked over the entire list
-    ///   1 if stopped by the user
-    ///   -1 if user function reported error
+    #[doc = " Walk each VA-contiguous area."]
+    #[doc = ""]
+    #[doc = " @note This function read-locks the memory hotplug subsystem, and thus cannot"]
+    #[doc = "       be used within memory-related callback functions."]
+    #[doc = ""]
+    #[doc = " @note This function will also walk through externally allocated segments. It"]
+    #[doc = "       is up to the user to decide whether to skip through these segments."]
+    #[doc = ""]
+    #[doc = " @param func"]
+    #[doc = "   Iterator function"]
+    #[doc = " @param arg"]
+    #[doc = "   Argument passed to iterator"]
+    #[doc = " @return"]
+    #[doc = "   0 if walked over the entire list"]
+    #[doc = "   1 if stopped by the user"]
+    #[doc = "   -1 if user function reported error"]
     pub fn rte_memseg_contig_walk(
         func: rte_memseg_contig_walk_t,
         arg: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Walk each allocated memseg list.
-    ///
-    /// @note This function read-locks the memory hotplug subsystem, and thus cannot
-    ///       be used within memory-related callback functions.
-    ///
-    /// @note This function will also walk through externally allocated segments. It
-    ///       is up to the user to decide whether to skip through these segments.
-    ///
-    /// @param func
-    ///   Iterator function
-    /// @param arg
-    ///   Argument passed to iterator
-    /// @return
-    ///   0 if walked over the entire list
-    ///   1 if stopped by the user
-    ///   -1 if user function reported error
+    #[doc = " Walk each allocated memseg list."]
+    #[doc = ""]
+    #[doc = " @note This function read-locks the memory hotplug subsystem, and thus cannot"]
+    #[doc = "       be used within memory-related callback functions."]
+    #[doc = ""]
+    #[doc = " @note This function will also walk through externally allocated segments. It"]
+    #[doc = "       is up to the user to decide whether to skip through these segments."]
+    #[doc = ""]
+    #[doc = " @param func"]
+    #[doc = "   Iterator function"]
+    #[doc = " @param arg"]
+    #[doc = "   Argument passed to iterator"]
+    #[doc = " @return"]
+    #[doc = "   0 if walked over the entire list"]
+    #[doc = "   1 if stopped by the user"]
+    #[doc = "   -1 if user function reported error"]
     pub fn rte_memseg_list_walk(
         func: rte_memseg_list_walk_t,
         arg: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Walk list of all memsegs without performing any locking.
-    ///
-    /// @note This function does not perform any locking, and is only safe to call
-    ///       from within memory-related callback functions.
-    ///
-    /// @param func
-    ///   Iterator function
-    /// @param arg
-    ///   Argument passed to iterator
-    /// @return
-    ///   0 if walked over the entire list
-    ///   1 if stopped by the user
-    ///   -1 if user function reported error
+    #[doc = " Walk list of all memsegs without performing any locking."]
+    #[doc = ""]
+    #[doc = " @note This function does not perform any locking, and is only safe to call"]
+    #[doc = "       from within memory-related callback functions."]
+    #[doc = ""]
+    #[doc = " @param func"]
+    #[doc = "   Iterator function"]
+    #[doc = " @param arg"]
+    #[doc = "   Argument passed to iterator"]
+    #[doc = " @return"]
+    #[doc = "   0 if walked over the entire list"]
+    #[doc = "   1 if stopped by the user"]
+    #[doc = "   -1 if user function reported error"]
     pub fn rte_memseg_walk_thread_unsafe(
         func: rte_memseg_walk_t,
         arg: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Walk each VA-contiguous area without performing any locking.
-    ///
-    /// @note This function does not perform any locking, and is only safe to call
-    ///       from within memory-related callback functions.
-    ///
-    /// @param func
-    ///   Iterator function
-    /// @param arg
-    ///   Argument passed to iterator
-    /// @return
-    ///   0 if walked over the entire list
-    ///   1 if stopped by the user
-    ///   -1 if user function reported error
+    #[doc = " Walk each VA-contiguous area without performing any locking."]
+    #[doc = ""]
+    #[doc = " @note This function does not perform any locking, and is only safe to call"]
+    #[doc = "       from within memory-related callback functions."]
+    #[doc = ""]
+    #[doc = " @param func"]
+    #[doc = "   Iterator function"]
+    #[doc = " @param arg"]
+    #[doc = "   Argument passed to iterator"]
+    #[doc = " @return"]
+    #[doc = "   0 if walked over the entire list"]
+    #[doc = "   1 if stopped by the user"]
+    #[doc = "   -1 if user function reported error"]
     pub fn rte_memseg_contig_walk_thread_unsafe(
         func: rte_memseg_contig_walk_t,
         arg: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Walk each allocated memseg list without performing any locking.
-    ///
-    /// @note This function does not perform any locking, and is only safe to call
-    ///       from within memory-related callback functions.
-    ///
-    /// @param func
-    ///   Iterator function
-    /// @param arg
-    ///   Argument passed to iterator
-    /// @return
-    ///   0 if walked over the entire list
-    ///   1 if stopped by the user
-    ///   -1 if user function reported error
+    #[doc = " Walk each allocated memseg list without performing any locking."]
+    #[doc = ""]
+    #[doc = " @note This function does not perform any locking, and is only safe to call"]
+    #[doc = "       from within memory-related callback functions."]
+    #[doc = ""]
+    #[doc = " @param func"]
+    #[doc = "   Iterator function"]
+    #[doc = " @param arg"]
+    #[doc = "   Argument passed to iterator"]
+    #[doc = " @return"]
+    #[doc = "   0 if walked over the entire list"]
+    #[doc = "   1 if stopped by the user"]
+    #[doc = "   -1 if user function reported error"]
     pub fn rte_memseg_list_walk_thread_unsafe(
         func: rte_memseg_list_walk_t,
         arg: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Return file descriptor associated with a particular memseg (if available).
-    ///
-    /// @note This function read-locks the memory hotplug subsystem, and thus cannot
-    ///       be used within memory-related callback functions.
-    ///
-    /// @note This returns an internal file descriptor. Performing any operations on
-    ///       this file descriptor is inherently dangerous, so it should be treated
-    ///       as read-only for all intents and purposes.
-    ///
-    /// @param ms
-    ///   A pointer to memseg for which to get file descriptor.
-    ///
-    /// @return
-    ///   Valid file descriptor in case of success.
-    ///   -1 in case of error, with ``rte_errno`` set to the following values:
-    ///     - EINVAL  - ``ms`` pointer was NULL or did not point to a valid memseg
-    ///     - ENODEV  - ``ms`` fd is not available
-    ///     - ENOENT  - ``ms`` is an unused segment
-    ///     - ENOTSUP - segment fd's are not supported
+    #[doc = " Return file descriptor associated with a particular memseg (if available)."]
+    #[doc = ""]
+    #[doc = " @note This function read-locks the memory hotplug subsystem, and thus cannot"]
+    #[doc = "       be used within memory-related callback functions."]
+    #[doc = ""]
+    #[doc = " @note This returns an internal file descriptor. Performing any operations on"]
+    #[doc = "       this file descriptor is inherently dangerous, so it should be treated"]
+    #[doc = "       as read-only for all intents and purposes."]
+    #[doc = ""]
+    #[doc = " @param ms"]
+    #[doc = "   A pointer to memseg for which to get file descriptor."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   Valid file descriptor in case of success."]
+    #[doc = "   -1 in case of error, with ``rte_errno`` set to the following values:"]
+    #[doc = "     - EINVAL  - ``ms`` pointer was NULL or did not point to a valid memseg"]
+    #[doc = "     - ENODEV  - ``ms`` fd is not available"]
+    #[doc = "     - ENOENT  - ``ms`` is an unused segment"]
+    #[doc = "     - ENOTSUP - segment fd\'s are not supported"]
     pub fn rte_memseg_get_fd(ms: *const rte_memseg) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Return file descriptor associated with a particular memseg (if available).
-    ///
-    /// @note This function does not perform any locking, and is only safe to call
-    ///       from within memory-related callback functions.
-    ///
-    /// @note This returns an internal file descriptor. Performing any operations on
-    ///       this file descriptor is inherently dangerous, so it should be treated
-    ///       as read-only for all intents and purposes.
-    ///
-    /// @param ms
-    ///   A pointer to memseg for which to get file descriptor.
-    ///
-    /// @return
-    ///   Valid file descriptor in case of success.
-    ///   -1 in case of error, with ``rte_errno`` set to the following values:
-    ///     - EINVAL  - ``ms`` pointer was NULL or did not point to a valid memseg
-    ///     - ENODEV  - ``ms`` fd is not available
-    ///     - ENOENT  - ``ms`` is an unused segment
-    ///     - ENOTSUP - segment fd's are not supported
+    #[doc = " Return file descriptor associated with a particular memseg (if available)."]
+    #[doc = ""]
+    #[doc = " @note This function does not perform any locking, and is only safe to call"]
+    #[doc = "       from within memory-related callback functions."]
+    #[doc = ""]
+    #[doc = " @note This returns an internal file descriptor. Performing any operations on"]
+    #[doc = "       this file descriptor is inherently dangerous, so it should be treated"]
+    #[doc = "       as read-only for all intents and purposes."]
+    #[doc = ""]
+    #[doc = " @param ms"]
+    #[doc = "   A pointer to memseg for which to get file descriptor."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   Valid file descriptor in case of success."]
+    #[doc = "   -1 in case of error, with ``rte_errno`` set to the following values:"]
+    #[doc = "     - EINVAL  - ``ms`` pointer was NULL or did not point to a valid memseg"]
+    #[doc = "     - ENODEV  - ``ms`` fd is not available"]
+    #[doc = "     - ENOENT  - ``ms`` is an unused segment"]
+    #[doc = "     - ENOTSUP - segment fd\'s are not supported"]
     pub fn rte_memseg_get_fd_thread_unsafe(ms: *const rte_memseg) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get offset into segment file descriptor associated with a particular memseg
-    /// (if available).
-    ///
-    /// @note This function read-locks the memory hotplug subsystem, and thus cannot
-    ///       be used within memory-related callback functions.
-    ///
-    /// @param ms
-    ///   A pointer to memseg for which to get file descriptor.
-    /// @param offset
-    ///   A pointer to offset value where the result will be stored.
-    ///
-    /// @return
-    ///   Valid file descriptor in case of success.
-    ///   -1 in case of error, with ``rte_errno`` set to the following values:
-    ///     - EINVAL  - ``ms`` pointer was NULL or did not point to a valid memseg
-    ///     - EINVAL  - ``offset`` pointer was NULL
-    ///     - ENODEV  - ``ms`` fd is not available
-    ///     - ENOENT  - ``ms`` is an unused segment
-    ///     - ENOTSUP - segment fd's are not supported
+    #[doc = " Get offset into segment file descriptor associated with a particular memseg"]
+    #[doc = " (if available)."]
+    #[doc = ""]
+    #[doc = " @note This function read-locks the memory hotplug subsystem, and thus cannot"]
+    #[doc = "       be used within memory-related callback functions."]
+    #[doc = ""]
+    #[doc = " @param ms"]
+    #[doc = "   A pointer to memseg for which to get file descriptor."]
+    #[doc = " @param offset"]
+    #[doc = "   A pointer to offset value where the result will be stored."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   Valid file descriptor in case of success."]
+    #[doc = "   -1 in case of error, with ``rte_errno`` set to the following values:"]
+    #[doc = "     - EINVAL  - ``ms`` pointer was NULL or did not point to a valid memseg"]
+    #[doc = "     - EINVAL  - ``offset`` pointer was NULL"]
+    #[doc = "     - ENODEV  - ``ms`` fd is not available"]
+    #[doc = "     - ENOENT  - ``ms`` is an unused segment"]
+    #[doc = "     - ENOTSUP - segment fd\'s are not supported"]
     pub fn rte_memseg_get_fd_offset(
         ms: *const rte_memseg,
         offset: *mut usize,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get offset into segment file descriptor associated with a particular memseg
-    /// (if available).
-    ///
-    /// @note This function does not perform any locking, and is only safe to call
-    ///       from within memory-related callback functions.
-    ///
-    /// @param ms
-    ///   A pointer to memseg for which to get file descriptor.
-    /// @param offset
-    ///   A pointer to offset value where the result will be stored.
-    ///
-    /// @return
-    ///   Valid file descriptor in case of success.
-    ///   -1 in case of error, with ``rte_errno`` set to the following values:
-    ///     - EINVAL  - ``ms`` pointer was NULL or did not point to a valid memseg
-    ///     - EINVAL  - ``offset`` pointer was NULL
-    ///     - ENODEV  - ``ms`` fd is not available
-    ///     - ENOENT  - ``ms`` is an unused segment
-    ///     - ENOTSUP - segment fd's are not supported
+    #[doc = " Get offset into segment file descriptor associated with a particular memseg"]
+    #[doc = " (if available)."]
+    #[doc = ""]
+    #[doc = " @note This function does not perform any locking, and is only safe to call"]
+    #[doc = "       from within memory-related callback functions."]
+    #[doc = ""]
+    #[doc = " @param ms"]
+    #[doc = "   A pointer to memseg for which to get file descriptor."]
+    #[doc = " @param offset"]
+    #[doc = "   A pointer to offset value where the result will be stored."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   Valid file descriptor in case of success."]
+    #[doc = "   -1 in case of error, with ``rte_errno`` set to the following values:"]
+    #[doc = "     - EINVAL  - ``ms`` pointer was NULL or did not point to a valid memseg"]
+    #[doc = "     - EINVAL  - ``offset`` pointer was NULL"]
+    #[doc = "     - ENODEV  - ``ms`` fd is not available"]
+    #[doc = "     - ENOENT  - ``ms`` is an unused segment"]
+    #[doc = "     - ENOTSUP - segment fd\'s are not supported"]
     pub fn rte_memseg_get_fd_offset_thread_unsafe(
         ms: *const rte_memseg,
         offset: *mut usize,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Dump the physical memory layout to a file.
-    ///
-    /// @note This function read-locks the memory hotplug subsystem, and thus cannot
-    ///       be used within memory-related callback functions.
-    ///
-    /// @param f
-    ///   A pointer to a file for output
+    #[doc = " Dump the physical memory layout to a file."]
+    #[doc = ""]
+    #[doc = " @note This function read-locks the memory hotplug subsystem, and thus cannot"]
+    #[doc = "       be used within memory-related callback functions."]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   A pointer to a file for output"]
     pub fn rte_dump_physmem_layout(f: *mut FILE);
 }
 extern "C" {
-    /// Get the total amount of available physical memory.
-    ///
-    /// @note This function read-locks the memory hotplug subsystem, and thus cannot
-    ///       be used within memory-related callback functions.
-    ///
-    /// @return
-    ///    The total amount of available physical memory in bytes.
+    #[doc = " Get the total amount of available physical memory."]
+    #[doc = ""]
+    #[doc = " @note This function read-locks the memory hotplug subsystem, and thus cannot"]
+    #[doc = "       be used within memory-related callback functions."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "    The total amount of available physical memory in bytes."]
     pub fn rte_eal_get_physmem_size() -> u64;
 }
 extern "C" {
-    /// Get the number of memory channels.
-    ///
-    /// @return
-    ///   The number of memory channels on the system. The value is 0 if unknown
-    ///   or not the same on all devices.
+    #[doc = " Get the number of memory channels."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   The number of memory channels on the system. The value is 0 if unknown"]
+    #[doc = "   or not the same on all devices."]
     pub fn rte_memory_get_nchannel() -> ::std::os::raw::c_uint;
 }
 extern "C" {
-    /// Get the number of memory ranks.
-    ///
-    /// @return
-    ///   The number of memory ranks on the system. The value is 0 if unknown or
-    ///   not the same on all devices.
+    #[doc = " Get the number of memory ranks."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   The number of memory ranks on the system. The value is 0 if unknown or"]
+    #[doc = "   not the same on all devices."]
     pub fn rte_memory_get_nrank() -> ::std::os::raw::c_uint;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// Check if all currently allocated memory segments are compliant with
-    /// supplied DMA address width.
-    ///
-    ///  @param maskbits
-    ///    Address width to check against.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Check if all currently allocated memory segments are compliant with"]
+    #[doc = " supplied DMA address width."]
+    #[doc = ""]
+    #[doc = "  @param maskbits"]
+    #[doc = "    Address width to check against."]
     pub fn rte_mem_check_dma_mask(maskbits: u8) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// Check if all currently allocated memory segments are compliant with
-    /// supplied DMA address width. This function will use
-    /// rte_memseg_walk_thread_unsafe instead of rte_memseg_walk implying
-    /// memory_hotplug_lock will not be acquired avoiding deadlock during
-    /// memory initialization.
-    ///
-    /// This function is just for EAL core memory internal use. Drivers should
-    /// use the previous rte_mem_check_dma_mask.
-    ///
-    ///  @param maskbits
-    ///    Address width to check against.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Check if all currently allocated memory segments are compliant with"]
+    #[doc = " supplied DMA address width. This function will use"]
+    #[doc = " rte_memseg_walk_thread_unsafe instead of rte_memseg_walk implying"]
+    #[doc = " memory_hotplug_lock will not be acquired avoiding deadlock during"]
+    #[doc = " memory initialization."]
+    #[doc = ""]
+    #[doc = " This function is just for EAL core memory internal use. Drivers should"]
+    #[doc = " use the previous rte_mem_check_dma_mask."]
+    #[doc = ""]
+    #[doc = "  @param maskbits"]
+    #[doc = "    Address width to check against."]
     pub fn rte_mem_check_dma_mask_thread_unsafe(maskbits: u8) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    ///  Set dma mask to use once memory initialization is done. Previous functions
-    ///  rte_mem_check_dma_mask and rte_mem_check_dma_mask_thread_unsafe can not be
-    ///  used safely until memory has been initialized.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = "  Set dma mask to use once memory initialization is done. Previous functions"]
+    #[doc = "  rte_mem_check_dma_mask and rte_mem_check_dma_mask_thread_unsafe can not be"]
+    #[doc = "  used safely until memory has been initialized."]
     pub fn rte_mem_set_dma_mask(maskbits: u8);
 }
 extern "C" {
-    /// Drivers based on uio will not load unless physical
-    /// addresses are obtainable. It is only possible to get
-    /// physical addresses when running as a privileged user.
-    ///
-    /// @return
-    ///   1 if the system is able to obtain physical addresses.
-    ///   0 if using DMA addresses through an IOMMU.
+    #[doc = " Drivers based on uio will not load unless physical"]
+    #[doc = " addresses are obtainable. It is only possible to get"]
+    #[doc = " physical addresses when running as a privileged user."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   1 if the system is able to obtain physical addresses."]
+    #[doc = "   0 if using DMA addresses through an IOMMU."]
     pub fn rte_eal_using_phys_addrs() -> ::std::os::raw::c_int;
 }
 pub mod rte_mem_event {
-    /// Enum indicating which kind of memory event has happened. Used by callbacks to
-    /// distinguish between memory allocations and deallocations.
+    #[doc = " Enum indicating which kind of memory event has happened. Used by callbacks to"]
+    #[doc = " distinguish between memory allocations and deallocations."]
     pub type Type = u32;
-    ///< Allocation event.
+    #[doc = "< Allocation event."]
     pub const RTE_MEM_EVENT_ALLOC: Type = 0;
-    ///< Deallocation event.
+    #[doc = "< Deallocation event."]
     pub const RTE_MEM_EVENT_FREE: Type = 1;
 }
-/// Function typedef used to register callbacks for memory events.
+#[doc = " Function typedef used to register callbacks for memory events."]
 pub type rte_mem_event_callback_t = ::std::option::Option<
     unsafe extern "C" fn(
         event_type: rte_mem_event::Type,
@@ -6993,29 +6978,29 @@ pub type rte_mem_event_callback_t = ::std::option::Option<
     ),
 >;
 extern "C" {
-    /// Function used to register callbacks for memory events.
-    ///
-    /// @note callbacks will happen while memory hotplug subsystem is write-locked,
-    ///       therefore some functions (e.g. `rte_memseg_walk()`) will cause a
-    ///       deadlock when called from within such callbacks.
-    ///
-    /// @note mem event callbacks not being supported is an expected error condition,
-    ///       so user code needs to handle this situation. In these cases, return
-    ///       value will be -1, and rte_errno will be set to ENOTSUP.
-    ///
-    /// @param name
-    ///   Name associated with specified callback to be added to the list.
-    ///
-    /// @param clb
-    ///   Callback function pointer.
-    ///
-    /// @param arg
-    ///   Argument to pass to the callback.
-    ///
-    /// @return
-    ///   0 on successful callback register
-    ///   -1 on unsuccessful callback register, with rte_errno value indicating
-    ///   reason for failure.
+    #[doc = " Function used to register callbacks for memory events."]
+    #[doc = ""]
+    #[doc = " @note callbacks will happen while memory hotplug subsystem is write-locked,"]
+    #[doc = "       therefore some functions (e.g. `rte_memseg_walk()`) will cause a"]
+    #[doc = "       deadlock when called from within such callbacks."]
+    #[doc = ""]
+    #[doc = " @note mem event callbacks not being supported is an expected error condition,"]
+    #[doc = "       so user code needs to handle this situation. In these cases, return"]
+    #[doc = "       value will be -1, and rte_errno will be set to ENOTSUP."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   Name associated with specified callback to be added to the list."]
+    #[doc = ""]
+    #[doc = " @param clb"]
+    #[doc = "   Callback function pointer."]
+    #[doc = ""]
+    #[doc = " @param arg"]
+    #[doc = "   Argument to pass to the callback."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   0 on successful callback register"]
+    #[doc = "   -1 on unsuccessful callback register, with rte_errno value indicating"]
+    #[doc = "   reason for failure."]
     pub fn rte_mem_event_callback_register(
         name: *const ::std::os::raw::c_char,
         clb: rte_mem_event_callback_t,
@@ -7023,64 +7008,64 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Function used to unregister callbacks for memory events.
-    ///
-    /// @param name
-    ///   Name associated with specified callback to be removed from the list.
-    ///
-    /// @param arg
-    ///   Argument to look for among callbacks with specified callback name.
-    ///
-    /// @return
-    ///   0 on successful callback unregister
-    ///   -1 on unsuccessful callback unregister, with rte_errno value indicating
-    ///   reason for failure.
+    #[doc = " Function used to unregister callbacks for memory events."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   Name associated with specified callback to be removed from the list."]
+    #[doc = ""]
+    #[doc = " @param arg"]
+    #[doc = "   Argument to look for among callbacks with specified callback name."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   0 on successful callback unregister"]
+    #[doc = "   -1 on unsuccessful callback unregister, with rte_errno value indicating"]
+    #[doc = "   reason for failure."]
     pub fn rte_mem_event_callback_unregister(
         name: *const ::std::os::raw::c_char,
         arg: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;
 }
-/// Function typedef used to register memory allocation validation callbacks.
-///
-/// Returning 0 will allow allocation attempt to continue. Returning -1 will
-/// prevent allocation from succeeding.
+#[doc = " Function typedef used to register memory allocation validation callbacks."]
+#[doc = ""]
+#[doc = " Returning 0 will allow allocation attempt to continue. Returning -1 will"]
+#[doc = " prevent allocation from succeeding."]
 pub type rte_mem_alloc_validator_t = ::std::option::Option<
     unsafe extern "C" fn(socket_id: ::std::os::raw::c_int, cur_limit: usize, new_len: usize)
         -> ::std::os::raw::c_int,
 >;
 extern "C" {
-    /// @brief Register validator callback for memory allocations.
-    ///
-    /// Callbacks registered by this function will be called right before memory
-    /// allocator is about to trigger allocation of more pages from the system if
-    /// said allocation will bring total memory usage above specified limit on
-    /// specified socket. User will be able to cancel pending allocation if callback
-    /// returns -1.
-    ///
-    /// @note callbacks will happen while memory hotplug subsystem is write-locked,
-    ///       therefore some functions (e.g. `rte_memseg_walk()`) will cause a
-    ///       deadlock when called from within such callbacks.
-    ///
-    /// @note validator callbacks not being supported is an expected error condition,
-    ///       so user code needs to handle this situation. In these cases, return
-    ///       value will be -1, and rte_errno will be set to ENOTSUP.
-    ///
-    /// @param name
-    ///   Name associated with specified callback to be added to the list.
-    ///
-    /// @param clb
-    ///   Callback function pointer.
-    ///
-    /// @param socket_id
-    ///   Socket ID on which to watch for allocations.
-    ///
-    /// @param limit
-    ///   Limit above which to trigger callbacks.
-    ///
-    /// @return
-    ///   0 on successful callback register
-    ///   -1 on unsuccessful callback register, with rte_errno value indicating
-    ///   reason for failure.
+    #[doc = " @brief Register validator callback for memory allocations."]
+    #[doc = ""]
+    #[doc = " Callbacks registered by this function will be called right before memory"]
+    #[doc = " allocator is about to trigger allocation of more pages from the system if"]
+    #[doc = " said allocation will bring total memory usage above specified limit on"]
+    #[doc = " specified socket. User will be able to cancel pending allocation if callback"]
+    #[doc = " returns -1."]
+    #[doc = ""]
+    #[doc = " @note callbacks will happen while memory hotplug subsystem is write-locked,"]
+    #[doc = "       therefore some functions (e.g. `rte_memseg_walk()`) will cause a"]
+    #[doc = "       deadlock when called from within such callbacks."]
+    #[doc = ""]
+    #[doc = " @note validator callbacks not being supported is an expected error condition,"]
+    #[doc = "       so user code needs to handle this situation. In these cases, return"]
+    #[doc = "       value will be -1, and rte_errno will be set to ENOTSUP."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   Name associated with specified callback to be added to the list."]
+    #[doc = ""]
+    #[doc = " @param clb"]
+    #[doc = "   Callback function pointer."]
+    #[doc = ""]
+    #[doc = " @param socket_id"]
+    #[doc = "   Socket ID on which to watch for allocations."]
+    #[doc = ""]
+    #[doc = " @param limit"]
+    #[doc = "   Limit above which to trigger callbacks."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   0 on successful callback register"]
+    #[doc = "   -1 on unsuccessful callback register, with rte_errno value indicating"]
+    #[doc = "   reason for failure."]
     pub fn rte_mem_alloc_validator_register(
         name: *const ::std::os::raw::c_char,
         clb: rte_mem_alloc_validator_t,
@@ -7089,38 +7074,38 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @brief Unregister validator callback for memory allocations.
-    ///
-    /// @param name
-    ///   Name associated with specified callback to be removed from the list.
-    ///
-    /// @param socket_id
-    ///   Socket ID on which to watch for allocations.
-    ///
-    /// @return
-    ///   0 on successful callback unregister
-    ///   -1 on unsuccessful callback unregister, with rte_errno value indicating
-    ///   reason for failure.
+    #[doc = " @brief Unregister validator callback for memory allocations."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   Name associated with specified callback to be removed from the list."]
+    #[doc = ""]
+    #[doc = " @param socket_id"]
+    #[doc = "   Socket ID on which to watch for allocations."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   0 on successful callback unregister"]
+    #[doc = "   -1 on unsuccessful callback unregister, with rte_errno value indicating"]
+    #[doc = "   reason for failure."]
     pub fn rte_mem_alloc_validator_unregister(
         name: *const ::std::os::raw::c_char,
         socket_id: ::std::os::raw::c_int,
     ) -> ::std::os::raw::c_int;
 }
-///  Structure to hold heap statistics obtained from rte_malloc_get_socket_stats function.
+#[doc = "  Structure to hold heap statistics obtained from rte_malloc_get_socket_stats function."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_malloc_socket_stats {
-    ///< Total bytes on heap
+    #[doc = "< Total bytes on heap"]
     pub heap_totalsz_bytes: usize,
-    ///< Total free bytes on heap
+    #[doc = "< Total free bytes on heap"]
     pub heap_freesz_bytes: usize,
-    ///< Size in bytes of largest free block
+    #[doc = "< Size in bytes of largest free block"]
     pub greatest_free_size: usize,
-    ///< Number of free elements on heap
+    #[doc = "< Number of free elements on heap"]
     pub free_count: ::std::os::raw::c_uint,
-    ///< Number of allocated elements on heap
+    #[doc = "< Number of allocated elements on heap"]
     pub alloc_count: ::std::os::raw::c_uint,
-    ///< Total allocated bytes on heap
+    #[doc = "< Total allocated bytes on heap"]
     pub heap_allocsz_bytes: usize,
 }
 #[test]
@@ -7213,25 +7198,25 @@ fn bindgen_test_layout_rte_malloc_socket_stats() {
     );
 }
 extern "C" {
-    /// This function allocates memory from the huge-page area of memory. The memory
-    /// is not cleared. In NUMA systems, the memory allocated resides on the same
-    /// NUMA socket as the core that calls this function.
-    ///
-    /// @param type
-    ///   A string identifying the type of allocated objects (useful for debug
-    ///   purposes, such as identifying the cause of a memory leak). Can be NULL.
-    /// @param size
-    ///   Size (in bytes) to be allocated.
-    /// @param align
-    ///   If 0, the return is a pointer that is suitably aligned for any kind of
-    ///   variable (in the same manner as malloc()).
-    ///   Otherwise, the return is a pointer that is a multiple of *align*. In
-    ///   this case, it must be a power of two. (Minimum alignment is the
-    ///   cacheline size, i.e. 64-bytes)
-    /// @return
-    ///   - NULL on error. Not enough memory, or invalid arguments (size is 0,
-    ///     align is not a power of two).
-    ///   - Otherwise, the pointer to the allocated object.
+    #[doc = " This function allocates memory from the huge-page area of memory. The memory"]
+    #[doc = " is not cleared. In NUMA systems, the memory allocated resides on the same"]
+    #[doc = " NUMA socket as the core that calls this function."]
+    #[doc = ""]
+    #[doc = " @param type"]
+    #[doc = "   A string identifying the type of allocated objects (useful for debug"]
+    #[doc = "   purposes, such as identifying the cause of a memory leak). Can be NULL."]
+    #[doc = " @param size"]
+    #[doc = "   Size (in bytes) to be allocated."]
+    #[doc = " @param align"]
+    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
+    #[doc = "   variable (in the same manner as malloc())."]
+    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
+    #[doc = "   this case, it must be a power of two. (Minimum alignment is the"]
+    #[doc = "   cacheline size, i.e. 64-bytes)"]
+    #[doc = " @return"]
+    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
+    #[doc = "     align is not a power of two)."]
+    #[doc = "   - Otherwise, the pointer to the allocated object."]
     pub fn rte_malloc(
         type_: *const ::std::os::raw::c_char,
         size: usize,
@@ -7239,27 +7224,27 @@ extern "C" {
     ) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
-    /// Allocate zero'ed memory from the heap.
-    ///
-    /// Equivalent to rte_malloc() except that the memory zone is
-    /// initialised with zeros. In NUMA systems, the memory allocated resides on the
-    /// same NUMA socket as the core that calls this function.
-    ///
-    /// @param type
-    ///   A string identifying the type of allocated objects (useful for debug
-    ///   purposes, such as identifying the cause of a memory leak). Can be NULL.
-    /// @param size
-    ///   Size (in bytes) to be allocated.
-    /// @param align
-    ///   If 0, the return is a pointer that is suitably aligned for any kind of
-    ///   variable (in the same manner as malloc()).
-    ///   Otherwise, the return is a pointer that is a multiple of *align*. In
-    ///   this case, it must obviously be a power of two. (Minimum alignment is the
-    ///   cacheline size, i.e. 64-bytes)
-    /// @return
-    ///   - NULL on error. Not enough memory, or invalid arguments (size is 0,
-    ///     align is not a power of two).
-    ///   - Otherwise, the pointer to the allocated object.
+    #[doc = " Allocate zero\'ed memory from the heap."]
+    #[doc = ""]
+    #[doc = " Equivalent to rte_malloc() except that the memory zone is"]
+    #[doc = " initialised with zeros. In NUMA systems, the memory allocated resides on the"]
+    #[doc = " same NUMA socket as the core that calls this function."]
+    #[doc = ""]
+    #[doc = " @param type"]
+    #[doc = "   A string identifying the type of allocated objects (useful for debug"]
+    #[doc = "   purposes, such as identifying the cause of a memory leak). Can be NULL."]
+    #[doc = " @param size"]
+    #[doc = "   Size (in bytes) to be allocated."]
+    #[doc = " @param align"]
+    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
+    #[doc = "   variable (in the same manner as malloc())."]
+    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
+    #[doc = "   this case, it must obviously be a power of two. (Minimum alignment is the"]
+    #[doc = "   cacheline size, i.e. 64-bytes)"]
+    #[doc = " @return"]
+    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
+    #[doc = "     align is not a power of two)."]
+    #[doc = "   - Otherwise, the pointer to the allocated object."]
     pub fn rte_zmalloc(
         type_: *const ::std::os::raw::c_char,
         size: usize,
@@ -7267,27 +7252,27 @@ extern "C" {
     ) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
-    /// Replacement function for calloc(), using huge-page memory. Memory area is
-    /// initialised with zeros. In NUMA systems, the memory allocated resides on the
-    /// same NUMA socket as the core that calls this function.
-    ///
-    /// @param type
-    ///   A string identifying the type of allocated objects (useful for debug
-    ///   purposes, such as identifying the cause of a memory leak). Can be NULL.
-    /// @param num
-    ///   Number of elements to be allocated.
-    /// @param size
-    ///   Size (in bytes) of a single element.
-    /// @param align
-    ///   If 0, the return is a pointer that is suitably aligned for any kind of
-    ///   variable (in the same manner as malloc()).
-    ///   Otherwise, the return is a pointer that is a multiple of *align*. In
-    ///   this case, it must obviously be a power of two. (Minimum alignment is the
-    ///   cacheline size, i.e. 64-bytes)
-    /// @return
-    ///   - NULL on error. Not enough memory, or invalid arguments (size is 0,
-    ///     align is not a power of two).
-    ///   - Otherwise, the pointer to the allocated object.
+    #[doc = " Replacement function for calloc(), using huge-page memory. Memory area is"]
+    #[doc = " initialised with zeros. In NUMA systems, the memory allocated resides on the"]
+    #[doc = " same NUMA socket as the core that calls this function."]
+    #[doc = ""]
+    #[doc = " @param type"]
+    #[doc = "   A string identifying the type of allocated objects (useful for debug"]
+    #[doc = "   purposes, such as identifying the cause of a memory leak). Can be NULL."]
+    #[doc = " @param num"]
+    #[doc = "   Number of elements to be allocated."]
+    #[doc = " @param size"]
+    #[doc = "   Size (in bytes) of a single element."]
+    #[doc = " @param align"]
+    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
+    #[doc = "   variable (in the same manner as malloc())."]
+    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
+    #[doc = "   this case, it must obviously be a power of two. (Minimum alignment is the"]
+    #[doc = "   cacheline size, i.e. 64-bytes)"]
+    #[doc = " @return"]
+    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
+    #[doc = "     align is not a power of two)."]
+    #[doc = "   - Otherwise, the pointer to the allocated object."]
     pub fn rte_calloc(
         type_: *const ::std::os::raw::c_char,
         num: usize,
@@ -7296,24 +7281,24 @@ extern "C" {
     ) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
-    /// Replacement function for realloc(), using huge-page memory. Reserved area
-    /// memory is resized, preserving contents. In NUMA systems, the new area
-    /// resides on the same NUMA socket as the old area.
-    ///
-    /// @param ptr
-    ///   Pointer to already allocated memory
-    /// @param size
-    ///   Size (in bytes) of new area. If this is 0, memory is freed.
-    /// @param align
-    ///   If 0, the return is a pointer that is suitably aligned for any kind of
-    ///   variable (in the same manner as malloc()).
-    ///   Otherwise, the return is a pointer that is a multiple of *align*. In
-    ///   this case, it must obviously be a power of two. (Minimum alignment is the
-    ///   cacheline size, i.e. 64-bytes)
-    /// @return
-    ///   - NULL on error. Not enough memory, or invalid arguments (size is 0,
-    ///     align is not a power of two).
-    ///   - Otherwise, the pointer to the reallocated memory.
+    #[doc = " Replacement function for realloc(), using huge-page memory. Reserved area"]
+    #[doc = " memory is resized, preserving contents. In NUMA systems, the new area"]
+    #[doc = " resides on the same NUMA socket as the old area."]
+    #[doc = ""]
+    #[doc = " @param ptr"]
+    #[doc = "   Pointer to already allocated memory"]
+    #[doc = " @param size"]
+    #[doc = "   Size (in bytes) of new area. If this is 0, memory is freed."]
+    #[doc = " @param align"]
+    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
+    #[doc = "   variable (in the same manner as malloc())."]
+    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
+    #[doc = "   this case, it must obviously be a power of two. (Minimum alignment is the"]
+    #[doc = "   cacheline size, i.e. 64-bytes)"]
+    #[doc = " @return"]
+    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
+    #[doc = "     align is not a power of two)."]
+    #[doc = "   - Otherwise, the pointer to the reallocated memory."]
     pub fn rte_realloc(
         ptr: *mut ::std::os::raw::c_void,
         size: usize,
@@ -7321,27 +7306,27 @@ extern "C" {
     ) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
-    /// This function allocates memory from the huge-page area of memory. The memory
-    /// is not cleared.
-    ///
-    /// @param type
-    ///   A string identifying the type of allocated objects (useful for debug
-    ///   purposes, such as identifying the cause of a memory leak). Can be NULL.
-    /// @param size
-    ///   Size (in bytes) to be allocated.
-    /// @param align
-    ///   If 0, the return is a pointer that is suitably aligned for any kind of
-    ///   variable (in the same manner as malloc()).
-    ///   Otherwise, the return is a pointer that is a multiple of *align*. In
-    ///   this case, it must be a power of two. (Minimum alignment is the
-    ///   cacheline size, i.e. 64-bytes)
-    /// @param socket
-    ///   NUMA socket to allocate memory on. If SOCKET_ID_ANY is used, this function
-    ///   will behave the same as rte_malloc().
-    /// @return
-    ///   - NULL on error. Not enough memory, or invalid arguments (size is 0,
-    ///     align is not a power of two).
-    ///   - Otherwise, the pointer to the allocated object.
+    #[doc = " This function allocates memory from the huge-page area of memory. The memory"]
+    #[doc = " is not cleared."]
+    #[doc = ""]
+    #[doc = " @param type"]
+    #[doc = "   A string identifying the type of allocated objects (useful for debug"]
+    #[doc = "   purposes, such as identifying the cause of a memory leak). Can be NULL."]
+    #[doc = " @param size"]
+    #[doc = "   Size (in bytes) to be allocated."]
+    #[doc = " @param align"]
+    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
+    #[doc = "   variable (in the same manner as malloc())."]
+    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
+    #[doc = "   this case, it must be a power of two. (Minimum alignment is the"]
+    #[doc = "   cacheline size, i.e. 64-bytes)"]
+    #[doc = " @param socket"]
+    #[doc = "   NUMA socket to allocate memory on. If SOCKET_ID_ANY is used, this function"]
+    #[doc = "   will behave the same as rte_malloc()."]
+    #[doc = " @return"]
+    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
+    #[doc = "     align is not a power of two)."]
+    #[doc = "   - Otherwise, the pointer to the allocated object."]
     pub fn rte_malloc_socket(
         type_: *const ::std::os::raw::c_char,
         size: usize,
@@ -7350,29 +7335,29 @@ extern "C" {
     ) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
-    /// Allocate zero'ed memory from the heap.
-    ///
-    /// Equivalent to rte_malloc() except that the memory zone is
-    /// initialised with zeros.
-    ///
-    /// @param type
-    ///   A string identifying the type of allocated objects (useful for debug
-    ///   purposes, such as identifying the cause of a memory leak). Can be NULL.
-    /// @param size
-    ///   Size (in bytes) to be allocated.
-    /// @param align
-    ///   If 0, the return is a pointer that is suitably aligned for any kind of
-    ///   variable (in the same manner as malloc()).
-    ///   Otherwise, the return is a pointer that is a multiple of *align*. In
-    ///   this case, it must obviously be a power of two. (Minimum alignment is the
-    ///   cacheline size, i.e. 64-bytes)
-    /// @param socket
-    ///   NUMA socket to allocate memory on. If SOCKET_ID_ANY is used, this function
-    ///   will behave the same as rte_zmalloc().
-    /// @return
-    ///   - NULL on error. Not enough memory, or invalid arguments (size is 0,
-    ///     align is not a power of two).
-    ///   - Otherwise, the pointer to the allocated object.
+    #[doc = " Allocate zero\'ed memory from the heap."]
+    #[doc = ""]
+    #[doc = " Equivalent to rte_malloc() except that the memory zone is"]
+    #[doc = " initialised with zeros."]
+    #[doc = ""]
+    #[doc = " @param type"]
+    #[doc = "   A string identifying the type of allocated objects (useful for debug"]
+    #[doc = "   purposes, such as identifying the cause of a memory leak). Can be NULL."]
+    #[doc = " @param size"]
+    #[doc = "   Size (in bytes) to be allocated."]
+    #[doc = " @param align"]
+    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
+    #[doc = "   variable (in the same manner as malloc())."]
+    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
+    #[doc = "   this case, it must obviously be a power of two. (Minimum alignment is the"]
+    #[doc = "   cacheline size, i.e. 64-bytes)"]
+    #[doc = " @param socket"]
+    #[doc = "   NUMA socket to allocate memory on. If SOCKET_ID_ANY is used, this function"]
+    #[doc = "   will behave the same as rte_zmalloc()."]
+    #[doc = " @return"]
+    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
+    #[doc = "     align is not a power of two)."]
+    #[doc = "   - Otherwise, the pointer to the allocated object."]
     pub fn rte_zmalloc_socket(
         type_: *const ::std::os::raw::c_char,
         size: usize,
@@ -7381,29 +7366,29 @@ extern "C" {
     ) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
-    /// Replacement function for calloc(), using huge-page memory. Memory area is
-    /// initialised with zeros.
-    ///
-    /// @param type
-    ///   A string identifying the type of allocated objects (useful for debug
-    ///   purposes, such as identifying the cause of a memory leak). Can be NULL.
-    /// @param num
-    ///   Number of elements to be allocated.
-    /// @param size
-    ///   Size (in bytes) of a single element.
-    /// @param align
-    ///   If 0, the return is a pointer that is suitably aligned for any kind of
-    ///   variable (in the same manner as malloc()).
-    ///   Otherwise, the return is a pointer that is a multiple of *align*. In
-    ///   this case, it must obviously be a power of two. (Minimum alignment is the
-    ///   cacheline size, i.e. 64-bytes)
-    /// @param socket
-    ///   NUMA socket to allocate memory on. If SOCKET_ID_ANY is used, this function
-    ///   will behave the same as rte_calloc().
-    /// @return
-    ///   - NULL on error. Not enough memory, or invalid arguments (size is 0,
-    ///     align is not a power of two).
-    ///   - Otherwise, the pointer to the allocated object.
+    #[doc = " Replacement function for calloc(), using huge-page memory. Memory area is"]
+    #[doc = " initialised with zeros."]
+    #[doc = ""]
+    #[doc = " @param type"]
+    #[doc = "   A string identifying the type of allocated objects (useful for debug"]
+    #[doc = "   purposes, such as identifying the cause of a memory leak). Can be NULL."]
+    #[doc = " @param num"]
+    #[doc = "   Number of elements to be allocated."]
+    #[doc = " @param size"]
+    #[doc = "   Size (in bytes) of a single element."]
+    #[doc = " @param align"]
+    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
+    #[doc = "   variable (in the same manner as malloc())."]
+    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
+    #[doc = "   this case, it must obviously be a power of two. (Minimum alignment is the"]
+    #[doc = "   cacheline size, i.e. 64-bytes)"]
+    #[doc = " @param socket"]
+    #[doc = "   NUMA socket to allocate memory on. If SOCKET_ID_ANY is used, this function"]
+    #[doc = "   will behave the same as rte_calloc()."]
+    #[doc = " @return"]
+    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
+    #[doc = "     align is not a power of two)."]
+    #[doc = "   - Otherwise, the pointer to the allocated object."]
     pub fn rte_calloc_socket(
         type_: *const ::std::os::raw::c_char,
         num: usize,
@@ -7413,92 +7398,92 @@ extern "C" {
     ) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
-    /// Frees the memory space pointed to by the provided pointer.
-    ///
-    /// This pointer must have been returned by a previous call to
-    /// rte_malloc(), rte_zmalloc(), rte_calloc() or rte_realloc(). The behaviour of
-    /// rte_free() is undefined if the pointer does not match this requirement.
-    ///
-    /// If the pointer is NULL, the function does nothing.
-    ///
-    /// @param ptr
-    ///   The pointer to memory to be freed.
+    #[doc = " Frees the memory space pointed to by the provided pointer."]
+    #[doc = ""]
+    #[doc = " This pointer must have been returned by a previous call to"]
+    #[doc = " rte_malloc(), rte_zmalloc(), rte_calloc() or rte_realloc(). The behaviour of"]
+    #[doc = " rte_free() is undefined if the pointer does not match this requirement."]
+    #[doc = ""]
+    #[doc = " If the pointer is NULL, the function does nothing."]
+    #[doc = ""]
+    #[doc = " @param ptr"]
+    #[doc = "   The pointer to memory to be freed."]
     pub fn rte_free(ptr: *mut ::std::os::raw::c_void);
 }
 extern "C" {
-    /// If malloc debug is enabled, check a memory block for header
-    /// and trailer markers to indicate that all is well with the block.
-    /// If size is non-null, also return the size of the block.
-    ///
-    /// @param ptr
-    ///   pointer to the start of a data block, must have been returned
-    ///   by a previous call to rte_malloc(), rte_zmalloc(), rte_calloc()
-    ///   or rte_realloc()
-    /// @param size
-    ///   if non-null, and memory block pointer is valid, returns the size
-    ///   of the memory block
-    /// @return
-    ///   -1 on error, invalid pointer passed or header and trailer markers
-    ///   are missing or corrupted
-    ///   0 on success
+    #[doc = " If malloc debug is enabled, check a memory block for header"]
+    #[doc = " and trailer markers to indicate that all is well with the block."]
+    #[doc = " If size is non-null, also return the size of the block."]
+    #[doc = ""]
+    #[doc = " @param ptr"]
+    #[doc = "   pointer to the start of a data block, must have been returned"]
+    #[doc = "   by a previous call to rte_malloc(), rte_zmalloc(), rte_calloc()"]
+    #[doc = "   or rte_realloc()"]
+    #[doc = " @param size"]
+    #[doc = "   if non-null, and memory block pointer is valid, returns the size"]
+    #[doc = "   of the memory block"]
+    #[doc = " @return"]
+    #[doc = "   -1 on error, invalid pointer passed or header and trailer markers"]
+    #[doc = "   are missing or corrupted"]
+    #[doc = "   0 on success"]
     pub fn rte_malloc_validate(
         ptr: *const ::std::os::raw::c_void,
         size: *mut usize,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get heap statistics for the specified heap.
-    ///
-    /// @param socket
-    ///   An unsigned integer specifying the socket to get heap statistics for
-    /// @param socket_stats
-    ///   A structure which provides memory to store statistics
-    /// @return
-    ///   Null on error
-    ///   Pointer to structure storing statistics on success
+    #[doc = " Get heap statistics for the specified heap."]
+    #[doc = ""]
+    #[doc = " @param socket"]
+    #[doc = "   An unsigned integer specifying the socket to get heap statistics for"]
+    #[doc = " @param socket_stats"]
+    #[doc = "   A structure which provides memory to store statistics"]
+    #[doc = " @return"]
+    #[doc = "   Null on error"]
+    #[doc = "   Pointer to structure storing statistics on success"]
     pub fn rte_malloc_get_socket_stats(
         socket: ::std::os::raw::c_int,
         socket_stats: *mut rte_malloc_socket_stats,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Add memory chunk to a heap with specified name.
-    ///
-    /// @note Multiple memory chunks can be added to the same heap
-    ///
-    /// @note Before accessing this memory in other processes, it needs to be
-    ///   attached in each of those processes by calling
-    ///   ``rte_malloc_heap_memory_attach`` in each other process.
-    ///
-    /// @note Memory must be previously allocated for DPDK to be able to use it as a
-    ///   malloc heap. Failing to do so will result in undefined behavior, up to and
-    ///   including segmentation faults.
-    ///
-    /// @note Calling this function will erase any contents already present at the
-    ///   supplied memory address.
-    ///
-    /// @param heap_name
-    ///   Name of the heap to add memory chunk to
-    /// @param va_addr
-    ///   Start of virtual area to add to the heap
-    /// @param len
-    ///   Length of virtual area to add to the heap
-    /// @param iova_addrs
-    ///   Array of page IOVA addresses corresponding to each page in this memory
-    ///   area. Can be NULL, in which case page IOVA addresses will be set to
-    ///   RTE_BAD_IOVA.
-    /// @param n_pages
-    ///   Number of elements in the iova_addrs array. Ignored if  ``iova_addrs``
-    ///   is NULL.
-    /// @param page_sz
-    ///   Page size of the underlying memory
-    ///
-    /// @return
-    ///   - 0 on success
-    ///   - -1 in case of error, with rte_errno set to one of the following:
-    ///     EINVAL - one of the parameters was invalid
-    ///     EPERM  - attempted to add memory to a reserved heap
-    ///     ENOSPC - no more space in internal config to store a new memory chunk
+    #[doc = " Add memory chunk to a heap with specified name."]
+    #[doc = ""]
+    #[doc = " @note Multiple memory chunks can be added to the same heap"]
+    #[doc = ""]
+    #[doc = " @note Before accessing this memory in other processes, it needs to be"]
+    #[doc = "   attached in each of those processes by calling"]
+    #[doc = "   ``rte_malloc_heap_memory_attach`` in each other process."]
+    #[doc = ""]
+    #[doc = " @note Memory must be previously allocated for DPDK to be able to use it as a"]
+    #[doc = "   malloc heap. Failing to do so will result in undefined behavior, up to and"]
+    #[doc = "   including segmentation faults."]
+    #[doc = ""]
+    #[doc = " @note Calling this function will erase any contents already present at the"]
+    #[doc = "   supplied memory address."]
+    #[doc = ""]
+    #[doc = " @param heap_name"]
+    #[doc = "   Name of the heap to add memory chunk to"]
+    #[doc = " @param va_addr"]
+    #[doc = "   Start of virtual area to add to the heap"]
+    #[doc = " @param len"]
+    #[doc = "   Length of virtual area to add to the heap"]
+    #[doc = " @param iova_addrs"]
+    #[doc = "   Array of page IOVA addresses corresponding to each page in this memory"]
+    #[doc = "   area. Can be NULL, in which case page IOVA addresses will be set to"]
+    #[doc = "   RTE_BAD_IOVA."]
+    #[doc = " @param n_pages"]
+    #[doc = "   Number of elements in the iova_addrs array. Ignored if  ``iova_addrs``"]
+    #[doc = "   is NULL."]
+    #[doc = " @param page_sz"]
+    #[doc = "   Page size of the underlying memory"]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0 on success"]
+    #[doc = "   - -1 in case of error, with rte_errno set to one of the following:"]
+    #[doc = "     EINVAL - one of the parameters was invalid"]
+    #[doc = "     EPERM  - attempted to add memory to a reserved heap"]
+    #[doc = "     ENOSPC - no more space in internal config to store a new memory chunk"]
     pub fn rte_malloc_heap_memory_add(
         heap_name: *const ::std::os::raw::c_char,
         va_addr: *mut ::std::os::raw::c_void,
@@ -7509,31 +7494,31 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Remove memory chunk from heap with specified name.
-    ///
-    /// @note Memory chunk being removed must be the same as one that was added;
-    ///   partially removing memory chunks is not supported
-    ///
-    /// @note Memory area must not contain any allocated elements to allow its
-    ///   removal from the heap
-    ///
-    /// @note All other processes must detach from the memory chunk prior to it being
-    ///   removed from the heap.
-    ///
-    /// @param heap_name
-    ///   Name of the heap to remove memory from
-    /// @param va_addr
-    ///   Virtual address to remove from the heap
-    /// @param len
-    ///   Length of virtual area to remove from the heap
-    ///
-    /// @return
-    ///   - 0 on success
-    ///   - -1 in case of error, with rte_errno set to one of the following:
-    ///     EINVAL - one of the parameters was invalid
-    ///     EPERM  - attempted to remove memory from a reserved heap
-    ///     ENOENT - heap or memory chunk was not found
-    ///     EBUSY  - memory chunk still contains data
+    #[doc = " Remove memory chunk from heap with specified name."]
+    #[doc = ""]
+    #[doc = " @note Memory chunk being removed must be the same as one that was added;"]
+    #[doc = "   partially removing memory chunks is not supported"]
+    #[doc = ""]
+    #[doc = " @note Memory area must not contain any allocated elements to allow its"]
+    #[doc = "   removal from the heap"]
+    #[doc = ""]
+    #[doc = " @note All other processes must detach from the memory chunk prior to it being"]
+    #[doc = "   removed from the heap."]
+    #[doc = ""]
+    #[doc = " @param heap_name"]
+    #[doc = "   Name of the heap to remove memory from"]
+    #[doc = " @param va_addr"]
+    #[doc = "   Virtual address to remove from the heap"]
+    #[doc = " @param len"]
+    #[doc = "   Length of virtual area to remove from the heap"]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0 on success"]
+    #[doc = "   - -1 in case of error, with rte_errno set to one of the following:"]
+    #[doc = "     EINVAL - one of the parameters was invalid"]
+    #[doc = "     EPERM  - attempted to remove memory from a reserved heap"]
+    #[doc = "     ENOENT - heap or memory chunk was not found"]
+    #[doc = "     EBUSY  - memory chunk still contains data"]
     pub fn rte_malloc_heap_memory_remove(
         heap_name: *const ::std::os::raw::c_char,
         va_addr: *mut ::std::os::raw::c_void,
@@ -7541,25 +7526,25 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Attach to an already existing chunk of external memory in another process.
-    ///
-    /// @note This function must be called before any attempt is made to use an
-    ///   already existing external memory chunk. This function does *not* need to
-    ///   be called if a call to ``rte_malloc_heap_memory_add`` was made in the
-    ///   current process.
-    ///
-    /// @param heap_name
-    ///   Heap name to which this chunk of memory belongs
-    /// @param va_addr
-    ///   Start address of memory chunk to attach to
-    /// @param len
-    ///   Length of memory chunk to attach to
-    /// @return
-    ///   0 on successful attach
-    ///   -1 on unsuccessful attach, with rte_errno set to indicate cause for error:
-    ///     EINVAL - one of the parameters was invalid
-    ///     EPERM  - attempted to attach memory to a reserved heap
-    ///     ENOENT - heap or memory chunk was not found
+    #[doc = " Attach to an already existing chunk of external memory in another process."]
+    #[doc = ""]
+    #[doc = " @note This function must be called before any attempt is made to use an"]
+    #[doc = "   already existing external memory chunk. This function does *not* need to"]
+    #[doc = "   be called if a call to ``rte_malloc_heap_memory_add`` was made in the"]
+    #[doc = "   current process."]
+    #[doc = ""]
+    #[doc = " @param heap_name"]
+    #[doc = "   Heap name to which this chunk of memory belongs"]
+    #[doc = " @param va_addr"]
+    #[doc = "   Start address of memory chunk to attach to"]
+    #[doc = " @param len"]
+    #[doc = "   Length of memory chunk to attach to"]
+    #[doc = " @return"]
+    #[doc = "   0 on successful attach"]
+    #[doc = "   -1 on unsuccessful attach, with rte_errno set to indicate cause for error:"]
+    #[doc = "     EINVAL - one of the parameters was invalid"]
+    #[doc = "     EPERM  - attempted to attach memory to a reserved heap"]
+    #[doc = "     ENOENT - heap or memory chunk was not found"]
     pub fn rte_malloc_heap_memory_attach(
         heap_name: *const ::std::os::raw::c_char,
         va_addr: *mut ::std::os::raw::c_void,
@@ -7567,25 +7552,25 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Detach from a chunk of external memory in secondary process.
-    ///
-    /// @note This function must be called in before any attempt is made to remove
-    ///   external memory from the heap in another process. This function does *not*
-    ///   need to be called if a call to ``rte_malloc_heap_memory_remove`` will be
-    ///   called in current process.
-    ///
-    /// @param heap_name
-    ///   Heap name to which this chunk of memory belongs
-    /// @param va_addr
-    ///   Start address of memory chunk to attach to
-    /// @param len
-    ///   Length of memory chunk to attach to
-    /// @return
-    ///   0 on successful detach
-    ///   -1 on unsuccessful detach, with rte_errno set to indicate cause for error:
-    ///     EINVAL - one of the parameters was invalid
-    ///     EPERM  - attempted to detach memory from a reserved heap
-    ///     ENOENT - heap or memory chunk was not found
+    #[doc = " Detach from a chunk of external memory in secondary process."]
+    #[doc = ""]
+    #[doc = " @note This function must be called in before any attempt is made to remove"]
+    #[doc = "   external memory from the heap in another process. This function does *not*"]
+    #[doc = "   need to be called if a call to ``rte_malloc_heap_memory_remove`` will be"]
+    #[doc = "   called in current process."]
+    #[doc = ""]
+    #[doc = " @param heap_name"]
+    #[doc = "   Heap name to which this chunk of memory belongs"]
+    #[doc = " @param va_addr"]
+    #[doc = "   Start address of memory chunk to attach to"]
+    #[doc = " @param len"]
+    #[doc = "   Length of memory chunk to attach to"]
+    #[doc = " @return"]
+    #[doc = "   0 on successful detach"]
+    #[doc = "   -1 on unsuccessful detach, with rte_errno set to indicate cause for error:"]
+    #[doc = "     EINVAL - one of the parameters was invalid"]
+    #[doc = "     EPERM  - attempted to detach memory from a reserved heap"]
+    #[doc = "     ENOENT - heap or memory chunk was not found"]
     pub fn rte_malloc_heap_memory_detach(
         heap_name: *const ::std::os::raw::c_char,
         va_addr: *mut ::std::os::raw::c_void,
@@ -7593,220 +7578,220 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Creates a new empty malloc heap with a specified name.
-    ///
-    /// @note Heaps created via this call will automatically get assigned a unique
-    ///   socket ID, which can be found using ``rte_malloc_heap_get_socket()``
-    ///
-    /// @param heap_name
-    ///   Name of the heap to create.
-    ///
-    /// @return
-    ///   - 0 on successful creation
-    ///   - -1 in case of error, with rte_errno set to one of the following:
-    ///     EINVAL - ``heap_name`` was NULL, empty or too long
-    ///     EEXIST - heap by name of ``heap_name`` already exists
-    ///     ENOSPC - no more space in internal config to store a new heap
+    #[doc = " Creates a new empty malloc heap with a specified name."]
+    #[doc = ""]
+    #[doc = " @note Heaps created via this call will automatically get assigned a unique"]
+    #[doc = "   socket ID, which can be found using ``rte_malloc_heap_get_socket()``"]
+    #[doc = ""]
+    #[doc = " @param heap_name"]
+    #[doc = "   Name of the heap to create."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0 on successful creation"]
+    #[doc = "   - -1 in case of error, with rte_errno set to one of the following:"]
+    #[doc = "     EINVAL - ``heap_name`` was NULL, empty or too long"]
+    #[doc = "     EEXIST - heap by name of ``heap_name`` already exists"]
+    #[doc = "     ENOSPC - no more space in internal config to store a new heap"]
     pub fn rte_malloc_heap_create(
         heap_name: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Destroys a previously created malloc heap with specified name.
-    ///
-    /// @note This function will return a failure result if not all memory allocated
-    ///   from the heap has been freed back to the heap
-    ///
-    /// @note This function will return a failure result if not all memory segments
-    ///   were removed from the heap prior to its destruction
-    ///
-    /// @param heap_name
-    ///   Name of the heap to create.
-    ///
-    /// @return
-    ///   - 0 on success
-    ///   - -1 in case of error, with rte_errno set to one of the following:
-    ///     EINVAL - ``heap_name`` was NULL, empty or too long
-    ///     ENOENT - heap by the name of ``heap_name`` was not found
-    ///     EPERM  - attempting to destroy reserved heap
-    ///     EBUSY  - heap still contains data
+    #[doc = " Destroys a previously created malloc heap with specified name."]
+    #[doc = ""]
+    #[doc = " @note This function will return a failure result if not all memory allocated"]
+    #[doc = "   from the heap has been freed back to the heap"]
+    #[doc = ""]
+    #[doc = " @note This function will return a failure result if not all memory segments"]
+    #[doc = "   were removed from the heap prior to its destruction"]
+    #[doc = ""]
+    #[doc = " @param heap_name"]
+    #[doc = "   Name of the heap to create."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0 on success"]
+    #[doc = "   - -1 in case of error, with rte_errno set to one of the following:"]
+    #[doc = "     EINVAL - ``heap_name`` was NULL, empty or too long"]
+    #[doc = "     ENOENT - heap by the name of ``heap_name`` was not found"]
+    #[doc = "     EPERM  - attempting to destroy reserved heap"]
+    #[doc = "     EBUSY  - heap still contains data"]
     pub fn rte_malloc_heap_destroy(
         heap_name: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Find socket ID corresponding to a named heap.
-    ///
-    /// @param name
-    ///   Heap name to find socket ID for
-    /// @return
-    ///   Socket ID in case of success (a non-negative number)
-    ///   -1 in case of error, with rte_errno set to one of the following:
-    ///     EINVAL - ``name`` was NULL
-    ///     ENOENT - heap identified by the name ``name`` was not found
+    #[doc = " Find socket ID corresponding to a named heap."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   Heap name to find socket ID for"]
+    #[doc = " @return"]
+    #[doc = "   Socket ID in case of success (a non-negative number)"]
+    #[doc = "   -1 in case of error, with rte_errno set to one of the following:"]
+    #[doc = "     EINVAL - ``name`` was NULL"]
+    #[doc = "     ENOENT - heap identified by the name ``name`` was not found"]
     pub fn rte_malloc_heap_get_socket(name: *const ::std::os::raw::c_char)
         -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Check if a given socket ID refers to externally allocated memory.
-    ///
-    /// @note Passing SOCKET_ID_ANY will return 0.
-    ///
-    /// @param socket_id
-    ///   Socket ID to check
-    /// @return
-    ///   1 if socket ID refers to externally allocated memory
-    ///   0 if socket ID refers to internal DPDK memory
-    ///   -1 if socket ID is invalid
+    #[doc = " Check if a given socket ID refers to externally allocated memory."]
+    #[doc = ""]
+    #[doc = " @note Passing SOCKET_ID_ANY will return 0."]
+    #[doc = ""]
+    #[doc = " @param socket_id"]
+    #[doc = "   Socket ID to check"]
+    #[doc = " @return"]
+    #[doc = "   1 if socket ID refers to externally allocated memory"]
+    #[doc = "   0 if socket ID refers to internal DPDK memory"]
+    #[doc = "   -1 if socket ID is invalid"]
     pub fn rte_malloc_heap_socket_is_external(
         socket_id: ::std::os::raw::c_int,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Dump statistics.
-    ///
-    /// Dump for the specified type to a file. If the type argument is
-    /// NULL, all memory types will be dumped.
-    ///
-    /// @param f
-    ///   A pointer to a file for output
-    /// @param type
-    ///   A string identifying the type of objects to dump, or NULL
-    ///   to dump all objects.
+    #[doc = " Dump statistics."]
+    #[doc = ""]
+    #[doc = " Dump for the specified type to a file. If the type argument is"]
+    #[doc = " NULL, all memory types will be dumped."]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   A pointer to a file for output"]
+    #[doc = " @param type"]
+    #[doc = "   A string identifying the type of objects to dump, or NULL"]
+    #[doc = "   to dump all objects."]
     pub fn rte_malloc_dump_stats(f: *mut FILE, type_: *const ::std::os::raw::c_char);
 }
 extern "C" {
-    /// Dump contents of all malloc heaps to a file.
-    ///
-    /// @param f
-    ///   A pointer to a file for output
+    #[doc = " Dump contents of all malloc heaps to a file."]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   A pointer to a file for output"]
     pub fn rte_malloc_dump_heaps(f: *mut FILE);
 }
 extern "C" {
-    /// Set the maximum amount of allocated memory for this type.
-    ///
-    /// This is not yet implemented
-    ///
-    /// @param type
-    ///   A string identifying the type of allocated objects.
-    /// @param max
-    ///   The maximum amount of allocated bytes for this type.
-    /// @return
-    ///   - 0: Success.
-    ///   - (-1): Error.
+    #[doc = " Set the maximum amount of allocated memory for this type."]
+    #[doc = ""]
+    #[doc = " This is not yet implemented"]
+    #[doc = ""]
+    #[doc = " @param type"]
+    #[doc = "   A string identifying the type of allocated objects."]
+    #[doc = " @param max"]
+    #[doc = "   The maximum amount of allocated bytes for this type."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success."]
+    #[doc = "   - (-1): Error."]
     pub fn rte_malloc_set_limit(
         type_: *const ::std::os::raw::c_char,
         max: usize,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Return the IO address of a virtual address obtained through
-    /// rte_malloc
-    ///
-    /// @param addr
-    ///   Address obtained from a previous rte_malloc call
-    /// @return
-    ///   RTE_BAD_IOVA on error
-    ///   otherwise return an address suitable for IO
+    #[doc = " Return the IO address of a virtual address obtained through"]
+    #[doc = " rte_malloc"]
+    #[doc = ""]
+    #[doc = " @param addr"]
+    #[doc = "   Address obtained from a previous rte_malloc call"]
+    #[doc = " @return"]
+    #[doc = "   RTE_BAD_IOVA on error"]
+    #[doc = "   otherwise return an address suitable for IO"]
     pub fn rte_malloc_virt2iova(addr: *const ::std::os::raw::c_void) -> rte_iova_t;
 }
-/// 64 bits vector size to use with unsigned 8 bits elements.
-///
-/// a = (rte_v64u8_t){ a0, a1, a2, a3, a4, a5, a6, a7 }
+#[doc = " 64 bits vector size to use with unsigned 8 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v64u8_t){ a0, a1, a2, a3, a4, a5, a6, a7 }"]
 pub type rte_v64u8_t = [u8; 8usize];
-/// 64 bits vector size to use with unsigned 16 bits elements.
-///
-/// a = (rte_v64u16_t){ a0, a1, a2, a3 }
+#[doc = " 64 bits vector size to use with unsigned 16 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v64u16_t){ a0, a1, a2, a3 }"]
 pub type rte_v64u16_t = [u16; 4usize];
-/// 64 bits vector size to use with unsigned 32 bits elements.
-///
-/// a = (rte_v64u32_t){ a0, a1 }
+#[doc = " 64 bits vector size to use with unsigned 32 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v64u32_t){ a0, a1 }"]
 pub type rte_v64u32_t = [u32; 2usize];
-/// 128 bits vector size to use with unsigned 8 bits elements.
-///
-/// a = (rte_v128u8_t){ a00, a01, a02, a03, a04, a05, a06, a07,
-///                     a08, a09, a10, a11, a12, a13, a14, a15 }
+#[doc = " 128 bits vector size to use with unsigned 8 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v128u8_t){ a00, a01, a02, a03, a04, a05, a06, a07,"]
+#[doc = "                     a08, a09, a10, a11, a12, a13, a14, a15 }"]
 pub type rte_v128u8_t = [u8; 16usize];
-/// 128 bits vector size to use with unsigned 16 bits elements.
-///
-/// a = (rte_v128u16_t){ a0, a1, a2, a3, a4, a5, a6, a7 }
+#[doc = " 128 bits vector size to use with unsigned 16 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v128u16_t){ a0, a1, a2, a3, a4, a5, a6, a7 }"]
 pub type rte_v128u16_t = [u16; 8usize];
-/// 128 bits vector size to use with unsigned 32 bits elements.
-///
-/// a = (rte_v128u32_t){ a0, a1, a2, a3, a4 }
+#[doc = " 128 bits vector size to use with unsigned 32 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v128u32_t){ a0, a1, a2, a3, a4 }"]
 pub type rte_v128u32_t = [u32; 4usize];
-/// 128 bits vector size to use with unsigned 64 bits elements.
-///
-/// a = (rte_v128u64_t){ a0, a1 }
+#[doc = " 128 bits vector size to use with unsigned 64 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v128u64_t){ a0, a1 }"]
 pub type rte_v128u64_t = [u64; 2usize];
-/// 256 bits vector size to use with unsigned 8 bits elements.
-///
-/// a = (rte_v256u8_t){ a00, a01, a02, a03, a04, a05, a06, a07,
-///                     a08, a09, a10, a11, a12, a13, a14, a15,
-///                     a16, a17, a18, a19, a20, a21, a22, a23,
-///                     a24, a25, a26, a27, a28, a29, a30, a31 }
+#[doc = " 256 bits vector size to use with unsigned 8 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v256u8_t){ a00, a01, a02, a03, a04, a05, a06, a07,"]
+#[doc = "                     a08, a09, a10, a11, a12, a13, a14, a15,"]
+#[doc = "                     a16, a17, a18, a19, a20, a21, a22, a23,"]
+#[doc = "                     a24, a25, a26, a27, a28, a29, a30, a31 }"]
 pub type rte_v256u8_t = [u8; 32usize];
-/// 256 bits vector size to use with unsigned 16 bits elements.
-///
-/// a = (rte_v256u16_t){ a00, a01, a02, a03, a04, a05, a06, a07,
-///                      a08, a09, a10, a11, a12, a13, a14, a15 }
+#[doc = " 256 bits vector size to use with unsigned 16 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v256u16_t){ a00, a01, a02, a03, a04, a05, a06, a07,"]
+#[doc = "                      a08, a09, a10, a11, a12, a13, a14, a15 }"]
 pub type rte_v256u16_t = [u16; 16usize];
-/// 256 bits vector size to use with unsigned 32 bits elements.
-///
-/// a = (rte_v256u32_t){ a0, a1, a2, a3, a4, a5, a6, a7 }
+#[doc = " 256 bits vector size to use with unsigned 32 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v256u32_t){ a0, a1, a2, a3, a4, a5, a6, a7 }"]
 pub type rte_v256u32_t = [u32; 8usize];
-/// 256 bits vector size to use with unsigned 64 bits elements.
-///
-/// a = (rte_v256u64_t){ a0, a1, a2, a3 }
+#[doc = " 256 bits vector size to use with unsigned 64 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v256u64_t){ a0, a1, a2, a3 }"]
 pub type rte_v256u64_t = [u64; 4usize];
-/// 64 bits vector size to use with 8 bits elements.
-///
-/// a = (rte_v64s8_t){ a0, a1, a2, a3, a4, a5, a6, a7 }
+#[doc = " 64 bits vector size to use with 8 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v64s8_t){ a0, a1, a2, a3, a4, a5, a6, a7 }"]
 pub type rte_v64s8_t = [i8; 8usize];
-/// 64 bits vector size to use with 16 bits elements.
-///
-/// a = (rte_v64s16_t){ a0, a1, a2, a3 }
+#[doc = " 64 bits vector size to use with 16 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v64s16_t){ a0, a1, a2, a3 }"]
 pub type rte_v64s16_t = [i16; 4usize];
-/// 64 bits vector size to use with 32 bits elements.
-///
-/// a = (rte_v64s32_t){ a0, a1 }
+#[doc = " 64 bits vector size to use with 32 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v64s32_t){ a0, a1 }"]
 pub type rte_v64s32_t = [i32; 2usize];
-/// 128 bits vector size to use with 8 bits elements.
-///
-/// a = (rte_v128s8_t){ a00, a01, a02, a03, a04, a05, a06, a07,
-///                     a08, a09, a10, a11, a12, a13, a14, a15 }
+#[doc = " 128 bits vector size to use with 8 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v128s8_t){ a00, a01, a02, a03, a04, a05, a06, a07,"]
+#[doc = "                     a08, a09, a10, a11, a12, a13, a14, a15 }"]
 pub type rte_v128s8_t = [i8; 16usize];
-/// 128 bits vector size to use with 16 bits elements.
-///
-/// a = (rte_v128s16_t){ a0, a1, a2, a3, a4, a5, a6, a7 }
+#[doc = " 128 bits vector size to use with 16 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v128s16_t){ a0, a1, a2, a3, a4, a5, a6, a7 }"]
 pub type rte_v128s16_t = [i16; 8usize];
-/// 128 bits vector size to use with 32 bits elements.
-///
-/// a = (rte_v128s32_t){ a0, a1, a2, a3 }
+#[doc = " 128 bits vector size to use with 32 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v128s32_t){ a0, a1, a2, a3 }"]
 pub type rte_v128s32_t = [i32; 4usize];
-/// 128 bits vector size to use with 64 bits elements.
-///
-/// a = (rte_v128s64_t){ a1, a2 }
+#[doc = " 128 bits vector size to use with 64 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v128s64_t){ a1, a2 }"]
 pub type rte_v128s64_t = [i64; 2usize];
-/// 256 bits vector size to use with 8 bits elements.
-///
-/// a = (rte_v256s8_t){ a00, a01, a02, a03, a04, a05, a06, a07,
-///                     a08, a09, a10, a11, a12, a13, a14, a15,
-///                     a16, a17, a18, a19, a20, a21, a22, a23,
-///                     a24, a25, a26, a27, a28, a29, a30, a31 }
+#[doc = " 256 bits vector size to use with 8 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v256s8_t){ a00, a01, a02, a03, a04, a05, a06, a07,"]
+#[doc = "                     a08, a09, a10, a11, a12, a13, a14, a15,"]
+#[doc = "                     a16, a17, a18, a19, a20, a21, a22, a23,"]
+#[doc = "                     a24, a25, a26, a27, a28, a29, a30, a31 }"]
 pub type rte_v256s8_t = [i8; 32usize];
-/// 256 bits vector size to use with 16 bits elements.
-///
-/// a = (rte_v256s16_t){ a00, a01, a02, a03, a04, a05, a06, a07,
-///                      a08, a09, a10, a11, a12, a13, a14, a15 }
+#[doc = " 256 bits vector size to use with 16 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v256s16_t){ a00, a01, a02, a03, a04, a05, a06, a07,"]
+#[doc = "                      a08, a09, a10, a11, a12, a13, a14, a15 }"]
 pub type rte_v256s16_t = [i16; 16usize];
-/// 256 bits vector size to use with 32 bits elements.
-///
-/// a = (rte_v256s32_t){ a0, a1, a2, a3, a4, a5, a6, a7 }
+#[doc = " 256 bits vector size to use with 32 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v256s32_t){ a0, a1, a2, a3, a4, a5, a6, a7 }"]
 pub type rte_v256s32_t = [i32; 8usize];
-/// 256 bits vector size to use with 64 bits elements.
-///
-/// a = (rte_v256s64_t){ a0, a1, a2, a3 }
+#[doc = " 256 bits vector size to use with 64 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v256s64_t){ a0, a1, a2, a3 }"]
 pub type rte_v256s64_t = [i64; 4usize];
 pub type __m64 = [::std::os::raw::c_longlong; 1usize];
 pub type __v1di = [::std::os::raw::c_longlong; 1usize];
@@ -9608,75 +9593,186 @@ extern "C" {
     pub static mut per_lcore__rte_errno: ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Function which returns a printable string describing a particular
-    /// error code. For non-RTE-specific error codes, this function returns
-    /// the value from the libc strerror function.
-    ///
-    /// @param errnum
-    ///   The error number to be looked up - generally the value of rte_errno
-    /// @return
-    ///   A pointer to a thread-local string containing the text describing
-    ///   the error.
+    #[doc = " Function which returns a printable string describing a particular"]
+    #[doc = " error code. For non-RTE-specific error codes, this function returns"]
+    #[doc = " the value from the libc strerror function."]
+    #[doc = ""]
+    #[doc = " @param errnum"]
+    #[doc = "   The error number to be looked up - generally the value of rte_errno"]
+    #[doc = " @return"]
+    #[doc = "   A pointer to a thread-local string containing the text describing"]
+    #[doc = "   the error."]
     pub fn rte_strerror(errnum: ::std::os::raw::c_int) -> *const ::std::os::raw::c_char;
 }
 pub mod _bindgen_ty_12 {
-    /// Error types
+    #[doc = " Error types"]
     pub type Type = u32;
-    ///< Start numbering above std errno vals
+    #[doc = "< Start numbering above std errno vals"]
     pub const RTE_MIN_ERRNO: Type = 1000;
-    ///< Operation not allowed in secondary processes
+    #[doc = "< Operation not allowed in secondary processes"]
     pub const E_RTE_SECONDARY: Type = 1001;
-    ///< Missing rte_config
+    #[doc = "< Missing rte_config"]
     pub const E_RTE_NO_CONFIG: Type = 1002;
-    ///< Max RTE error number
+    #[doc = "< Max RTE error number"]
     pub const RTE_MAX_ERRNO: Type = 1003;
 }
-pub mod rte_lcore_state_t {
-    /// State of an lcore.
+pub mod rte_keepalive_state {
     pub type Type = u32;
-    ///< waiting a new command
+    pub const RTE_KA_STATE_UNUSED: Type = 0;
+    pub const RTE_KA_STATE_ALIVE: Type = 1;
+    pub const RTE_KA_STATE_MISSING: Type = 4;
+    pub const RTE_KA_STATE_DEAD: Type = 2;
+    pub const RTE_KA_STATE_GONE: Type = 3;
+    pub const RTE_KA_STATE_DOZING: Type = 5;
+    pub const RTE_KA_STATE_SLEEP: Type = 6;
+}
+#[doc = " Keepalive failure callback."]
+#[doc = ""]
+#[doc = "  Receives a data pointer passed to rte_keepalive_create() and the id of the"]
+#[doc = "  failed core."]
+#[doc = "  @param data Data pointer passed to rte_keepalive_create()"]
+#[doc = "  @param id_core ID of the core that has failed"]
+pub type rte_keepalive_failure_callback_t = ::std::option::Option<
+    unsafe extern "C" fn(data: *mut ::std::os::raw::c_void, id_core: ::std::os::raw::c_int),
+>;
+#[doc = " Keepalive relay callback."]
+#[doc = ""]
+#[doc = "  Receives a data pointer passed to rte_keepalive_register_relay_callback(),"]
+#[doc = "  the id of the core for which state is to be forwarded, and details of the"]
+#[doc = "  current core state."]
+#[doc = "  @param data Data pointer passed to rte_keepalive_register_relay_callback()"]
+#[doc = "  @param id_core ID of the core for which state is being reported"]
+#[doc = "  @param core_state The current state of the core"]
+#[doc = "  @param Timestamp of when core was last seen alive"]
+pub type rte_keepalive_relay_callback_t = ::std::option::Option<
+    unsafe extern "C" fn(
+        data: *mut ::std::os::raw::c_void,
+        id_core: ::std::os::raw::c_int,
+        core_state: rte_keepalive_state::Type,
+        last_seen: u64,
+    ),
+>;
+#[doc = " Keepalive state structure."]
+#[doc = " @internal"]
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct rte_keepalive {
+    _unused: [u8; 0],
+}
+extern "C" {
+    #[doc = " Initialise keepalive sub-system."]
+    #[doc = " @param callback"]
+    #[doc = "   Function called upon detection of a dead core."]
+    #[doc = " @param data"]
+    #[doc = "   Data pointer to be passed to function callback."]
+    #[doc = " @return"]
+    #[doc = "   Keepalive structure success, NULL on failure."]
+    pub fn rte_keepalive_create(
+        callback: rte_keepalive_failure_callback_t,
+        data: *mut ::std::os::raw::c_void,
+    ) -> *mut rte_keepalive;
+}
+extern "C" {
+    #[doc = " Checks & handles keepalive state of monitored cores."]
+    #[doc = " @param *ptr_timer Triggering timer (unused)"]
+    #[doc = " @param *ptr_data  Data pointer (keepalive structure)"]
+    pub fn rte_keepalive_dispatch_pings(
+        ptr_timer: *mut ::std::os::raw::c_void,
+        ptr_data: *mut ::std::os::raw::c_void,
+    );
+}
+extern "C" {
+    #[doc = " Registers a core for keepalive checks."]
+    #[doc = " @param *keepcfg"]
+    #[doc = "   Keepalive structure pointer"]
+    #[doc = " @param id_core"]
+    #[doc = "   ID number of core to register."]
+    pub fn rte_keepalive_register_core(keepcfg: *mut rte_keepalive, id_core: ::std::os::raw::c_int);
+}
+extern "C" {
+    #[doc = " Per-core keepalive check."]
+    #[doc = " @param *keepcfg"]
+    #[doc = "   Keepalive structure pointer"]
+    #[doc = ""]
+    #[doc = " This function needs to be called from within the main process loop of"]
+    #[doc = " the LCore to be checked."]
+    pub fn rte_keepalive_mark_alive(keepcfg: *mut rte_keepalive);
+}
+extern "C" {
+    #[doc = " Per-core sleep-time indication."]
+    #[doc = " @param *keepcfg"]
+    #[doc = "   Keepalive structure pointer"]
+    #[doc = ""]
+    #[doc = " If CPU idling is enabled, this function needs to be called from within"]
+    #[doc = " the main process loop of the LCore going to sleep, in order to avoid"]
+    #[doc = " the LCore being mis-detected as dead."]
+    pub fn rte_keepalive_mark_sleep(keepcfg: *mut rte_keepalive);
+}
+extern "C" {
+    #[doc = " Registers a \'live core\' callback."]
+    #[doc = ""]
+    #[doc = " The complement of the \'dead core\' callback. This is called when a"]
+    #[doc = " core is known to be alive, and is intended for cases when an app"]
+    #[doc = " needs to know \'liveness\' beyond just knowing when a core has died."]
+    #[doc = ""]
+    #[doc = " @param *keepcfg"]
+    #[doc = "   Keepalive structure pointer"]
+    #[doc = " @param callback"]
+    #[doc = "   Function called upon detection of a dead core."]
+    #[doc = " @param data"]
+    #[doc = "   Data pointer to be passed to function callback."]
+    pub fn rte_keepalive_register_relay_callback(
+        keepcfg: *mut rte_keepalive,
+        callback: rte_keepalive_relay_callback_t,
+        data: *mut ::std::os::raw::c_void,
+    );
+}
+pub mod rte_lcore_state_t {
+    #[doc = " State of an lcore."]
+    pub type Type = u32;
+    #[doc = "< waiting a new command"]
     pub const WAIT: Type = 0;
-    ///< executing command
+    #[doc = "< executing command"]
     pub const RUNNING: Type = 1;
-    ///< command executed
+    #[doc = "< command executed"]
     pub const FINISHED: Type = 2;
 }
-/// Definition of a remote launch function.
+#[doc = " Definition of a remote launch function."]
 pub type lcore_function_t = ::std::option::Option<
     unsafe extern "C" fn(arg1: *mut ::std::os::raw::c_void) -> ::std::os::raw::c_int,
 >;
 extern "C" {
-    /// Launch a function on another lcore.
-    ///
-    /// To be executed on the MASTER lcore only.
-    ///
-    /// Sends a message to a slave lcore (identified by the slave_id) that
-    /// is in the WAIT state (this is true after the first call to
-    /// rte_eal_init()). This can be checked by first calling
-    /// rte_eal_wait_lcore(slave_id).
-    ///
-    /// When the remote lcore receives the message, it switches to
-    /// the RUNNING state, then calls the function f with argument arg. Once the
-    /// execution is done, the remote lcore switches to a FINISHED state and
-    /// the return value of f is stored in a local variable to be read using
-    /// rte_eal_wait_lcore().
-    ///
-    /// The MASTER lcore returns as soon as the message is sent and knows
-    /// nothing about the completion of f.
-    ///
-    /// Note: This function is not designed to offer optimum
-    /// performance. It is just a practical way to launch a function on
-    /// another lcore at initialization time.
-    ///
-    /// @param f
-    ///   The function to be called.
-    /// @param arg
-    ///   The argument for the function.
-    /// @param slave_id
-    ///   The identifier of the lcore on which the function should be executed.
-    /// @return
-    ///   - 0: Success. Execution of function f started on the remote lcore.
-    ///   - (-EBUSY): The remote lcore is not in a WAIT state.
+    #[doc = " Launch a function on another lcore."]
+    #[doc = ""]
+    #[doc = " To be executed on the MASTER lcore only."]
+    #[doc = ""]
+    #[doc = " Sends a message to a slave lcore (identified by the slave_id) that"]
+    #[doc = " is in the WAIT state (this is true after the first call to"]
+    #[doc = " rte_eal_init()). This can be checked by first calling"]
+    #[doc = " rte_eal_wait_lcore(slave_id)."]
+    #[doc = ""]
+    #[doc = " When the remote lcore receives the message, it switches to"]
+    #[doc = " the RUNNING state, then calls the function f with argument arg. Once the"]
+    #[doc = " execution is done, the remote lcore switches to a FINISHED state and"]
+    #[doc = " the return value of f is stored in a local variable to be read using"]
+    #[doc = " rte_eal_wait_lcore()."]
+    #[doc = ""]
+    #[doc = " The MASTER lcore returns as soon as the message is sent and knows"]
+    #[doc = " nothing about the completion of f."]
+    #[doc = ""]
+    #[doc = " Note: This function is not designed to offer optimum"]
+    #[doc = " performance. It is just a practical way to launch a function on"]
+    #[doc = " another lcore at initialization time."]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   The function to be called."]
+    #[doc = " @param arg"]
+    #[doc = "   The argument for the function."]
+    #[doc = " @param slave_id"]
+    #[doc = "   The identifier of the lcore on which the function should be executed."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success. Execution of function f started on the remote lcore."]
+    #[doc = "   - (-EBUSY): The remote lcore is not in a WAIT state."]
     pub fn rte_eal_remote_launch(
         f: lcore_function_t,
         arg: *mut ::std::os::raw::c_void,
@@ -9684,34 +9780,34 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 pub mod rte_rmt_call_master_t {
-    /// This enum indicates whether the master core must execute the handler
-    /// launched on all logical cores.
+    #[doc = " This enum indicates whether the master core must execute the handler"]
+    #[doc = " launched on all logical cores."]
     pub type Type = u32;
-    ///< lcore handler not executed by master core.
+    #[doc = "< lcore handler not executed by master core."]
     pub const SKIP_MASTER: Type = 0;
-    ///< lcore handler executed by master core.
+    #[doc = "< lcore handler executed by master core."]
     pub const CALL_MASTER: Type = 1;
 }
 extern "C" {
-    /// Launch a function on all lcores.
-    ///
-    /// Check that each SLAVE lcore is in a WAIT state, then call
-    /// rte_eal_remote_launch() for each lcore.
-    ///
-    /// @param f
-    ///   The function to be called.
-    /// @param arg
-    ///   The argument for the function.
-    /// @param call_master
-    ///   If call_master set to SKIP_MASTER, the MASTER lcore does not call
-    ///   the function. If call_master is set to CALL_MASTER, the function
-    ///   is also called on master before returning. In any case, the master
-    ///   lcore returns as soon as it finished its job and knows nothing
-    ///   about the completion of f on the other lcores.
-    /// @return
-    ///   - 0: Success. Execution of function f started on all remote lcores.
-    ///   - (-EBUSY): At least one remote lcore is not in a WAIT state. In this
-    ///     case, no message is sent to any of the lcores.
+    #[doc = " Launch a function on all lcores."]
+    #[doc = ""]
+    #[doc = " Check that each SLAVE lcore is in a WAIT state, then call"]
+    #[doc = " rte_eal_remote_launch() for each lcore."]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   The function to be called."]
+    #[doc = " @param arg"]
+    #[doc = "   The argument for the function."]
+    #[doc = " @param call_master"]
+    #[doc = "   If call_master set to SKIP_MASTER, the MASTER lcore does not call"]
+    #[doc = "   the function. If call_master is set to CALL_MASTER, the function"]
+    #[doc = "   is also called on master before returning. In any case, the master"]
+    #[doc = "   lcore returns as soon as it finished its job and knows nothing"]
+    #[doc = "   about the completion of f on the other lcores."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success. Execution of function f started on all remote lcores."]
+    #[doc = "   - (-EBUSY): At least one remote lcore is not in a WAIT state. In this"]
+    #[doc = "     case, no message is sent to any of the lcores."]
     pub fn rte_eal_mp_remote_launch(
         f: lcore_function_t,
         arg: *mut ::std::os::raw::c_void,
@@ -9719,51 +9815,51 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get the state of the lcore identified by slave_id.
-    ///
-    /// To be executed on the MASTER lcore only.
-    ///
-    /// @param slave_id
-    ///   The identifier of the lcore.
-    /// @return
-    ///   The state of the lcore.
+    #[doc = " Get the state of the lcore identified by slave_id."]
+    #[doc = ""]
+    #[doc = " To be executed on the MASTER lcore only."]
+    #[doc = ""]
+    #[doc = " @param slave_id"]
+    #[doc = "   The identifier of the lcore."]
+    #[doc = " @return"]
+    #[doc = "   The state of the lcore."]
     pub fn rte_eal_get_lcore_state(slave_id: ::std::os::raw::c_uint) -> rte_lcore_state_t::Type;
 }
 extern "C" {
-    /// Wait until an lcore finishes its job.
-    ///
-    /// To be executed on the MASTER lcore only.
-    ///
-    /// If the slave lcore identified by the slave_id is in a FINISHED state,
-    /// switch to the WAIT state. If the lcore is in RUNNING state, wait until
-    /// the lcore finishes its job and moves to the FINISHED state.
-    ///
-    /// @param slave_id
-    ///   The identifier of the lcore.
-    /// @return
-    ///   - 0: If the lcore identified by the slave_id is in a WAIT state.
-    ///   - The value that was returned by the previous remote launch
-    ///     function call if the lcore identified by the slave_id was in a
-    ///     FINISHED or RUNNING state. In this case, it changes the state
-    ///     of the lcore to WAIT.
+    #[doc = " Wait until an lcore finishes its job."]
+    #[doc = ""]
+    #[doc = " To be executed on the MASTER lcore only."]
+    #[doc = ""]
+    #[doc = " If the slave lcore identified by the slave_id is in a FINISHED state,"]
+    #[doc = " switch to the WAIT state. If the lcore is in RUNNING state, wait until"]
+    #[doc = " the lcore finishes its job and moves to the FINISHED state."]
+    #[doc = ""]
+    #[doc = " @param slave_id"]
+    #[doc = "   The identifier of the lcore."]
+    #[doc = " @return"]
+    #[doc = "   - 0: If the lcore identified by the slave_id is in a WAIT state."]
+    #[doc = "   - The value that was returned by the previous remote launch"]
+    #[doc = "     function call if the lcore identified by the slave_id was in a"]
+    #[doc = "     FINISHED or RUNNING state. In this case, it changes the state"]
+    #[doc = "     of the lcore to WAIT."]
     pub fn rte_eal_wait_lcore(slave_id: ::std::os::raw::c_uint) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Wait until all lcores finish their jobs.
-    ///
-    /// To be executed on the MASTER lcore only. Issue an
-    /// rte_eal_wait_lcore() for every lcore. The return values are
-    /// ignored.
-    ///
-    /// After a call to rte_eal_mp_wait_lcore(), the caller can assume
-    /// that all slave lcores are in a WAIT state.
+    #[doc = " Wait until all lcores finish their jobs."]
+    #[doc = ""]
+    #[doc = " To be executed on the MASTER lcore only. Issue an"]
+    #[doc = " rte_eal_wait_lcore() for every lcore. The return values are"]
+    #[doc = " ignored."]
+    #[doc = ""]
+    #[doc = " After a call to rte_eal_mp_wait_lcore(), the caller can assume"]
+    #[doc = " that all slave lcores are in a WAIT state."]
     pub fn rte_eal_mp_wait_lcore();
 }
-/// The atomic counter structure.
+#[doc = " The atomic counter structure."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_atomic16_t {
-    ///< An internal counter value.
+    #[doc = "< An internal counter value."]
     pub cnt: i16,
 }
 #[test]
@@ -9789,11 +9885,11 @@ fn bindgen_test_layout_rte_atomic16_t() {
         )
     );
 }
-/// The atomic counter structure.
+#[doc = " The atomic counter structure."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_atomic32_t {
-    ///< An internal counter value.
+    #[doc = "< An internal counter value."]
     pub cnt: i32,
 }
 #[test]
@@ -9819,11 +9915,11 @@ fn bindgen_test_layout_rte_atomic32_t() {
         )
     );
 }
-/// The atomic counter structure.
+#[doc = " The atomic counter structure."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_atomic64_t {
-    ///< Internal counter value.
+    #[doc = "< Internal counter value."]
     pub cnt: i64,
 }
 #[test]
@@ -9850,13 +9946,13 @@ fn bindgen_test_layout_rte_atomic64_t() {
     );
 }
 extern "C" {
-    /// Dump the stack of the calling core to the console.
+    #[doc = " Dump the stack of the calling core to the console."]
     pub fn rte_dump_stack();
 }
 extern "C" {
-    /// Dump the registers of the calling core to the console.
-    ///
-    /// Note: Not implemented in a userapp environment; use gdb instead.
+    #[doc = " Dump the registers of the calling core to the console."]
+    #[doc = ""]
+    #[doc = " Note: Not implemented in a userapp environment; use gdb instead."]
     pub fn rte_dump_registers();
 }
 extern "C" {
@@ -9876,10 +9972,10 @@ extern "C" {
     pub static mut eal_timer_source: timer_source::Type;
 }
 extern "C" {
-    /// Get the measured frequency of the RDTSC counter
-    ///
-    /// @return
-    ///   The TSC frequency for this lcore
+    #[doc = " Get the measured frequency of the RDTSC counter"]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   The TSC frequency for this lcore"]
     pub fn rte_get_tsc_hz() -> u64;
 }
 extern "C" {
@@ -9888,26 +9984,26 @@ extern "C" {
         ::std::option::Option<unsafe extern "C" fn(us: ::std::os::raw::c_uint)>;
 }
 extern "C" {
-    /// Blocking delay function.
-    ///
-    /// @param us
-    ///   Number of microseconds to wait.
+    #[doc = " Blocking delay function."]
+    #[doc = ""]
+    #[doc = " @param us"]
+    #[doc = "   Number of microseconds to wait."]
     pub fn rte_delay_us_block(us: ::std::os::raw::c_uint);
 }
 extern "C" {
-    /// Delay function that uses system sleep.
-    /// Does not block the CPU core.
-    ///
-    /// @param us
-    ///   Number of microseconds to wait.
+    #[doc = " Delay function that uses system sleep."]
+    #[doc = " Does not block the CPU core."]
+    #[doc = ""]
+    #[doc = " @param us"]
+    #[doc = "   Number of microseconds to wait."]
     pub fn rte_delay_us_sleep(us: ::std::os::raw::c_uint);
 }
 extern "C" {
-    /// Replace rte_delay_us with user defined function.
-    ///
-    /// @param userfunc
-    ///   User function which replaces rte_delay_us. rte_delay_us_block restores
-    ///   buildin block delay function.
+    #[doc = " Replace rte_delay_us with user defined function."]
+    #[doc = ""]
+    #[doc = " @param userfunc"]
+    #[doc = "   User function which replaces rte_delay_us. rte_delay_us_block restores"]
+    #[doc = "   buildin block delay function."]
     pub fn rte_delay_us_callback_register(
         userfunc: ::std::option::Option<unsafe extern "C" fn(arg1: ::std::os::raw::c_uint)>,
     );
@@ -9917,23 +10013,23 @@ extern "C" {
     pub static mut rte_cycles_vmware_tsc_map: ::std::os::raw::c_int;
 }
 pub mod rte_dev_event_type {
-    /// The device event type.
+    #[doc = " The device event type."]
     pub type Type = u32;
-    ///< device being added
+    #[doc = "< device being added"]
     pub const RTE_DEV_EVENT_ADD: Type = 0;
-    ///< device being removed
+    #[doc = "< device being removed"]
     pub const RTE_DEV_EVENT_REMOVE: Type = 1;
-    ///< max value of this enum
+    #[doc = "< max value of this enum"]
     pub const RTE_DEV_EVENT_MAX: Type = 2;
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_dev_event {
-    ///< device event type
+    #[doc = "< device event type"]
     pub type_: rte_dev_event_type::Type,
-    ///< subsystem id
+    #[doc = "< subsystem id"]
     pub subsystem: ::std::os::raw::c_int,
-    ///< device name
+    #[doc = "< device name"]
     pub devname: *mut ::std::os::raw::c_char,
 }
 #[test]
@@ -9992,7 +10088,7 @@ pub type rte_dev_event_cb_fn = ::std::option::Option<
     ),
 >;
 pub mod rte_kernel_driver {
-    /// Device driver.
+    #[doc = " Device driver."]
     pub type Type = u32;
     pub const RTE_KDRV_UNKNOWN: Type = 0;
     pub const RTE_KDRV_IGB_UIO: Type = 1;
@@ -10002,20 +10098,20 @@ pub mod rte_kernel_driver {
     pub const RTE_KDRV_NONE: Type = 5;
 }
 pub mod rte_dev_policy {
-    /// Device policies.
+    #[doc = " Device policies."]
     pub type Type = u32;
     pub const RTE_DEV_WHITELISTED: Type = 0;
     pub const RTE_DEV_BLACKLISTED: Type = 1;
 }
-/// A generic memory resource representation.
+#[doc = " A generic memory resource representation."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_mem_resource {
-    ///< Physical address, 0 if not resource.
+    #[doc = "< Physical address, 0 if not resource."]
     pub phys_addr: u64,
-    ///< Length of the resource.
+    #[doc = "< Length of the resource."]
     pub len: u64,
-    ///< Virtual address, NULL when not mapped.
+    #[doc = "< Virtual address, NULL when not mapped."]
     pub addr: *mut ::std::os::raw::c_void,
 }
 #[test]
@@ -10066,15 +10162,15 @@ impl Default for rte_mem_resource {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure describing a device driver.
+#[doc = " A structure describing a device driver."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_driver {
-    ///< Next in list.
+    #[doc = "< Next in list."]
     pub next: rte_driver__bindgen_ty_1,
-    ///< Driver name.
+    #[doc = "< Driver name."]
     pub name: *const ::std::os::raw::c_char,
-    ///< Driver alias.
+    #[doc = "< Driver alias."]
     pub alias: *const ::std::os::raw::c_char,
 }
 #[repr(C)]
@@ -10173,21 +10269,21 @@ impl Default for rte_driver {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure describing a generic device.
+#[doc = " A structure describing a generic device."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_device {
-    ///< Next device
+    #[doc = "< Next device"]
     pub next: rte_device__bindgen_ty_1,
-    ///< Device name
+    #[doc = "< Device name"]
     pub name: *const ::std::os::raw::c_char,
-    ///< Driver assigned after probing
+    #[doc = "< Driver assigned after probing"]
     pub driver: *const rte_driver,
-    ///< Bus handle assigned on scan
+    #[doc = "< Bus handle assigned on scan"]
     pub bus: *const rte_bus,
-    ///< NUMA node connection
+    #[doc = "< NUMA node connection"]
     pub numa_node: ::std::os::raw::c_int,
-    ///< Arguments for latest probing
+    #[doc = "< Arguments for latest probing"]
     pub devargs: *mut rte_devargs,
 }
 #[repr(C)]
@@ -10317,32 +10413,32 @@ impl Default for rte_device {
     }
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// Query status of a device.
-    ///
-    /// @param dev
-    ///   Generic device pointer.
-    /// @return
-    ///   (int)true if already probed successfully, 0 otherwise.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Query status of a device."]
+    #[doc = ""]
+    #[doc = " @param dev"]
+    #[doc = "   Generic device pointer."]
+    #[doc = " @return"]
+    #[doc = "   (int)true if already probed successfully, 0 otherwise."]
     pub fn rte_dev_is_probed(dev: *const rte_device) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Hotplug add a given device to a specific bus.
-    ///
-    /// In multi-process, it will request other processes to add the same device.
-    /// A failure, in any process, will rollback the action
-    ///
-    /// @param busname
-    ///   The bus name the device is added to.
-    /// @param devname
-    ///   The device name. Based on this device name, eal will identify a driver
-    ///   capable of handling it and pass it to the driver probing function.
-    /// @param drvargs
-    ///   Device arguments to be passed to the driver.
-    /// @return
-    ///   0 on success, negative on error.
+    #[doc = " Hotplug add a given device to a specific bus."]
+    #[doc = ""]
+    #[doc = " In multi-process, it will request other processes to add the same device."]
+    #[doc = " A failure, in any process, will rollback the action"]
+    #[doc = ""]
+    #[doc = " @param busname"]
+    #[doc = "   The bus name the device is added to."]
+    #[doc = " @param devname"]
+    #[doc = "   The device name. Based on this device name, eal will identify a driver"]
+    #[doc = "   capable of handling it and pass it to the driver probing function."]
+    #[doc = " @param drvargs"]
+    #[doc = "   Device arguments to be passed to the driver."]
+    #[doc = " @return"]
+    #[doc = "   0 on success, negative on error."]
     pub fn rte_eal_hotplug_add(
         busname: *const ::std::os::raw::c_char,
         devname: *const ::std::os::raw::c_char,
@@ -10350,86 +10446,86 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Add matching devices.
-    ///
-    /// In multi-process, it will request other processes to add the same device.
-    /// A failure, in any process, will rollback the action
-    ///
-    /// @param devargs
-    ///   Device arguments including bus, class and driver properties.
-    /// @return
-    ///   0 on success, negative on error.
+    #[doc = " Add matching devices."]
+    #[doc = ""]
+    #[doc = " In multi-process, it will request other processes to add the same device."]
+    #[doc = " A failure, in any process, will rollback the action"]
+    #[doc = ""]
+    #[doc = " @param devargs"]
+    #[doc = "   Device arguments including bus, class and driver properties."]
+    #[doc = " @return"]
+    #[doc = "   0 on success, negative on error."]
     pub fn rte_dev_probe(devargs: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Hotplug remove a given device from a specific bus.
-    ///
-    /// In multi-process, it will request other processes to remove the same device.
-    /// A failure, in any process, will rollback the action
-    ///
-    /// @param busname
-    ///   The bus name the device is removed from.
-    /// @param devname
-    ///   The device name being removed.
-    /// @return
-    ///   0 on success, negative on error.
+    #[doc = " Hotplug remove a given device from a specific bus."]
+    #[doc = ""]
+    #[doc = " In multi-process, it will request other processes to remove the same device."]
+    #[doc = " A failure, in any process, will rollback the action"]
+    #[doc = ""]
+    #[doc = " @param busname"]
+    #[doc = "   The bus name the device is removed from."]
+    #[doc = " @param devname"]
+    #[doc = "   The device name being removed."]
+    #[doc = " @return"]
+    #[doc = "   0 on success, negative on error."]
     pub fn rte_eal_hotplug_remove(
         busname: *const ::std::os::raw::c_char,
         devname: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Remove one device.
-    ///
-    /// In multi-process, it will request other processes to remove the same device.
-    /// A failure, in any process, will rollback the action
-    ///
-    /// @param dev
-    ///   Data structure of the device to remove.
-    /// @return
-    ///   0 on success, negative on error.
+    #[doc = " Remove one device."]
+    #[doc = ""]
+    #[doc = " In multi-process, it will request other processes to remove the same device."]
+    #[doc = " A failure, in any process, will rollback the action"]
+    #[doc = ""]
+    #[doc = " @param dev"]
+    #[doc = "   Data structure of the device to remove."]
+    #[doc = " @return"]
+    #[doc = "   0 on success, negative on error."]
     pub fn rte_dev_remove(dev: *mut rte_device) -> ::std::os::raw::c_int;
 }
-/// Device comparison function.
-///
-/// This type of function is used to compare an rte_device with arbitrary
-/// data.
-///
-/// @param dev
-///   Device handle.
-///
-/// @param data
-///   Data to compare against. The type of this parameter is determined by
-///   the kind of comparison performed by the function.
-///
-/// @return
-///   0 if the device matches the data.
-///   !0 if the device does not match.
-///   <0 if ordering is possible and the device is lower than the data.
-///   >0 if ordering is possible and the device is greater than the data.
+#[doc = " Device comparison function."]
+#[doc = ""]
+#[doc = " This type of function is used to compare an rte_device with arbitrary"]
+#[doc = " data."]
+#[doc = ""]
+#[doc = " @param dev"]
+#[doc = "   Device handle."]
+#[doc = ""]
+#[doc = " @param data"]
+#[doc = "   Data to compare against. The type of this parameter is determined by"]
+#[doc = "   the kind of comparison performed by the function."]
+#[doc = ""]
+#[doc = " @return"]
+#[doc = "   0 if the device matches the data."]
+#[doc = "   !0 if the device does not match."]
+#[doc = "   <0 if ordering is possible and the device is lower than the data."]
+#[doc = "   >0 if ordering is possible and the device is greater than the data."]
 pub type rte_dev_cmp_t = ::std::option::Option<
     unsafe extern "C" fn(dev: *const rte_device, data: *const ::std::os::raw::c_void)
         -> ::std::os::raw::c_int,
 >;
-/// Iteration context.
-///
-/// This context carries over the current iteration state.
+#[doc = " Iteration context."]
+#[doc = ""]
+#[doc = " This context carries over the current iteration state."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_dev_iterator {
-    ///< device string.
+    #[doc = "< device string."]
     pub dev_str: *const ::std::os::raw::c_char,
-    ///< bus-related part of device string.
+    #[doc = "< bus-related part of device string."]
     pub bus_str: *const ::std::os::raw::c_char,
-    ///< class-related part of device string.
+    #[doc = "< class-related part of device string."]
     pub cls_str: *const ::std::os::raw::c_char,
-    ///< bus handle.
+    #[doc = "< bus handle."]
     pub bus: *mut rte_bus,
-    ///< class handle.
+    #[doc = "< class handle."]
     pub cls: *mut rte_class,
-    ///< current position.
+    #[doc = "< current position."]
     pub device: *mut rte_device,
-    ///< additional specialized context.
+    #[doc = "< additional specialized context."]
     pub class_device: *mut ::std::os::raw::c_void,
 }
 #[test]
@@ -10520,32 +10616,32 @@ impl Default for rte_dev_iterator {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// Device iteration function.
-///
-/// Find the next device matching properties passed in parameters.
-/// The function takes an additional ``start`` parameter, that is
-/// used as starting context when relevant.
-///
-/// The function returns the current element in the iteration.
-/// This return value will potentially be used as a start parameter
-/// in subsequent calls to the function.
-///
-/// The additional iterator parameter is only there if a specific
-/// implementation needs additional context. It must not be modified by
-/// the iteration function itself.
-///
-/// @param start
-///   Starting iteration context.
-///
-/// @param devstr
-///   Device description string.
-///
-/// @param it
-///   Device iterator.
-///
-/// @return
-///   The address of the current element matching the device description
-///   string.
+#[doc = " Device iteration function."]
+#[doc = ""]
+#[doc = " Find the next device matching properties passed in parameters."]
+#[doc = " The function takes an additional ``start`` parameter, that is"]
+#[doc = " used as starting context when relevant."]
+#[doc = ""]
+#[doc = " The function returns the current element in the iteration."]
+#[doc = " This return value will potentially be used as a start parameter"]
+#[doc = " in subsequent calls to the function."]
+#[doc = ""]
+#[doc = " The additional iterator parameter is only there if a specific"]
+#[doc = " implementation needs additional context. It must not be modified by"]
+#[doc = " the iteration function itself."]
+#[doc = ""]
+#[doc = " @param start"]
+#[doc = "   Starting iteration context."]
+#[doc = ""]
+#[doc = " @param devstr"]
+#[doc = "   Device description string."]
+#[doc = ""]
+#[doc = " @param it"]
+#[doc = "   Device iterator."]
+#[doc = ""]
+#[doc = " @return"]
+#[doc = "   The address of the current element matching the device description"]
+#[doc = "   string."]
 pub type rte_dev_iterate_t = ::std::option::Option<
     unsafe extern "C" fn(
         start: *const ::std::os::raw::c_void,
@@ -10554,64 +10650,64 @@ pub type rte_dev_iterate_t = ::std::option::Option<
     ) -> *mut ::std::os::raw::c_void,
 >;
 extern "C" {
-    /// Initializes a device iterator.
-    ///
-    /// This iterator allows accessing a list of devices matching a criteria.
-    /// The device matching is made among all buses and classes currently registered,
-    /// filtered by the device description given as parameter.
-    ///
-    /// This function will not allocate any memory. It is safe to stop the
-    /// iteration at any moment and let the iterator go out of context.
-    ///
-    /// @param it
-    ///   Device iterator handle.
-    ///
-    /// @param str
-    ///   Device description string.
-    ///
-    /// @return
-    ///   0 on successful initialization.
-    ///   <0 on error.
+    #[doc = " Initializes a device iterator."]
+    #[doc = ""]
+    #[doc = " This iterator allows accessing a list of devices matching a criteria."]
+    #[doc = " The device matching is made among all buses and classes currently registered,"]
+    #[doc = " filtered by the device description given as parameter."]
+    #[doc = ""]
+    #[doc = " This function will not allocate any memory. It is safe to stop the"]
+    #[doc = " iteration at any moment and let the iterator go out of context."]
+    #[doc = ""]
+    #[doc = " @param it"]
+    #[doc = "   Device iterator handle."]
+    #[doc = ""]
+    #[doc = " @param str"]
+    #[doc = "   Device description string."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   0 on successful initialization."]
+    #[doc = "   <0 on error."]
     pub fn rte_dev_iterator_init(
         it: *mut rte_dev_iterator,
         str: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Iterates on a device iterator.
-    ///
-    /// Generates a new rte_device handle corresponding to the next element
-    /// in the list described in comprehension by the iterator.
-    ///
-    /// The next object is returned, and the iterator is updated.
-    ///
-    /// @param it
-    ///   Device iterator handle.
-    ///
-    /// @return
-    ///   An rte_device handle if found.
-    ///   NULL if an error occurred (rte_errno is set).
-    ///   NULL if no device could be found (rte_errno is not set).
+    #[doc = " Iterates on a device iterator."]
+    #[doc = ""]
+    #[doc = " Generates a new rte_device handle corresponding to the next element"]
+    #[doc = " in the list described in comprehension by the iterator."]
+    #[doc = ""]
+    #[doc = " The next object is returned, and the iterator is updated."]
+    #[doc = ""]
+    #[doc = " @param it"]
+    #[doc = "   Device iterator handle."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   An rte_device handle if found."]
+    #[doc = "   NULL if an error occurred (rte_errno is set)."]
+    #[doc = "   NULL if no device could be found (rte_errno is not set)."]
     pub fn rte_dev_iterator_next(it: *mut rte_dev_iterator) -> *mut rte_device;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// It registers the callback for the specific device.
-    /// Multiple callbacks cal be registered at the same time.
-    ///
-    /// @param device_name
-    ///  The device name, that is the param name of the struct rte_device,
-    ///  null value means for all devices.
-    /// @param cb_fn
-    ///  callback address.
-    /// @param cb_arg
-    ///  address of parameter for callback.
-    ///
-    /// @return
-    ///  - On success, zero.
-    ///  - On failure, a negative value.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " It registers the callback for the specific device."]
+    #[doc = " Multiple callbacks cal be registered at the same time."]
+    #[doc = ""]
+    #[doc = " @param device_name"]
+    #[doc = "  The device name, that is the param name of the struct rte_device,"]
+    #[doc = "  null value means for all devices."]
+    #[doc = " @param cb_fn"]
+    #[doc = "  callback address."]
+    #[doc = " @param cb_arg"]
+    #[doc = "  address of parameter for callback."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - On success, zero."]
+    #[doc = "  - On failure, a negative value."]
     pub fn rte_dev_event_callback_register(
         device_name: *const ::std::os::raw::c_char,
         cb_fn: rte_dev_event_cb_fn,
@@ -10619,23 +10715,23 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// It unregisters the callback according to the specified device.
-    ///
-    /// @param device_name
-    ///  The device name, that is the param name of the struct rte_device,
-    ///  null value means for all devices and their callbacks.
-    /// @param cb_fn
-    ///  callback address.
-    /// @param cb_arg
-    ///  address of parameter for callback, (void *)-1 means to remove all
-    ///  registered which has the same callback address.
-    ///
-    /// @return
-    ///  - On success, return the number of callback entities removed.
-    ///  - On failure, a negative value.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " It unregisters the callback according to the specified device."]
+    #[doc = ""]
+    #[doc = " @param device_name"]
+    #[doc = "  The device name, that is the param name of the struct rte_device,"]
+    #[doc = "  null value means for all devices and their callbacks."]
+    #[doc = " @param cb_fn"]
+    #[doc = "  callback address."]
+    #[doc = " @param cb_arg"]
+    #[doc = "  address of parameter for callback, (void *)-1 means to remove all"]
+    #[doc = "  registered which has the same callback address."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - On success, return the number of callback entities removed."]
+    #[doc = "  - On failure, a negative value."]
     pub fn rte_dev_event_callback_unregister(
         device_name: *const ::std::os::raw::c_char,
         cb_fn: rte_dev_event_cb_fn,
@@ -10643,66 +10739,66 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// Executes all the user application registered callbacks for
-    /// the specific device.
-    ///
-    /// @param device_name
-    ///  The device name.
-    /// @param event
-    ///  the device event type.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Executes all the user application registered callbacks for"]
+    #[doc = " the specific device."]
+    #[doc = ""]
+    #[doc = " @param device_name"]
+    #[doc = "  The device name."]
+    #[doc = " @param event"]
+    #[doc = "  the device event type."]
     pub fn rte_dev_event_callback_process(
         device_name: *const ::std::os::raw::c_char,
         event: rte_dev_event_type::Type,
     );
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// Start the device event monitoring.
-    ///
-    /// @return
-    ///   - On success, zero.
-    ///   - On failure, a negative value.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Start the device event monitoring."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - On success, zero."]
+    #[doc = "   - On failure, a negative value."]
     pub fn rte_dev_event_monitor_start() -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// Stop the device event monitoring.
-    ///
-    /// @return
-    ///   - On success, zero.
-    ///   - On failure, a negative value.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Stop the device event monitoring."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - On success, zero."]
+    #[doc = "   - On failure, a negative value."]
     pub fn rte_dev_event_monitor_stop() -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// Enable hotplug handling for devices.
-    ///
-    /// @return
-    ///   - On success, zero.
-    ///   - On failure, a negative value.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Enable hotplug handling for devices."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - On success, zero."]
+    #[doc = "   - On failure, a negative value."]
     pub fn rte_dev_hotplug_handle_enable() -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// Disable hotplug handling for devices.
-    ///
-    /// @return
-    ///   - On success, zero.
-    ///   - On failure, a negative value.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Disable hotplug handling for devices."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - On success, zero."]
+    #[doc = "   - On failure, a negative value."]
     pub fn rte_dev_hotplug_handle_disable() -> ::std::os::raw::c_int;
 }
-/// Double linked list of buses
+#[doc = " Double linked list of buses"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_bus_list {
@@ -10748,56 +10844,56 @@ impl Default for rte_bus_list {
     }
 }
 pub mod rte_iova_mode {
-    /// IOVA mapping mode.
-    ///
-    /// IOVA mapping mode is iommu programming mode of a device.
-    /// That device (for example: IOMMU backed DMA device) based
-    /// on rte_iova_mode will generate physical or virtual address.
-    ///
+    #[doc = " IOVA mapping mode."]
+    #[doc = ""]
+    #[doc = " IOVA mapping mode is iommu programming mode of a device."]
+    #[doc = " That device (for example: IOMMU backed DMA device) based"]
+    #[doc = " on rte_iova_mode will generate physical or virtual address."]
+    #[doc = ""]
     pub type Type = u32;
     pub const RTE_IOVA_DC: Type = 0;
     pub const RTE_IOVA_PA: Type = 1;
     pub const RTE_IOVA_VA: Type = 2;
 }
-/// Bus specific scan for devices attached on the bus.
-/// For each bus object, the scan would be responsible for finding devices and
-/// adding them to its private device list.
-///
-/// A bus should mandatorily implement this method.
-///
-/// @return
-///	0 for successful scan
-///	<0 for unsuccessful scan with error value
+#[doc = " Bus specific scan for devices attached on the bus."]
+#[doc = " For each bus object, the scan would be responsible for finding devices and"]
+#[doc = " adding them to its private device list."]
+#[doc = ""]
+#[doc = " A bus should mandatorily implement this method."]
+#[doc = ""]
+#[doc = " @return"]
+#[doc = "\t0 for successful scan"]
+#[doc = "\t<0 for unsuccessful scan with error value"]
 pub type rte_bus_scan_t = ::std::option::Option<unsafe extern "C" fn() -> ::std::os::raw::c_int>;
-/// Implementation specific probe function which is responsible for linking
-/// devices on that bus with applicable drivers.
-///
-/// This is called while iterating over each registered bus.
-///
-/// @return
-///	0 for successful probe
-///	!0 for any error while probing
+#[doc = " Implementation specific probe function which is responsible for linking"]
+#[doc = " devices on that bus with applicable drivers."]
+#[doc = ""]
+#[doc = " This is called while iterating over each registered bus."]
+#[doc = ""]
+#[doc = " @return"]
+#[doc = "\t0 for successful probe"]
+#[doc = "\t!0 for any error while probing"]
 pub type rte_bus_probe_t = ::std::option::Option<unsafe extern "C" fn() -> ::std::os::raw::c_int>;
-/// Device iterator to find a device on a bus.
-///
-/// This function returns an rte_device if one of those held by the bus
-/// matches the data passed as parameter.
-///
-/// If the comparison function returns zero this function should stop iterating
-/// over any more devices. To continue a search the device of a previous search
-/// can be passed via the start parameter.
-///
-/// @param cmp
-///	Comparison function.
-///
-/// @param data
-///	Data to compare each device against.
-///
-/// @param start
-///	starting point for the iteration
-///
-/// @return
-///	The first device matching the data, NULL if none exists.
+#[doc = " Device iterator to find a device on a bus."]
+#[doc = ""]
+#[doc = " This function returns an rte_device if one of those held by the bus"]
+#[doc = " matches the data passed as parameter."]
+#[doc = ""]
+#[doc = " If the comparison function returns zero this function should stop iterating"]
+#[doc = " over any more devices. To continue a search the device of a previous search"]
+#[doc = " can be passed via the start parameter."]
+#[doc = ""]
+#[doc = " @param cmp"]
+#[doc = "\tComparison function."]
+#[doc = ""]
+#[doc = " @param data"]
+#[doc = "\tData to compare each device against."]
+#[doc = ""]
+#[doc = " @param start"]
+#[doc = "\tstarting point for the iteration"]
+#[doc = ""]
+#[doc = " @return"]
+#[doc = "\tThe first device matching the data, NULL if none exists."]
 pub type rte_bus_find_device_t = ::std::option::Option<
     unsafe extern "C" fn(
         start: *const rte_device,
@@ -10805,86 +10901,86 @@ pub type rte_bus_find_device_t = ::std::option::Option<
         data: *const ::std::os::raw::c_void,
     ) -> *mut rte_device,
 >;
-/// Implementation specific probe function which is responsible for linking
-/// devices on that bus with applicable drivers.
-///
-/// @param dev
-///	Device pointer that was returned by a previous call to find_device.
-///
-/// @return
-///	0 on success.
-///	!0 on error.
+#[doc = " Implementation specific probe function which is responsible for linking"]
+#[doc = " devices on that bus with applicable drivers."]
+#[doc = ""]
+#[doc = " @param dev"]
+#[doc = "\tDevice pointer that was returned by a previous call to find_device."]
+#[doc = ""]
+#[doc = " @return"]
+#[doc = "\t0 on success."]
+#[doc = "\t!0 on error."]
 pub type rte_bus_plug_t =
     ::std::option::Option<unsafe extern "C" fn(dev: *mut rte_device) -> ::std::os::raw::c_int>;
-/// Implementation specific remove function which is responsible for unlinking
-/// devices on that bus from assigned driver.
-///
-/// @param dev
-///	Device pointer that was returned by a previous call to find_device.
-///
-/// @return
-///	0 on success.
-///	!0 on error.
+#[doc = " Implementation specific remove function which is responsible for unlinking"]
+#[doc = " devices on that bus from assigned driver."]
+#[doc = ""]
+#[doc = " @param dev"]
+#[doc = "\tDevice pointer that was returned by a previous call to find_device."]
+#[doc = ""]
+#[doc = " @return"]
+#[doc = "\t0 on success."]
+#[doc = "\t!0 on error."]
 pub type rte_bus_unplug_t =
     ::std::option::Option<unsafe extern "C" fn(dev: *mut rte_device) -> ::std::os::raw::c_int>;
-/// Bus specific parsing function.
-/// Validates the syntax used in the textual representation of a device,
-/// If the syntax is valid and ``addr`` is not NULL, writes the bus-specific
-/// device representation to ``addr``.
-///
-/// @param[in] name
-///	device textual description
-///
-/// @param[out] addr
-///	device information location address, into which parsed info
-///	should be written. If NULL, nothing should be written, which
-///	is not an error.
-///
-/// @return
-///	0 if parsing was successful.
-///	!0 for any error.
+#[doc = " Bus specific parsing function."]
+#[doc = " Validates the syntax used in the textual representation of a device,"]
+#[doc = " If the syntax is valid and ``addr`` is not NULL, writes the bus-specific"]
+#[doc = " device representation to ``addr``."]
+#[doc = ""]
+#[doc = " @param[in] name"]
+#[doc = "\tdevice textual description"]
+#[doc = ""]
+#[doc = " @param[out] addr"]
+#[doc = "\tdevice information location address, into which parsed info"]
+#[doc = "\tshould be written. If NULL, nothing should be written, which"]
+#[doc = "\tis not an error."]
+#[doc = ""]
+#[doc = " @return"]
+#[doc = "\t0 if parsing was successful."]
+#[doc = "\t!0 for any error."]
 pub type rte_bus_parse_t = ::std::option::Option<
     unsafe extern "C" fn(name: *const ::std::os::raw::c_char, addr: *mut ::std::os::raw::c_void)
         -> ::std::os::raw::c_int,
 >;
-/// Implement a specific hot-unplug handler, which is responsible for
-/// handle the failure when device be hot-unplugged. When the event of
-/// hot-unplug be detected, it could call this function to handle
-/// the hot-unplug failure and avoid app crash.
-/// @param dev
-///	Pointer of the device structure.
-///
-/// @return
-///	0 on success.
-///	!0 on error.
+#[doc = " Implement a specific hot-unplug handler, which is responsible for"]
+#[doc = " handle the failure when device be hot-unplugged. When the event of"]
+#[doc = " hot-unplug be detected, it could call this function to handle"]
+#[doc = " the hot-unplug failure and avoid app crash."]
+#[doc = " @param dev"]
+#[doc = "\tPointer of the device structure."]
+#[doc = ""]
+#[doc = " @return"]
+#[doc = "\t0 on success."]
+#[doc = "\t!0 on error."]
 pub type rte_bus_hot_unplug_handler_t =
     ::std::option::Option<unsafe extern "C" fn(dev: *mut rte_device) -> ::std::os::raw::c_int>;
-/// Implement a specific sigbus handler, which is responsible for handling
-/// the sigbus error which is either original memory error, or specific memory
-/// error that caused of device be hot-unplugged. When sigbus error be captured,
-/// it could call this function to handle sigbus error.
-/// @param failure_addr
-///	Pointer of the fault address of the sigbus error.
-///
-/// @return
-///	0 for success handle the sigbus for hot-unplug.
-///	1 for not process it, because it is a generic sigbus error.
-///	-1 for failed to handle the sigbus for hot-unplug.
+#[doc = " Implement a specific sigbus handler, which is responsible for handling"]
+#[doc = " the sigbus error which is either original memory error, or specific memory"]
+#[doc = " error that caused of device be hot-unplugged. When sigbus error be captured,"]
+#[doc = " it could call this function to handle sigbus error."]
+#[doc = " @param failure_addr"]
+#[doc = "\tPointer of the fault address of the sigbus error."]
+#[doc = ""]
+#[doc = " @return"]
+#[doc = "\t0 for success handle the sigbus for hot-unplug."]
+#[doc = "\t1 for not process it, because it is a generic sigbus error."]
+#[doc = "\t-1 for failed to handle the sigbus for hot-unplug."]
 pub type rte_bus_sigbus_handler_t = ::std::option::Option<
     unsafe extern "C" fn(failure_addr: *const ::std::os::raw::c_void) -> ::std::os::raw::c_int,
 >;
 pub mod rte_bus_scan_mode {
-    /// Bus scan policies
+    #[doc = " Bus scan policies"]
     pub type Type = u32;
     pub const RTE_BUS_SCAN_UNDEFINED: Type = 0;
     pub const RTE_BUS_SCAN_WHITELIST: Type = 1;
     pub const RTE_BUS_SCAN_BLACKLIST: Type = 2;
 }
-/// A structure used to configure bus operations.
+#[doc = " A structure used to configure bus operations."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_bus_conf {
-    ///< Scan policy.
+    #[doc = "< Scan policy."]
     pub scan_mode: rte_bus_scan_mode::Type,
 }
 #[test]
@@ -10915,41 +11011,41 @@ impl Default for rte_bus_conf {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// Get common iommu class of the all the devices on the bus. The bus may
-/// check that those devices are attached to iommu driver.
-/// If no devices are attached to the bus. The bus may return with don't care
-/// (_DC) value.
-/// Otherwise, The bus will return appropriate _pa or _va iova mode.
-///
-/// @return
-///      enum rte_iova_mode value.
+#[doc = " Get common iommu class of the all the devices on the bus. The bus may"]
+#[doc = " check that those devices are attached to iommu driver."]
+#[doc = " If no devices are attached to the bus. The bus may return with don\'t care"]
+#[doc = " (_DC) value."]
+#[doc = " Otherwise, The bus will return appropriate _pa or _va iova mode."]
+#[doc = ""]
+#[doc = " @return"]
+#[doc = "      enum rte_iova_mode value."]
 pub type rte_bus_get_iommu_class_t =
     ::std::option::Option<unsafe extern "C" fn() -> rte_iova_mode::Type>;
-/// A structure describing a generic bus.
+#[doc = " A structure describing a generic bus."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_bus {
-    ///< Next bus object in linked list
+    #[doc = "< Next bus object in linked list"]
     pub next: rte_bus__bindgen_ty_1,
-    ///< Name of the bus
+    #[doc = "< Name of the bus"]
     pub name: *const ::std::os::raw::c_char,
-    ///< Scan for devices attached to bus
+    #[doc = "< Scan for devices attached to bus"]
     pub scan: rte_bus_scan_t,
-    ///< Probe devices on bus
+    #[doc = "< Probe devices on bus"]
     pub probe: rte_bus_probe_t,
-    ///< Find a device on the bus
+    #[doc = "< Find a device on the bus"]
     pub find_device: rte_bus_find_device_t,
-    ///< Probe single device for drivers
+    #[doc = "< Probe single device for drivers"]
     pub plug: rte_bus_plug_t,
-    ///< Remove single device from driver
+    #[doc = "< Remove single device from driver"]
     pub unplug: rte_bus_unplug_t,
-    ///< Parse a device name
+    #[doc = "< Parse a device name"]
     pub parse: rte_bus_parse_t,
-    ///< Bus configuration
+    #[doc = "< Bus configuration"]
     pub conf: rte_bus_conf,
-    ///< Get iommu class
+    #[doc = "< Get iommu class"]
     pub get_iommu_class: rte_bus_get_iommu_class_t,
-    ///< Device iterator.
+    #[doc = "< Device iterator."]
     pub dev_iterate: rte_dev_iterate_t,
     pub hot_unplug_handler: rte_bus_hot_unplug_handler_t,
     pub sigbus_handler: rte_bus_sigbus_handler_t,
@@ -11147,83 +11243,83 @@ impl Default for rte_bus {
     }
 }
 extern "C" {
-    /// Register a Bus handler.
-    ///
-    /// @param bus
-    ///   A pointer to a rte_bus structure describing the bus
-    ///   to be registered.
+    #[doc = " Register a Bus handler."]
+    #[doc = ""]
+    #[doc = " @param bus"]
+    #[doc = "   A pointer to a rte_bus structure describing the bus"]
+    #[doc = "   to be registered."]
     pub fn rte_bus_register(bus: *mut rte_bus);
 }
 extern "C" {
-    /// Unregister a Bus handler.
-    ///
-    /// @param bus
-    ///   A pointer to a rte_bus structure describing the bus
-    ///   to be unregistered.
+    #[doc = " Unregister a Bus handler."]
+    #[doc = ""]
+    #[doc = " @param bus"]
+    #[doc = "   A pointer to a rte_bus structure describing the bus"]
+    #[doc = "   to be unregistered."]
     pub fn rte_bus_unregister(bus: *mut rte_bus);
 }
 extern "C" {
-    /// Scan all the buses.
-    ///
-    /// @return
-    ///   0 in case of success in scanning all buses
-    ///  !0 in case of failure to scan
+    #[doc = " Scan all the buses."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   0 in case of success in scanning all buses"]
+    #[doc = "  !0 in case of failure to scan"]
     pub fn rte_bus_scan() -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// For each device on the buses, perform a driver 'match' and call the
-    /// driver-specific probe for device initialization.
-    ///
-    /// @return
-    ///	 0 for successful match/probe
-    ///	!0 otherwise
+    #[doc = " For each device on the buses, perform a driver \'match\' and call the"]
+    #[doc = " driver-specific probe for device initialization."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "\t 0 for successful match/probe"]
+    #[doc = "\t!0 otherwise"]
     pub fn rte_bus_probe() -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Dump information of all the buses registered with EAL.
-    ///
-    /// @param f
-    ///	 A valid and open output stream handle
+    #[doc = " Dump information of all the buses registered with EAL."]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "\t A valid and open output stream handle"]
     pub fn rte_bus_dump(f: *mut FILE);
 }
-/// Bus comparison function.
-///
-/// @param bus
-///	Bus under test.
-///
-/// @param data
-///	Data to compare against.
-///
-/// @return
-///	0 if the bus matches the data.
-///	!0 if the bus does not match.
-///	<0 if ordering is possible and the bus is lower than the data.
-///	>0 if ordering is possible and the bus is greater than the data.
+#[doc = " Bus comparison function."]
+#[doc = ""]
+#[doc = " @param bus"]
+#[doc = "\tBus under test."]
+#[doc = ""]
+#[doc = " @param data"]
+#[doc = "\tData to compare against."]
+#[doc = ""]
+#[doc = " @return"]
+#[doc = "\t0 if the bus matches the data."]
+#[doc = "\t!0 if the bus does not match."]
+#[doc = "\t<0 if ordering is possible and the bus is lower than the data."]
+#[doc = "\t>0 if ordering is possible and the bus is greater than the data."]
 pub type rte_bus_cmp_t = ::std::option::Option<
     unsafe extern "C" fn(bus: *const rte_bus, data: *const ::std::os::raw::c_void)
         -> ::std::os::raw::c_int,
 >;
 extern "C" {
-    /// Bus iterator to find a particular bus.
-    ///
-    /// This function compares each registered bus to find one that matches
-    /// the data passed as parameter.
-    ///
-    /// If the comparison function returns zero this function will stop iterating
-    /// over any more buses. To continue a search the bus of a previous search can
-    /// be passed via the start parameter.
-    ///
-    /// @param start
-    ///	Starting point for the iteration.
-    ///
-    /// @param cmp
-    ///	Comparison function.
-    ///
-    /// @param data
-    ///	 Data to pass to comparison function.
-    ///
-    /// @return
-    ///	 A pointer to a rte_bus structure or NULL in case no bus matches
+    #[doc = " Bus iterator to find a particular bus."]
+    #[doc = ""]
+    #[doc = " This function compares each registered bus to find one that matches"]
+    #[doc = " the data passed as parameter."]
+    #[doc = ""]
+    #[doc = " If the comparison function returns zero this function will stop iterating"]
+    #[doc = " over any more buses. To continue a search the bus of a previous search can"]
+    #[doc = " be passed via the start parameter."]
+    #[doc = ""]
+    #[doc = " @param start"]
+    #[doc = "\tStarting point for the iteration."]
+    #[doc = ""]
+    #[doc = " @param cmp"]
+    #[doc = "\tComparison function."]
+    #[doc = ""]
+    #[doc = " @param data"]
+    #[doc = "\t Data to pass to comparison function."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "\t A pointer to a rte_bus structure or NULL in case no bus matches"]
     pub fn rte_bus_find(
         start: *const rte_bus,
         cmp: rte_bus_cmp_t,
@@ -11231,19 +11327,19 @@ extern "C" {
     ) -> *mut rte_bus;
 }
 extern "C" {
-    /// Find the registered bus for a particular device.
+    #[doc = " Find the registered bus for a particular device."]
     pub fn rte_bus_find_by_device(dev: *const rte_device) -> *mut rte_bus;
 }
 extern "C" {
-    /// Find the registered bus for a given name.
+    #[doc = " Find the registered bus for a given name."]
     pub fn rte_bus_find_by_name(busname: *const ::std::os::raw::c_char) -> *mut rte_bus;
 }
 extern "C" {
-    /// Get the common iommu class of devices bound on to buses available in the
-    /// system. The default mode is PA.
-    ///
-    /// @return
-    ///     enum rte_iova_mode value.
+    #[doc = " Get the common iommu class of devices bound on to buses available in the"]
+    #[doc = " system. The default mode is PA."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "     enum rte_iova_mode value."]
     pub fn rte_bus_get_iommu_class() -> rte_iova_mode::Type;
 }
 pub mod rte_intr_mode {
@@ -11254,42 +11350,42 @@ pub mod rte_intr_mode {
     pub const RTE_INTR_MODE_MSIX: Type = 3;
 }
 pub mod rte_lcore_role_t {
-    /// The lcore role (used in RTE or not).
+    #[doc = " The lcore role (used in RTE or not)."]
     pub type Type = u32;
     pub const ROLE_RTE: Type = 0;
     pub const ROLE_OFF: Type = 1;
     pub const ROLE_SERVICE: Type = 2;
 }
 pub mod rte_proc_type_t {
-    /// The type of process in a linuxapp, multi-process setup
+    #[doc = " The type of process in a linuxapp, multi-process setup"]
     pub type Type = i32;
     pub const RTE_PROC_AUTO: Type = -1;
     pub const RTE_PROC_PRIMARY: Type = 0;
     pub const RTE_PROC_SECONDARY: Type = 1;
     pub const RTE_PROC_INVALID: Type = 2;
 }
-/// The global RTE configuration structure.
+#[doc = " The global RTE configuration structure."]
 #[repr(C, packed)]
 #[derive(Copy, Clone)]
 pub struct rte_config {
-    ///< Id of the master lcore
+    #[doc = "< Id of the master lcore"]
     pub master_lcore: u32,
-    ///< Number of available logical cores.
+    #[doc = "< Number of available logical cores."]
     pub lcore_count: u32,
-    ///< Number of detected NUMA nodes.
+    #[doc = "< Number of detected NUMA nodes."]
     pub numa_node_count: u32,
-    ///< List of detected NUMA nodes.
+    #[doc = "< List of detected NUMA nodes."]
     pub numa_nodes: [u32; 8usize],
-    ///< Number of available service cores.
+    #[doc = "< Number of available service cores."]
     pub service_lcore_count: u32,
-    ///< State of cores.
+    #[doc = "< State of cores."]
     pub lcore_role: [rte_lcore_role_t::Type; 128usize],
-    /// Primary or secondary configuration
+    #[doc = " Primary or secondary configuration"]
     pub process_type: rte_proc_type_t::Type,
-    /// PA or VA mapping mode
+    #[doc = " PA or VA mapping mode"]
     pub iova_mode: rte_iova_mode::Type,
-    /// Pointer to memory configuration, which may be shared across multiple
-    /// DPDK instances
+    #[doc = " Pointer to memory configuration, which may be shared across multiple"]
+    #[doc = " DPDK instances"]
     pub mem_config: *mut rte_mem_config,
 }
 #[test]
@@ -11401,129 +11497,129 @@ impl Default for rte_config {
     }
 }
 extern "C" {
-    /// Get the global configuration structure.
-    ///
-    /// @return
-    ///   A pointer to the global configuration structure.
+    #[doc = " Get the global configuration structure."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   A pointer to the global configuration structure."]
     pub fn rte_eal_get_configuration() -> *mut rte_config;
 }
 extern "C" {
-    /// Get a lcore's role.
-    ///
-    /// @param lcore_id
-    ///   The identifier of the lcore.
-    /// @return
-    ///   The role of the lcore.
+    #[doc = " Get a lcore\'s role."]
+    #[doc = ""]
+    #[doc = " @param lcore_id"]
+    #[doc = "   The identifier of the lcore."]
+    #[doc = " @return"]
+    #[doc = "   The role of the lcore."]
     pub fn rte_eal_lcore_role(lcore_id: ::std::os::raw::c_uint) -> rte_lcore_role_t::Type;
 }
 extern "C" {
-    /// Get the process type in a multi-process setup
-    ///
-    /// @return
-    ///   The process type
+    #[doc = " Get the process type in a multi-process setup"]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   The process type"]
     pub fn rte_eal_process_type() -> rte_proc_type_t::Type;
 }
 extern "C" {
-    /// Request iopl privilege for all RPL.
-    ///
-    /// This function should be called by pmds which need access to ioports.
-    ///
-    /// @return
-    ///   - On success, returns 0.
-    ///   - On failure, returns -1.
+    #[doc = " Request iopl privilege for all RPL."]
+    #[doc = ""]
+    #[doc = " This function should be called by pmds which need access to ioports."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - On success, returns 0."]
+    #[doc = "   - On failure, returns -1."]
     pub fn rte_eal_iopl_init() -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Initialize the Environment Abstraction Layer (EAL).
-    ///
-    /// This function is to be executed on the MASTER lcore only, as soon
-    /// as possible in the application's main() function.
-    ///
-    /// The function finishes the initialization process before main() is called.
-    /// It puts the SLAVE lcores in the WAIT state.
-    ///
-    /// When the multi-partition feature is supported, depending on the
-    /// configuration (if CONFIG_RTE_EAL_MAIN_PARTITION is disabled), this
-    /// function waits to ensure that the magic number is set before
-    /// returning. See also the rte_eal_get_configuration() function. Note:
-    /// This behavior may change in the future.
-    ///
-    /// @param argc
-    ///   A non-negative value.  If it is greater than 0, the array members
-    ///   for argv[0] through argv[argc] (non-inclusive) shall contain pointers
-    ///   to strings.
-    /// @param argv
-    ///   An array of strings.  The contents of the array, as well as the strings
-    ///   which are pointed to by the array, may be modified by this function.
-    /// @return
-    ///   - On success, the number of parsed arguments, which is greater or
-    ///     equal to zero. After the call to rte_eal_init(),
-    ///     all arguments argv[x] with x < ret may have been modified by this
-    ///     function call and should not be further interpreted by the
-    ///     application.  The EAL does not take any ownership of the memory used
-    ///     for either the argv array, or its members.
-    ///   - On failure, -1 and rte_errno is set to a value indicating the cause
-    ///     for failure.  In some instances, the application will need to be
-    ///     restarted as part of clearing the issue.
-    ///
-    ///   Error codes returned via rte_errno:
-    ///     EACCES indicates a permissions issue.
-    ///
-    ///     EAGAIN indicates either a bus or system resource was not available,
-    ///            setup may be attempted again.
-    ///
-    ///     EALREADY indicates that the rte_eal_init function has already been
-    ///              called, and cannot be called again.
-    ///
-    ///     EFAULT indicates the tailq configuration name was not found in
-    ///            memory configuration.
-    ///
-    ///     EINVAL indicates invalid parameters were passed as argv/argc.
-    ///
-    ///     ENOMEM indicates failure likely caused by an out-of-memory condition.
-    ///
-    ///     ENODEV indicates memory setup issues.
-    ///
-    ///     ENOTSUP indicates that the EAL cannot initialize on this system.
-    ///
-    ///     EPROTO indicates that the PCI bus is either not present, or is not
-    ///            readable by the eal.
-    ///
-    ///     ENOEXEC indicates that a service core failed to launch successfully.
+    #[doc = " Initialize the Environment Abstraction Layer (EAL)."]
+    #[doc = ""]
+    #[doc = " This function is to be executed on the MASTER lcore only, as soon"]
+    #[doc = " as possible in the application\'s main() function."]
+    #[doc = ""]
+    #[doc = " The function finishes the initialization process before main() is called."]
+    #[doc = " It puts the SLAVE lcores in the WAIT state."]
+    #[doc = ""]
+    #[doc = " When the multi-partition feature is supported, depending on the"]
+    #[doc = " configuration (if CONFIG_RTE_EAL_MAIN_PARTITION is disabled), this"]
+    #[doc = " function waits to ensure that the magic number is set before"]
+    #[doc = " returning. See also the rte_eal_get_configuration() function. Note:"]
+    #[doc = " This behavior may change in the future."]
+    #[doc = ""]
+    #[doc = " @param argc"]
+    #[doc = "   A non-negative value.  If it is greater than 0, the array members"]
+    #[doc = "   for argv[0] through argv[argc] (non-inclusive) shall contain pointers"]
+    #[doc = "   to strings."]
+    #[doc = " @param argv"]
+    #[doc = "   An array of strings.  The contents of the array, as well as the strings"]
+    #[doc = "   which are pointed to by the array, may be modified by this function."]
+    #[doc = " @return"]
+    #[doc = "   - On success, the number of parsed arguments, which is greater or"]
+    #[doc = "     equal to zero. After the call to rte_eal_init(),"]
+    #[doc = "     all arguments argv[x] with x < ret may have been modified by this"]
+    #[doc = "     function call and should not be further interpreted by the"]
+    #[doc = "     application.  The EAL does not take any ownership of the memory used"]
+    #[doc = "     for either the argv array, or its members."]
+    #[doc = "   - On failure, -1 and rte_errno is set to a value indicating the cause"]
+    #[doc = "     for failure.  In some instances, the application will need to be"]
+    #[doc = "     restarted as part of clearing the issue."]
+    #[doc = ""]
+    #[doc = "   Error codes returned via rte_errno:"]
+    #[doc = "     EACCES indicates a permissions issue."]
+    #[doc = ""]
+    #[doc = "     EAGAIN indicates either a bus or system resource was not available,"]
+    #[doc = "            setup may be attempted again."]
+    #[doc = ""]
+    #[doc = "     EALREADY indicates that the rte_eal_init function has already been"]
+    #[doc = "              called, and cannot be called again."]
+    #[doc = ""]
+    #[doc = "     EFAULT indicates the tailq configuration name was not found in"]
+    #[doc = "            memory configuration."]
+    #[doc = ""]
+    #[doc = "     EINVAL indicates invalid parameters were passed as argv/argc."]
+    #[doc = ""]
+    #[doc = "     ENOMEM indicates failure likely caused by an out-of-memory condition."]
+    #[doc = ""]
+    #[doc = "     ENODEV indicates memory setup issues."]
+    #[doc = ""]
+    #[doc = "     ENOTSUP indicates that the EAL cannot initialize on this system."]
+    #[doc = ""]
+    #[doc = "     EPROTO indicates that the PCI bus is either not present, or is not"]
+    #[doc = "            readable by the eal."]
+    #[doc = ""]
+    #[doc = "     ENOEXEC indicates that a service core failed to launch successfully."]
     pub fn rte_eal_init(
         argc: ::std::os::raw::c_int,
         argv: *mut *mut ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// Clean up the Environment Abstraction Layer (EAL)
-    ///
-    /// This function must be called to release any internal resources that EAL has
-    /// allocated during rte_eal_init(). After this call, no DPDK function calls may
-    /// be made. It is expected that common usage of this function is to call it
-    /// just before terminating the process.
-    ///
-    /// @return 0 Successfully released all internal EAL resources
-    /// @return -EFAULT There was an error in releasing all resources.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Clean up the Environment Abstraction Layer (EAL)"]
+    #[doc = ""]
+    #[doc = " This function must be called to release any internal resources that EAL has"]
+    #[doc = " allocated during rte_eal_init(). After this call, no DPDK function calls may"]
+    #[doc = " be made. It is expected that common usage of this function is to call it"]
+    #[doc = " just before terminating the process."]
+    #[doc = ""]
+    #[doc = " @return 0 Successfully released all internal EAL resources"]
+    #[doc = " @return -EFAULT There was an error in releasing all resources."]
     pub fn rte_eal_cleanup() -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Check if a primary process is currently alive
-    ///
-    /// This function returns true when a primary process is currently
-    /// active.
-    ///
-    /// @param config_file_path
-    ///   The config_file_path argument provided should point at the location
-    ///   that the primary process will create its config file. If NULL, the default
-    ///   config file path is used.
-    ///
-    /// @return
-    ///  - If alive, returns 1.
-    ///  - If dead, returns 0.
+    #[doc = " Check if a primary process is currently alive"]
+    #[doc = ""]
+    #[doc = " This function returns true when a primary process is currently"]
+    #[doc = " active."]
+    #[doc = ""]
+    #[doc = " @param config_file_path"]
+    #[doc = "   The config_file_path argument provided should point at the location"]
+    #[doc = "   that the primary process will create its config file. If NULL, the default"]
+    #[doc = "   config file path is used."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - If alive, returns 1."]
+    #[doc = "  - If dead, returns 0."]
     pub fn rte_eal_primary_proc_alive(
         config_file_path: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
@@ -11660,103 +11756,103 @@ impl Default for rte_mp_reply {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// Action function typedef used by other components.
-///
-/// As we create  socket channel for primary/secondary communication, use
-/// this function typedef to register action for coming messages.
+#[doc = " Action function typedef used by other components."]
+#[doc = ""]
+#[doc = " As we create  socket channel for primary/secondary communication, use"]
+#[doc = " this function typedef to register action for coming messages."]
 pub type rte_mp_t = ::std::option::Option<
     unsafe extern "C" fn(msg: *const rte_mp_msg, peer: *const ::std::os::raw::c_void)
         -> ::std::os::raw::c_int,
 >;
-/// Asynchronous reply function typedef used by other components.
-///
-/// As we create socket channel for primary/secondary communication, use
-/// this function typedef to register action for coming responses to asynchronous
-/// requests.
+#[doc = " Asynchronous reply function typedef used by other components."]
+#[doc = ""]
+#[doc = " As we create socket channel for primary/secondary communication, use"]
+#[doc = " this function typedef to register action for coming responses to asynchronous"]
+#[doc = " requests."]
 pub type rte_mp_async_reply_t = ::std::option::Option<
     unsafe extern "C" fn(request: *const rte_mp_msg, reply: *const rte_mp_reply)
         -> ::std::os::raw::c_int,
 >;
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// Register an action function for primary/secondary communication.
-    ///
-    /// Call this function to register an action, if the calling component wants
-    /// to response the messages from the corresponding component in its primary
-    /// process or secondary processes.
-    ///
-    /// @param name
-    ///   The name argument plays as the nonredundant key to find the action.
-    ///
-    /// @param action
-    ///   The action argument is the function pointer to the action function.
-    ///
-    /// @return
-    ///  - 0 on success.
-    ///  - (<0) on failure.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Register an action function for primary/secondary communication."]
+    #[doc = ""]
+    #[doc = " Call this function to register an action, if the calling component wants"]
+    #[doc = " to response the messages from the corresponding component in its primary"]
+    #[doc = " process or secondary processes."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   The name argument plays as the nonredundant key to find the action."]
+    #[doc = ""]
+    #[doc = " @param action"]
+    #[doc = "   The action argument is the function pointer to the action function."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - 0 on success."]
+    #[doc = "  - (<0) on failure."]
     pub fn rte_mp_action_register(
         name: *const ::std::os::raw::c_char,
         action: rte_mp_t,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// Unregister an action function for primary/secondary communication.
-    ///
-    /// Call this function to unregister an action  if the calling component does
-    /// not want to response the messages from the corresponding component in its
-    /// primary process or secondary processes.
-    ///
-    /// @param name
-    ///   The name argument plays as the nonredundant key to find the action.
-    ///
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Unregister an action function for primary/secondary communication."]
+    #[doc = ""]
+    #[doc = " Call this function to unregister an action  if the calling component does"]
+    #[doc = " not want to response the messages from the corresponding component in its"]
+    #[doc = " primary process or secondary processes."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   The name argument plays as the nonredundant key to find the action."]
+    #[doc = ""]
     pub fn rte_mp_action_unregister(name: *const ::std::os::raw::c_char);
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// Send a message to the peer process.
-    ///
-    /// This function will send a message which will be responsed by the action
-    /// identified by name in the peer process.
-    ///
-    /// @param msg
-    ///   The msg argument contains the customized message.
-    ///
-    /// @return
-    ///  - On success, return 0.
-    ///  - On failure, return -1, and the reason will be stored in rte_errno.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Send a message to the peer process."]
+    #[doc = ""]
+    #[doc = " This function will send a message which will be responsed by the action"]
+    #[doc = " identified by name in the peer process."]
+    #[doc = ""]
+    #[doc = " @param msg"]
+    #[doc = "   The msg argument contains the customized message."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - On success, return 0."]
+    #[doc = "  - On failure, return -1, and the reason will be stored in rte_errno."]
     pub fn rte_mp_sendmsg(msg: *mut rte_mp_msg) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// Send a request to the peer process and expect a reply.
-    ///
-    /// This function sends a request message to the peer process, and will
-    /// block until receiving reply message from the peer process.
-    ///
-    /// @note The caller is responsible to free reply->replies.
-    ///
-    /// @param req
-    ///   The req argument contains the customized request message.
-    ///
-    /// @param reply
-    ///   The reply argument will be for storing all the replied messages;
-    ///   the caller is responsible for free reply->msgs.
-    ///
-    /// @param ts
-    ///   The ts argument specifies how long we can wait for the peer(s) to reply.
-    ///
-    /// @return
-    ///  - On success, return 0.
-    ///  - On failure, return -1, and the reason will be stored in rte_errno.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Send a request to the peer process and expect a reply."]
+    #[doc = ""]
+    #[doc = " This function sends a request message to the peer process, and will"]
+    #[doc = " block until receiving reply message from the peer process."]
+    #[doc = ""]
+    #[doc = " @note The caller is responsible to free reply->replies."]
+    #[doc = ""]
+    #[doc = " @param req"]
+    #[doc = "   The req argument contains the customized request message."]
+    #[doc = ""]
+    #[doc = " @param reply"]
+    #[doc = "   The reply argument will be for storing all the replied messages;"]
+    #[doc = "   the caller is responsible for free reply->msgs."]
+    #[doc = ""]
+    #[doc = " @param ts"]
+    #[doc = "   The ts argument specifies how long we can wait for the peer(s) to reply."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - On success, return 0."]
+    #[doc = "  - On failure, return -1, and the reason will be stored in rte_errno."]
     pub fn rte_mp_request_sync(
         req: *mut rte_mp_msg,
         reply: *mut rte_mp_reply,
@@ -11764,26 +11860,26 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// Send a request to the peer process and expect a reply in a separate callback.
-    ///
-    /// This function sends a request message to the peer process, and will not
-    /// block. Instead, reply will be received in a separate callback.
-    ///
-    /// @param req
-    ///   The req argument contains the customized request message.
-    ///
-    /// @param ts
-    ///   The ts argument specifies how long we can wait for the peer(s) to reply.
-    ///
-    /// @param clb
-    ///   The callback to trigger when all responses for this request have arrived.
-    ///
-    /// @return
-    ///  - On success, return 0.
-    ///  - On failure, return -1, and the reason will be stored in rte_errno.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Send a request to the peer process and expect a reply in a separate callback."]
+    #[doc = ""]
+    #[doc = " This function sends a request message to the peer process, and will not"]
+    #[doc = " block. Instead, reply will be received in a separate callback."]
+    #[doc = ""]
+    #[doc = " @param req"]
+    #[doc = "   The req argument contains the customized request message."]
+    #[doc = ""]
+    #[doc = " @param ts"]
+    #[doc = "   The ts argument specifies how long we can wait for the peer(s) to reply."]
+    #[doc = ""]
+    #[doc = " @param clb"]
+    #[doc = "   The callback to trigger when all responses for this request have arrived."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - On success, return 0."]
+    #[doc = "  - On failure, return -1, and the reason will be stored in rte_errno."]
     pub fn rte_mp_request_async(
         req: *mut rte_mp_msg,
         ts: *const timespec,
@@ -11791,156 +11887,156 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// Send a reply to the peer process.
-    ///
-    /// This function will send a reply message in response to a request message
-    /// received previously.
-    ///
-    /// @param msg
-    ///   The msg argument contains the customized message.
-    ///
-    /// @param peer
-    ///   The peer argument is the pointer to the peer socket path.
-    ///
-    /// @return
-    ///  - On success, return 0.
-    ///  - On failure, return -1, and the reason will be stored in rte_errno.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Send a reply to the peer process."]
+    #[doc = ""]
+    #[doc = " This function will send a reply message in response to a request message"]
+    #[doc = " received previously."]
+    #[doc = ""]
+    #[doc = " @param msg"]
+    #[doc = "   The msg argument contains the customized message."]
+    #[doc = ""]
+    #[doc = " @param peer"]
+    #[doc = "   The peer argument is the pointer to the peer socket path."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - On success, return 0."]
+    #[doc = "  - On failure, return -1, and the reason will be stored in rte_errno."]
     pub fn rte_mp_reply(
         msg: *mut rte_mp_msg,
         peer: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Register all mp action callbacks for hotplug.
-    ///
-    /// @return
-    ///   0 on success, negative on error.
+    #[doc = " Register all mp action callbacks for hotplug."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   0 on success, negative on error."]
     pub fn rte_mp_dev_hotplug_init() -> ::std::os::raw::c_int;
 }
-/// Usage function typedef used by the application usage function.
-///
-/// Use this function typedef to define and call rte_set_application_usage_hook()
-/// routine.
+#[doc = " Usage function typedef used by the application usage function."]
+#[doc = ""]
+#[doc = " Use this function typedef to define and call rte_set_application_usage_hook()"]
+#[doc = " routine."]
 pub type rte_usage_hook_t =
     ::std::option::Option<unsafe extern "C" fn(prgname: *const ::std::os::raw::c_char)>;
 extern "C" {
-    /// Add application usage routine callout from the eal_usage() routine.
-    ///
-    /// This function allows the application to include its usage message
-    /// in the EAL system usage message. The routine rte_set_application_usage_hook()
-    /// needs to be called before the rte_eal_init() routine in the application.
-    ///
-    /// This routine is optional for the application and will behave as if the set
-    /// routine was never called as the default behavior.
-    ///
-    /// @param usage_func
-    ///   The func argument is a function pointer to the application usage routine.
-    ///   Called function is defined using rte_usage_hook_t typedef, which is of
-    ///   the form void rte_usage_func(const char * prgname).
-    ///
-    ///   Calling this routine with a NULL value will reset the usage hook routine and
-    ///   return the current value, which could be NULL.
-    /// @return
-    ///   - Returns the current value of the rte_application_usage pointer to allow
-    ///     the caller to daisy chain the usage routines if needing more then one.
+    #[doc = " Add application usage routine callout from the eal_usage() routine."]
+    #[doc = ""]
+    #[doc = " This function allows the application to include its usage message"]
+    #[doc = " in the EAL system usage message. The routine rte_set_application_usage_hook()"]
+    #[doc = " needs to be called before the rte_eal_init() routine in the application."]
+    #[doc = ""]
+    #[doc = " This routine is optional for the application and will behave as if the set"]
+    #[doc = " routine was never called as the default behavior."]
+    #[doc = ""]
+    #[doc = " @param usage_func"]
+    #[doc = "   The func argument is a function pointer to the application usage routine."]
+    #[doc = "   Called function is defined using rte_usage_hook_t typedef, which is of"]
+    #[doc = "   the form void rte_usage_func(const char * prgname)."]
+    #[doc = ""]
+    #[doc = "   Calling this routine with a NULL value will reset the usage hook routine and"]
+    #[doc = "   return the current value, which could be NULL."]
+    #[doc = " @return"]
+    #[doc = "   - Returns the current value of the rte_application_usage pointer to allow"]
+    #[doc = "     the caller to daisy chain the usage routines if needing more then one."]
     pub fn rte_set_application_usage_hook(usage_func: rte_usage_hook_t) -> rte_usage_hook_t;
 }
 extern "C" {
-    /// Whether EAL is using huge pages (disabled by --no-huge option).
-    /// The no-huge mode cannot be used with UIO poll-mode drivers like igb/ixgbe.
-    /// It is useful for NIC drivers (e.g. librte_pmd_mlx4, librte_pmd_vmxnet3) or
-    /// crypto drivers (e.g. librte_crypto_nitrox) provided by third-parties such
-    /// as 6WIND.
-    ///
-    /// @return
-    ///   Nonzero if hugepages are enabled.
+    #[doc = " Whether EAL is using huge pages (disabled by --no-huge option)."]
+    #[doc = " The no-huge mode cannot be used with UIO poll-mode drivers like igb/ixgbe."]
+    #[doc = " It is useful for NIC drivers (e.g. librte_pmd_mlx4, librte_pmd_vmxnet3) or"]
+    #[doc = " crypto drivers (e.g. librte_crypto_nitrox) provided by third-parties such"]
+    #[doc = " as 6WIND."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   Nonzero if hugepages are enabled."]
     pub fn rte_eal_has_hugepages() -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Whether EAL is using PCI bus.
-    /// Disabled by --no-pci option.
-    ///
-    /// @return
-    ///   Nonzero if the PCI bus is enabled.
+    #[doc = " Whether EAL is using PCI bus."]
+    #[doc = " Disabled by --no-pci option."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   Nonzero if the PCI bus is enabled."]
     pub fn rte_eal_has_pci() -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Whether the EAL was asked to create UIO device.
-    ///
-    /// @return
-    ///   Nonzero if true.
+    #[doc = " Whether the EAL was asked to create UIO device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   Nonzero if true."]
     pub fn rte_eal_create_uio_dev() -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// The user-configured vfio interrupt mode.
-    ///
-    /// @return
-    ///   Interrupt mode configured with the command line,
-    ///   RTE_INTR_MODE_NONE by default.
+    #[doc = " The user-configured vfio interrupt mode."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   Interrupt mode configured with the command line,"]
+    #[doc = "   RTE_INTR_MODE_NONE by default."]
     pub fn rte_eal_vfio_intr_mode() -> rte_intr_mode::Type;
 }
 extern "C" {
-    /// A wrap API for syscall gettid.
-    ///
-    /// @return
-    ///   On success, returns the thread ID of calling process.
-    ///   It is always successful.
+    #[doc = " A wrap API for syscall gettid."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   On success, returns the thread ID of calling process."]
+    #[doc = "   It is always successful."]
     pub fn rte_sys_gettid() -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get the iova mode
-    ///
-    /// @return
-    ///   enum rte_iova_mode value.
+    #[doc = " Get the iova mode"]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   enum rte_iova_mode value."]
     pub fn rte_eal_iova_mode() -> rte_iova_mode::Type;
 }
 extern "C" {
-    /// Get user provided pool ops name for mbuf
-    ///
-    /// @return
-    ///   returns user provided pool ops name.
+    #[doc = " Get user provided pool ops name for mbuf"]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   returns user provided pool ops name."]
     pub fn rte_eal_mbuf_user_pool_ops() -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Get the runtime directory of DPDK
-    ///
-    /// @return
-    ///  The runtime directory path of DPDK
+    #[doc = " Get the runtime directory of DPDK"]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  The runtime directory path of DPDK"]
     pub fn rte_eal_get_runtime_dir() -> *const ::std::os::raw::c_char;
 }
 pub type rte_cpuset_t = cpu_set_t;
-/// Structure storing internal configuration (per-lcore)
+#[doc = " Structure storing internal configuration (per-lcore)"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct lcore_config {
-    ///< true if lcore was detected
+    #[doc = "< true if lcore was detected"]
     pub detected: ::std::os::raw::c_uint,
-    ///< pthread identifier
+    #[doc = "< pthread identifier"]
     pub thread_id: pthread_t,
-    ///< communication pipe with master
+    #[doc = "< communication pipe with master"]
     pub pipe_master2slave: [::std::os::raw::c_int; 2usize],
-    ///< communication pipe with master
+    #[doc = "< communication pipe with master"]
     pub pipe_slave2master: [::std::os::raw::c_int; 2usize],
-    ///< function to call
+    #[doc = "< function to call"]
     pub f: lcore_function_t,
-    ///< argument of function
+    #[doc = "< argument of function"]
     pub arg: *mut ::std::os::raw::c_void,
-    ///< return value of function
+    #[doc = "< return value of function"]
     pub ret: ::std::os::raw::c_int,
-    ///< lcore state
+    #[doc = "< lcore state"]
     pub state: rte_lcore_state_t::Type,
-    ///< physical socket id for this lcore
+    #[doc = "< physical socket id for this lcore"]
     pub socket_id: ::std::os::raw::c_uint,
-    ///< core number on socket for this lcore
+    #[doc = "< core number on socket for this lcore"]
     pub core_id: ::std::os::raw::c_uint,
-    ///< relative index, starting from 0
+    #[doc = "< relative index, starting from 0"]
     pub core_index: ::std::os::raw::c_int,
-    ///< cpu set which the lcore affinity to
+    #[doc = "< cpu set which the lcore affinity to"]
     pub cpuset: rte_cpuset_t,
-    ///< role of core eg: OFF, RTE, SERVICE
+    #[doc = "< role of core eg: OFF, RTE, SERVICE"]
     pub core_role: u8,
 }
 #[test]
@@ -12104,93 +12200,93 @@ extern "C" {
     pub static mut per_lcore__cpuset: cpu_set_t;
 }
 extern "C" {
-    /// Return the ID of the physical socket of the logical core we are
-    /// running on.
-    /// @return
-    ///   the ID of current lcoreid's physical socket
+    #[doc = " Return the ID of the physical socket of the logical core we are"]
+    #[doc = " running on."]
+    #[doc = " @return"]
+    #[doc = "   the ID of current lcoreid\'s physical socket"]
     pub fn rte_socket_id() -> ::std::os::raw::c_uint;
 }
 extern "C" {
-    /// Return number of physical sockets detected on the system.
-    ///
-    /// Note that number of nodes may not be correspondent to their physical id's:
-    /// for example, a system may report two socket id's, but the actual socket id's
-    /// may be 0 and 8.
-    ///
-    /// @return
-    ///   the number of physical sockets as recognized by EAL
+    #[doc = " Return number of physical sockets detected on the system."]
+    #[doc = ""]
+    #[doc = " Note that number of nodes may not be correspondent to their physical id\'s:"]
+    #[doc = " for example, a system may report two socket id\'s, but the actual socket id\'s"]
+    #[doc = " may be 0 and 8."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   the number of physical sockets as recognized by EAL"]
     pub fn rte_socket_count() -> ::std::os::raw::c_uint;
 }
 extern "C" {
-    /// Return socket id with a particular index.
-    ///
-    /// This will return socket id at a particular position in list of all detected
-    /// physical socket id's. For example, on a machine with sockets [0, 8], passing
-    /// 1 as a parameter will return 8.
-    ///
-    /// @param idx
-    ///   index of physical socket id to return
-    ///
-    /// @return
-    ///   - physical socket id as recognized by EAL
-    ///   - -1 on error, with errno set to EINVAL
+    #[doc = " Return socket id with a particular index."]
+    #[doc = ""]
+    #[doc = " This will return socket id at a particular position in list of all detected"]
+    #[doc = " physical socket id\'s. For example, on a machine with sockets [0, 8], passing"]
+    #[doc = " 1 as a parameter will return 8."]
+    #[doc = ""]
+    #[doc = " @param idx"]
+    #[doc = "   index of physical socket id to return"]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - physical socket id as recognized by EAL"]
+    #[doc = "   - -1 on error, with errno set to EINVAL"]
     pub fn rte_socket_id_by_idx(idx: ::std::os::raw::c_uint) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set core affinity of the current thread.
-    /// Support both EAL and non-EAL thread and update TLS.
-    ///
-    /// @param cpusetp
-    ///   Point to cpu_set_t for setting current thread affinity.
-    /// @return
-    ///   On success, return 0; otherwise return -1;
+    #[doc = " Set core affinity of the current thread."]
+    #[doc = " Support both EAL and non-EAL thread and update TLS."]
+    #[doc = ""]
+    #[doc = " @param cpusetp"]
+    #[doc = "   Point to cpu_set_t for setting current thread affinity."]
+    #[doc = " @return"]
+    #[doc = "   On success, return 0; otherwise return -1;"]
     pub fn rte_thread_set_affinity(cpusetp: *mut rte_cpuset_t) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get core affinity of the current thread.
-    ///
-    /// @param cpusetp
-    ///   Point to cpu_set_t for getting current thread cpu affinity.
-    ///   It presumes input is not NULL, otherwise it causes panic.
-    ///
+    #[doc = " Get core affinity of the current thread."]
+    #[doc = ""]
+    #[doc = " @param cpusetp"]
+    #[doc = "   Point to cpu_set_t for getting current thread cpu affinity."]
+    #[doc = "   It presumes input is not NULL, otherwise it causes panic."]
+    #[doc = ""]
     pub fn rte_thread_get_affinity(cpusetp: *mut rte_cpuset_t);
 }
 extern "C" {
-    /// Set thread names.
-    ///
-    /// @note It fails with glibc < 2.12.
-    ///
-    /// @param id
-    ///   Thread id.
-    /// @param name
-    ///   Thread name to set.
-    /// @return
-    ///   On success, return 0; otherwise return a negative value.
+    #[doc = " Set thread names."]
+    #[doc = ""]
+    #[doc = " @note It fails with glibc < 2.12."]
+    #[doc = ""]
+    #[doc = " @param id"]
+    #[doc = "   Thread id."]
+    #[doc = " @param name"]
+    #[doc = "   Thread name to set."]
+    #[doc = " @return"]
+    #[doc = "   On success, return 0; otherwise return a negative value."]
     pub fn rte_thread_setname(
         id: pthread_t,
         name: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Create a control thread.
-    ///
-    /// Wrapper to pthread_create(), pthread_setname_np() and
-    /// pthread_setaffinity_np(). The dataplane and service lcores are
-    /// excluded from the affinity of the new thread.
-    ///
-    /// @param thread
-    ///   Filled with the thread id of the new created thread.
-    /// @param name
-    ///   The name of the control thread (max 16 characters including '\0').
-    /// @param attr
-    ///   Attributes for the new thread.
-    /// @param start_routine
-    ///   Function to be executed by the new thread.
-    /// @param arg
-    ///   Argument passed to start_routine.
-    /// @return
-    ///   On success, returns 0; on error, it returns a negative value
-    ///   corresponding to the error number.
+    #[doc = " Create a control thread."]
+    #[doc = ""]
+    #[doc = " Wrapper to pthread_create(), pthread_setname_np() and"]
+    #[doc = " pthread_setaffinity_np(). The dataplane and service lcores are"]
+    #[doc = " excluded from the affinity of the new thread."]
+    #[doc = ""]
+    #[doc = " @param thread"]
+    #[doc = "   Filled with the thread id of the new created thread."]
+    #[doc = " @param name"]
+    #[doc = "   The name of the control thread (max 16 characters including \'\\0\')."]
+    #[doc = " @param attr"]
+    #[doc = "   Attributes for the new thread."]
+    #[doc = " @param start_routine"]
+    #[doc = "   Function to be executed by the new thread."]
+    #[doc = " @param arg"]
+    #[doc = "   Argument passed to start_routine."]
+    #[doc = " @return"]
+    #[doc = "   On success, returns 0; on error, it returns a negative value"]
+    #[doc = "   corresponding to the error number."]
     pub fn rte_ctrl_thread_create(
         thread: *mut pthread_t,
         name: *const ::std::os::raw::c_char,
@@ -12202,25 +12298,25 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Test if the core supplied has a specific role
-    ///
-    /// @param lcore_id
-    ///   The identifier of the lcore, which MUST be between 0 and
-    ///   RTE_MAX_LCORE-1.
-    /// @param role
-    ///   The role to be checked against.
-    /// @return
-    ///   Boolean value: positive if test is true; otherwise returns 0.
+    #[doc = " Test if the core supplied has a specific role"]
+    #[doc = ""]
+    #[doc = " @param lcore_id"]
+    #[doc = "   The identifier of the lcore, which MUST be between 0 and"]
+    #[doc = "   RTE_MAX_LCORE-1."]
+    #[doc = " @param role"]
+    #[doc = "   The role to be checked against."]
+    #[doc = " @return"]
+    #[doc = "   Boolean value: positive if test is true; otherwise returns 0."]
     pub fn rte_lcore_has_role(
         lcore_id: ::std::os::raw::c_uint,
         role: rte_lcore_role_t::Type,
     ) -> ::std::os::raw::c_int;
 }
-/// The rte_spinlock_t type.
+#[doc = " The rte_spinlock_t type."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_spinlock_t {
-    ///< lock status 0 = unlocked, 1 = locked
+    #[doc = "< lock status 0 = unlocked, 1 = locked"]
     pub locked: ::std::os::raw::c_int,
 }
 #[test]
@@ -12246,15 +12342,15 @@ fn bindgen_test_layout_rte_spinlock_t() {
         )
     );
 }
-/// The rte_spinlock_recursive_t type.
+#[doc = " The rte_spinlock_recursive_t type."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_spinlock_recursive_t {
-    ///< the actual spinlock
+    #[doc = "< the actual spinlock"]
     pub sl: rte_spinlock_t,
-    ///< core id using lock, -1 for unused
+    #[doc = "< core id using lock, -1 for unused"]
     pub user: ::std::os::raw::c_int,
-    ///< count of time this lock has been called
+    #[doc = "< count of time this lock has been called"]
     pub count: ::std::os::raw::c_int,
 }
 #[test]
@@ -12301,232 +12397,232 @@ fn bindgen_test_layout_rte_spinlock_recursive_t() {
     );
 }
 pub mod rte_cpu_flag_t {
-    /// Enumeration of all CPU features supported
+    #[doc = " Enumeration of all CPU features supported"]
     pub type Type = u32;
-    ///< SSE3
+    #[doc = "< SSE3"]
     pub const RTE_CPUFLAG_SSE3: Type = 0;
-    ///< PCLMULQDQ
+    #[doc = "< PCLMULQDQ"]
     pub const RTE_CPUFLAG_PCLMULQDQ: Type = 1;
-    ///< DTES64
+    #[doc = "< DTES64"]
     pub const RTE_CPUFLAG_DTES64: Type = 2;
-    ///< MONITOR
+    #[doc = "< MONITOR"]
     pub const RTE_CPUFLAG_MONITOR: Type = 3;
-    ///< DS_CPL
+    #[doc = "< DS_CPL"]
     pub const RTE_CPUFLAG_DS_CPL: Type = 4;
-    ///< VMX
+    #[doc = "< VMX"]
     pub const RTE_CPUFLAG_VMX: Type = 5;
-    ///< SMX
+    #[doc = "< SMX"]
     pub const RTE_CPUFLAG_SMX: Type = 6;
-    ///< EIST
+    #[doc = "< EIST"]
     pub const RTE_CPUFLAG_EIST: Type = 7;
-    ///< TM2
+    #[doc = "< TM2"]
     pub const RTE_CPUFLAG_TM2: Type = 8;
-    ///< SSSE3
+    #[doc = "< SSSE3"]
     pub const RTE_CPUFLAG_SSSE3: Type = 9;
-    ///< CNXT_ID
+    #[doc = "< CNXT_ID"]
     pub const RTE_CPUFLAG_CNXT_ID: Type = 10;
-    ///< FMA
+    #[doc = "< FMA"]
     pub const RTE_CPUFLAG_FMA: Type = 11;
-    ///< CMPXCHG16B
+    #[doc = "< CMPXCHG16B"]
     pub const RTE_CPUFLAG_CMPXCHG16B: Type = 12;
-    ///< XTPR
+    #[doc = "< XTPR"]
     pub const RTE_CPUFLAG_XTPR: Type = 13;
-    ///< PDCM
+    #[doc = "< PDCM"]
     pub const RTE_CPUFLAG_PDCM: Type = 14;
-    ///< PCID
+    #[doc = "< PCID"]
     pub const RTE_CPUFLAG_PCID: Type = 15;
-    ///< DCA
+    #[doc = "< DCA"]
     pub const RTE_CPUFLAG_DCA: Type = 16;
-    ///< SSE4_1
+    #[doc = "< SSE4_1"]
     pub const RTE_CPUFLAG_SSE4_1: Type = 17;
-    ///< SSE4_2
+    #[doc = "< SSE4_2"]
     pub const RTE_CPUFLAG_SSE4_2: Type = 18;
-    ///< X2APIC
+    #[doc = "< X2APIC"]
     pub const RTE_CPUFLAG_X2APIC: Type = 19;
-    ///< MOVBE
+    #[doc = "< MOVBE"]
     pub const RTE_CPUFLAG_MOVBE: Type = 20;
-    ///< POPCNT
+    #[doc = "< POPCNT"]
     pub const RTE_CPUFLAG_POPCNT: Type = 21;
-    ///< TSC_DEADLINE
+    #[doc = "< TSC_DEADLINE"]
     pub const RTE_CPUFLAG_TSC_DEADLINE: Type = 22;
-    ///< AES
+    #[doc = "< AES"]
     pub const RTE_CPUFLAG_AES: Type = 23;
-    ///< XSAVE
+    #[doc = "< XSAVE"]
     pub const RTE_CPUFLAG_XSAVE: Type = 24;
-    ///< OSXSAVE
+    #[doc = "< OSXSAVE"]
     pub const RTE_CPUFLAG_OSXSAVE: Type = 25;
-    ///< AVX
+    #[doc = "< AVX"]
     pub const RTE_CPUFLAG_AVX: Type = 26;
-    ///< F16C
+    #[doc = "< F16C"]
     pub const RTE_CPUFLAG_F16C: Type = 27;
-    ///< RDRAND
+    #[doc = "< RDRAND"]
     pub const RTE_CPUFLAG_RDRAND: Type = 28;
-    ///< Running in a VM
+    #[doc = "< Running in a VM"]
     pub const RTE_CPUFLAG_HYPERVISOR: Type = 29;
-    ///< FPU
+    #[doc = "< FPU"]
     pub const RTE_CPUFLAG_FPU: Type = 30;
-    ///< VME
+    #[doc = "< VME"]
     pub const RTE_CPUFLAG_VME: Type = 31;
-    ///< DE
+    #[doc = "< DE"]
     pub const RTE_CPUFLAG_DE: Type = 32;
-    ///< PSE
+    #[doc = "< PSE"]
     pub const RTE_CPUFLAG_PSE: Type = 33;
-    ///< TSC
+    #[doc = "< TSC"]
     pub const RTE_CPUFLAG_TSC: Type = 34;
-    ///< MSR
+    #[doc = "< MSR"]
     pub const RTE_CPUFLAG_MSR: Type = 35;
-    ///< PAE
+    #[doc = "< PAE"]
     pub const RTE_CPUFLAG_PAE: Type = 36;
-    ///< MCE
+    #[doc = "< MCE"]
     pub const RTE_CPUFLAG_MCE: Type = 37;
-    ///< CX8
+    #[doc = "< CX8"]
     pub const RTE_CPUFLAG_CX8: Type = 38;
-    ///< APIC
+    #[doc = "< APIC"]
     pub const RTE_CPUFLAG_APIC: Type = 39;
-    ///< SEP
+    #[doc = "< SEP"]
     pub const RTE_CPUFLAG_SEP: Type = 40;
-    ///< MTRR
+    #[doc = "< MTRR"]
     pub const RTE_CPUFLAG_MTRR: Type = 41;
-    ///< PGE
+    #[doc = "< PGE"]
     pub const RTE_CPUFLAG_PGE: Type = 42;
-    ///< MCA
+    #[doc = "< MCA"]
     pub const RTE_CPUFLAG_MCA: Type = 43;
-    ///< CMOV
+    #[doc = "< CMOV"]
     pub const RTE_CPUFLAG_CMOV: Type = 44;
-    ///< PAT
+    #[doc = "< PAT"]
     pub const RTE_CPUFLAG_PAT: Type = 45;
-    ///< PSE36
+    #[doc = "< PSE36"]
     pub const RTE_CPUFLAG_PSE36: Type = 46;
-    ///< PSN
+    #[doc = "< PSN"]
     pub const RTE_CPUFLAG_PSN: Type = 47;
-    ///< CLFSH
+    #[doc = "< CLFSH"]
     pub const RTE_CPUFLAG_CLFSH: Type = 48;
-    ///< DS
+    #[doc = "< DS"]
     pub const RTE_CPUFLAG_DS: Type = 49;
-    ///< ACPI
+    #[doc = "< ACPI"]
     pub const RTE_CPUFLAG_ACPI: Type = 50;
-    ///< MMX
+    #[doc = "< MMX"]
     pub const RTE_CPUFLAG_MMX: Type = 51;
-    ///< FXSR
+    #[doc = "< FXSR"]
     pub const RTE_CPUFLAG_FXSR: Type = 52;
-    ///< SSE
+    #[doc = "< SSE"]
     pub const RTE_CPUFLAG_SSE: Type = 53;
-    ///< SSE2
+    #[doc = "< SSE2"]
     pub const RTE_CPUFLAG_SSE2: Type = 54;
-    ///< SS
+    #[doc = "< SS"]
     pub const RTE_CPUFLAG_SS: Type = 55;
-    ///< HTT
+    #[doc = "< HTT"]
     pub const RTE_CPUFLAG_HTT: Type = 56;
-    ///< TM
+    #[doc = "< TM"]
     pub const RTE_CPUFLAG_TM: Type = 57;
-    ///< PBE
+    #[doc = "< PBE"]
     pub const RTE_CPUFLAG_PBE: Type = 58;
-    ///< DIGTEMP
+    #[doc = "< DIGTEMP"]
     pub const RTE_CPUFLAG_DIGTEMP: Type = 59;
-    ///< TRBOBST
+    #[doc = "< TRBOBST"]
     pub const RTE_CPUFLAG_TRBOBST: Type = 60;
-    ///< ARAT
+    #[doc = "< ARAT"]
     pub const RTE_CPUFLAG_ARAT: Type = 61;
-    ///< PLN
+    #[doc = "< PLN"]
     pub const RTE_CPUFLAG_PLN: Type = 62;
-    ///< ECMD
+    #[doc = "< ECMD"]
     pub const RTE_CPUFLAG_ECMD: Type = 63;
-    ///< PTM
+    #[doc = "< PTM"]
     pub const RTE_CPUFLAG_PTM: Type = 64;
-    ///< MPERF_APERF_MSR
+    #[doc = "< MPERF_APERF_MSR"]
     pub const RTE_CPUFLAG_MPERF_APERF_MSR: Type = 65;
-    ///< ACNT2
+    #[doc = "< ACNT2"]
     pub const RTE_CPUFLAG_ACNT2: Type = 66;
-    ///< ENERGY_EFF
+    #[doc = "< ENERGY_EFF"]
     pub const RTE_CPUFLAG_ENERGY_EFF: Type = 67;
-    ///< FSGSBASE
+    #[doc = "< FSGSBASE"]
     pub const RTE_CPUFLAG_FSGSBASE: Type = 68;
-    ///< BMI1
+    #[doc = "< BMI1"]
     pub const RTE_CPUFLAG_BMI1: Type = 69;
-    ///< Hardware Lock elision
+    #[doc = "< Hardware Lock elision"]
     pub const RTE_CPUFLAG_HLE: Type = 70;
-    ///< AVX2
+    #[doc = "< AVX2"]
     pub const RTE_CPUFLAG_AVX2: Type = 71;
-    ///< SMEP
+    #[doc = "< SMEP"]
     pub const RTE_CPUFLAG_SMEP: Type = 72;
-    ///< BMI2
+    #[doc = "< BMI2"]
     pub const RTE_CPUFLAG_BMI2: Type = 73;
-    ///< ERMS
+    #[doc = "< ERMS"]
     pub const RTE_CPUFLAG_ERMS: Type = 74;
-    ///< INVPCID
+    #[doc = "< INVPCID"]
     pub const RTE_CPUFLAG_INVPCID: Type = 75;
-    ///< Transactional memory
+    #[doc = "< Transactional memory"]
     pub const RTE_CPUFLAG_RTM: Type = 76;
-    ///< AVX512F
+    #[doc = "< AVX512F"]
     pub const RTE_CPUFLAG_AVX512F: Type = 77;
-    ///< LAHF_SAHF
+    #[doc = "< LAHF_SAHF"]
     pub const RTE_CPUFLAG_LAHF_SAHF: Type = 78;
-    ///< LZCNT
+    #[doc = "< LZCNT"]
     pub const RTE_CPUFLAG_LZCNT: Type = 79;
-    ///< SYSCALL
+    #[doc = "< SYSCALL"]
     pub const RTE_CPUFLAG_SYSCALL: Type = 80;
-    ///< XD
+    #[doc = "< XD"]
     pub const RTE_CPUFLAG_XD: Type = 81;
-    ///< 1GB_PG
+    #[doc = "< 1GB_PG"]
     pub const RTE_CPUFLAG_1GB_PG: Type = 82;
-    ///< RDTSCP
+    #[doc = "< RDTSCP"]
     pub const RTE_CPUFLAG_RDTSCP: Type = 83;
-    ///< EM64T
+    #[doc = "< EM64T"]
     pub const RTE_CPUFLAG_EM64T: Type = 84;
-    ///< INVTSC
+    #[doc = "< INVTSC"]
     pub const RTE_CPUFLAG_INVTSC: Type = 85;
-    ///< This should always be the last!
+    #[doc = "< This should always be the last!"]
     pub const RTE_CPUFLAG_NUMFLAGS: Type = 86;
 }
 extern "C" {
-    /// Get name of CPU flag
-    ///
-    /// @param feature
-    ///     CPU flag ID
-    /// @return
-    ///     flag name
-    ///     NULL if flag ID is invalid
+    #[doc = " Get name of CPU flag"]
+    #[doc = ""]
+    #[doc = " @param feature"]
+    #[doc = "     CPU flag ID"]
+    #[doc = " @return"]
+    #[doc = "     flag name"]
+    #[doc = "     NULL if flag ID is invalid"]
     pub fn rte_cpu_get_flag_name(feature: rte_cpu_flag_t::Type) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Function for checking a CPU flag availability
-    ///
-    /// @param feature
-    ///     CPU flag to query CPU for
-    /// @return
-    ///     1 if flag is available
-    ///     0 if flag is not available
-    ///     -ENOENT if flag is invalid
+    #[doc = " Function for checking a CPU flag availability"]
+    #[doc = ""]
+    #[doc = " @param feature"]
+    #[doc = "     CPU flag to query CPU for"]
+    #[doc = " @return"]
+    #[doc = "     1 if flag is available"]
+    #[doc = "     0 if flag is not available"]
+    #[doc = "     -ENOENT if flag is invalid"]
     pub fn rte_cpu_get_flag_enabled(feature: rte_cpu_flag_t::Type) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// This function checks that the currently used CPU supports the CPU features
-    /// that were specified at compile time. It is called automatically within the
-    /// EAL, so does not need to be used by applications.
+    #[doc = " This function checks that the currently used CPU supports the CPU features"]
+    #[doc = " that were specified at compile time. It is called automatically within the"]
+    #[doc = " EAL, so does not need to be used by applications."]
     pub fn rte_cpu_check_supported();
 }
 extern "C" {
-    /// This function checks that the currently used CPU supports the CPU features
-    /// that were specified at compile time. It is called automatically within the
-    /// EAL, so does not need to be used by applications.  This version returns a
-    /// result so that decisions may be made (for instance, graceful shutdowns).
+    #[doc = " This function checks that the currently used CPU supports the CPU features"]
+    #[doc = " that were specified at compile time. It is called automatically within the"]
+    #[doc = " EAL, so does not need to be used by applications.  This version returns a"]
+    #[doc = " result so that decisions may be made (for instance, graceful shutdowns)."]
     pub fn rte_cpu_is_supported() -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// This function attempts to retrieve a value from the auxiliary vector.
-    /// If it is unsuccessful, the result will be 0, and errno will be set.
-    ///
-    /// @return A value from the auxiliary vector.  When the value is 0, check
-    /// errno to determine if an error occurred.
+    #[doc = " This function attempts to retrieve a value from the auxiliary vector."]
+    #[doc = " If it is unsuccessful, the result will be 0, and errno will be set."]
+    #[doc = ""]
+    #[doc = " @return A value from the auxiliary vector.  When the value is 0, check"]
+    #[doc = " errno to determine if an error occurred."]
     pub fn rte_cpu_getauxval(type_: ::std::os::raw::c_ulong) -> ::std::os::raw::c_ulong;
 }
 extern "C" {
-    /// This function retrieves a value from the auxiliary vector, and compares it
-    /// as a string against the value retrieved.
-    ///
-    /// @return The result of calling strcmp() against the value retrieved from
-    /// the auxiliary vector.  When the value is 0 (meaning a match is found),
-    /// check errno to determine if an error occurred.
+    #[doc = " This function retrieves a value from the auxiliary vector, and compares it"]
+    #[doc = " as a string against the value retrieved."]
+    #[doc = ""]
+    #[doc = " @return The result of calling strcmp() against the value retrieved from"]
+    #[doc = " the auxiliary vector.  When the value is 0 (meaning a match is found),"]
+    #[doc = " check errno to determine if an error occurred."]
     pub fn rte_cpu_strcmp_auxval(
         type_: ::std::os::raw::c_ulong,
         str: *const ::std::os::raw::c_char,
@@ -12536,30 +12632,30 @@ extern "C" {
     #[link_name = "\u{1}rte_rtm_supported"]
     pub static mut rte_rtm_supported: u8;
 }
-/// A structure describing a memzone, which is a contiguous portion of
-/// physical memory identified by a name.
+#[doc = " A structure describing a memzone, which is a contiguous portion of"]
+#[doc = " physical memory identified by a name."]
 #[repr(C, packed)]
 #[derive(Copy, Clone)]
 pub struct rte_memzone {
-    ///< Name of the memory zone.
+    #[doc = "< Name of the memory zone."]
     pub name: [::std::os::raw::c_char; 32usize],
     pub __bindgen_anon_1: rte_memzone__bindgen_ty_1,
     pub __bindgen_anon_2: rte_memzone__bindgen_ty_2,
-    ///< Length of the memzone.
+    #[doc = "< Length of the memzone."]
     pub len: usize,
-    ///< The page size of underlying memory
+    #[doc = "< The page size of underlying memory"]
     pub hugepage_sz: u64,
-    ///< NUMA socket ID.
+    #[doc = "< NUMA socket ID."]
     pub socket_id: i32,
-    ///< Characteristics of this memzone.
+    #[doc = "< Characteristics of this memzone."]
     pub flags: u32,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_memzone__bindgen_ty_1 {
-    ///< deprecated - Start physical address.
+    #[doc = "< deprecated - Start physical address."]
     pub phys_addr: phys_addr_t,
-    ///< Start IO address.
+    #[doc = "< Start IO address."]
     pub iova: rte_iova_t,
     _bindgen_union_align: u64,
 }
@@ -12606,9 +12702,9 @@ impl Default for rte_memzone__bindgen_ty_1 {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_memzone__bindgen_ty_2 {
-    ///< Start virtual address.
+    #[doc = "< Start virtual address."]
     pub addr: *mut ::std::os::raw::c_void,
-    ///< Makes sure addr is always 64-bits
+    #[doc = "< Makes sure addr is always 64-bits"]
     pub addr_64: u64,
     _bindgen_union_align: u64,
 }
@@ -12721,62 +12817,62 @@ impl Default for rte_memzone {
     }
 }
 extern "C" {
-    /// Reserve a portion of physical memory.
-    ///
-    /// This function reserves some memory and returns a pointer to a
-    /// correctly filled memzone descriptor. If the allocation cannot be
-    /// done, return NULL.
-    ///
-    /// @note Reserving memzones with len set to 0 will only attempt to allocate
-    ///   memzones from memory that is already available. It will not trigger any
-    ///   new allocations.
-    ///
-    /// @note: When reserving memzones with len set to 0, it is preferable to also
-    ///   set a valid socket_id. Setting socket_id to SOCKET_ID_ANY is supported, but
-    ///   will likely not yield expected results. Specifically, the resulting memzone
-    ///   may not necessarily be the biggest memzone available, but rather biggest
-    ///   memzone available on socket id corresponding to an lcore from which
-    ///   reservation was called.
-    ///
-    /// @param name
-    ///   The name of the memzone. If it already exists, the function will
-    ///   fail and return NULL.
-    /// @param len
-    ///   The size of the memory to be reserved. If it
-    ///   is 0, the biggest contiguous zone will be reserved.
-    /// @param socket_id
-    ///   The socket identifier in the case of
-    ///   NUMA. The value can be SOCKET_ID_ANY if there is no NUMA
-    ///   constraint for the reserved zone.
-    /// @param flags
-    ///   The flags parameter is used to request memzones to be
-    ///   taken from specifically sized hugepages.
-    ///   - RTE_MEMZONE_2MB - Reserved from 2MB pages
-    ///   - RTE_MEMZONE_1GB - Reserved from 1GB pages
-    ///   - RTE_MEMZONE_16MB - Reserved from 16MB pages
-    ///   - RTE_MEMZONE_16GB - Reserved from 16GB pages
-    ///   - RTE_MEMZONE_256KB - Reserved from 256KB pages
-    ///   - RTE_MEMZONE_256MB - Reserved from 256MB pages
-    ///   - RTE_MEMZONE_512MB - Reserved from 512MB pages
-    ///   - RTE_MEMZONE_4GB - Reserved from 4GB pages
-    ///   - RTE_MEMZONE_SIZE_HINT_ONLY - Allow alternative page size to be used if
-    ///                                  the requested page size is unavailable.
-    ///                                  If this flag is not set, the function
-    ///                                  will return error on an unavailable size
-    ///                                  request.
-    ///   - RTE_MEMZONE_IOVA_CONTIG - Ensure reserved memzone is IOVA-contiguous.
-    ///                               This option should be used when allocating
-    ///                               memory intended for hardware rings etc.
-    /// @return
-    ///   A pointer to a correctly-filled read-only memzone descriptor, or NULL
-    ///   on error.
-    ///   On error case, rte_errno will be set appropriately:
-    ///    - E_RTE_NO_CONFIG - function could not get pointer to rte_config structure
-    ///    - E_RTE_SECONDARY - function was called from a secondary process instance
-    ///    - ENOSPC - the maximum number of memzones has already been allocated
-    ///    - EEXIST - a memzone with the same name already exists
-    ///    - ENOMEM - no appropriate memory area found in which to create memzone
-    ///    - EINVAL - invalid parameters
+    #[doc = " Reserve a portion of physical memory."]
+    #[doc = ""]
+    #[doc = " This function reserves some memory and returns a pointer to a"]
+    #[doc = " correctly filled memzone descriptor. If the allocation cannot be"]
+    #[doc = " done, return NULL."]
+    #[doc = ""]
+    #[doc = " @note Reserving memzones with len set to 0 will only attempt to allocate"]
+    #[doc = "   memzones from memory that is already available. It will not trigger any"]
+    #[doc = "   new allocations."]
+    #[doc = ""]
+    #[doc = " @note: When reserving memzones with len set to 0, it is preferable to also"]
+    #[doc = "   set a valid socket_id. Setting socket_id to SOCKET_ID_ANY is supported, but"]
+    #[doc = "   will likely not yield expected results. Specifically, the resulting memzone"]
+    #[doc = "   may not necessarily be the biggest memzone available, but rather biggest"]
+    #[doc = "   memzone available on socket id corresponding to an lcore from which"]
+    #[doc = "   reservation was called."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   The name of the memzone. If it already exists, the function will"]
+    #[doc = "   fail and return NULL."]
+    #[doc = " @param len"]
+    #[doc = "   The size of the memory to be reserved. If it"]
+    #[doc = "   is 0, the biggest contiguous zone will be reserved."]
+    #[doc = " @param socket_id"]
+    #[doc = "   The socket identifier in the case of"]
+    #[doc = "   NUMA. The value can be SOCKET_ID_ANY if there is no NUMA"]
+    #[doc = "   constraint for the reserved zone."]
+    #[doc = " @param flags"]
+    #[doc = "   The flags parameter is used to request memzones to be"]
+    #[doc = "   taken from specifically sized hugepages."]
+    #[doc = "   - RTE_MEMZONE_2MB - Reserved from 2MB pages"]
+    #[doc = "   - RTE_MEMZONE_1GB - Reserved from 1GB pages"]
+    #[doc = "   - RTE_MEMZONE_16MB - Reserved from 16MB pages"]
+    #[doc = "   - RTE_MEMZONE_16GB - Reserved from 16GB pages"]
+    #[doc = "   - RTE_MEMZONE_256KB - Reserved from 256KB pages"]
+    #[doc = "   - RTE_MEMZONE_256MB - Reserved from 256MB pages"]
+    #[doc = "   - RTE_MEMZONE_512MB - Reserved from 512MB pages"]
+    #[doc = "   - RTE_MEMZONE_4GB - Reserved from 4GB pages"]
+    #[doc = "   - RTE_MEMZONE_SIZE_HINT_ONLY - Allow alternative page size to be used if"]
+    #[doc = "                                  the requested page size is unavailable."]
+    #[doc = "                                  If this flag is not set, the function"]
+    #[doc = "                                  will return error on an unavailable size"]
+    #[doc = "                                  request."]
+    #[doc = "   - RTE_MEMZONE_IOVA_CONTIG - Ensure reserved memzone is IOVA-contiguous."]
+    #[doc = "                               This option should be used when allocating"]
+    #[doc = "                               memory intended for hardware rings etc."]
+    #[doc = " @return"]
+    #[doc = "   A pointer to a correctly-filled read-only memzone descriptor, or NULL"]
+    #[doc = "   on error."]
+    #[doc = "   On error case, rte_errno will be set appropriately:"]
+    #[doc = "    - E_RTE_NO_CONFIG - function could not get pointer to rte_config structure"]
+    #[doc = "    - E_RTE_SECONDARY - function was called from a secondary process instance"]
+    #[doc = "    - ENOSPC - the maximum number of memzones has already been allocated"]
+    #[doc = "    - EEXIST - a memzone with the same name already exists"]
+    #[doc = "    - ENOMEM - no appropriate memory area found in which to create memzone"]
+    #[doc = "    - EINVAL - invalid parameters"]
     pub fn rte_memzone_reserve(
         name: *const ::std::os::raw::c_char,
         len: usize,
@@ -12785,66 +12881,66 @@ extern "C" {
     ) -> *const rte_memzone;
 }
 extern "C" {
-    /// Reserve a portion of physical memory with alignment on a specified
-    /// boundary.
-    ///
-    /// This function reserves some memory with alignment on a specified
-    /// boundary, and returns a pointer to a correctly filled memzone
-    /// descriptor. If the allocation cannot be done or if the alignment
-    /// is not a power of 2, returns NULL.
-    ///
-    /// @note Reserving memzones with len set to 0 will only attempt to allocate
-    ///   memzones from memory that is already available. It will not trigger any
-    ///   new allocations.
-    ///
-    /// @note: When reserving memzones with len set to 0, it is preferable to also
-    ///   set a valid socket_id. Setting socket_id to SOCKET_ID_ANY is supported, but
-    ///   will likely not yield expected results. Specifically, the resulting memzone
-    ///   may not necessarily be the biggest memzone available, but rather biggest
-    ///   memzone available on socket id corresponding to an lcore from which
-    ///   reservation was called.
-    ///
-    /// @param name
-    ///   The name of the memzone. If it already exists, the function will
-    ///   fail and return NULL.
-    /// @param len
-    ///   The size of the memory to be reserved. If it
-    ///   is 0, the biggest contiguous zone will be reserved.
-    /// @param socket_id
-    ///   The socket identifier in the case of
-    ///   NUMA. The value can be SOCKET_ID_ANY if there is no NUMA
-    ///   constraint for the reserved zone.
-    /// @param flags
-    ///   The flags parameter is used to request memzones to be
-    ///   taken from specifically sized hugepages.
-    ///   - RTE_MEMZONE_2MB - Reserved from 2MB pages
-    ///   - RTE_MEMZONE_1GB - Reserved from 1GB pages
-    ///   - RTE_MEMZONE_16MB - Reserved from 16MB pages
-    ///   - RTE_MEMZONE_16GB - Reserved from 16GB pages
-    ///   - RTE_MEMZONE_256KB - Reserved from 256KB pages
-    ///   - RTE_MEMZONE_256MB - Reserved from 256MB pages
-    ///   - RTE_MEMZONE_512MB - Reserved from 512MB pages
-    ///   - RTE_MEMZONE_4GB - Reserved from 4GB pages
-    ///   - RTE_MEMZONE_SIZE_HINT_ONLY - Allow alternative page size to be used if
-    ///                                  the requested page size is unavailable.
-    ///                                  If this flag is not set, the function
-    ///                                  will return error on an unavailable size
-    ///                                  request.
-    ///   - RTE_MEMZONE_IOVA_CONTIG - Ensure reserved memzone is IOVA-contiguous.
-    ///                               This option should be used when allocating
-    ///                               memory intended for hardware rings etc.
-    /// @param align
-    ///   Alignment for resulting memzone. Must be a power of 2.
-    /// @return
-    ///   A pointer to a correctly-filled read-only memzone descriptor, or NULL
-    ///   on error.
-    ///   On error case, rte_errno will be set appropriately:
-    ///    - E_RTE_NO_CONFIG - function could not get pointer to rte_config structure
-    ///    - E_RTE_SECONDARY - function was called from a secondary process instance
-    ///    - ENOSPC - the maximum number of memzones has already been allocated
-    ///    - EEXIST - a memzone with the same name already exists
-    ///    - ENOMEM - no appropriate memory area found in which to create memzone
-    ///    - EINVAL - invalid parameters
+    #[doc = " Reserve a portion of physical memory with alignment on a specified"]
+    #[doc = " boundary."]
+    #[doc = ""]
+    #[doc = " This function reserves some memory with alignment on a specified"]
+    #[doc = " boundary, and returns a pointer to a correctly filled memzone"]
+    #[doc = " descriptor. If the allocation cannot be done or if the alignment"]
+    #[doc = " is not a power of 2, returns NULL."]
+    #[doc = ""]
+    #[doc = " @note Reserving memzones with len set to 0 will only attempt to allocate"]
+    #[doc = "   memzones from memory that is already available. It will not trigger any"]
+    #[doc = "   new allocations."]
+    #[doc = ""]
+    #[doc = " @note: When reserving memzones with len set to 0, it is preferable to also"]
+    #[doc = "   set a valid socket_id. Setting socket_id to SOCKET_ID_ANY is supported, but"]
+    #[doc = "   will likely not yield expected results. Specifically, the resulting memzone"]
+    #[doc = "   may not necessarily be the biggest memzone available, but rather biggest"]
+    #[doc = "   memzone available on socket id corresponding to an lcore from which"]
+    #[doc = "   reservation was called."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   The name of the memzone. If it already exists, the function will"]
+    #[doc = "   fail and return NULL."]
+    #[doc = " @param len"]
+    #[doc = "   The size of the memory to be reserved. If it"]
+    #[doc = "   is 0, the biggest contiguous zone will be reserved."]
+    #[doc = " @param socket_id"]
+    #[doc = "   The socket identifier in the case of"]
+    #[doc = "   NUMA. The value can be SOCKET_ID_ANY if there is no NUMA"]
+    #[doc = "   constraint for the reserved zone."]
+    #[doc = " @param flags"]
+    #[doc = "   The flags parameter is used to request memzones to be"]
+    #[doc = "   taken from specifically sized hugepages."]
+    #[doc = "   - RTE_MEMZONE_2MB - Reserved from 2MB pages"]
+    #[doc = "   - RTE_MEMZONE_1GB - Reserved from 1GB pages"]
+    #[doc = "   - RTE_MEMZONE_16MB - Reserved from 16MB pages"]
+    #[doc = "   - RTE_MEMZONE_16GB - Reserved from 16GB pages"]
+    #[doc = "   - RTE_MEMZONE_256KB - Reserved from 256KB pages"]
+    #[doc = "   - RTE_MEMZONE_256MB - Reserved from 256MB pages"]
+    #[doc = "   - RTE_MEMZONE_512MB - Reserved from 512MB pages"]
+    #[doc = "   - RTE_MEMZONE_4GB - Reserved from 4GB pages"]
+    #[doc = "   - RTE_MEMZONE_SIZE_HINT_ONLY - Allow alternative page size to be used if"]
+    #[doc = "                                  the requested page size is unavailable."]
+    #[doc = "                                  If this flag is not set, the function"]
+    #[doc = "                                  will return error on an unavailable size"]
+    #[doc = "                                  request."]
+    #[doc = "   - RTE_MEMZONE_IOVA_CONTIG - Ensure reserved memzone is IOVA-contiguous."]
+    #[doc = "                               This option should be used when allocating"]
+    #[doc = "                               memory intended for hardware rings etc."]
+    #[doc = " @param align"]
+    #[doc = "   Alignment for resulting memzone. Must be a power of 2."]
+    #[doc = " @return"]
+    #[doc = "   A pointer to a correctly-filled read-only memzone descriptor, or NULL"]
+    #[doc = "   on error."]
+    #[doc = "   On error case, rte_errno will be set appropriately:"]
+    #[doc = "    - E_RTE_NO_CONFIG - function could not get pointer to rte_config structure"]
+    #[doc = "    - E_RTE_SECONDARY - function was called from a secondary process instance"]
+    #[doc = "    - ENOSPC - the maximum number of memzones has already been allocated"]
+    #[doc = "    - EEXIST - a memzone with the same name already exists"]
+    #[doc = "    - ENOMEM - no appropriate memory area found in which to create memzone"]
+    #[doc = "    - EINVAL - invalid parameters"]
     pub fn rte_memzone_reserve_aligned(
         name: *const ::std::os::raw::c_char,
         len: usize,
@@ -12854,72 +12950,72 @@ extern "C" {
     ) -> *const rte_memzone;
 }
 extern "C" {
-    /// Reserve a portion of physical memory with specified alignment and
-    /// boundary.
-    ///
-    /// This function reserves some memory with specified alignment and
-    /// boundary, and returns a pointer to a correctly filled memzone
-    /// descriptor. If the allocation cannot be done or if the alignment
-    /// or boundary are not a power of 2, returns NULL.
-    /// Memory buffer is reserved in a way, that it wouldn't cross specified
-    /// boundary. That implies that requested length should be less or equal
-    /// then boundary.
-    ///
-    /// @note Reserving memzones with len set to 0 will only attempt to allocate
-    ///   memzones from memory that is already available. It will not trigger any
-    ///   new allocations.
-    ///
-    /// @note: When reserving memzones with len set to 0, it is preferable to also
-    ///   set a valid socket_id. Setting socket_id to SOCKET_ID_ANY is supported, but
-    ///   will likely not yield expected results. Specifically, the resulting memzone
-    ///   may not necessarily be the biggest memzone available, but rather biggest
-    ///   memzone available on socket id corresponding to an lcore from which
-    ///   reservation was called.
-    ///
-    /// @param name
-    ///   The name of the memzone. If it already exists, the function will
-    ///   fail and return NULL.
-    /// @param len
-    ///   The size of the memory to be reserved. If it
-    ///   is 0, the biggest contiguous zone will be reserved.
-    /// @param socket_id
-    ///   The socket identifier in the case of
-    ///   NUMA. The value can be SOCKET_ID_ANY if there is no NUMA
-    ///   constraint for the reserved zone.
-    /// @param flags
-    ///   The flags parameter is used to request memzones to be
-    ///   taken from specifically sized hugepages.
-    ///   - RTE_MEMZONE_2MB - Reserved from 2MB pages
-    ///   - RTE_MEMZONE_1GB - Reserved from 1GB pages
-    ///   - RTE_MEMZONE_16MB - Reserved from 16MB pages
-    ///   - RTE_MEMZONE_16GB - Reserved from 16GB pages
-    ///   - RTE_MEMZONE_256KB - Reserved from 256KB pages
-    ///   - RTE_MEMZONE_256MB - Reserved from 256MB pages
-    ///   - RTE_MEMZONE_512MB - Reserved from 512MB pages
-    ///   - RTE_MEMZONE_4GB - Reserved from 4GB pages
-    ///   - RTE_MEMZONE_SIZE_HINT_ONLY - Allow alternative page size to be used if
-    ///                                  the requested page size is unavailable.
-    ///                                  If this flag is not set, the function
-    ///                                  will return error on an unavailable size
-    ///                                  request.
-    ///   - RTE_MEMZONE_IOVA_CONTIG - Ensure reserved memzone is IOVA-contiguous.
-    ///                               This option should be used when allocating
-    ///                               memory intended for hardware rings etc.
-    /// @param align
-    ///   Alignment for resulting memzone. Must be a power of 2.
-    /// @param bound
-    ///   Boundary for resulting memzone. Must be a power of 2 or zero.
-    ///   Zero value implies no boundary condition.
-    /// @return
-    ///   A pointer to a correctly-filled read-only memzone descriptor, or NULL
-    ///   on error.
-    ///   On error case, rte_errno will be set appropriately:
-    ///    - E_RTE_NO_CONFIG - function could not get pointer to rte_config structure
-    ///    - E_RTE_SECONDARY - function was called from a secondary process instance
-    ///    - ENOSPC - the maximum number of memzones has already been allocated
-    ///    - EEXIST - a memzone with the same name already exists
-    ///    - ENOMEM - no appropriate memory area found in which to create memzone
-    ///    - EINVAL - invalid parameters
+    #[doc = " Reserve a portion of physical memory with specified alignment and"]
+    #[doc = " boundary."]
+    #[doc = ""]
+    #[doc = " This function reserves some memory with specified alignment and"]
+    #[doc = " boundary, and returns a pointer to a correctly filled memzone"]
+    #[doc = " descriptor. If the allocation cannot be done or if the alignment"]
+    #[doc = " or boundary are not a power of 2, returns NULL."]
+    #[doc = " Memory buffer is reserved in a way, that it wouldn\'t cross specified"]
+    #[doc = " boundary. That implies that requested length should be less or equal"]
+    #[doc = " then boundary."]
+    #[doc = ""]
+    #[doc = " @note Reserving memzones with len set to 0 will only attempt to allocate"]
+    #[doc = "   memzones from memory that is already available. It will not trigger any"]
+    #[doc = "   new allocations."]
+    #[doc = ""]
+    #[doc = " @note: When reserving memzones with len set to 0, it is preferable to also"]
+    #[doc = "   set a valid socket_id. Setting socket_id to SOCKET_ID_ANY is supported, but"]
+    #[doc = "   will likely not yield expected results. Specifically, the resulting memzone"]
+    #[doc = "   may not necessarily be the biggest memzone available, but rather biggest"]
+    #[doc = "   memzone available on socket id corresponding to an lcore from which"]
+    #[doc = "   reservation was called."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   The name of the memzone. If it already exists, the function will"]
+    #[doc = "   fail and return NULL."]
+    #[doc = " @param len"]
+    #[doc = "   The size of the memory to be reserved. If it"]
+    #[doc = "   is 0, the biggest contiguous zone will be reserved."]
+    #[doc = " @param socket_id"]
+    #[doc = "   The socket identifier in the case of"]
+    #[doc = "   NUMA. The value can be SOCKET_ID_ANY if there is no NUMA"]
+    #[doc = "   constraint for the reserved zone."]
+    #[doc = " @param flags"]
+    #[doc = "   The flags parameter is used to request memzones to be"]
+    #[doc = "   taken from specifically sized hugepages."]
+    #[doc = "   - RTE_MEMZONE_2MB - Reserved from 2MB pages"]
+    #[doc = "   - RTE_MEMZONE_1GB - Reserved from 1GB pages"]
+    #[doc = "   - RTE_MEMZONE_16MB - Reserved from 16MB pages"]
+    #[doc = "   - RTE_MEMZONE_16GB - Reserved from 16GB pages"]
+    #[doc = "   - RTE_MEMZONE_256KB - Reserved from 256KB pages"]
+    #[doc = "   - RTE_MEMZONE_256MB - Reserved from 256MB pages"]
+    #[doc = "   - RTE_MEMZONE_512MB - Reserved from 512MB pages"]
+    #[doc = "   - RTE_MEMZONE_4GB - Reserved from 4GB pages"]
+    #[doc = "   - RTE_MEMZONE_SIZE_HINT_ONLY - Allow alternative page size to be used if"]
+    #[doc = "                                  the requested page size is unavailable."]
+    #[doc = "                                  If this flag is not set, the function"]
+    #[doc = "                                  will return error on an unavailable size"]
+    #[doc = "                                  request."]
+    #[doc = "   - RTE_MEMZONE_IOVA_CONTIG - Ensure reserved memzone is IOVA-contiguous."]
+    #[doc = "                               This option should be used when allocating"]
+    #[doc = "                               memory intended for hardware rings etc."]
+    #[doc = " @param align"]
+    #[doc = "   Alignment for resulting memzone. Must be a power of 2."]
+    #[doc = " @param bound"]
+    #[doc = "   Boundary for resulting memzone. Must be a power of 2 or zero."]
+    #[doc = "   Zero value implies no boundary condition."]
+    #[doc = " @return"]
+    #[doc = "   A pointer to a correctly-filled read-only memzone descriptor, or NULL"]
+    #[doc = "   on error."]
+    #[doc = "   On error case, rte_errno will be set appropriately:"]
+    #[doc = "    - E_RTE_NO_CONFIG - function could not get pointer to rte_config structure"]
+    #[doc = "    - E_RTE_SECONDARY - function was called from a secondary process instance"]
+    #[doc = "    - ENOSPC - the maximum number of memzones has already been allocated"]
+    #[doc = "    - EEXIST - a memzone with the same name already exists"]
+    #[doc = "    - ENOMEM - no appropriate memory area found in which to create memzone"]
+    #[doc = "    - EINVAL - invalid parameters"]
     pub fn rte_memzone_reserve_bounded(
         name: *const ::std::os::raw::c_char,
         len: usize,
@@ -12930,41 +13026,41 @@ extern "C" {
     ) -> *const rte_memzone;
 }
 extern "C" {
-    /// Free a memzone.
-    ///
-    /// @param mz
-    ///   A pointer to the memzone
-    /// @return
-    ///  -EINVAL - invalid parameter.
-    ///  0 - success
+    #[doc = " Free a memzone."]
+    #[doc = ""]
+    #[doc = " @param mz"]
+    #[doc = "   A pointer to the memzone"]
+    #[doc = " @return"]
+    #[doc = "  -EINVAL - invalid parameter."]
+    #[doc = "  0 - success"]
     pub fn rte_memzone_free(mz: *const rte_memzone) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Lookup for a memzone.
-    ///
-    /// Get a pointer to a descriptor of an already reserved memory
-    /// zone identified by the name given as an argument.
-    ///
-    /// @param name
-    ///   The name of the memzone.
-    /// @return
-    ///   A pointer to a read-only memzone descriptor.
+    #[doc = " Lookup for a memzone."]
+    #[doc = ""]
+    #[doc = " Get a pointer to a descriptor of an already reserved memory"]
+    #[doc = " zone identified by the name given as an argument."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   The name of the memzone."]
+    #[doc = " @return"]
+    #[doc = "   A pointer to a read-only memzone descriptor."]
     pub fn rte_memzone_lookup(name: *const ::std::os::raw::c_char) -> *const rte_memzone;
 }
 extern "C" {
-    /// Dump all reserved memzones to a file.
-    ///
-    /// @param f
-    ///   A pointer to a file for output
+    #[doc = " Dump all reserved memzones to a file."]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   A pointer to a file for output"]
     pub fn rte_memzone_dump(f: *mut FILE);
 }
 extern "C" {
-    /// Walk list of all memzones
-    ///
-    /// @param func
-    ///   Iterator function
-    /// @param arg
-    ///   Argument passed to iterator
+    #[doc = " Walk list of all memzones"]
+    #[doc = ""]
+    #[doc = " @param func"]
+    #[doc = "   Iterator function"]
+    #[doc = " @param arg"]
+    #[doc = "   Argument passed to iterator"]
     pub fn rte_memzone_walk(
         func: ::std::option::Option<
             unsafe extern "C" fn(arg1: *const rte_memzone, arg: *mut ::std::os::raw::c_void),
@@ -12980,11 +13076,11 @@ pub mod rte_ring_queue_behavior {
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_ring_headtail {
-    ///< Prod/consumer head.
+    #[doc = "< Prod/consumer head."]
     pub head: u32,
-    ///< Prod/consumer tail.
+    #[doc = "< Prod/consumer tail."]
     pub tail: u32,
-    ///< True if single prod/cons
+    #[doc = "< True if single prod/cons"]
     pub single: u32,
 }
 #[test]
@@ -13030,42 +13126,42 @@ fn bindgen_test_layout_rte_ring_headtail() {
         )
     );
 }
-/// An RTE ring structure.
-///
-/// The producer and the consumer have a head and a tail index. The particularity
-/// of these index is that they are not between 0 and size(ring). These indexes
-/// are between 0 and 2^32, and we mask their value when we access the ring[]
-/// field. Thanks to this assumption, we can do subtractions between 2 index
-/// values in a modulo-32bit base: that's why the overflow of the indexes is not
-/// a problem.
+#[doc = " An RTE ring structure."]
+#[doc = ""]
+#[doc = " The producer and the consumer have a head and a tail index. The particularity"]
+#[doc = " of these index is that they are not between 0 and size(ring). These indexes"]
+#[doc = " are between 0 and 2^32, and we mask their value when we access the ring[]"]
+#[doc = " field. Thanks to this assumption, we can do subtractions between 2 index"]
+#[doc = " values in a modulo-32bit base: that\'s why the overflow of the indexes is not"]
+#[doc = " a problem."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_ring {
-    ///< Name of the ring.
+    #[doc = "< Name of the ring."]
     pub name: [::std::os::raw::c_char; 32usize],
-    ///< Flags supplied at creation.
+    #[doc = "< Flags supplied at creation."]
     pub flags: ::std::os::raw::c_int,
     pub memzone: *const rte_memzone,
-    ///< Size of ring.
+    #[doc = "< Size of ring."]
     pub size: u32,
-    ///< Mask (size-1) of ring.
+    #[doc = "< Mask (size-1) of ring."]
     pub mask: u32,
-    ///< Usable size of ring
+    #[doc = "< Usable size of ring"]
     pub capacity: u32,
     pub __bindgen_padding_0: [u8; 4usize],
-    ///< empty cache line
+    #[doc = "< empty cache line"]
     pub pad0: ::std::os::raw::c_char,
     pub __bindgen_padding_1: [u32; 15usize],
-    /// Ring producer status.
+    #[doc = " Ring producer status."]
     pub prod: rte_ring_headtail,
     pub __bindgen_padding_2: [u8; 52usize],
-    ///< empty cache line
+    #[doc = "< empty cache line"]
     pub pad1: ::std::os::raw::c_char,
     pub __bindgen_padding_3: [u32; 15usize],
-    /// Ring consumer status.
+    #[doc = " Ring consumer status."]
     pub cons: rte_ring_headtail,
     pub __bindgen_padding_4: [u8; 52usize],
-    ///< empty cache line
+    #[doc = "< empty cache line"]
     pub pad2: ::std::os::raw::c_char,
     pub __bindgen_padding_5: [u8; 63usize],
 }
@@ -13193,53 +13289,53 @@ impl Default for rte_ring {
     }
 }
 extern "C" {
-    /// Calculate the memory size needed for a ring
-    ///
-    /// This function returns the number of bytes needed for a ring, given
-    /// the number of elements in it. This value is the sum of the size of
-    /// the structure rte_ring and the size of the memory needed by the
-    /// objects pointers. The value is aligned to a cache line size.
-    ///
-    /// @param count
-    ///   The number of elements in the ring (must be a power of 2).
-    /// @return
-    ///   - The memory size needed for the ring on success.
-    ///   - -EINVAL if count is not a power of 2.
+    #[doc = " Calculate the memory size needed for a ring"]
+    #[doc = ""]
+    #[doc = " This function returns the number of bytes needed for a ring, given"]
+    #[doc = " the number of elements in it. This value is the sum of the size of"]
+    #[doc = " the structure rte_ring and the size of the memory needed by the"]
+    #[doc = " objects pointers. The value is aligned to a cache line size."]
+    #[doc = ""]
+    #[doc = " @param count"]
+    #[doc = "   The number of elements in the ring (must be a power of 2)."]
+    #[doc = " @return"]
+    #[doc = "   - The memory size needed for the ring on success."]
+    #[doc = "   - -EINVAL if count is not a power of 2."]
     pub fn rte_ring_get_memsize(count: ::std::os::raw::c_uint) -> isize;
 }
 extern "C" {
-    /// Initialize a ring structure.
-    ///
-    /// Initialize a ring structure in memory pointed by "r". The size of the
-    /// memory area must be large enough to store the ring structure and the
-    /// object table. It is advised to use rte_ring_get_memsize() to get the
-    /// appropriate size.
-    ///
-    /// The ring size is set to *count*, which must be a power of two. Water
-    /// marking is disabled by default. The real usable ring size is
-    /// *count-1* instead of *count* to differentiate a free ring from an
-    /// empty ring.
-    ///
-    /// The ring is not added in RTE_TAILQ_RING global list. Indeed, the
-    /// memory given by the caller may not be shareable among dpdk
-    /// processes.
-    ///
-    /// @param r
-    ///   The pointer to the ring structure followed by the objects table.
-    /// @param name
-    ///   The name of the ring.
-    /// @param count
-    ///   The number of elements in the ring (must be a power of 2).
-    /// @param flags
-    ///   An OR of the following:
-    ///    - RING_F_SP_ENQ: If this flag is set, the default behavior when
-    ///      using ``rte_ring_enqueue()`` or ``rte_ring_enqueue_bulk()``
-    ///      is "single-producer". Otherwise, it is "multi-producers".
-    ///    - RING_F_SC_DEQ: If this flag is set, the default behavior when
-    ///      using ``rte_ring_dequeue()`` or ``rte_ring_dequeue_bulk()``
-    ///      is "single-consumer". Otherwise, it is "multi-consumers".
-    /// @return
-    ///   0 on success, or a negative value on error.
+    #[doc = " Initialize a ring structure."]
+    #[doc = ""]
+    #[doc = " Initialize a ring structure in memory pointed by \"r\". The size of the"]
+    #[doc = " memory area must be large enough to store the ring structure and the"]
+    #[doc = " object table. It is advised to use rte_ring_get_memsize() to get the"]
+    #[doc = " appropriate size."]
+    #[doc = ""]
+    #[doc = " The ring size is set to *count*, which must be a power of two. Water"]
+    #[doc = " marking is disabled by default. The real usable ring size is"]
+    #[doc = " *count-1* instead of *count* to differentiate a free ring from an"]
+    #[doc = " empty ring."]
+    #[doc = ""]
+    #[doc = " The ring is not added in RTE_TAILQ_RING global list. Indeed, the"]
+    #[doc = " memory given by the caller may not be shareable among dpdk"]
+    #[doc = " processes."]
+    #[doc = ""]
+    #[doc = " @param r"]
+    #[doc = "   The pointer to the ring structure followed by the objects table."]
+    #[doc = " @param name"]
+    #[doc = "   The name of the ring."]
+    #[doc = " @param count"]
+    #[doc = "   The number of elements in the ring (must be a power of 2)."]
+    #[doc = " @param flags"]
+    #[doc = "   An OR of the following:"]
+    #[doc = "    - RING_F_SP_ENQ: If this flag is set, the default behavior when"]
+    #[doc = "      using ``rte_ring_enqueue()`` or ``rte_ring_enqueue_bulk()``"]
+    #[doc = "      is \"single-producer\". Otherwise, it is \"multi-producers\"."]
+    #[doc = "    - RING_F_SC_DEQ: If this flag is set, the default behavior when"]
+    #[doc = "      using ``rte_ring_dequeue()`` or ``rte_ring_dequeue_bulk()``"]
+    #[doc = "      is \"single-consumer\". Otherwise, it is \"multi-consumers\"."]
+    #[doc = " @return"]
+    #[doc = "   0 on success, or a negative value on error."]
     pub fn rte_ring_init(
         r: *mut rte_ring,
         name: *const ::std::os::raw::c_char,
@@ -13248,43 +13344,43 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Create a new ring named *name* in memory.
-    ///
-    /// This function uses ``memzone_reserve()`` to allocate memory. Then it
-    /// calls rte_ring_init() to initialize an empty ring.
-    ///
-    /// The new ring size is set to *count*, which must be a power of
-    /// two. Water marking is disabled by default. The real usable ring size
-    /// is *count-1* instead of *count* to differentiate a free ring from an
-    /// empty ring.
-    ///
-    /// The ring is added in RTE_TAILQ_RING list.
-    ///
-    /// @param name
-    ///   The name of the ring.
-    /// @param count
-    ///   The size of the ring (must be a power of 2).
-    /// @param socket_id
-    ///   The *socket_id* argument is the socket identifier in case of
-    ///   NUMA. The value can be *SOCKET_ID_ANY* if there is no NUMA
-    ///   constraint for the reserved zone.
-    /// @param flags
-    ///   An OR of the following:
-    ///    - RING_F_SP_ENQ: If this flag is set, the default behavior when
-    ///      using ``rte_ring_enqueue()`` or ``rte_ring_enqueue_bulk()``
-    ///      is "single-producer". Otherwise, it is "multi-producers".
-    ///    - RING_F_SC_DEQ: If this flag is set, the default behavior when
-    ///      using ``rte_ring_dequeue()`` or ``rte_ring_dequeue_bulk()``
-    ///      is "single-consumer". Otherwise, it is "multi-consumers".
-    /// @return
-    ///   On success, the pointer to the new allocated ring. NULL on error with
-    ///    rte_errno set appropriately. Possible errno values include:
-    ///    - E_RTE_NO_CONFIG - function could not get pointer to rte_config structure
-    ///    - E_RTE_SECONDARY - function was called from a secondary process instance
-    ///    - EINVAL - count provided is not a power of 2
-    ///    - ENOSPC - the maximum number of memzones has already been allocated
-    ///    - EEXIST - a memzone with the same name already exists
-    ///    - ENOMEM - no appropriate memory area found in which to create memzone
+    #[doc = " Create a new ring named *name* in memory."]
+    #[doc = ""]
+    #[doc = " This function uses ``memzone_reserve()`` to allocate memory. Then it"]
+    #[doc = " calls rte_ring_init() to initialize an empty ring."]
+    #[doc = ""]
+    #[doc = " The new ring size is set to *count*, which must be a power of"]
+    #[doc = " two. Water marking is disabled by default. The real usable ring size"]
+    #[doc = " is *count-1* instead of *count* to differentiate a free ring from an"]
+    #[doc = " empty ring."]
+    #[doc = ""]
+    #[doc = " The ring is added in RTE_TAILQ_RING list."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   The name of the ring."]
+    #[doc = " @param count"]
+    #[doc = "   The size of the ring (must be a power of 2)."]
+    #[doc = " @param socket_id"]
+    #[doc = "   The *socket_id* argument is the socket identifier in case of"]
+    #[doc = "   NUMA. The value can be *SOCKET_ID_ANY* if there is no NUMA"]
+    #[doc = "   constraint for the reserved zone."]
+    #[doc = " @param flags"]
+    #[doc = "   An OR of the following:"]
+    #[doc = "    - RING_F_SP_ENQ: If this flag is set, the default behavior when"]
+    #[doc = "      using ``rte_ring_enqueue()`` or ``rte_ring_enqueue_bulk()``"]
+    #[doc = "      is \"single-producer\". Otherwise, it is \"multi-producers\"."]
+    #[doc = "    - RING_F_SC_DEQ: If this flag is set, the default behavior when"]
+    #[doc = "      using ``rte_ring_dequeue()`` or ``rte_ring_dequeue_bulk()``"]
+    #[doc = "      is \"single-consumer\". Otherwise, it is \"multi-consumers\"."]
+    #[doc = " @return"]
+    #[doc = "   On success, the pointer to the new allocated ring. NULL on error with"]
+    #[doc = "    rte_errno set appropriately. Possible errno values include:"]
+    #[doc = "    - E_RTE_NO_CONFIG - function could not get pointer to rte_config structure"]
+    #[doc = "    - E_RTE_SECONDARY - function was called from a secondary process instance"]
+    #[doc = "    - EINVAL - count provided is not a power of 2"]
+    #[doc = "    - ENOSPC - the maximum number of memzones has already been allocated"]
+    #[doc = "    - EEXIST - a memzone with the same name already exists"]
+    #[doc = "    - ENOMEM - no appropriate memory area found in which to create memzone"]
     pub fn rte_ring_create(
         name: *const ::std::os::raw::c_char,
         count: ::std::os::raw::c_uint,
@@ -13293,37 +13389,37 @@ extern "C" {
     ) -> *mut rte_ring;
 }
 extern "C" {
-    /// De-allocate all memory used by the ring.
-    ///
-    /// @param r
-    ///   Ring to free
+    #[doc = " De-allocate all memory used by the ring."]
+    #[doc = ""]
+    #[doc = " @param r"]
+    #[doc = "   Ring to free"]
     pub fn rte_ring_free(r: *mut rte_ring);
 }
 extern "C" {
-    /// Dump the status of the ring to a file.
-    ///
-    /// @param f
-    ///   A pointer to a file for output
-    /// @param r
-    ///   A pointer to the ring structure.
+    #[doc = " Dump the status of the ring to a file."]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   A pointer to a file for output"]
+    #[doc = " @param r"]
+    #[doc = "   A pointer to the ring structure."]
     pub fn rte_ring_dump(f: *mut FILE, r: *const rte_ring);
 }
 extern "C" {
-    /// Dump the status of all rings on the console
-    ///
-    /// @param f
-    ///   A pointer to a file for output
+    #[doc = " Dump the status of all rings on the console"]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   A pointer to a file for output"]
     pub fn rte_ring_list_dump(f: *mut FILE);
 }
 extern "C" {
-    /// Search a ring from its name
-    ///
-    /// @param name
-    ///   The name of the ring.
-    /// @return
-    ///   The pointer to the ring matching the name, or NULL if not found,
-    ///   with rte_errno set appropriately. Possible rte_errno values include:
-    ///    - ENOENT - required entry not available to return.
+    #[doc = " Search a ring from its name"]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   The name of the ring."]
+    #[doc = " @return"]
+    #[doc = "   The pointer to the ring matching the name, or NULL if not found,"]
+    #[doc = "   with rte_errno set appropriately. Possible rte_errno values include:"]
+    #[doc = "    - ENOENT - required entry not available to return."]
     pub fn rte_ring_lookup(name: *const ::std::os::raw::c_char) -> *mut rte_ring;
 }
 pub type __gwchar_t = ::std::os::raw::c_int;
@@ -13400,17 +13496,17 @@ extern "C" {
         __base: ::std::os::raw::c_int,
     ) -> uintmax_t;
 }
-/// A structure that stores a per-core object cache.
+#[doc = " A structure that stores a per-core object cache."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_mempool_cache {
-    ///< Size of the cache
+    #[doc = "< Size of the cache"]
     pub size: u32,
-    ///< Threshold before we flush excess elements
+    #[doc = "< Threshold before we flush excess elements"]
     pub flushthresh: u32,
-    ///< Current cache count
+    #[doc = "< Current cache count"]
     pub len: u32,
-    ///< Cache objects
+    #[doc = "< Cache objects"]
     pub objs: [*mut ::std::os::raw::c_void; 1536usize],
     pub __bindgen_padding_0: [u64; 6usize],
 }
@@ -13467,15 +13563,15 @@ impl Default for rte_mempool_cache {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure that stores the size of mempool elements.
+#[doc = " A structure that stores the size of mempool elements."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_mempool_objsz {
-    ///< Size of an element.
+    #[doc = "< Size of an element."]
     pub elt_size: u32,
-    ///< Size of header (before elt).
+    #[doc = "< Size of header (before elt)."]
     pub header_size: u32,
-    ///< Size of trailer (after elt).
+    #[doc = "< Size of trailer (after elt)."]
     pub trailer_size: u32,
     pub total_size: u32,
 }
@@ -13532,19 +13628,19 @@ fn bindgen_test_layout_rte_mempool_objsz() {
         )
     );
 }
-/// Mempool object header structure
-///
-/// Each object stored in mempools are prefixed by this header structure,
-/// it allows to retrieve the mempool pointer from the object and to
-/// iterate on all objects attached to a mempool. When debug is enabled,
-/// a cookie is also added in this structure preventing corruptions and
-/// double-frees.
+#[doc = " Mempool object header structure"]
+#[doc = ""]
+#[doc = " Each object stored in mempools are prefixed by this header structure,"]
+#[doc = " it allows to retrieve the mempool pointer from the object and to"]
+#[doc = " iterate on all objects attached to a mempool. When debug is enabled,"]
+#[doc = " a cookie is also added in this structure preventing corruptions and"]
+#[doc = " double-frees."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_mempool_objhdr {
-    ///< Next in list.
+    #[doc = "< Next in list."]
     pub next: rte_mempool_objhdr__bindgen_ty_1,
-    ///< The mempool owning the object.
+    #[doc = "< The mempool owning the object."]
     pub mp: *mut rte_mempool,
     pub __bindgen_anon_1: rte_mempool_objhdr__bindgen_ty_2,
 }
@@ -13590,9 +13686,9 @@ impl Default for rte_mempool_objhdr__bindgen_ty_1 {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_mempool_objhdr__bindgen_ty_2 {
-    ///< IO address of the object.
+    #[doc = "< IO address of the object."]
     pub iova: rte_iova_t,
-    ///< deprecated - Physical address of the object.
+    #[doc = "< deprecated - Physical address of the object."]
     pub physaddr: phys_addr_t,
     _bindgen_union_align: u64,
 }
@@ -13680,7 +13776,7 @@ impl Default for rte_mempool_objhdr {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A list of object headers type
+#[doc = " A list of object headers type"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_mempool_objhdr_list {
@@ -13729,7 +13825,7 @@ impl Default for rte_mempool_objhdr_list {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A list of memory where objects are stored
+#[doc = " A list of memory where objects are stored"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_mempool_memhdr_list {
@@ -13778,29 +13874,29 @@ impl Default for rte_mempool_memhdr_list {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// Callback used to free a memory chunk
+#[doc = " Callback used to free a memory chunk"]
 pub type rte_mempool_memchunk_free_cb_t = ::std::option::Option<
     unsafe extern "C" fn(memhdr: *mut rte_mempool_memhdr, opaque: *mut ::std::os::raw::c_void),
 >;
-/// Mempool objects memory header structure
-///
-/// The memory chunks where objects are stored. Each chunk is virtually
-/// and physically contiguous.
+#[doc = " Mempool objects memory header structure"]
+#[doc = ""]
+#[doc = " The memory chunks where objects are stored. Each chunk is virtually"]
+#[doc = " and physically contiguous."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_mempool_memhdr {
-    ///< Next in list.
+    #[doc = "< Next in list."]
     pub next: rte_mempool_memhdr__bindgen_ty_1,
-    ///< The mempool owning the chunk
+    #[doc = "< The mempool owning the chunk"]
     pub mp: *mut rte_mempool,
-    ///< Virtual address of the chunk
+    #[doc = "< Virtual address of the chunk"]
     pub addr: *mut ::std::os::raw::c_void,
     pub __bindgen_anon_1: rte_mempool_memhdr__bindgen_ty_2,
-    ///< length of the chunk
+    #[doc = "< length of the chunk"]
     pub len: usize,
-    ///< Free callback
+    #[doc = "< Free callback"]
     pub free_cb: rte_mempool_memchunk_free_cb_t,
-    ///< Argument passed to the free callback
+    #[doc = "< Argument passed to the free callback"]
     pub opaque: *mut ::std::os::raw::c_void,
 }
 #[repr(C)]
@@ -13845,9 +13941,9 @@ impl Default for rte_mempool_memhdr__bindgen_ty_1 {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_mempool_memhdr__bindgen_ty_2 {
-    ///< IO address of the chunk
+    #[doc = "< IO address of the chunk"]
     pub iova: rte_iova_t,
-    ///< Physical address of the chunk
+    #[doc = "< Physical address of the chunk"]
     pub phys_addr: phys_addr_t,
     _bindgen_union_align: u64,
 }
@@ -13975,17 +14071,17 @@ impl Default for rte_mempool_memhdr {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// @warning
-/// @b EXPERIMENTAL: this API may change without prior notice.
-///
-/// Additional information about the mempool
-///
-/// The structure is cache-line aligned to avoid ABI breakages in
-/// a number of cases when something small is added.
+#[doc = " @warning"]
+#[doc = " @b EXPERIMENTAL: this API may change without prior notice."]
+#[doc = ""]
+#[doc = " Additional information about the mempool"]
+#[doc = ""]
+#[doc = " The structure is cache-line aligned to avoid ABI breakages in"]
+#[doc = " a number of cases when something small is added."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_mempool_info {
-    /// Number of objects in the contiguous block
+    #[doc = " Number of objects in the contiguous block"]
     pub contig_block_size: ::std::os::raw::c_uint,
     pub __bindgen_padding_0: [u32; 15usize],
 }
@@ -14014,56 +14110,56 @@ impl Default for rte_mempool_info {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// The RTE mempool structure.
+#[doc = " The RTE mempool structure."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_mempool {
-    ///< Name of mempool.
+    #[doc = "< Name of mempool."]
     pub name: [::std::os::raw::c_char; 32usize],
     pub __bindgen_anon_1: rte_mempool__bindgen_ty_1,
-    ///< optional args for ops alloc.
+    #[doc = "< optional args for ops alloc."]
     pub pool_config: *mut ::std::os::raw::c_void,
-    ///< Memzone where pool is alloc'd.
+    #[doc = "< Memzone where pool is alloc\'d."]
     pub mz: *const rte_memzone,
-    ///< Flags of the mempool.
+    #[doc = "< Flags of the mempool."]
     pub flags: ::std::os::raw::c_uint,
-    ///< Socket id passed at create.
+    #[doc = "< Socket id passed at create."]
     pub socket_id: ::std::os::raw::c_int,
-    ///< Max size of the mempool.
+    #[doc = "< Max size of the mempool."]
     pub size: u32,
     pub cache_size: u32,
-    ///< Size of an element.
+    #[doc = "< Size of an element."]
     pub elt_size: u32,
-    ///< Size of header (before elt).
+    #[doc = "< Size of header (before elt)."]
     pub header_size: u32,
-    ///< Size of trailer (after elt).
+    #[doc = "< Size of trailer (after elt)."]
     pub trailer_size: u32,
-    ///< Size of private data.
+    #[doc = "< Size of private data."]
     pub private_data_size: ::std::os::raw::c_uint,
-    /// Index into rte_mempool_ops_table array of mempool ops
-    /// structs, which contain callback function pointers.
-    /// We're using an index here rather than pointers to the callbacks
-    /// to facilitate any secondary processes that may want to use
-    /// this mempool.
+    #[doc = " Index into rte_mempool_ops_table array of mempool ops"]
+    #[doc = " structs, which contain callback function pointers."]
+    #[doc = " We\'re using an index here rather than pointers to the callbacks"]
+    #[doc = " to facilitate any secondary processes that may want to use"]
+    #[doc = " this mempool."]
     pub ops_index: i32,
-    ///< Per-lcore local cache
+    #[doc = "< Per-lcore local cache"]
     pub local_cache: *mut rte_mempool_cache,
-    ///< Number of populated objects.
+    #[doc = "< Number of populated objects."]
     pub populated_size: u32,
-    ///< List of objects in pool
+    #[doc = "< List of objects in pool"]
     pub elt_list: rte_mempool_objhdr_list,
-    ///< Number of memory chunks
+    #[doc = "< Number of memory chunks"]
     pub nb_mem_chunks: u32,
-    ///< List of memory chunks
+    #[doc = "< List of memory chunks"]
     pub mem_list: rte_mempool_memhdr_list,
     pub __bindgen_padding_0: [u64; 5usize],
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_mempool__bindgen_ty_1 {
-    ///< Ring or pool to store objects.
+    #[doc = "< Ring or pool to store objects."]
     pub pool_data: *mut ::std::os::raw::c_void,
-    ///< External mempool identifier.
+    #[doc = "< External mempool identifier."]
     pub pool_id: u64,
     _bindgen_union_align: u64,
 }
@@ -14298,18 +14394,18 @@ pub struct rte_mempool_objtlr {
     _unused: [u8; 0],
 }
 extern "C" {
-    /// @internal Check and update cookies or panic.
-    ///
-    /// @param mp
-    ///   Pointer to the memory pool.
-    /// @param obj_table_const
-    ///   Pointer to a table of void * pointers (objects).
-    /// @param n
-    ///   Index of object in object table.
-    /// @param free
-    ///   - 0: object is supposed to be allocated, mark it as free
-    ///   - 1: object is supposed to be free, mark it as allocated
-    ///   - 2: just check that cookie is valid (free or allocated)
+    #[doc = " @internal Check and update cookies or panic."]
+    #[doc = ""]
+    #[doc = " @param mp"]
+    #[doc = "   Pointer to the memory pool."]
+    #[doc = " @param obj_table_const"]
+    #[doc = "   Pointer to a table of void * pointers (objects)."]
+    #[doc = " @param n"]
+    #[doc = "   Index of object in object table."]
+    #[doc = " @param free"]
+    #[doc = "   - 0: object is supposed to be allocated, mark it as free"]
+    #[doc = "   - 1: object is supposed to be free, mark it as allocated"]
+    #[doc = "   - 2: just check that cookie is valid (free or allocated)"]
     pub fn rte_mempool_check_cookies(
         mp: *const rte_mempool,
         obj_table_const: *const *mut ::std::os::raw::c_void,
@@ -14318,22 +14414,22 @@ extern "C" {
     );
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice.
-    ///
-    /// @internal Check contiguous object blocks and update cookies or panic.
-    ///
-    /// @param mp
-    ///   Pointer to the memory pool.
-    /// @param first_obj_table_const
-    ///   Pointer to a table of void * pointers (first object of the contiguous
-    ///   object blocks).
-    /// @param n
-    ///   Number of contiguous object blocks.
-    /// @param free
-    ///   - 0: object is supposed to be allocated, mark it as free
-    ///   - 1: object is supposed to be free, mark it as allocated
-    ///   - 2: just check that cookie is valid (free or allocated)
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice."]
+    #[doc = ""]
+    #[doc = " @internal Check contiguous object blocks and update cookies or panic."]
+    #[doc = ""]
+    #[doc = " @param mp"]
+    #[doc = "   Pointer to the memory pool."]
+    #[doc = " @param first_obj_table_const"]
+    #[doc = "   Pointer to a table of void * pointers (first object of the contiguous"]
+    #[doc = "   object blocks)."]
+    #[doc = " @param n"]
+    #[doc = "   Number of contiguous object blocks."]
+    #[doc = " @param free"]
+    #[doc = "   - 0: object is supposed to be allocated, mark it as free"]
+    #[doc = "   - 1: object is supposed to be free, mark it as allocated"]
+    #[doc = "   - 2: just check that cookie is valid (free or allocated)"]
     pub fn rte_mempool_contig_blocks_check_cookies(
         mp: *const rte_mempool,
         first_obj_table_const: *const *mut ::std::os::raw::c_void,
@@ -14341,19 +14437,19 @@ extern "C" {
         free: ::std::os::raw::c_int,
     );
 }
-/// Prototype for implementation specific data provisioning function.
-///
-/// The function should provide the implementation specific memory for
-/// use by the other mempool ops functions in a given mempool ops struct.
-/// E.g. the default ops provides an instance of the rte_ring for this purpose.
-/// it will most likely point to a different type of data structure, and
-/// will be transparent to the application programmer.
-/// This function should set mp->pool_data.
+#[doc = " Prototype for implementation specific data provisioning function."]
+#[doc = ""]
+#[doc = " The function should provide the implementation specific memory for"]
+#[doc = " use by the other mempool ops functions in a given mempool ops struct."]
+#[doc = " E.g. the default ops provides an instance of the rte_ring for this purpose."]
+#[doc = " it will most likely point to a different type of data structure, and"]
+#[doc = " will be transparent to the application programmer."]
+#[doc = " This function should set mp->pool_data."]
 pub type rte_mempool_alloc_t =
     ::std::option::Option<unsafe extern "C" fn(mp: *mut rte_mempool) -> ::std::os::raw::c_int>;
-/// Free the opaque private data pointed to by mp->pool_data pointer.
+#[doc = " Free the opaque private data pointed to by mp->pool_data pointer."]
 pub type rte_mempool_free_t = ::std::option::Option<unsafe extern "C" fn(mp: *mut rte_mempool)>;
-/// Enqueue an object into the external pool.
+#[doc = " Enqueue an object into the external pool."]
 pub type rte_mempool_enqueue_t = ::std::option::Option<
     unsafe extern "C" fn(
         mp: *mut rte_mempool,
@@ -14361,7 +14457,7 @@ pub type rte_mempool_enqueue_t = ::std::option::Option<
         n: ::std::os::raw::c_uint,
     ) -> ::std::os::raw::c_int,
 >;
-/// Dequeue an object from the external pool.
+#[doc = " Dequeue an object from the external pool."]
 pub type rte_mempool_dequeue_t = ::std::option::Option<
     unsafe extern "C" fn(
         mp: *mut rte_mempool,
@@ -14369,10 +14465,10 @@ pub type rte_mempool_dequeue_t = ::std::option::Option<
         n: ::std::os::raw::c_uint,
     ) -> ::std::os::raw::c_int,
 >;
-/// @warning
-/// @b EXPERIMENTAL: this API may change without prior notice.
-///
-/// Dequeue a number of contiquous object blocks from the external pool.
+#[doc = " @warning"]
+#[doc = " @b EXPERIMENTAL: this API may change without prior notice."]
+#[doc = ""]
+#[doc = " Dequeue a number of contiquous object blocks from the external pool."]
 pub type rte_mempool_dequeue_contig_blocks_t = ::std::option::Option<
     unsafe extern "C" fn(
         mp: *mut rte_mempool,
@@ -14380,30 +14476,30 @@ pub type rte_mempool_dequeue_contig_blocks_t = ::std::option::Option<
         n: ::std::os::raw::c_uint,
     ) -> ::std::os::raw::c_int,
 >;
-/// Return the number of available objects in the external pool.
+#[doc = " Return the number of available objects in the external pool."]
 pub type rte_mempool_get_count =
     ::std::option::Option<unsafe extern "C" fn(mp: *const rte_mempool) -> ::std::os::raw::c_uint>;
-/// Calculate memory size required to store given number of objects.
-///
-/// If mempool objects are not required to be IOVA-contiguous
-/// (the flag MEMPOOL_F_NO_IOVA_CONTIG is set), min_chunk_size defines
-/// virtually contiguous chunk size. Otherwise, if mempool objects must
-/// be IOVA-contiguous (the flag MEMPOOL_F_NO_IOVA_CONTIG is clear),
-/// min_chunk_size defines IOVA-contiguous chunk size.
-///
-/// @param[in] mp
-///   Pointer to the memory pool.
-/// @param[in] obj_num
-///   Number of objects.
-/// @param[in] pg_shift
-///   LOG2 of the physical pages size. If set to 0, ignore page boundaries.
-/// @param[out] min_chunk_size
-///   Location for minimum size of the memory chunk which may be used to
-///   store memory pool objects.
-/// @param[out] align
-///   Location for required memory chunk alignment.
-/// @return
-///   Required memory size aligned at page boundary.
+#[doc = " Calculate memory size required to store given number of objects."]
+#[doc = ""]
+#[doc = " If mempool objects are not required to be IOVA-contiguous"]
+#[doc = " (the flag MEMPOOL_F_NO_IOVA_CONTIG is set), min_chunk_size defines"]
+#[doc = " virtually contiguous chunk size. Otherwise, if mempool objects must"]
+#[doc = " be IOVA-contiguous (the flag MEMPOOL_F_NO_IOVA_CONTIG is clear),"]
+#[doc = " min_chunk_size defines IOVA-contiguous chunk size."]
+#[doc = ""]
+#[doc = " @param[in] mp"]
+#[doc = "   Pointer to the memory pool."]
+#[doc = " @param[in] obj_num"]
+#[doc = "   Number of objects."]
+#[doc = " @param[in] pg_shift"]
+#[doc = "   LOG2 of the physical pages size. If set to 0, ignore page boundaries."]
+#[doc = " @param[out] min_chunk_size"]
+#[doc = "   Location for minimum size of the memory chunk which may be used to"]
+#[doc = "   store memory pool objects."]
+#[doc = " @param[out] align"]
+#[doc = "   Location for required memory chunk alignment."]
+#[doc = " @return"]
+#[doc = "   Required memory size aligned at page boundary."]
 pub type rte_mempool_calc_mem_size_t = ::std::option::Option<
     unsafe extern "C" fn(
         mp: *const rte_mempool,
@@ -14414,23 +14510,23 @@ pub type rte_mempool_calc_mem_size_t = ::std::option::Option<
     ) -> isize,
 >;
 extern "C" {
-    /// Default way to calculate memory size required to store given number of
-    /// objects.
-    ///
-    /// If page boundaries may be ignored, it is just a product of total
-    /// object size including header and trailer and number of objects.
-    /// Otherwise, it is a number of pages required to store given number of
-    /// objects without crossing page boundary.
-    ///
-    /// Note that if object size is bigger than page size, then it assumes
-    /// that pages are grouped in subsets of physically continuous pages big
-    /// enough to store at least one object.
-    ///
-    /// Minimum size of memory chunk is a maximum of the page size and total
-    /// element size.
-    ///
-    /// Required memory chunk alignment is a maximum of page size and cache
-    /// line size.
+    #[doc = " Default way to calculate memory size required to store given number of"]
+    #[doc = " objects."]
+    #[doc = ""]
+    #[doc = " If page boundaries may be ignored, it is just a product of total"]
+    #[doc = " object size including header and trailer and number of objects."]
+    #[doc = " Otherwise, it is a number of pages required to store given number of"]
+    #[doc = " objects without crossing page boundary."]
+    #[doc = ""]
+    #[doc = " Note that if object size is bigger than page size, then it assumes"]
+    #[doc = " that pages are grouped in subsets of physically continuous pages big"]
+    #[doc = " enough to store at least one object."]
+    #[doc = ""]
+    #[doc = " Minimum size of memory chunk is a maximum of the page size and total"]
+    #[doc = " element size."]
+    #[doc = ""]
+    #[doc = " Required memory chunk alignment is a maximum of page size and cache"]
+    #[doc = " line size."]
     pub fn rte_mempool_op_calc_mem_size_default(
         mp: *const rte_mempool,
         obj_num: u32,
@@ -14439,16 +14535,16 @@ extern "C" {
         align: *mut usize,
     ) -> isize;
 }
-/// Function to be called for each populated object.
-///
-/// @param[in] mp
-///   A pointer to the mempool structure.
-/// @param[in] opaque
-///   An opaque pointer passed to iterator.
-/// @param[in] vaddr
-///   Object virtual address.
-/// @param[in] iova
-///   Input/output virtual address of the object or RTE_BAD_IOVA.
+#[doc = " Function to be called for each populated object."]
+#[doc = ""]
+#[doc = " @param[in] mp"]
+#[doc = "   A pointer to the mempool structure."]
+#[doc = " @param[in] opaque"]
+#[doc = "   An opaque pointer passed to iterator."]
+#[doc = " @param[in] vaddr"]
+#[doc = "   Object virtual address."]
+#[doc = " @param[in] iova"]
+#[doc = "   Input/output virtual address of the object or RTE_BAD_IOVA."]
 pub type rte_mempool_populate_obj_cb_t = ::std::option::Option<
     unsafe extern "C" fn(
         mp: *mut rte_mempool,
@@ -14457,32 +14553,32 @@ pub type rte_mempool_populate_obj_cb_t = ::std::option::Option<
         iova: rte_iova_t,
     ),
 >;
-/// Populate memory pool objects using provided memory chunk.
-///
-/// Populated objects should be enqueued to the pool, e.g. using
-/// rte_mempool_ops_enqueue_bulk().
-///
-/// If the given IO address is unknown (iova = RTE_BAD_IOVA),
-/// the chunk doesn't need to be physically contiguous (only virtually),
-/// and allocated objects may span two pages.
-///
-/// @param[in] mp
-///   A pointer to the mempool structure.
-/// @param[in] max_objs
-///   Maximum number of objects to be populated.
-/// @param[in] vaddr
-///   The virtual address of memory that should be used to store objects.
-/// @param[in] iova
-///   The IO address
-/// @param[in] len
-///   The length of memory in bytes.
-/// @param[in] obj_cb
-///   Callback function to be executed for each populated object.
-/// @param[in] obj_cb_arg
-///   An opaque pointer passed to the callback function.
-/// @return
-///   The number of objects added on success.
-///   On error, no objects are populated and a negative errno is returned.
+#[doc = " Populate memory pool objects using provided memory chunk."]
+#[doc = ""]
+#[doc = " Populated objects should be enqueued to the pool, e.g. using"]
+#[doc = " rte_mempool_ops_enqueue_bulk()."]
+#[doc = ""]
+#[doc = " If the given IO address is unknown (iova = RTE_BAD_IOVA),"]
+#[doc = " the chunk doesn\'t need to be physically contiguous (only virtually),"]
+#[doc = " and allocated objects may span two pages."]
+#[doc = ""]
+#[doc = " @param[in] mp"]
+#[doc = "   A pointer to the mempool structure."]
+#[doc = " @param[in] max_objs"]
+#[doc = "   Maximum number of objects to be populated."]
+#[doc = " @param[in] vaddr"]
+#[doc = "   The virtual address of memory that should be used to store objects."]
+#[doc = " @param[in] iova"]
+#[doc = "   The IO address"]
+#[doc = " @param[in] len"]
+#[doc = "   The length of memory in bytes."]
+#[doc = " @param[in] obj_cb"]
+#[doc = "   Callback function to be executed for each populated object."]
+#[doc = " @param[in] obj_cb_arg"]
+#[doc = "   An opaque pointer passed to the callback function."]
+#[doc = " @return"]
+#[doc = "   The number of objects added on success."]
+#[doc = "   On error, no objects are populated and a negative errno is returned."]
 pub type rte_mempool_populate_t = ::std::option::Option<
     unsafe extern "C" fn(
         mp: *mut rte_mempool,
@@ -14495,8 +14591,8 @@ pub type rte_mempool_populate_t = ::std::option::Option<
     ) -> ::std::os::raw::c_int,
 >;
 extern "C" {
-    /// Default way to populate memory pool object using provided memory
-    /// chunk: just slice objects one by one.
+    #[doc = " Default way to populate memory pool object using provided memory"]
+    #[doc = " chunk: just slice objects one by one."]
     pub fn rte_mempool_op_populate_default(
         mp: *mut rte_mempool,
         max_objs: ::std::os::raw::c_uint,
@@ -14507,39 +14603,39 @@ extern "C" {
         obj_cb_arg: *mut ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;
 }
-/// @warning
-/// @b EXPERIMENTAL: this API may change without prior notice.
-///
-/// Get some additional information about a mempool.
+#[doc = " @warning"]
+#[doc = " @b EXPERIMENTAL: this API may change without prior notice."]
+#[doc = ""]
+#[doc = " Get some additional information about a mempool."]
 pub type rte_mempool_get_info_t = ::std::option::Option<
     unsafe extern "C" fn(mp: *const rte_mempool, info: *mut rte_mempool_info)
         -> ::std::os::raw::c_int,
 >;
-/// Structure defining mempool operations structure
+#[doc = " Structure defining mempool operations structure"]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_mempool_ops {
-    ///< Name of mempool ops struct.
+    #[doc = "< Name of mempool ops struct."]
     pub name: [::std::os::raw::c_char; 32usize],
-    ///< Allocate private data.
+    #[doc = "< Allocate private data."]
     pub alloc: rte_mempool_alloc_t,
-    ///< Free the external pool.
+    #[doc = "< Free the external pool."]
     pub free: rte_mempool_free_t,
-    ///< Enqueue an object.
+    #[doc = "< Enqueue an object."]
     pub enqueue: rte_mempool_enqueue_t,
-    ///< Dequeue an object.
+    #[doc = "< Dequeue an object."]
     pub dequeue: rte_mempool_dequeue_t,
-    ///< Get qty of available objs.
+    #[doc = "< Get qty of available objs."]
     pub get_count: rte_mempool_get_count,
-    /// Optional callback to calculate memory size required to
-    /// store specified number of objects.
+    #[doc = " Optional callback to calculate memory size required to"]
+    #[doc = " store specified number of objects."]
     pub calc_mem_size: rte_mempool_calc_mem_size_t,
-    /// Optional callback to populate mempool objects using
-    /// provided memory chunk.
+    #[doc = " Optional callback to populate mempool objects using"]
+    #[doc = " provided memory chunk."]
     pub populate: rte_mempool_populate_t,
-    /// Get mempool info
+    #[doc = " Get mempool info"]
     pub get_info: rte_mempool_get_info_t,
-    /// Dequeue a number of contiguous object blocks.
+    #[doc = " Dequeue a number of contiguous object blocks."]
     pub dequeue_contig_blocks: rte_mempool_dequeue_contig_blocks_t,
     pub __bindgen_padding_0: [u64; 3usize],
 }
@@ -14658,22 +14754,22 @@ impl Default for rte_mempool_ops {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// Structure storing the table of registered ops structs, each of which contain
-/// the function pointers for the mempool ops functions.
-/// Each process has its own storage for this ops struct array so that
-/// the mempools can be shared across primary and secondary processes.
-/// The indices used to access the array are valid across processes, whereas
-/// any function pointers stored directly in the mempool struct would not be.
-/// This results in us simply having "ops_index" in the mempool struct.
+#[doc = " Structure storing the table of registered ops structs, each of which contain"]
+#[doc = " the function pointers for the mempool ops functions."]
+#[doc = " Each process has its own storage for this ops struct array so that"]
+#[doc = " the mempools can be shared across primary and secondary processes."]
+#[doc = " The indices used to access the array are valid across processes, whereas"]
+#[doc = " any function pointers stored directly in the mempool struct would not be."]
+#[doc = " This results in us simply having \"ops_index\" in the mempool struct."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_mempool_ops_table {
-    ///< Spinlock for add/delete.
+    #[doc = "< Spinlock for add/delete."]
     pub sl: rte_spinlock_t,
-    ///< Number of used ops structs in the table.
+    #[doc = "< Number of used ops structs in the table."]
     pub num_ops: u32,
     pub __bindgen_padding_0: [u64; 7usize],
-    /// Storage for all possible ops structs.
+    #[doc = " Storage for all possible ops structs."]
     pub ops: [rte_mempool_ops; 16usize],
 }
 #[test]
@@ -14724,42 +14820,42 @@ extern "C" {
     pub static mut rte_mempool_ops_table: rte_mempool_ops_table;
 }
 extern "C" {
-    /// @internal Wrapper for mempool_ops alloc callback.
-    ///
-    /// @param mp
-    ///   Pointer to the memory pool.
-    /// @return
-    ///   - 0: Success; successfully allocated mempool pool_data.
-    ///   - <0: Error; code of alloc function.
+    #[doc = " @internal Wrapper for mempool_ops alloc callback."]
+    #[doc = ""]
+    #[doc = " @param mp"]
+    #[doc = "   Pointer to the memory pool."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success; successfully allocated mempool pool_data."]
+    #[doc = "   - <0: Error; code of alloc function."]
     pub fn rte_mempool_ops_alloc(mp: *mut rte_mempool) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @internal wrapper for mempool_ops get_count callback.
-    ///
-    /// @param mp
-    ///   Pointer to the memory pool.
-    /// @return
-    ///   The number of available objects in the external pool.
+    #[doc = " @internal wrapper for mempool_ops get_count callback."]
+    #[doc = ""]
+    #[doc = " @param mp"]
+    #[doc = "   Pointer to the memory pool."]
+    #[doc = " @return"]
+    #[doc = "   The number of available objects in the external pool."]
     pub fn rte_mempool_ops_get_count(mp: *const rte_mempool) -> ::std::os::raw::c_uint;
 }
 extern "C" {
-    /// @internal wrapper for mempool_ops calc_mem_size callback.
-    /// API to calculate size of memory required to store specified number of
-    /// object.
-    ///
-    /// @param[in] mp
-    ///   Pointer to the memory pool.
-    /// @param[in] obj_num
-    ///   Number of objects.
-    /// @param[in] pg_shift
-    ///   LOG2 of the physical pages size. If set to 0, ignore page boundaries.
-    /// @param[out] min_chunk_size
-    ///   Location for minimum size of the memory chunk which may be used to
-    ///   store memory pool objects.
-    /// @param[out] align
-    ///   Location for required memory chunk alignment.
-    /// @return
-    ///   Required memory size aligned at page boundary.
+    #[doc = " @internal wrapper for mempool_ops calc_mem_size callback."]
+    #[doc = " API to calculate size of memory required to store specified number of"]
+    #[doc = " object."]
+    #[doc = ""]
+    #[doc = " @param[in] mp"]
+    #[doc = "   Pointer to the memory pool."]
+    #[doc = " @param[in] obj_num"]
+    #[doc = "   Number of objects."]
+    #[doc = " @param[in] pg_shift"]
+    #[doc = "   LOG2 of the physical pages size. If set to 0, ignore page boundaries."]
+    #[doc = " @param[out] min_chunk_size"]
+    #[doc = "   Location for minimum size of the memory chunk which may be used to"]
+    #[doc = "   store memory pool objects."]
+    #[doc = " @param[out] align"]
+    #[doc = "   Location for required memory chunk alignment."]
+    #[doc = " @return"]
+    #[doc = "   Required memory size aligned at page boundary."]
     pub fn rte_mempool_ops_calc_mem_size(
         mp: *const rte_mempool,
         obj_num: u32,
@@ -14769,27 +14865,27 @@ extern "C" {
     ) -> isize;
 }
 extern "C" {
-    /// @internal wrapper for mempool_ops populate callback.
-    ///
-    /// Populate memory pool objects using provided memory chunk.
-    ///
-    /// @param[in] mp
-    ///   A pointer to the mempool structure.
-    /// @param[in] max_objs
-    ///   Maximum number of objects to be populated.
-    /// @param[in] vaddr
-    ///   The virtual address of memory that should be used to store objects.
-    /// @param[in] iova
-    ///   The IO address
-    /// @param[in] len
-    ///   The length of memory in bytes.
-    /// @param[in] obj_cb
-    ///   Callback function to be executed for each populated object.
-    /// @param[in] obj_cb_arg
-    ///   An opaque pointer passed to the callback function.
-    /// @return
-    ///   The number of objects added on success.
-    ///   On error, no objects are populated and a negative errno is returned.
+    #[doc = " @internal wrapper for mempool_ops populate callback."]
+    #[doc = ""]
+    #[doc = " Populate memory pool objects using provided memory chunk."]
+    #[doc = ""]
+    #[doc = " @param[in] mp"]
+    #[doc = "   A pointer to the mempool structure."]
+    #[doc = " @param[in] max_objs"]
+    #[doc = "   Maximum number of objects to be populated."]
+    #[doc = " @param[in] vaddr"]
+    #[doc = "   The virtual address of memory that should be used to store objects."]
+    #[doc = " @param[in] iova"]
+    #[doc = "   The IO address"]
+    #[doc = " @param[in] len"]
+    #[doc = "   The length of memory in bytes."]
+    #[doc = " @param[in] obj_cb"]
+    #[doc = "   Callback function to be executed for each populated object."]
+    #[doc = " @param[in] obj_cb_arg"]
+    #[doc = "   An opaque pointer passed to the callback function."]
+    #[doc = " @return"]
+    #[doc = "   The number of objects added on success."]
+    #[doc = "   On error, no objects are populated and a negative errno is returned."]
     pub fn rte_mempool_ops_populate(
         mp: *mut rte_mempool,
         max_objs: ::std::os::raw::c_uint,
@@ -14801,47 +14897,47 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice.
-    ///
-    /// Wrapper for mempool_ops get_info callback.
-    ///
-    /// @param[in] mp
-    ///   Pointer to the memory pool.
-    /// @param[out] info
-    ///   Pointer to the rte_mempool_info structure
-    /// @return
-    ///   - 0: Success; The mempool driver supports retrieving supplementary
-    ///        mempool information
-    ///   - -ENOTSUP - doesn't support get_info ops (valid case).
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice."]
+    #[doc = ""]
+    #[doc = " Wrapper for mempool_ops get_info callback."]
+    #[doc = ""]
+    #[doc = " @param[in] mp"]
+    #[doc = "   Pointer to the memory pool."]
+    #[doc = " @param[out] info"]
+    #[doc = "   Pointer to the rte_mempool_info structure"]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success; The mempool driver supports retrieving supplementary"]
+    #[doc = "        mempool information"]
+    #[doc = "   - -ENOTSUP - doesn\'t support get_info ops (valid case)."]
     pub fn rte_mempool_ops_get_info(
         mp: *const rte_mempool,
         info: *mut rte_mempool_info,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @internal wrapper for mempool_ops free callback.
-    ///
-    /// @param mp
-    ///   Pointer to the memory pool.
+    #[doc = " @internal wrapper for mempool_ops free callback."]
+    #[doc = ""]
+    #[doc = " @param mp"]
+    #[doc = "   Pointer to the memory pool."]
     pub fn rte_mempool_ops_free(mp: *mut rte_mempool);
 }
 extern "C" {
-    /// Set the ops of a mempool.
-    ///
-    /// This can only be done on a mempool that is not populated, i.e. just after
-    /// a call to rte_mempool_create_empty().
-    ///
-    /// @param mp
-    ///   Pointer to the memory pool.
-    /// @param name
-    ///   Name of the ops structure to use for this mempool.
-    /// @param pool_config
-    ///   Opaque data that can be passed by the application to the ops functions.
-    /// @return
-    ///   - 0: Success; the mempool is now using the requested ops functions.
-    ///   - -EINVAL - Invalid ops struct name provided.
-    ///   - -EEXIST - mempool already has an ops struct assigned.
+    #[doc = " Set the ops of a mempool."]
+    #[doc = ""]
+    #[doc = " This can only be done on a mempool that is not populated, i.e. just after"]
+    #[doc = " a call to rte_mempool_create_empty()."]
+    #[doc = ""]
+    #[doc = " @param mp"]
+    #[doc = "   Pointer to the memory pool."]
+    #[doc = " @param name"]
+    #[doc = "   Name of the ops structure to use for this mempool."]
+    #[doc = " @param pool_config"]
+    #[doc = "   Opaque data that can be passed by the application to the ops functions."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success; the mempool is now using the requested ops functions."]
+    #[doc = "   - -EINVAL - Invalid ops struct name provided."]
+    #[doc = "   - -EEXIST - mempool already has an ops struct assigned."]
     pub fn rte_mempool_set_ops_byname(
         mp: *mut rte_mempool,
         name: *const ::std::os::raw::c_char,
@@ -14849,19 +14945,19 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Register mempool operations.
-    ///
-    /// @param ops
-    ///   Pointer to an ops structure to register.
-    /// @return
-    ///   - >=0: Success; return the index of the ops struct in the table.
-    ///   - -EINVAL - some missing callbacks while registering ops struct.
-    ///   - -ENOSPC - the maximum number of ops structs has been reached.
+    #[doc = " Register mempool operations."]
+    #[doc = ""]
+    #[doc = " @param ops"]
+    #[doc = "   Pointer to an ops structure to register."]
+    #[doc = " @return"]
+    #[doc = "   - >=0: Success; return the index of the ops struct in the table."]
+    #[doc = "   - -EINVAL - some missing callbacks while registering ops struct."]
+    #[doc = "   - -ENOSPC - the maximum number of ops structs has been reached."]
     pub fn rte_mempool_register_ops(ops: *const rte_mempool_ops) -> ::std::os::raw::c_int;
 }
-/// An object callback function for mempool.
-///
-/// Used by rte_mempool_create() and rte_mempool_obj_iter().
+#[doc = " An object callback function for mempool."]
+#[doc = ""]
+#[doc = " Used by rte_mempool_create() and rte_mempool_obj_iter()."]
 pub type rte_mempool_obj_cb_t = ::std::option::Option<
     unsafe extern "C" fn(
         mp: *mut rte_mempool,
@@ -14871,9 +14967,9 @@ pub type rte_mempool_obj_cb_t = ::std::option::Option<
     ),
 >;
 pub type rte_mempool_obj_ctor_t = rte_mempool_obj_cb_t;
-/// A memory callback function for mempool.
-///
-/// Used by rte_mempool_mem_iter().
+#[doc = " A memory callback function for mempool."]
+#[doc = ""]
+#[doc = " Used by rte_mempool_mem_iter()."]
 pub type rte_mempool_mem_cb_t = ::std::option::Option<
     unsafe extern "C" fn(
         mp: *mut rte_mempool,
@@ -14882,91 +14978,91 @@ pub type rte_mempool_mem_cb_t = ::std::option::Option<
         mem_idx: ::std::os::raw::c_uint,
     ),
 >;
-/// A mempool constructor callback function.
-///
-/// Arguments are the mempool and the opaque pointer given by the user in
-/// rte_mempool_create().
+#[doc = " A mempool constructor callback function."]
+#[doc = ""]
+#[doc = " Arguments are the mempool and the opaque pointer given by the user in"]
+#[doc = " rte_mempool_create()."]
 pub type rte_mempool_ctor_t = ::std::option::Option<
     unsafe extern "C" fn(arg1: *mut rte_mempool, arg2: *mut ::std::os::raw::c_void),
 >;
 extern "C" {
-    /// Create a new mempool named *name* in memory.
-    ///
-    /// This function uses ``rte_memzone_reserve()`` to allocate memory. The
-    /// pool contains n elements of elt_size. Its size is set to n.
-    ///
-    /// @param name
-    ///   The name of the mempool.
-    /// @param n
-    ///   The number of elements in the mempool. The optimum size (in terms of
-    ///   memory usage) for a mempool is when n is a power of two minus one:
-    ///   n = (2^q - 1).
-    /// @param elt_size
-    ///   The size of each element.
-    /// @param cache_size
-    ///   If cache_size is non-zero, the rte_mempool library will try to
-    ///   limit the accesses to the common lockless pool, by maintaining a
-    ///   per-lcore object cache. This argument must be lower or equal to
-    ///   CONFIG_RTE_MEMPOOL_CACHE_MAX_SIZE and n / 1.5. It is advised to choose
-    ///   cache_size to have "n modulo cache_size == 0": if this is
-    ///   not the case, some elements will always stay in the pool and will
-    ///   never be used. The access to the per-lcore table is of course
-    ///   faster than the multi-producer/consumer pool. The cache can be
-    ///   disabled if the cache_size argument is set to 0; it can be useful to
-    ///   avoid losing objects in cache.
-    /// @param private_data_size
-    ///   The size of the private data appended after the mempool
-    ///   structure. This is useful for storing some private data after the
-    ///   mempool structure, as is done for rte_mbuf_pool for example.
-    /// @param mp_init
-    ///   A function pointer that is called for initialization of the pool,
-    ///   before object initialization. The user can initialize the private
-    ///   data in this function if needed. This parameter can be NULL if
-    ///   not needed.
-    /// @param mp_init_arg
-    ///   An opaque pointer to data that can be used in the mempool
-    ///   constructor function.
-    /// @param obj_init
-    ///   A function pointer that is called for each object at
-    ///   initialization of the pool. The user can set some meta data in
-    ///   objects if needed. This parameter can be NULL if not needed.
-    ///   The obj_init() function takes the mempool pointer, the init_arg,
-    ///   the object pointer and the object number as parameters.
-    /// @param obj_init_arg
-    ///   An opaque pointer to data that can be used as an argument for
-    ///   each call to the object constructor function.
-    /// @param socket_id
-    ///   The *socket_id* argument is the socket identifier in the case of
-    ///   NUMA. The value can be *SOCKET_ID_ANY* if there is no NUMA
-    ///   constraint for the reserved zone.
-    /// @param flags
-    ///   The *flags* arguments is an OR of following flags:
-    ///   - MEMPOOL_F_NO_SPREAD: By default, objects addresses are spread
-    ///     between channels in RAM: the pool allocator will add padding
-    ///     between objects depending on the hardware configuration. See
-    ///     Memory alignment constraints for details. If this flag is set,
-    ///     the allocator will just align them to a cache line.
-    ///   - MEMPOOL_F_NO_CACHE_ALIGN: By default, the returned objects are
-    ///     cache-aligned. This flag removes this constraint, and no
-    ///     padding will be present between objects. This flag implies
-    ///     MEMPOOL_F_NO_SPREAD.
-    ///   - MEMPOOL_F_SP_PUT: If this flag is set, the default behavior
-    ///     when using rte_mempool_put() or rte_mempool_put_bulk() is
-    ///     "single-producer". Otherwise, it is "multi-producers".
-    ///   - MEMPOOL_F_SC_GET: If this flag is set, the default behavior
-    ///     when using rte_mempool_get() or rte_mempool_get_bulk() is
-    ///     "single-consumer". Otherwise, it is "multi-consumers".
-    ///   - MEMPOOL_F_NO_IOVA_CONTIG: If set, allocated objects won't
-    ///     necessarily be contiguous in IO memory.
-    /// @return
-    ///   The pointer to the new allocated mempool, on success. NULL on error
-    ///   with rte_errno set appropriately. Possible rte_errno values include:
-    ///    - E_RTE_NO_CONFIG - function could not get pointer to rte_config structure
-    ///    - E_RTE_SECONDARY - function was called from a secondary process instance
-    ///    - EINVAL - cache size provided is too large
-    ///    - ENOSPC - the maximum number of memzones has already been allocated
-    ///    - EEXIST - a memzone with the same name already exists
-    ///    - ENOMEM - no appropriate memory area found in which to create memzone
+    #[doc = " Create a new mempool named *name* in memory."]
+    #[doc = ""]
+    #[doc = " This function uses ``rte_memzone_reserve()`` to allocate memory. The"]
+    #[doc = " pool contains n elements of elt_size. Its size is set to n."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   The name of the mempool."]
+    #[doc = " @param n"]
+    #[doc = "   The number of elements in the mempool. The optimum size (in terms of"]
+    #[doc = "   memory usage) for a mempool is when n is a power of two minus one:"]
+    #[doc = "   n = (2^q - 1)."]
+    #[doc = " @param elt_size"]
+    #[doc = "   The size of each element."]
+    #[doc = " @param cache_size"]
+    #[doc = "   If cache_size is non-zero, the rte_mempool library will try to"]
+    #[doc = "   limit the accesses to the common lockless pool, by maintaining a"]
+    #[doc = "   per-lcore object cache. This argument must be lower or equal to"]
+    #[doc = "   CONFIG_RTE_MEMPOOL_CACHE_MAX_SIZE and n / 1.5. It is advised to choose"]
+    #[doc = "   cache_size to have \"n modulo cache_size == 0\": if this is"]
+    #[doc = "   not the case, some elements will always stay in the pool and will"]
+    #[doc = "   never be used. The access to the per-lcore table is of course"]
+    #[doc = "   faster than the multi-producer/consumer pool. The cache can be"]
+    #[doc = "   disabled if the cache_size argument is set to 0; it can be useful to"]
+    #[doc = "   avoid losing objects in cache."]
+    #[doc = " @param private_data_size"]
+    #[doc = "   The size of the private data appended after the mempool"]
+    #[doc = "   structure. This is useful for storing some private data after the"]
+    #[doc = "   mempool structure, as is done for rte_mbuf_pool for example."]
+    #[doc = " @param mp_init"]
+    #[doc = "   A function pointer that is called for initialization of the pool,"]
+    #[doc = "   before object initialization. The user can initialize the private"]
+    #[doc = "   data in this function if needed. This parameter can be NULL if"]
+    #[doc = "   not needed."]
+    #[doc = " @param mp_init_arg"]
+    #[doc = "   An opaque pointer to data that can be used in the mempool"]
+    #[doc = "   constructor function."]
+    #[doc = " @param obj_init"]
+    #[doc = "   A function pointer that is called for each object at"]
+    #[doc = "   initialization of the pool. The user can set some meta data in"]
+    #[doc = "   objects if needed. This parameter can be NULL if not needed."]
+    #[doc = "   The obj_init() function takes the mempool pointer, the init_arg,"]
+    #[doc = "   the object pointer and the object number as parameters."]
+    #[doc = " @param obj_init_arg"]
+    #[doc = "   An opaque pointer to data that can be used as an argument for"]
+    #[doc = "   each call to the object constructor function."]
+    #[doc = " @param socket_id"]
+    #[doc = "   The *socket_id* argument is the socket identifier in the case of"]
+    #[doc = "   NUMA. The value can be *SOCKET_ID_ANY* if there is no NUMA"]
+    #[doc = "   constraint for the reserved zone."]
+    #[doc = " @param flags"]
+    #[doc = "   The *flags* arguments is an OR of following flags:"]
+    #[doc = "   - MEMPOOL_F_NO_SPREAD: By default, objects addresses are spread"]
+    #[doc = "     between channels in RAM: the pool allocator will add padding"]
+    #[doc = "     between objects depending on the hardware configuration. See"]
+    #[doc = "     Memory alignment constraints for details. If this flag is set,"]
+    #[doc = "     the allocator will just align them to a cache line."]
+    #[doc = "   - MEMPOOL_F_NO_CACHE_ALIGN: By default, the returned objects are"]
+    #[doc = "     cache-aligned. This flag removes this constraint, and no"]
+    #[doc = "     padding will be present between objects. This flag implies"]
+    #[doc = "     MEMPOOL_F_NO_SPREAD."]
+    #[doc = "   - MEMPOOL_F_SP_PUT: If this flag is set, the default behavior"]
+    #[doc = "     when using rte_mempool_put() or rte_mempool_put_bulk() is"]
+    #[doc = "     \"single-producer\". Otherwise, it is \"multi-producers\"."]
+    #[doc = "   - MEMPOOL_F_SC_GET: If this flag is set, the default behavior"]
+    #[doc = "     when using rte_mempool_get() or rte_mempool_get_bulk() is"]
+    #[doc = "     \"single-consumer\". Otherwise, it is \"multi-consumers\"."]
+    #[doc = "   - MEMPOOL_F_NO_IOVA_CONTIG: If set, allocated objects won\'t"]
+    #[doc = "     necessarily be contiguous in IO memory."]
+    #[doc = " @return"]
+    #[doc = "   The pointer to the new allocated mempool, on success. NULL on error"]
+    #[doc = "   with rte_errno set appropriately. Possible rte_errno values include:"]
+    #[doc = "    - E_RTE_NO_CONFIG - function could not get pointer to rte_config structure"]
+    #[doc = "    - E_RTE_SECONDARY - function was called from a secondary process instance"]
+    #[doc = "    - EINVAL - cache size provided is too large"]
+    #[doc = "    - ENOSPC - the maximum number of memzones has already been allocated"]
+    #[doc = "    - EEXIST - a memzone with the same name already exists"]
+    #[doc = "    - ENOMEM - no appropriate memory area found in which to create memzone"]
     pub fn rte_mempool_create(
         name: *const ::std::os::raw::c_char,
         n: ::std::os::raw::c_uint,
@@ -14982,38 +15078,38 @@ extern "C" {
     ) -> *mut rte_mempool;
 }
 extern "C" {
-    /// Create an empty mempool
-    ///
-    /// The mempool is allocated and initialized, but it is not populated: no
-    /// memory is allocated for the mempool elements. The user has to call
-    /// rte_mempool_populate_*() to add memory chunks to the pool. Once
-    /// populated, the user may also want to initialize each object with
-    /// rte_mempool_obj_iter().
-    ///
-    /// @param name
-    ///   The name of the mempool.
-    /// @param n
-    ///   The maximum number of elements that can be added in the mempool.
-    ///   The optimum size (in terms of memory usage) for a mempool is when n
-    ///   is a power of two minus one: n = (2^q - 1).
-    /// @param elt_size
-    ///   The size of each element.
-    /// @param cache_size
-    ///   Size of the cache. See rte_mempool_create() for details.
-    /// @param private_data_size
-    ///   The size of the private data appended after the mempool
-    ///   structure. This is useful for storing some private data after the
-    ///   mempool structure, as is done for rte_mbuf_pool for example.
-    /// @param socket_id
-    ///   The *socket_id* argument is the socket identifier in the case of
-    ///   NUMA. The value can be *SOCKET_ID_ANY* if there is no NUMA
-    ///   constraint for the reserved zone.
-    /// @param flags
-    ///   Flags controlling the behavior of the mempool. See
-    ///   rte_mempool_create() for details.
-    /// @return
-    ///   The pointer to the new allocated mempool, on success. NULL on error
-    ///   with rte_errno set appropriately. See rte_mempool_create() for details.
+    #[doc = " Create an empty mempool"]
+    #[doc = ""]
+    #[doc = " The mempool is allocated and initialized, but it is not populated: no"]
+    #[doc = " memory is allocated for the mempool elements. The user has to call"]
+    #[doc = " rte_mempool_populate_*() to add memory chunks to the pool. Once"]
+    #[doc = " populated, the user may also want to initialize each object with"]
+    #[doc = " rte_mempool_obj_iter()."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   The name of the mempool."]
+    #[doc = " @param n"]
+    #[doc = "   The maximum number of elements that can be added in the mempool."]
+    #[doc = "   The optimum size (in terms of memory usage) for a mempool is when n"]
+    #[doc = "   is a power of two minus one: n = (2^q - 1)."]
+    #[doc = " @param elt_size"]
+    #[doc = "   The size of each element."]
+    #[doc = " @param cache_size"]
+    #[doc = "   Size of the cache. See rte_mempool_create() for details."]
+    #[doc = " @param private_data_size"]
+    #[doc = "   The size of the private data appended after the mempool"]
+    #[doc = "   structure. This is useful for storing some private data after the"]
+    #[doc = "   mempool structure, as is done for rte_mbuf_pool for example."]
+    #[doc = " @param socket_id"]
+    #[doc = "   The *socket_id* argument is the socket identifier in the case of"]
+    #[doc = "   NUMA. The value can be *SOCKET_ID_ANY* if there is no NUMA"]
+    #[doc = "   constraint for the reserved zone."]
+    #[doc = " @param flags"]
+    #[doc = "   Flags controlling the behavior of the mempool. See"]
+    #[doc = "   rte_mempool_create() for details."]
+    #[doc = " @return"]
+    #[doc = "   The pointer to the new allocated mempool, on success. NULL on error"]
+    #[doc = "   with rte_errno set appropriately. See rte_mempool_create() for details."]
     pub fn rte_mempool_create_empty(
         name: *const ::std::os::raw::c_char,
         n: ::std::os::raw::c_uint,
@@ -15025,42 +15121,42 @@ extern "C" {
     ) -> *mut rte_mempool;
 }
 extern "C" {
-    /// Free a mempool
-    ///
-    /// Unlink the mempool from global list, free the memory chunks, and all
-    /// memory referenced by the mempool. The objects must not be used by
-    /// other cores as they will be freed.
-    ///
-    /// @param mp
-    ///   A pointer to the mempool structure.
+    #[doc = " Free a mempool"]
+    #[doc = ""]
+    #[doc = " Unlink the mempool from global list, free the memory chunks, and all"]
+    #[doc = " memory referenced by the mempool. The objects must not be used by"]
+    #[doc = " other cores as they will be freed."]
+    #[doc = ""]
+    #[doc = " @param mp"]
+    #[doc = "   A pointer to the mempool structure."]
     pub fn rte_mempool_free(mp: *mut rte_mempool);
 }
 extern "C" {
-    /// Add physically contiguous memory for objects in the pool at init
-    ///
-    /// Add a virtually and physically contiguous memory chunk in the pool
-    /// where objects can be instantiated.
-    ///
-    /// If the given IO address is unknown (iova = RTE_BAD_IOVA),
-    /// the chunk doesn't need to be physically contiguous (only virtually),
-    /// and allocated objects may span two pages.
-    ///
-    /// @param mp
-    ///   A pointer to the mempool structure.
-    /// @param vaddr
-    ///   The virtual address of memory that should be used to store objects.
-    /// @param iova
-    ///   The IO address
-    /// @param len
-    ///   The length of memory in bytes.
-    /// @param free_cb
-    ///   The callback used to free this chunk when destroying the mempool.
-    /// @param opaque
-    ///   An opaque argument passed to free_cb.
-    /// @return
-    ///   The number of objects added on success.
-    ///   On error, the chunk is not added in the memory list of the
-    ///   mempool and a negative errno is returned.
+    #[doc = " Add physically contiguous memory for objects in the pool at init"]
+    #[doc = ""]
+    #[doc = " Add a virtually and physically contiguous memory chunk in the pool"]
+    #[doc = " where objects can be instantiated."]
+    #[doc = ""]
+    #[doc = " If the given IO address is unknown (iova = RTE_BAD_IOVA),"]
+    #[doc = " the chunk doesn\'t need to be physically contiguous (only virtually),"]
+    #[doc = " and allocated objects may span two pages."]
+    #[doc = ""]
+    #[doc = " @param mp"]
+    #[doc = "   A pointer to the mempool structure."]
+    #[doc = " @param vaddr"]
+    #[doc = "   The virtual address of memory that should be used to store objects."]
+    #[doc = " @param iova"]
+    #[doc = "   The IO address"]
+    #[doc = " @param len"]
+    #[doc = "   The length of memory in bytes."]
+    #[doc = " @param free_cb"]
+    #[doc = "   The callback used to free this chunk when destroying the mempool."]
+    #[doc = " @param opaque"]
+    #[doc = "   An opaque argument passed to free_cb."]
+    #[doc = " @return"]
+    #[doc = "   The number of objects added on success."]
+    #[doc = "   On error, the chunk is not added in the memory list of the"]
+    #[doc = "   mempool and a negative errno is returned."]
     pub fn rte_mempool_populate_iova(
         mp: *mut rte_mempool,
         vaddr: *mut ::std::os::raw::c_char,
@@ -15071,28 +15167,28 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Add virtually contiguous memory for objects in the pool at init
-    ///
-    /// Add a virtually contiguous memory chunk in the pool where objects can
-    /// be instantiated.
-    ///
-    /// @param mp
-    ///   A pointer to the mempool structure.
-    /// @param addr
-    ///   The virtual address of memory that should be used to store objects.
-    ///   Must be page-aligned.
-    /// @param len
-    ///   The length of memory in bytes. Must be page-aligned.
-    /// @param pg_sz
-    ///   The size of memory pages in this virtual area.
-    /// @param free_cb
-    ///   The callback used to free this chunk when destroying the mempool.
-    /// @param opaque
-    ///   An opaque argument passed to free_cb.
-    /// @return
-    ///   The number of objects added on success.
-    ///   On error, the chunk is not added in the memory list of the
-    ///   mempool and a negative errno is returned.
+    #[doc = " Add virtually contiguous memory for objects in the pool at init"]
+    #[doc = ""]
+    #[doc = " Add a virtually contiguous memory chunk in the pool where objects can"]
+    #[doc = " be instantiated."]
+    #[doc = ""]
+    #[doc = " @param mp"]
+    #[doc = "   A pointer to the mempool structure."]
+    #[doc = " @param addr"]
+    #[doc = "   The virtual address of memory that should be used to store objects."]
+    #[doc = "   Must be page-aligned."]
+    #[doc = " @param len"]
+    #[doc = "   The length of memory in bytes. Must be page-aligned."]
+    #[doc = " @param pg_sz"]
+    #[doc = "   The size of memory pages in this virtual area."]
+    #[doc = " @param free_cb"]
+    #[doc = "   The callback used to free this chunk when destroying the mempool."]
+    #[doc = " @param opaque"]
+    #[doc = "   An opaque argument passed to free_cb."]
+    #[doc = " @return"]
+    #[doc = "   The number of objects added on success."]
+    #[doc = "   On error, the chunk is not added in the memory list of the"]
+    #[doc = "   mempool and a negative errno is returned."]
     pub fn rte_mempool_populate_virt(
         mp: *mut rte_mempool,
         addr: *mut ::std::os::raw::c_char,
@@ -15103,47 +15199,47 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Add memory for objects in the pool at init
-    ///
-    /// This is the default function used by rte_mempool_create() to populate
-    /// the mempool. It adds memory allocated using rte_memzone_reserve().
-    ///
-    /// @param mp
-    ///   A pointer to the mempool structure.
-    /// @return
-    ///   The number of objects added on success.
-    ///   On error, the chunk is not added in the memory list of the
-    ///   mempool and a negative errno is returned.
+    #[doc = " Add memory for objects in the pool at init"]
+    #[doc = ""]
+    #[doc = " This is the default function used by rte_mempool_create() to populate"]
+    #[doc = " the mempool. It adds memory allocated using rte_memzone_reserve()."]
+    #[doc = ""]
+    #[doc = " @param mp"]
+    #[doc = "   A pointer to the mempool structure."]
+    #[doc = " @return"]
+    #[doc = "   The number of objects added on success."]
+    #[doc = "   On error, the chunk is not added in the memory list of the"]
+    #[doc = "   mempool and a negative errno is returned."]
     pub fn rte_mempool_populate_default(mp: *mut rte_mempool) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Add memory from anonymous mapping for objects in the pool at init
-    ///
-    /// This function mmap an anonymous memory zone that is locked in
-    /// memory to store the objects of the mempool.
-    ///
-    /// @param mp
-    ///   A pointer to the mempool structure.
-    /// @return
-    ///   The number of objects added on success.
-    ///   On error, the chunk is not added in the memory list of the
-    ///   mempool and a negative errno is returned.
+    #[doc = " Add memory from anonymous mapping for objects in the pool at init"]
+    #[doc = ""]
+    #[doc = " This function mmap an anonymous memory zone that is locked in"]
+    #[doc = " memory to store the objects of the mempool."]
+    #[doc = ""]
+    #[doc = " @param mp"]
+    #[doc = "   A pointer to the mempool structure."]
+    #[doc = " @return"]
+    #[doc = "   The number of objects added on success."]
+    #[doc = "   On error, the chunk is not added in the memory list of the"]
+    #[doc = "   mempool and a negative errno is returned."]
     pub fn rte_mempool_populate_anon(mp: *mut rte_mempool) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Call a function for each mempool element
-    ///
-    /// Iterate across all objects attached to a rte_mempool and call the
-    /// callback function on it.
-    ///
-    /// @param mp
-    ///   A pointer to an initialized mempool.
-    /// @param obj_cb
-    ///   A function pointer that is called for each object.
-    /// @param obj_cb_arg
-    ///   An opaque pointer passed to the callback function.
-    /// @return
-    ///   Number of objects iterated.
+    #[doc = " Call a function for each mempool element"]
+    #[doc = ""]
+    #[doc = " Iterate across all objects attached to a rte_mempool and call the"]
+    #[doc = " callback function on it."]
+    #[doc = ""]
+    #[doc = " @param mp"]
+    #[doc = "   A pointer to an initialized mempool."]
+    #[doc = " @param obj_cb"]
+    #[doc = "   A function pointer that is called for each object."]
+    #[doc = " @param obj_cb_arg"]
+    #[doc = "   An opaque pointer passed to the callback function."]
+    #[doc = " @return"]
+    #[doc = "   Number of objects iterated."]
     pub fn rte_mempool_obj_iter(
         mp: *mut rte_mempool,
         obj_cb: rte_mempool_obj_cb_t,
@@ -15151,19 +15247,19 @@ extern "C" {
     ) -> u32;
 }
 extern "C" {
-    /// Call a function for each mempool memory chunk
-    ///
-    /// Iterate across all memory chunks attached to a rte_mempool and call
-    /// the callback function on it.
-    ///
-    /// @param mp
-    ///   A pointer to an initialized mempool.
-    /// @param mem_cb
-    ///   A function pointer that is called for each memory chunk.
-    /// @param mem_cb_arg
-    ///   An opaque pointer passed to the callback function.
-    /// @return
-    ///   Number of memory chunks iterated.
+    #[doc = " Call a function for each mempool memory chunk"]
+    #[doc = ""]
+    #[doc = " Iterate across all memory chunks attached to a rte_mempool and call"]
+    #[doc = " the callback function on it."]
+    #[doc = ""]
+    #[doc = " @param mp"]
+    #[doc = "   A pointer to an initialized mempool."]
+    #[doc = " @param mem_cb"]
+    #[doc = "   A function pointer that is called for each memory chunk."]
+    #[doc = " @param mem_cb_arg"]
+    #[doc = "   An opaque pointer passed to the callback function."]
+    #[doc = " @return"]
+    #[doc = "   Number of memory chunks iterated."]
     pub fn rte_mempool_mem_iter(
         mp: *mut rte_mempool,
         mem_cb: rte_mempool_mem_cb_t,
@@ -15171,121 +15267,121 @@ extern "C" {
     ) -> u32;
 }
 extern "C" {
-    /// Dump the status of the mempool to a file.
-    ///
-    /// @param f
-    ///   A pointer to a file for output
-    /// @param mp
-    ///   A pointer to the mempool structure.
+    #[doc = " Dump the status of the mempool to a file."]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   A pointer to a file for output"]
+    #[doc = " @param mp"]
+    #[doc = "   A pointer to the mempool structure."]
     pub fn rte_mempool_dump(f: *mut FILE, mp: *mut rte_mempool);
 }
 extern "C" {
-    /// Create a user-owned mempool cache.
-    ///
-    /// This can be used by non-EAL threads to enable caching when they
-    /// interact with a mempool.
-    ///
-    /// @param size
-    ///   The size of the mempool cache. See rte_mempool_create()'s cache_size
-    ///   parameter description for more information. The same limits and
-    ///   considerations apply here too.
-    /// @param socket_id
-    ///   The socket identifier in the case of NUMA. The value can be
-    ///   SOCKET_ID_ANY if there is no NUMA constraint for the reserved zone.
+    #[doc = " Create a user-owned mempool cache."]
+    #[doc = ""]
+    #[doc = " This can be used by non-EAL threads to enable caching when they"]
+    #[doc = " interact with a mempool."]
+    #[doc = ""]
+    #[doc = " @param size"]
+    #[doc = "   The size of the mempool cache. See rte_mempool_create()\'s cache_size"]
+    #[doc = "   parameter description for more information. The same limits and"]
+    #[doc = "   considerations apply here too."]
+    #[doc = " @param socket_id"]
+    #[doc = "   The socket identifier in the case of NUMA. The value can be"]
+    #[doc = "   SOCKET_ID_ANY if there is no NUMA constraint for the reserved zone."]
     pub fn rte_mempool_cache_create(
         size: u32,
         socket_id: ::std::os::raw::c_int,
     ) -> *mut rte_mempool_cache;
 }
 extern "C" {
-    /// Free a user-owned mempool cache.
-    ///
-    /// @param cache
-    ///   A pointer to the mempool cache.
+    #[doc = " Free a user-owned mempool cache."]
+    #[doc = ""]
+    #[doc = " @param cache"]
+    #[doc = "   A pointer to the mempool cache."]
     pub fn rte_mempool_cache_free(cache: *mut rte_mempool_cache);
 }
 extern "C" {
-    /// Return the number of entries in the mempool.
-    ///
-    /// When cache is enabled, this function has to browse the length of
-    /// all lcores, so it should not be used in a data path, but only for
-    /// debug purposes. User-owned mempool caches are not accounted for.
-    ///
-    /// @param mp
-    ///   A pointer to the mempool structure.
-    /// @return
-    ///   The number of entries in the mempool.
+    #[doc = " Return the number of entries in the mempool."]
+    #[doc = ""]
+    #[doc = " When cache is enabled, this function has to browse the length of"]
+    #[doc = " all lcores, so it should not be used in a data path, but only for"]
+    #[doc = " debug purposes. User-owned mempool caches are not accounted for."]
+    #[doc = ""]
+    #[doc = " @param mp"]
+    #[doc = "   A pointer to the mempool structure."]
+    #[doc = " @return"]
+    #[doc = "   The number of entries in the mempool."]
     pub fn rte_mempool_avail_count(mp: *const rte_mempool) -> ::std::os::raw::c_uint;
 }
 extern "C" {
-    /// Return the number of elements which have been allocated from the mempool
-    ///
-    /// When cache is enabled, this function has to browse the length of
-    /// all lcores, so it should not be used in a data path, but only for
-    /// debug purposes.
-    ///
-    /// @param mp
-    ///   A pointer to the mempool structure.
-    /// @return
-    ///   The number of free entries in the mempool.
+    #[doc = " Return the number of elements which have been allocated from the mempool"]
+    #[doc = ""]
+    #[doc = " When cache is enabled, this function has to browse the length of"]
+    #[doc = " all lcores, so it should not be used in a data path, but only for"]
+    #[doc = " debug purposes."]
+    #[doc = ""]
+    #[doc = " @param mp"]
+    #[doc = "   A pointer to the mempool structure."]
+    #[doc = " @return"]
+    #[doc = "   The number of free entries in the mempool."]
     pub fn rte_mempool_in_use_count(mp: *const rte_mempool) -> ::std::os::raw::c_uint;
 }
 extern "C" {
-    /// Check the consistency of mempool objects.
-    ///
-    /// Verify the coherency of fields in the mempool structure. Also check
-    /// that the cookies of mempool objects (even the ones that are not
-    /// present in pool) have a correct value. If not, a panic will occur.
-    ///
-    /// @param mp
-    ///   A pointer to the mempool structure.
+    #[doc = " Check the consistency of mempool objects."]
+    #[doc = ""]
+    #[doc = " Verify the coherency of fields in the mempool structure. Also check"]
+    #[doc = " that the cookies of mempool objects (even the ones that are not"]
+    #[doc = " present in pool) have a correct value. If not, a panic will occur."]
+    #[doc = ""]
+    #[doc = " @param mp"]
+    #[doc = "   A pointer to the mempool structure."]
     pub fn rte_mempool_audit(mp: *mut rte_mempool);
 }
 extern "C" {
-    /// Dump the status of all mempools on the console
-    ///
-    /// @param f
-    ///   A pointer to a file for output
+    #[doc = " Dump the status of all mempools on the console"]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   A pointer to a file for output"]
     pub fn rte_mempool_list_dump(f: *mut FILE);
 }
 extern "C" {
-    /// Search a mempool from its name
-    ///
-    /// @param name
-    ///   The name of the mempool.
-    /// @return
-    ///   The pointer to the mempool matching the name, or NULL if not found.
-    ///   NULL on error
-    ///   with rte_errno set appropriately. Possible rte_errno values include:
-    ///    - ENOENT - required entry not available to return.
-    ///
+    #[doc = " Search a mempool from its name"]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   The name of the mempool."]
+    #[doc = " @return"]
+    #[doc = "   The pointer to the mempool matching the name, or NULL if not found."]
+    #[doc = "   NULL on error"]
+    #[doc = "   with rte_errno set appropriately. Possible rte_errno values include:"]
+    #[doc = "    - ENOENT - required entry not available to return."]
+    #[doc = ""]
     pub fn rte_mempool_lookup(name: *const ::std::os::raw::c_char) -> *mut rte_mempool;
 }
 extern "C" {
-    /// Get the header, trailer and total size of a mempool element.
-    ///
-    /// Given a desired size of the mempool element and mempool flags,
-    /// calculates header, trailer, body and total sizes of the mempool object.
-    ///
-    /// @param elt_size
-    ///   The size of each element, without header and trailer.
-    /// @param flags
-    ///   The flags used for the mempool creation.
-    ///   Consult rte_mempool_create() for more information about possible values.
-    ///   The size of each element.
-    /// @param sz
-    ///   The calculated detailed size the mempool object. May be NULL.
-    /// @return
-    ///   Total size of the mempool object.
+    #[doc = " Get the header, trailer and total size of a mempool element."]
+    #[doc = ""]
+    #[doc = " Given a desired size of the mempool element and mempool flags,"]
+    #[doc = " calculates header, trailer, body and total sizes of the mempool object."]
+    #[doc = ""]
+    #[doc = " @param elt_size"]
+    #[doc = "   The size of each element, without header and trailer."]
+    #[doc = " @param flags"]
+    #[doc = "   The flags used for the mempool creation."]
+    #[doc = "   Consult rte_mempool_create() for more information about possible values."]
+    #[doc = "   The size of each element."]
+    #[doc = " @param sz"]
+    #[doc = "   The calculated detailed size the mempool object. May be NULL."]
+    #[doc = " @return"]
+    #[doc = "   Total size of the mempool object."]
     pub fn rte_mempool_calc_obj_size(elt_size: u32, flags: u32, sz: *mut rte_mempool_objsz) -> u32;
 }
 extern "C" {
-    /// Walk list of all memory pools
-    ///
-    /// @param func
-    ///   Iterator function
-    /// @param arg
-    ///   Argument passed to iterator
+    #[doc = " Walk list of all memory pools"]
+    #[doc = ""]
+    #[doc = " @param func"]
+    #[doc = "   Iterator function"]
+    #[doc = " @param arg"]
+    #[doc = "   Argument passed to iterator"]
     pub fn rte_mempool_walk(
         func: ::std::option::Option<
             unsafe extern "C" fn(arg1: *mut rte_mempool, arg: *mut ::std::os::raw::c_void),
@@ -15294,80 +15390,80 @@ extern "C" {
     );
 }
 extern "C" {
-    /// Get the name of the l2 packet type
-    ///
-    /// @param ptype
-    ///   The packet type value.
-    /// @return
-    ///   A non-null string describing the packet type.
+    #[doc = " Get the name of the l2 packet type"]
+    #[doc = ""]
+    #[doc = " @param ptype"]
+    #[doc = "   The packet type value."]
+    #[doc = " @return"]
+    #[doc = "   A non-null string describing the packet type."]
     pub fn rte_get_ptype_l2_name(ptype: u32) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Get the name of the l3 packet type
-    ///
-    /// @param ptype
-    ///   The packet type value.
-    /// @return
-    ///   A non-null string describing the packet type.
+    #[doc = " Get the name of the l3 packet type"]
+    #[doc = ""]
+    #[doc = " @param ptype"]
+    #[doc = "   The packet type value."]
+    #[doc = " @return"]
+    #[doc = "   A non-null string describing the packet type."]
     pub fn rte_get_ptype_l3_name(ptype: u32) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Get the name of the l4 packet type
-    ///
-    /// @param ptype
-    ///   The packet type value.
-    /// @return
-    ///   A non-null string describing the packet type.
+    #[doc = " Get the name of the l4 packet type"]
+    #[doc = ""]
+    #[doc = " @param ptype"]
+    #[doc = "   The packet type value."]
+    #[doc = " @return"]
+    #[doc = "   A non-null string describing the packet type."]
     pub fn rte_get_ptype_l4_name(ptype: u32) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Get the name of the tunnel packet type
-    ///
-    /// @param ptype
-    ///   The packet type value.
-    /// @return
-    ///   A non-null string describing the packet type.
+    #[doc = " Get the name of the tunnel packet type"]
+    #[doc = ""]
+    #[doc = " @param ptype"]
+    #[doc = "   The packet type value."]
+    #[doc = " @return"]
+    #[doc = "   A non-null string describing the packet type."]
     pub fn rte_get_ptype_tunnel_name(ptype: u32) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Get the name of the inner_l2 packet type
-    ///
-    /// @param ptype
-    ///   The packet type value.
-    /// @return
-    ///   A non-null string describing the packet type.
+    #[doc = " Get the name of the inner_l2 packet type"]
+    #[doc = ""]
+    #[doc = " @param ptype"]
+    #[doc = "   The packet type value."]
+    #[doc = " @return"]
+    #[doc = "   A non-null string describing the packet type."]
     pub fn rte_get_ptype_inner_l2_name(ptype: u32) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Get the name of the inner_l3 packet type
-    ///
-    /// @param ptype
-    ///   The packet type value.
-    /// @return
-    ///   A non-null string describing the packet type.
+    #[doc = " Get the name of the inner_l3 packet type"]
+    #[doc = ""]
+    #[doc = " @param ptype"]
+    #[doc = "   The packet type value."]
+    #[doc = " @return"]
+    #[doc = "   A non-null string describing the packet type."]
     pub fn rte_get_ptype_inner_l3_name(ptype: u32) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Get the name of the inner_l4 packet type
-    ///
-    /// @param ptype
-    ///   The packet type value.
-    /// @return
-    ///   A non-null string describing the packet type.
+    #[doc = " Get the name of the inner_l4 packet type"]
+    #[doc = ""]
+    #[doc = " @param ptype"]
+    #[doc = "   The packet type value."]
+    #[doc = " @return"]
+    #[doc = "   A non-null string describing the packet type."]
     pub fn rte_get_ptype_inner_l4_name(ptype: u32) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Write the packet type name into the buffer
-    ///
-    /// @param ptype
-    ///   The packet type value.
-    /// @param buf
-    ///   The buffer where the string is written.
-    /// @param buflen
-    ///   The length of the buffer.
-    /// @return
-    ///   - 0 on success
-    ///   - (-1) if the buffer is too small
+    #[doc = " Write the packet type name into the buffer"]
+    #[doc = ""]
+    #[doc = " @param ptype"]
+    #[doc = "   The packet type value."]
+    #[doc = " @param buf"]
+    #[doc = "   The buffer where the string is written."]
+    #[doc = " @param buflen"]
+    #[doc = "   The length of the buffer."]
+    #[doc = " @return"]
+    #[doc = "   - 0 on success"]
+    #[doc = "   - (-1) if the buffer is too small"]
     pub fn rte_get_ptype_name(
         ptype: u32,
         buf: *mut ::std::os::raw::c_char,
@@ -15375,25 +15471,25 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get the name of a RX offload flag
-    ///
-    /// @param mask
-    ///   The mask describing the flag.
-    /// @return
-    ///   The name of this flag, or NULL if it's not a valid RX flag.
+    #[doc = " Get the name of a RX offload flag"]
+    #[doc = ""]
+    #[doc = " @param mask"]
+    #[doc = "   The mask describing the flag."]
+    #[doc = " @return"]
+    #[doc = "   The name of this flag, or NULL if it\'s not a valid RX flag."]
     pub fn rte_get_rx_ol_flag_name(mask: u64) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Dump the list of RX offload flags in a buffer
-    ///
-    /// @param mask
-    ///   The mask describing the RX flags.
-    /// @param buf
-    ///   The output buffer.
-    /// @param buflen
-    ///   The length of the buffer.
-    /// @return
-    ///   0 on success, (-1) on error.
+    #[doc = " Dump the list of RX offload flags in a buffer"]
+    #[doc = ""]
+    #[doc = " @param mask"]
+    #[doc = "   The mask describing the RX flags."]
+    #[doc = " @param buf"]
+    #[doc = "   The output buffer."]
+    #[doc = " @param buflen"]
+    #[doc = "   The length of the buffer."]
+    #[doc = " @return"]
+    #[doc = "   0 on success, (-1) on error."]
     pub fn rte_get_rx_ol_flag_list(
         mask: u64,
         buf: *mut ::std::os::raw::c_char,
@@ -15401,27 +15497,27 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get the name of a TX offload flag
-    ///
-    /// @param mask
-    ///   The mask describing the flag. Usually only one bit must be set.
-    ///   Several bits can be given if they belong to the same mask.
-    ///   Ex: PKT_TX_L4_MASK.
-    /// @return
-    ///   The name of this flag, or NULL if it's not a valid TX flag.
+    #[doc = " Get the name of a TX offload flag"]
+    #[doc = ""]
+    #[doc = " @param mask"]
+    #[doc = "   The mask describing the flag. Usually only one bit must be set."]
+    #[doc = "   Several bits can be given if they belong to the same mask."]
+    #[doc = "   Ex: PKT_TX_L4_MASK."]
+    #[doc = " @return"]
+    #[doc = "   The name of this flag, or NULL if it\'s not a valid TX flag."]
     pub fn rte_get_tx_ol_flag_name(mask: u64) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Dump the list of TX offload flags in a buffer
-    ///
-    /// @param mask
-    ///   The mask describing the TX flags.
-    /// @param buf
-    ///   The output buffer.
-    /// @param buflen
-    ///   The length of the buffer.
-    /// @return
-    ///   0 on success, (-1) on error.
+    #[doc = " Dump the list of TX offload flags in a buffer"]
+    #[doc = ""]
+    #[doc = " @param mask"]
+    #[doc = "   The mask describing the TX flags."]
+    #[doc = " @param buf"]
+    #[doc = "   The output buffer."]
+    #[doc = " @param buflen"]
+    #[doc = "   The length of the buffer."]
+    #[doc = " @return"]
+    #[doc = "   0 on success, (-1) on error."]
     pub fn rte_get_tx_ol_flag_list(
         mask: u64,
         buf: *mut ::std::os::raw::c_char,
@@ -15431,67 +15527,67 @@ extern "C" {
 pub type MARKER = [*mut ::std::os::raw::c_void; 0usize];
 pub type MARKER8 = [u8; 0usize];
 pub type MARKER64 = [u64; 0usize];
-/// The generic rte_mbuf, containing a packet mbuf.
+#[doc = " The generic rte_mbuf, containing a packet mbuf."]
 #[repr(C)]
 pub struct rte_mbuf {
     pub cacheline0: MARKER,
-    ///< Virtual address of segment buffer.
+    #[doc = "< Virtual address of segment buffer."]
     pub buf_addr: *mut ::std::os::raw::c_void,
     pub __bindgen_anon_1: rte_mbuf__bindgen_ty_1,
     pub rearm_data: MARKER64,
     pub data_off: u16,
     pub __bindgen_anon_2: rte_mbuf__bindgen_ty_2,
-    ///< Number of segments.
+    #[doc = "< Number of segments."]
     pub nb_segs: u16,
-    /// Input port (16 bits to support more than 256 virtual ports).
-    /// The event eth Tx adapter uses this field to specify the output port.
+    #[doc = " Input port (16 bits to support more than 256 virtual ports)."]
+    #[doc = " The event eth Tx adapter uses this field to specify the output port."]
     pub port: u16,
-    ///< Offload features.
+    #[doc = "< Offload features."]
     pub ol_flags: u64,
     pub rx_descriptor_fields1: MARKER,
     pub __bindgen_anon_3: rte_mbuf__bindgen_ty_3,
-    ///< Total pkt len: sum of all segments.
+    #[doc = "< Total pkt len: sum of all segments."]
     pub pkt_len: u32,
-    ///< Amount of data in segment buffer.
+    #[doc = "< Amount of data in segment buffer."]
     pub data_len: u16,
-    /// VLAN TCI (CPU order), valid if PKT_RX_VLAN is set.
+    #[doc = " VLAN TCI (CPU order), valid if PKT_RX_VLAN is set."]
     pub vlan_tci: u16,
     pub __bindgen_anon_4: rte_mbuf__bindgen_ty_4,
-    /// Outer VLAN TCI (CPU order), valid if PKT_RX_QINQ is set.
+    #[doc = " Outer VLAN TCI (CPU order), valid if PKT_RX_QINQ is set."]
     pub vlan_tci_outer: u16,
-    ///< Length of segment buffer.
+    #[doc = "< Length of segment buffer."]
     pub buf_len: u16,
-    /// Valid if PKT_RX_TIMESTAMP is set. The unit and time reference
-    /// are not normalized but are always the same for a given port.
+    #[doc = " Valid if PKT_RX_TIMESTAMP is set. The unit and time reference"]
+    #[doc = " are not normalized but are always the same for a given port."]
     pub timestamp: u64,
     pub cacheline1: MARKER,
     pub __bindgen_anon_5: rte_mbuf__bindgen_ty_5,
-    ///< Pool from which mbuf was allocated.
+    #[doc = "< Pool from which mbuf was allocated."]
     pub pool: *mut rte_mempool,
-    ///< Next segment of scattered packet.
+    #[doc = "< Next segment of scattered packet."]
     pub next: *mut rte_mbuf,
     pub __bindgen_anon_6: rte_mbuf__bindgen_ty_6,
-    /// Size of the application private data. In case of an indirect
-    /// mbuf, it stores the direct mbuf private data size.
+    #[doc = " Size of the application private data. In case of an indirect"]
+    #[doc = " mbuf, it stores the direct mbuf private data size."]
     pub priv_size: u16,
-    /// Timesync flags for use with IEEE1588.
+    #[doc = " Timesync flags for use with IEEE1588."]
     pub timesync: u16,
-    /// Sequence number. See also rte_reorder_insert().
+    #[doc = " Sequence number. See also rte_reorder_insert()."]
     pub seqn: u32,
-    /// Shared data for external buffer attached to mbuf. See
-    /// rte_pktmbuf_attach_extbuf().
+    #[doc = " Shared data for external buffer attached to mbuf. See"]
+    #[doc = " rte_pktmbuf_attach_extbuf()."]
     pub shinfo: *mut rte_mbuf_ext_shared_info,
     pub __bindgen_padding_0: [u64; 2usize],
 }
-/// Physical address of segment buffer.
-/// Force alignment to 8-bytes, so as to ensure we have the exact
-/// same mbuf cacheline0 layout for 32-bit and 64-bit. This makes
-/// working on vector drivers easier.
+#[doc = " Physical address of segment buffer."]
+#[doc = " Force alignment to 8-bytes, so as to ensure we have the exact"]
+#[doc = " same mbuf cacheline0 layout for 32-bit and 64-bit. This makes"]
+#[doc = " working on vector drivers easier."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_mbuf__bindgen_ty_1 {
     pub buf_iova: rte_iova_t,
-    ///< deprecated
+    #[doc = "< deprecated"]
     pub buf_physaddr: rte_iova_t,
     _bindgen_union_align: u64,
 }
@@ -15535,19 +15631,19 @@ impl Default for rte_mbuf__bindgen_ty_1 {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// Reference counter. Its size should at least equal to the size
-/// of port field (16 bits), to support zero-copy broadcast.
-/// It should only be accessed using the following functions:
-/// rte_mbuf_refcnt_update(), rte_mbuf_refcnt_read(), and
-/// rte_mbuf_refcnt_set(). The functionality of these functions (atomic,
-/// or non-atomic) is controlled by the CONFIG_RTE_MBUF_REFCNT_ATOMIC
-/// config option.
+#[doc = " Reference counter. Its size should at least equal to the size"]
+#[doc = " of port field (16 bits), to support zero-copy broadcast."]
+#[doc = " It should only be accessed using the following functions:"]
+#[doc = " rte_mbuf_refcnt_update(), rte_mbuf_refcnt_read(), and"]
+#[doc = " rte_mbuf_refcnt_set(). The functionality of these functions (atomic,"]
+#[doc = " or non-atomic) is controlled by the CONFIG_RTE_MBUF_REFCNT_ATOMIC"]
+#[doc = " config option."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_mbuf__bindgen_ty_2 {
-    ///< Atomically accessed refcnt
+    #[doc = "< Atomically accessed refcnt"]
     pub refcnt_atomic: rte_atomic16_t,
-    ///< Non-atomically accessed refcnt
+    #[doc = "< Non-atomically accessed refcnt"]
     pub refcnt: u16,
     _bindgen_union_align: u16,
 }
@@ -15594,7 +15690,7 @@ impl Default for rte_mbuf__bindgen_ty_2 {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_mbuf__bindgen_ty_3 {
-    ///< L2/L3/L4 and tunnel information.
+    #[doc = "< L2/L3/L4 and tunnel information."]
     pub packet_type: u32,
     pub __bindgen_anon_1: rte_mbuf__bindgen_ty_3__bindgen_ty_1,
     _bindgen_union_align: u32,
@@ -15867,7 +15963,7 @@ impl Default for rte_mbuf__bindgen_ty_3 {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_mbuf__bindgen_ty_4 {
-    ///< hash information
+    #[doc = "< hash information"]
     pub hash: rte_mbuf__bindgen_ty_4__bindgen_ty_1,
     pub __bindgen_anon_1: rte_mbuf__bindgen_ty_4__bindgen_ty_2,
     _bindgen_union_align: [u32; 2usize],
@@ -15875,12 +15971,11 @@ pub union rte_mbuf__bindgen_ty_4 {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_mbuf__bindgen_ty_4__bindgen_ty_1 {
-    ///< RSS hash result if RSS enabled
+    #[doc = "< RSS hash result if RSS enabled"]
     pub rss: u32,
-    ///< Filter identifier if FDIR enabled
+    #[doc = "< Filter identifier if FDIR enabled"]
     pub fdir: rte_mbuf__bindgen_ty_4__bindgen_ty_1__bindgen_ty_1,
-    ///< Hierarchical scheduler */
-    ////**< User defined tags. See rte_distributor_process()
+    #[doc = "< Hierarchical scheduler */"]
     pub sched: rte_mbuf__bindgen_ty_4__bindgen_ty_1__bindgen_ty_2,
     pub usr: u32,
     _bindgen_union_align: [u32; 2usize],
@@ -16168,11 +16263,11 @@ impl Default for rte_mbuf__bindgen_ty_4__bindgen_ty_1 {
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_mbuf__bindgen_ty_4__bindgen_ty_2 {
-    /// Application specific metadata value
-    /// for egress flow rule match.
-    /// Valid if PKT_TX_METADATA is set.
-    /// Located here to allow conjunct use
-    /// with hash.sched.hi.
+    #[doc = " Application specific metadata value"]
+    #[doc = " for egress flow rule match."]
+    #[doc = " Valid if PKT_TX_METADATA is set."]
+    #[doc = " Located here to allow conjunct use"]
+    #[doc = " with hash.sched.hi."]
     pub tx_metadata: u32,
     pub reserved: u32,
 }
@@ -16252,9 +16347,9 @@ impl Default for rte_mbuf__bindgen_ty_4 {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_mbuf__bindgen_ty_5 {
-    ///< Can be used for external metadata
+    #[doc = "< Can be used for external metadata"]
     pub userdata: *mut ::std::os::raw::c_void,
-    ///< Allow 8-byte userdata on 32-bit
+    #[doc = "< Allow 8-byte userdata on 32-bit"]
     pub udata64: u64,
     _bindgen_union_align: u64,
 }
@@ -16299,7 +16394,7 @@ impl Default for rte_mbuf__bindgen_ty_5 {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_mbuf__bindgen_ty_6 {
-    ///< combined for easy fetch
+    #[doc = "< combined for easy fetch"]
     pub tx_offload: u64,
     pub __bindgen_anon_1: rte_mbuf__bindgen_ty_6__bindgen_ty_1,
     _bindgen_union_align: u64,
@@ -16687,19 +16782,19 @@ impl Default for rte_mbuf {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// Function typedef of callback to free externally attached buffer.
+#[doc = " Function typedef of callback to free externally attached buffer."]
 pub type rte_mbuf_extbuf_free_callback_t = ::std::option::Option<
     unsafe extern "C" fn(addr: *mut ::std::os::raw::c_void, opaque: *mut ::std::os::raw::c_void),
 >;
-/// Shared data at the end of an external buffer.
+#[doc = " Shared data at the end of an external buffer."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_mbuf_ext_shared_info {
-    ///< Free callback function
+    #[doc = "< Free callback function"]
     pub free_cb: rte_mbuf_extbuf_free_callback_t,
-    ///< Free callback argument
+    #[doc = "< Free callback argument"]
     pub fcb_opaque: *mut ::std::os::raw::c_void,
-    ///< Atomically accessed refcnt
+    #[doc = "< Atomically accessed refcnt"]
     pub refcnt_atomic: rte_atomic16_t,
 }
 #[test]
@@ -16756,16 +16851,16 @@ impl Default for rte_mbuf_ext_shared_info {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// Private data in case of pktmbuf pool.
-///
-/// A structure that contains some pktmbuf_pool-specific data that are
-/// appended after the mempool structure (in private data).
+#[doc = " Private data in case of pktmbuf pool."]
+#[doc = ""]
+#[doc = " A structure that contains some pktmbuf_pool-specific data that are"]
+#[doc = " appended after the mempool structure (in private data)."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_pktmbuf_pool_private {
-    ///< Size of data space in each mbuf.
+    #[doc = "< Size of data space in each mbuf."]
     pub mbuf_data_room_size: u16,
-    ///< Size of private area in each mbuf.
+    #[doc = "< Size of private area in each mbuf."]
     pub mbuf_priv_size: u16,
 }
 #[test]
@@ -16807,36 +16902,36 @@ fn bindgen_test_layout_rte_pktmbuf_pool_private() {
     );
 }
 extern "C" {
-    /// Sanity checks on an mbuf.
-    ///
-    /// Check the consistency of the given mbuf. The function will cause a
-    /// panic if corruption is detected.
-    ///
-    /// @param m
-    ///   The mbuf to be checked.
-    /// @param is_header
-    ///   True if the mbuf is a packet header, false if it is a sub-segment
-    ///   of a packet (in this case, some fields like nb_segs are not checked)
+    #[doc = " Sanity checks on an mbuf."]
+    #[doc = ""]
+    #[doc = " Check the consistency of the given mbuf. The function will cause a"]
+    #[doc = " panic if corruption is detected."]
+    #[doc = ""]
+    #[doc = " @param m"]
+    #[doc = "   The mbuf to be checked."]
+    #[doc = " @param is_header"]
+    #[doc = "   True if the mbuf is a packet header, false if it is a sub-segment"]
+    #[doc = "   of a packet (in this case, some fields like nb_segs are not checked)"]
     pub fn rte_mbuf_sanity_check(m: *const rte_mbuf, is_header: ::std::os::raw::c_int);
 }
 extern "C" {
-    /// The packet mbuf constructor.
-    ///
-    /// This function initializes some fields in the mbuf structure that are
-    /// not modified by the user once created (origin pool, buffer start
-    /// address, and so on). This function is given as a callback function to
-    /// rte_mempool_obj_iter() or rte_mempool_create() at pool creation time.
-    ///
-    /// @param mp
-    ///   The mempool from which mbufs originate.
-    /// @param opaque_arg
-    ///   A pointer that can be used by the user to retrieve useful information
-    ///   for mbuf initialization. This pointer is the opaque argument passed to
-    ///   rte_mempool_obj_iter() or rte_mempool_create().
-    /// @param m
-    ///   The mbuf to initialize.
-    /// @param i
-    ///   The index of the mbuf in the pool table.
+    #[doc = " The packet mbuf constructor."]
+    #[doc = ""]
+    #[doc = " This function initializes some fields in the mbuf structure that are"]
+    #[doc = " not modified by the user once created (origin pool, buffer start"]
+    #[doc = " address, and so on). This function is given as a callback function to"]
+    #[doc = " rte_mempool_obj_iter() or rte_mempool_create() at pool creation time."]
+    #[doc = ""]
+    #[doc = " @param mp"]
+    #[doc = "   The mempool from which mbufs originate."]
+    #[doc = " @param opaque_arg"]
+    #[doc = "   A pointer that can be used by the user to retrieve useful information"]
+    #[doc = "   for mbuf initialization. This pointer is the opaque argument passed to"]
+    #[doc = "   rte_mempool_obj_iter() or rte_mempool_create()."]
+    #[doc = " @param m"]
+    #[doc = "   The mbuf to initialize."]
+    #[doc = " @param i"]
+    #[doc = "   The index of the mbuf in the pool table."]
     pub fn rte_pktmbuf_init(
         mp: *mut rte_mempool,
         opaque_arg: *mut ::std::os::raw::c_void,
@@ -16845,56 +16940,56 @@ extern "C" {
     );
 }
 extern "C" {
-    /// A  packet mbuf pool constructor.
-    ///
-    /// This function initializes the mempool private data in the case of a
-    /// pktmbuf pool. This private data is needed by the driver. The
-    /// function must be called on the mempool before it is used, or it
-    /// can be given as a callback function to rte_mempool_create() at
-    /// pool creation. It can be extended by the user, for example, to
-    /// provide another packet size.
-    ///
-    /// @param mp
-    ///   The mempool from which mbufs originate.
-    /// @param opaque_arg
-    ///   A pointer that can be used by the user to retrieve useful information
-    ///   for mbuf initialization. This pointer is the opaque argument passed to
-    ///   rte_mempool_create().
+    #[doc = " A  packet mbuf pool constructor."]
+    #[doc = ""]
+    #[doc = " This function initializes the mempool private data in the case of a"]
+    #[doc = " pktmbuf pool. This private data is needed by the driver. The"]
+    #[doc = " function must be called on the mempool before it is used, or it"]
+    #[doc = " can be given as a callback function to rte_mempool_create() at"]
+    #[doc = " pool creation. It can be extended by the user, for example, to"]
+    #[doc = " provide another packet size."]
+    #[doc = ""]
+    #[doc = " @param mp"]
+    #[doc = "   The mempool from which mbufs originate."]
+    #[doc = " @param opaque_arg"]
+    #[doc = "   A pointer that can be used by the user to retrieve useful information"]
+    #[doc = "   for mbuf initialization. This pointer is the opaque argument passed to"]
+    #[doc = "   rte_mempool_create()."]
     pub fn rte_pktmbuf_pool_init(mp: *mut rte_mempool, opaque_arg: *mut ::std::os::raw::c_void);
 }
 extern "C" {
-    /// Create a mbuf pool.
-    ///
-    /// This function creates and initializes a packet mbuf pool. It is
-    /// a wrapper to rte_mempool functions.
-    ///
-    /// @param name
-    ///   The name of the mbuf pool.
-    /// @param n
-    ///   The number of elements in the mbuf pool. The optimum size (in terms
-    ///   of memory usage) for a mempool is when n is a power of two minus one:
-    ///   n = (2^q - 1).
-    /// @param cache_size
-    ///   Size of the per-core object cache. See rte_mempool_create() for
-    ///   details.
-    /// @param priv_size
-    ///   Size of application private are between the rte_mbuf structure
-    ///   and the data buffer. This value must be aligned to RTE_MBUF_PRIV_ALIGN.
-    /// @param data_room_size
-    ///   Size of data buffer in each mbuf, including RTE_PKTMBUF_HEADROOM.
-    /// @param socket_id
-    ///   The socket identifier where the memory should be allocated. The
-    ///   value can be *SOCKET_ID_ANY* if there is no NUMA constraint for the
-    ///   reserved zone.
-    /// @return
-    ///   The pointer to the new allocated mempool, on success. NULL on error
-    ///   with rte_errno set appropriately. Possible rte_errno values include:
-    ///    - E_RTE_NO_CONFIG - function could not get pointer to rte_config structure
-    ///    - E_RTE_SECONDARY - function was called from a secondary process instance
-    ///    - EINVAL - cache size provided is too large, or priv_size is not aligned.
-    ///    - ENOSPC - the maximum number of memzones has already been allocated
-    ///    - EEXIST - a memzone with the same name already exists
-    ///    - ENOMEM - no appropriate memory area found in which to create memzone
+    #[doc = " Create a mbuf pool."]
+    #[doc = ""]
+    #[doc = " This function creates and initializes a packet mbuf pool. It is"]
+    #[doc = " a wrapper to rte_mempool functions."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   The name of the mbuf pool."]
+    #[doc = " @param n"]
+    #[doc = "   The number of elements in the mbuf pool. The optimum size (in terms"]
+    #[doc = "   of memory usage) for a mempool is when n is a power of two minus one:"]
+    #[doc = "   n = (2^q - 1)."]
+    #[doc = " @param cache_size"]
+    #[doc = "   Size of the per-core object cache. See rte_mempool_create() for"]
+    #[doc = "   details."]
+    #[doc = " @param priv_size"]
+    #[doc = "   Size of application private are between the rte_mbuf structure"]
+    #[doc = "   and the data buffer. This value must be aligned to RTE_MBUF_PRIV_ALIGN."]
+    #[doc = " @param data_room_size"]
+    #[doc = "   Size of data buffer in each mbuf, including RTE_PKTMBUF_HEADROOM."]
+    #[doc = " @param socket_id"]
+    #[doc = "   The socket identifier where the memory should be allocated. The"]
+    #[doc = "   value can be *SOCKET_ID_ANY* if there is no NUMA constraint for the"]
+    #[doc = "   reserved zone."]
+    #[doc = " @return"]
+    #[doc = "   The pointer to the new allocated mempool, on success. NULL on error"]
+    #[doc = "   with rte_errno set appropriately. Possible rte_errno values include:"]
+    #[doc = "    - E_RTE_NO_CONFIG - function could not get pointer to rte_config structure"]
+    #[doc = "    - E_RTE_SECONDARY - function was called from a secondary process instance"]
+    #[doc = "    - EINVAL - cache size provided is too large, or priv_size is not aligned."]
+    #[doc = "    - ENOSPC - the maximum number of memzones has already been allocated"]
+    #[doc = "    - EEXIST - a memzone with the same name already exists"]
+    #[doc = "    - ENOMEM - no appropriate memory area found in which to create memzone"]
     pub fn rte_pktmbuf_pool_create(
         name: *const ::std::os::raw::c_char,
         n: ::std::os::raw::c_uint,
@@ -16905,41 +17000,41 @@ extern "C" {
     ) -> *mut rte_mempool;
 }
 extern "C" {
-    /// Create a mbuf pool with a given mempool ops name
-    ///
-    /// This function creates and initializes a packet mbuf pool. It is
-    /// a wrapper to rte_mempool functions.
-    ///
-    /// @param name
-    ///   The name of the mbuf pool.
-    /// @param n
-    ///   The number of elements in the mbuf pool. The optimum size (in terms
-    ///   of memory usage) for a mempool is when n is a power of two minus one:
-    ///   n = (2^q - 1).
-    /// @param cache_size
-    ///   Size of the per-core object cache. See rte_mempool_create() for
-    ///   details.
-    /// @param priv_size
-    ///   Size of application private are between the rte_mbuf structure
-    ///   and the data buffer. This value must be aligned to RTE_MBUF_PRIV_ALIGN.
-    /// @param data_room_size
-    ///   Size of data buffer in each mbuf, including RTE_PKTMBUF_HEADROOM.
-    /// @param socket_id
-    ///   The socket identifier where the memory should be allocated. The
-    ///   value can be *SOCKET_ID_ANY* if there is no NUMA constraint for the
-    ///   reserved zone.
-    /// @param ops_name
-    ///   The mempool ops name to be used for this mempool instead of
-    ///   default mempool. The value can be *NULL* to use default mempool.
-    /// @return
-    ///   The pointer to the new allocated mempool, on success. NULL on error
-    ///   with rte_errno set appropriately. Possible rte_errno values include:
-    ///    - E_RTE_NO_CONFIG - function could not get pointer to rte_config structure
-    ///    - E_RTE_SECONDARY - function was called from a secondary process instance
-    ///    - EINVAL - cache size provided is too large, or priv_size is not aligned.
-    ///    - ENOSPC - the maximum number of memzones has already been allocated
-    ///    - EEXIST - a memzone with the same name already exists
-    ///    - ENOMEM - no appropriate memory area found in which to create memzone
+    #[doc = " Create a mbuf pool with a given mempool ops name"]
+    #[doc = ""]
+    #[doc = " This function creates and initializes a packet mbuf pool. It is"]
+    #[doc = " a wrapper to rte_mempool functions."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   The name of the mbuf pool."]
+    #[doc = " @param n"]
+    #[doc = "   The number of elements in the mbuf pool. The optimum size (in terms"]
+    #[doc = "   of memory usage) for a mempool is when n is a power of two minus one:"]
+    #[doc = "   n = (2^q - 1)."]
+    #[doc = " @param cache_size"]
+    #[doc = "   Size of the per-core object cache. See rte_mempool_create() for"]
+    #[doc = "   details."]
+    #[doc = " @param priv_size"]
+    #[doc = "   Size of application private are between the rte_mbuf structure"]
+    #[doc = "   and the data buffer. This value must be aligned to RTE_MBUF_PRIV_ALIGN."]
+    #[doc = " @param data_room_size"]
+    #[doc = "   Size of data buffer in each mbuf, including RTE_PKTMBUF_HEADROOM."]
+    #[doc = " @param socket_id"]
+    #[doc = "   The socket identifier where the memory should be allocated. The"]
+    #[doc = "   value can be *SOCKET_ID_ANY* if there is no NUMA constraint for the"]
+    #[doc = "   reserved zone."]
+    #[doc = " @param ops_name"]
+    #[doc = "   The mempool ops name to be used for this mempool instead of"]
+    #[doc = "   default mempool. The value can be *NULL* to use default mempool."]
+    #[doc = " @return"]
+    #[doc = "   The pointer to the new allocated mempool, on success. NULL on error"]
+    #[doc = "   with rte_errno set appropriately. Possible rte_errno values include:"]
+    #[doc = "    - E_RTE_NO_CONFIG - function could not get pointer to rte_config structure"]
+    #[doc = "    - E_RTE_SECONDARY - function was called from a secondary process instance"]
+    #[doc = "    - EINVAL - cache size provided is too large, or priv_size is not aligned."]
+    #[doc = "    - ENOSPC - the maximum number of memzones has already been allocated"]
+    #[doc = "    - EEXIST - a memzone with the same name already exists"]
+    #[doc = "    - ENOMEM - no appropriate memory area found in which to create memzone"]
     pub fn rte_pktmbuf_pool_create_by_ops(
         name: *const ::std::os::raw::c_char,
         n: ::std::os::raw::c_uint,
@@ -16951,7 +17046,7 @@ extern "C" {
     ) -> *mut rte_mempool;
 }
 extern "C" {
-    /// @internal used by rte_pktmbuf_read().
+    #[doc = " @internal used by rte_pktmbuf_read()."]
     pub fn __rte_pktmbuf_read(
         m: *const rte_mbuf,
         off: u32,
@@ -16960,42 +17055,42 @@ extern "C" {
     ) -> *const ::std::os::raw::c_void;
 }
 extern "C" {
-    /// Dump an mbuf structure to a file.
-    ///
-    /// Dump all fields for the given packet mbuf and all its associated
-    /// segments (in the case of a chained buffer).
-    ///
-    /// @param f
-    ///   A pointer to a file for output
-    /// @param m
-    ///   The packet mbuf.
-    /// @param dump_len
-    ///   If dump_len != 0, also dump the "dump_len" first data bytes of
-    ///   the packet.
+    #[doc = " Dump an mbuf structure to a file."]
+    #[doc = ""]
+    #[doc = " Dump all fields for the given packet mbuf and all its associated"]
+    #[doc = " segments (in the case of a chained buffer)."]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   A pointer to a file for output"]
+    #[doc = " @param m"]
+    #[doc = "   The packet mbuf."]
+    #[doc = " @param dump_len"]
+    #[doc = "   If dump_len != 0, also dump the \"dump_len\" first data bytes of"]
+    #[doc = "   the packet."]
     pub fn rte_pktmbuf_dump(f: *mut FILE, m: *const rte_mbuf, dump_len: ::std::os::raw::c_uint);
 }
 pub mod rte_timer_type {
-    /// Timer type: Periodic or single (one-shot).
+    #[doc = " Timer type: Periodic or single (one-shot)."]
     pub type Type = u32;
     pub const SINGLE: Type = 0;
     pub const PERIODICAL: Type = 1;
 }
-/// Timer status: A union of the state (stopped, pending, running,
-/// config) and an owner (the id of the lcore that owns the timer).
+#[doc = " Timer status: A union of the state (stopped, pending, running,"]
+#[doc = " config) and an owner (the id of the lcore that owns the timer)."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_timer_status {
     pub __bindgen_anon_1: rte_timer_status__bindgen_ty_1,
-    ///< To atomic-set status + owner.
+    #[doc = "< To atomic-set status + owner."]
     pub u32: u32,
     _bindgen_union_align: u32,
 }
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_timer_status__bindgen_ty_1 {
-    ///< Stop, pending, running, config.
+    #[doc = "< Stop, pending, running, config."]
     pub state: u16,
-    ///< The lcore that owns the timer.
+    #[doc = "< The lcore that owns the timer."]
     pub owner: i16,
 }
 #[test]
@@ -17063,24 +17158,24 @@ impl Default for rte_timer_status {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// Callback function type for timer expiry.
+#[doc = " Callback function type for timer expiry."]
 pub type rte_timer_cb_t = ::std::option::Option<
     unsafe extern "C" fn(arg1: *mut rte_timer, arg2: *mut ::std::os::raw::c_void),
 >;
-/// A structure describing a timer in RTE.
+#[doc = " A structure describing a timer in RTE."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_timer {
-    ///< Time when timer expire.
+    #[doc = "< Time when timer expire."]
     pub expire: u64,
     pub sl_next: [*mut rte_timer; 10usize],
-    ///< Status of timer.
+    #[doc = "< Status of timer."]
     pub status: rte_timer_status,
-    ///< Period of timer (0 if not periodic).
+    #[doc = "< Period of timer (0 if not periodic)."]
     pub period: u64,
-    ///< Callback function.
+    #[doc = "< Callback function."]
     pub f: rte_timer_cb_t,
-    ///< Argument to callback function.
+    #[doc = "< Argument to callback function."]
     pub arg: *mut ::std::os::raw::c_void,
 }
 #[test]
@@ -17162,64 +17257,64 @@ impl Default for rte_timer {
     }
 }
 extern "C" {
-    /// Initialize the timer library.
-    ///
-    /// Initializes internal variables (list, locks and so on) for the RTE
-    /// timer library.
+    #[doc = " Initialize the timer library."]
+    #[doc = ""]
+    #[doc = " Initializes internal variables (list, locks and so on) for the RTE"]
+    #[doc = " timer library."]
     pub fn rte_timer_subsystem_init();
 }
 extern "C" {
-    /// Initialize a timer handle.
-    ///
-    /// The rte_timer_init() function initializes the timer handle *tim*
-    /// for use. No operations can be performed on a timer before it is
-    /// initialized.
-    ///
-    /// @param tim
-    ///   The timer to initialize.
+    #[doc = " Initialize a timer handle."]
+    #[doc = ""]
+    #[doc = " The rte_timer_init() function initializes the timer handle *tim*"]
+    #[doc = " for use. No operations can be performed on a timer before it is"]
+    #[doc = " initialized."]
+    #[doc = ""]
+    #[doc = " @param tim"]
+    #[doc = "   The timer to initialize."]
     pub fn rte_timer_init(tim: *mut rte_timer);
 }
 extern "C" {
-    /// Reset and start the timer associated with the timer handle.
-    ///
-    /// The rte_timer_reset() function resets and starts the timer
-    /// associated with the timer handle *tim*. When the timer expires after
-    /// *ticks* HPET cycles, the function specified by *fct* will be called
-    /// with the argument *arg* on core *tim_lcore*.
-    ///
-    /// If the timer associated with the timer handle is already running
-    /// (in the RUNNING state), the function will fail. The user has to check
-    /// the return value of the function to see if there is a chance that the
-    /// timer is in the RUNNING state.
-    ///
-    /// If the timer is being configured on another core (the CONFIG state),
-    /// it will also fail.
-    ///
-    /// If the timer is pending or stopped, it will be rescheduled with the
-    /// new parameters.
-    ///
-    /// @param tim
-    ///   The timer handle.
-    /// @param ticks
-    ///   The number of cycles (see rte_get_hpet_hz()) before the callback
-    ///   function is called.
-    /// @param type
-    ///   The type can be either:
-    ///   - PERIODICAL: The timer is automatically reloaded after execution
-    ///     (returns to the PENDING state)
-    ///   - SINGLE: The timer is one-shot, that is, the timer goes to a
-    ///     STOPPED state after execution.
-    /// @param tim_lcore
-    ///   The ID of the lcore where the timer callback function has to be
-    ///   executed. If tim_lcore is LCORE_ID_ANY, the timer library will
-    ///   launch it on a different core for each call (round-robin).
-    /// @param fct
-    ///   The callback function of the timer.
-    /// @param arg
-    ///   The user argument of the callback function.
-    /// @return
-    ///   - 0: Success; the timer is scheduled.
-    ///   - (-1): Timer is in the RUNNING or CONFIG state.
+    #[doc = " Reset and start the timer associated with the timer handle."]
+    #[doc = ""]
+    #[doc = " The rte_timer_reset() function resets and starts the timer"]
+    #[doc = " associated with the timer handle *tim*. When the timer expires after"]
+    #[doc = " *ticks* HPET cycles, the function specified by *fct* will be called"]
+    #[doc = " with the argument *arg* on core *tim_lcore*."]
+    #[doc = ""]
+    #[doc = " If the timer associated with the timer handle is already running"]
+    #[doc = " (in the RUNNING state), the function will fail. The user has to check"]
+    #[doc = " the return value of the function to see if there is a chance that the"]
+    #[doc = " timer is in the RUNNING state."]
+    #[doc = ""]
+    #[doc = " If the timer is being configured on another core (the CONFIG state),"]
+    #[doc = " it will also fail."]
+    #[doc = ""]
+    #[doc = " If the timer is pending or stopped, it will be rescheduled with the"]
+    #[doc = " new parameters."]
+    #[doc = ""]
+    #[doc = " @param tim"]
+    #[doc = "   The timer handle."]
+    #[doc = " @param ticks"]
+    #[doc = "   The number of cycles (see rte_get_hpet_hz()) before the callback"]
+    #[doc = "   function is called."]
+    #[doc = " @param type"]
+    #[doc = "   The type can be either:"]
+    #[doc = "   - PERIODICAL: The timer is automatically reloaded after execution"]
+    #[doc = "     (returns to the PENDING state)"]
+    #[doc = "   - SINGLE: The timer is one-shot, that is, the timer goes to a"]
+    #[doc = "     STOPPED state after execution."]
+    #[doc = " @param tim_lcore"]
+    #[doc = "   The ID of the lcore where the timer callback function has to be"]
+    #[doc = "   executed. If tim_lcore is LCORE_ID_ANY, the timer library will"]
+    #[doc = "   launch it on a different core for each call (round-robin)."]
+    #[doc = " @param fct"]
+    #[doc = "   The callback function of the timer."]
+    #[doc = " @param arg"]
+    #[doc = "   The user argument of the callback function."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success; the timer is scheduled."]
+    #[doc = "   - (-1): Timer is in the RUNNING or CONFIG state."]
     pub fn rte_timer_reset(
         tim: *mut rte_timer,
         ticks: u64,
@@ -17230,30 +17325,30 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Loop until rte_timer_reset() succeeds.
-    ///
-    /// Reset and start the timer associated with the timer handle. Always
-    /// succeed. See rte_timer_reset() for details.
-    ///
-    /// @param tim
-    ///   The timer handle.
-    /// @param ticks
-    ///   The number of cycles (see rte_get_hpet_hz()) before the callback
-    ///   function is called.
-    /// @param type
-    ///   The type can be either:
-    ///   - PERIODICAL: The timer is automatically reloaded after execution
-    ///     (returns to the PENDING state)
-    ///   - SINGLE: The timer is one-shot, that is, the timer goes to a
-    ///     STOPPED state after execution.
-    /// @param tim_lcore
-    ///   The ID of the lcore where the timer callback function has to be
-    ///   executed. If tim_lcore is LCORE_ID_ANY, the timer library will
-    ///   launch it on a different core for each call (round-robin).
-    /// @param fct
-    ///   The callback function of the timer.
-    /// @param arg
-    ///   The user argument of the callback function.
+    #[doc = " Loop until rte_timer_reset() succeeds."]
+    #[doc = ""]
+    #[doc = " Reset and start the timer associated with the timer handle. Always"]
+    #[doc = " succeed. See rte_timer_reset() for details."]
+    #[doc = ""]
+    #[doc = " @param tim"]
+    #[doc = "   The timer handle."]
+    #[doc = " @param ticks"]
+    #[doc = "   The number of cycles (see rte_get_hpet_hz()) before the callback"]
+    #[doc = "   function is called."]
+    #[doc = " @param type"]
+    #[doc = "   The type can be either:"]
+    #[doc = "   - PERIODICAL: The timer is automatically reloaded after execution"]
+    #[doc = "     (returns to the PENDING state)"]
+    #[doc = "   - SINGLE: The timer is one-shot, that is, the timer goes to a"]
+    #[doc = "     STOPPED state after execution."]
+    #[doc = " @param tim_lcore"]
+    #[doc = "   The ID of the lcore where the timer callback function has to be"]
+    #[doc = "   executed. If tim_lcore is LCORE_ID_ANY, the timer library will"]
+    #[doc = "   launch it on a different core for each call (round-robin)."]
+    #[doc = " @param fct"]
+    #[doc = "   The callback function of the timer."]
+    #[doc = " @param arg"]
+    #[doc = "   The user argument of the callback function."]
     pub fn rte_timer_reset_sync(
         tim: *mut rte_timer,
         ticks: u64,
@@ -17264,79 +17359,79 @@ extern "C" {
     );
 }
 extern "C" {
-    /// Stop a timer.
-    ///
-    /// The rte_timer_stop() function stops the timer associated with the
-    /// timer handle *tim*. It may fail if the timer is currently running or
-    /// being configured.
-    ///
-    /// If the timer is pending or stopped (for instance, already expired),
-    /// the function will succeed. The timer handle tim must have been
-    /// initialized using rte_timer_init(), otherwise, undefined behavior
-    /// will occur.
-    ///
-    /// This function can be called safely from a timer callback. If it
-    /// succeeds, the timer is not referenced anymore by the timer library
-    /// and the timer structure can be freed (even in the callback
-    /// function).
-    ///
-    /// @param tim
-    ///   The timer handle.
-    /// @return
-    ///   - 0: Success; the timer is stopped.
-    ///   - (-1): The timer is in the RUNNING or CONFIG state.
+    #[doc = " Stop a timer."]
+    #[doc = ""]
+    #[doc = " The rte_timer_stop() function stops the timer associated with the"]
+    #[doc = " timer handle *tim*. It may fail if the timer is currently running or"]
+    #[doc = " being configured."]
+    #[doc = ""]
+    #[doc = " If the timer is pending or stopped (for instance, already expired),"]
+    #[doc = " the function will succeed. The timer handle tim must have been"]
+    #[doc = " initialized using rte_timer_init(), otherwise, undefined behavior"]
+    #[doc = " will occur."]
+    #[doc = ""]
+    #[doc = " This function can be called safely from a timer callback. If it"]
+    #[doc = " succeeds, the timer is not referenced anymore by the timer library"]
+    #[doc = " and the timer structure can be freed (even in the callback"]
+    #[doc = " function)."]
+    #[doc = ""]
+    #[doc = " @param tim"]
+    #[doc = "   The timer handle."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success; the timer is stopped."]
+    #[doc = "   - (-1): The timer is in the RUNNING or CONFIG state."]
     pub fn rte_timer_stop(tim: *mut rte_timer) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Loop until rte_timer_stop() succeeds.
-    ///
-    /// After a call to this function, the timer identified by *tim* is
-    /// stopped. See rte_timer_stop() for details.
-    ///
-    /// @param tim
-    ///   The timer handle.
+    #[doc = " Loop until rte_timer_stop() succeeds."]
+    #[doc = ""]
+    #[doc = " After a call to this function, the timer identified by *tim* is"]
+    #[doc = " stopped. See rte_timer_stop() for details."]
+    #[doc = ""]
+    #[doc = " @param tim"]
+    #[doc = "   The timer handle."]
     pub fn rte_timer_stop_sync(tim: *mut rte_timer);
 }
 extern "C" {
-    /// Test if a timer is pending.
-    ///
-    /// The rte_timer_pending() function tests the PENDING status
-    /// of the timer handle *tim*. A PENDING timer is one that has been
-    /// scheduled and whose function has not yet been called.
-    ///
-    /// @param tim
-    ///   The timer handle.
-    /// @return
-    ///   - 0: The timer is not pending.
-    ///   - 1: The timer is pending.
+    #[doc = " Test if a timer is pending."]
+    #[doc = ""]
+    #[doc = " The rte_timer_pending() function tests the PENDING status"]
+    #[doc = " of the timer handle *tim*. A PENDING timer is one that has been"]
+    #[doc = " scheduled and whose function has not yet been called."]
+    #[doc = ""]
+    #[doc = " @param tim"]
+    #[doc = "   The timer handle."]
+    #[doc = " @return"]
+    #[doc = "   - 0: The timer is not pending."]
+    #[doc = "   - 1: The timer is pending."]
     pub fn rte_timer_pending(tim: *mut rte_timer) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Manage the timer list and execute callback functions.
-    ///
-    /// This function must be called periodically from EAL lcores
-    /// main_loop(). It browses the list of pending timers and runs all
-    /// timers that are expired.
-    ///
-    /// The precision of the timer depends on the call frequency of this
-    /// function. However, the more often the function is called, the more
-    /// CPU resources it will use.
+    #[doc = " Manage the timer list and execute callback functions."]
+    #[doc = ""]
+    #[doc = " This function must be called periodically from EAL lcores"]
+    #[doc = " main_loop(). It browses the list of pending timers and runs all"]
+    #[doc = " timers that are expired."]
+    #[doc = ""]
+    #[doc = " The precision of the timer depends on the call frequency of this"]
+    #[doc = " function. However, the more often the function is called, the more"]
+    #[doc = " CPU resources it will use."]
     pub fn rte_timer_manage();
 }
 extern "C" {
-    /// Dump statistics about timers.
-    ///
-    /// @param f
-    ///   A pointer to a file for output
+    #[doc = " Dump statistics about timers."]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   A pointer to a file for output"]
     pub fn rte_timer_dump_stats(f: *mut FILE);
 }
-/// dummy structure type used by the rte_tailq APIs
+#[doc = " dummy structure type used by the rte_tailq APIs"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_tailq_entry {
-    ///< Pointer entries for a tailq list
+    #[doc = "< Pointer entries for a tailq list"]
     pub next: rte_tailq_entry__bindgen_ty_1,
-    ///< Pointer to the data referenced by this tailq entry
+    #[doc = "< Pointer to the data referenced by this tailq entry"]
     pub data: *mut ::std::os::raw::c_void,
 }
 #[repr(C)]
@@ -17425,7 +17520,7 @@ impl Default for rte_tailq_entry {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// dummy
+#[doc = " dummy"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_tailq_entry_head {
@@ -17470,16 +17565,16 @@ impl Default for rte_tailq_entry_head {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// The structure defining a tailq header entry for storing
-/// in the rte_config structure in shared memory. Each tailq
-/// is identified by name.
-/// Any library storing a set of objects e.g. rings, mempools, hash-tables,
-/// is recommended to use an entry here, so as to make it easy for
-/// a multi-process app to find already-created elements in shared memory.
+#[doc = " The structure defining a tailq header entry for storing"]
+#[doc = " in the rte_config structure in shared memory. Each tailq"]
+#[doc = " is identified by name."]
+#[doc = " Any library storing a set of objects e.g. rings, mempools, hash-tables,"]
+#[doc = " is recommended to use an entry here, so as to make it easy for"]
+#[doc = " a multi-process app to find already-created elements in shared memory."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_tailq_head {
-    ///< NOTE: must be first element
+    #[doc = "< NOTE: must be first element"]
     pub tailq_head: rte_tailq_entry_head,
     pub name: [::std::os::raw::c_char; 32usize],
 }
@@ -17524,8 +17619,8 @@ impl Default for rte_tailq_head {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_tailq_elem {
-    /// Reference to head in shared mem, updated at init time by
-    /// rte_eal_tailqs_init()
+    #[doc = " Reference to head in shared mem, updated at init time by"]
+    #[doc = " rte_eal_tailqs_init()"]
     pub head: *mut rte_tailq_head,
     pub next: rte_tailq_elem__bindgen_ty_1,
     pub name: [::std::os::raw::c_char; 32usize],
@@ -17627,41 +17722,41 @@ impl Default for rte_tailq_elem {
     }
 }
 extern "C" {
-    /// Dump tail queues to a file.
-    ///
-    /// @param f
-    ///   A pointer to a file for output
+    #[doc = " Dump tail queues to a file."]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   A pointer to a file for output"]
     pub fn rte_dump_tailq(f: *mut FILE);
 }
 extern "C" {
-    /// Lookup for a tail queue.
-    ///
-    /// Get a pointer to a tail queue header of a tail
-    /// queue identified by the name given as an argument.
-    /// Note: this function is not multi-thread safe, and should only be called from
-    /// a single thread at a time
-    ///
-    /// @param name
-    ///   The name of the queue.
-    /// @return
-    ///   A pointer to the tail queue head structure.
+    #[doc = " Lookup for a tail queue."]
+    #[doc = ""]
+    #[doc = " Get a pointer to a tail queue header of a tail"]
+    #[doc = " queue identified by the name given as an argument."]
+    #[doc = " Note: this function is not multi-thread safe, and should only be called from"]
+    #[doc = " a single thread at a time"]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   The name of the queue."]
+    #[doc = " @return"]
+    #[doc = "   A pointer to the tail queue head structure."]
     pub fn rte_eal_tailq_lookup(name: *const ::std::os::raw::c_char) -> *mut rte_tailq_head;
 }
 extern "C" {
-    /// Register a tail queue.
-    ///
-    /// Register a tail queue from shared memory.
-    /// This function is mainly used by EAL_REGISTER_TAILQ macro which is used to
-    /// register tailq from the different dpdk libraries. Since this macro is a
-    /// constructor, the function has no access to dpdk shared memory, so the
-    /// registered tailq can not be used before call to rte_eal_init() which calls
-    /// rte_eal_tailqs_init().
-    ///
-    /// @param t
-    ///   The tailq element which contains the name of the tailq you want to
-    ///   create (/retrieve when in secondary process).
-    /// @return
-    ///   0 on success or -1 in case of an error.
+    #[doc = " Register a tail queue."]
+    #[doc = ""]
+    #[doc = " Register a tail queue from shared memory."]
+    #[doc = " This function is mainly used by EAL_REGISTER_TAILQ macro which is used to"]
+    #[doc = " register tailq from the different dpdk libraries. Since this macro is a"]
+    #[doc = " constructor, the function has no access to dpdk shared memory, so the"]
+    #[doc = " registered tailq can not be used before call to rte_eal_init() which calls"]
+    #[doc = " rte_eal_tailqs_init()."]
+    #[doc = ""]
+    #[doc = " @param t"]
+    #[doc = "   The tailq element which contains the name of the tailq you want to"]
+    #[doc = "   create (/retrieve when in secondary process)."]
+    #[doc = " @return"]
+    #[doc = "   0 on success or -1 in case of an error."]
     pub fn rte_eal_tailq_register(t: *mut rte_tailq_elem) -> ::std::os::raw::c_int;
 }
 #[repr(C)]
@@ -17669,7 +17764,7 @@ extern "C" {
 pub struct malloc_elem {
     _unused: [u8; 0],
 }
-/// Structure to hold malloc heap
+#[doc = " Structure to hold malloc heap"]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct malloc_heap {
@@ -17811,13 +17906,13 @@ impl Default for malloc_heap {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// The rte_rwlock_t type.
-///
-/// cnt is -1 when write lock is held, and > 0 when read locks are held.
+#[doc = " The rte_rwlock_t type."]
+#[doc = ""]
+#[doc = " cnt is -1 when write lock is held, and > 0 when read locks are held."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_rwlock_t {
-    ///< -1 when W lock held, > 0 when R locks held.
+    #[doc = "< -1 when W lock held, > 0 when R locks held."]
     pub cnt: i32,
 }
 #[test]
@@ -17846,17 +17941,17 @@ fn bindgen_test_layout_rte_rwlock_t() {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_fbarray {
-    ///< name associated with an array
+    #[doc = "< name associated with an array"]
     pub name: [::std::os::raw::c_char; 64usize],
-    ///< number of entries stored
+    #[doc = "< number of entries stored"]
     pub count: ::std::os::raw::c_uint,
-    ///< current length of the array
+    #[doc = "< current length of the array"]
     pub len: ::std::os::raw::c_uint,
-    ///< size of each element
+    #[doc = "< size of each element"]
     pub elt_sz: ::std::os::raw::c_uint,
-    ///< data pointer
+    #[doc = "< data pointer"]
     pub data: *mut ::std::os::raw::c_void,
-    ///< multiprocess lock
+    #[doc = "< multiprocess lock"]
     pub rwlock: rte_rwlock_t,
 }
 #[test]
@@ -17938,28 +18033,28 @@ impl Default for rte_fbarray {
     }
 }
 extern "C" {
-    /// Set up ``rte_fbarray`` structure and allocate underlying resources.
-    ///
-    /// Call this function to correctly set up ``rte_fbarray`` and allocate
-    /// underlying files that will be backing the data in the current process. Note
-    /// that in order to use and share ``rte_fbarray`` between multiple processes,
-    /// data pointed to by ``arr`` pointer must itself be allocated in shared memory.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated ``rte_fbarray`` structure.
-    ///
-    /// @param name
-    ///   Unique name to be assigned to this array.
-    ///
-    /// @param len
-    ///   Number of elements initially available in the array.
-    ///
-    /// @param elt_sz
-    ///   Size of each element.
-    ///
-    /// @return
-    ///  - 0 on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Set up ``rte_fbarray`` structure and allocate underlying resources."]
+    #[doc = ""]
+    #[doc = " Call this function to correctly set up ``rte_fbarray`` and allocate"]
+    #[doc = " underlying files that will be backing the data in the current process. Note"]
+    #[doc = " that in order to use and share ``rte_fbarray`` between multiple processes,"]
+    #[doc = " data pointed to by ``arr`` pointer must itself be allocated in shared memory."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   Unique name to be assigned to this array."]
+    #[doc = ""]
+    #[doc = " @param len"]
+    #[doc = "   Number of elements initially available in the array."]
+    #[doc = ""]
+    #[doc = " @param elt_sz"]
+    #[doc = "   Size of each element."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - 0 on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_init(
         arr: *mut rte_fbarray,
         name: *const ::std::os::raw::c_char,
@@ -17968,191 +18063,191 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Attach to a file backing an already allocated and correctly set up
-    /// ``rte_fbarray`` structure.
-    ///
-    /// Call this function to attach to file that will be backing the data in the
-    /// current process. The structure must have been previously correctly set up
-    /// with a call to ``rte_fbarray_init()``. Calls to ``rte_fbarray_attach()`` are
-    /// usually meant to be performed in a multiprocessing scenario, with data
-    /// pointed to by ``arr`` pointer allocated in shared memory.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up rte_fbarray structure.
-    ///
-    /// @return
-    ///  - 0 on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Attach to a file backing an already allocated and correctly set up"]
+    #[doc = " ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " Call this function to attach to file that will be backing the data in the"]
+    #[doc = " current process. The structure must have been previously correctly set up"]
+    #[doc = " with a call to ``rte_fbarray_init()``. Calls to ``rte_fbarray_attach()`` are"]
+    #[doc = " usually meant to be performed in a multiprocessing scenario, with data"]
+    #[doc = " pointed to by ``arr`` pointer allocated in shared memory."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up rte_fbarray structure."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - 0 on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_attach(arr: *mut rte_fbarray) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Deallocate resources for an already allocated and correctly set up
-    /// ``rte_fbarray`` structure, and remove the underlying file.
-    ///
-    /// Call this function to deallocate all resources associated with an
-    /// ``rte_fbarray`` structure within the current process. This will also
-    /// zero-fill data pointed to by ``arr`` pointer and remove the underlying file
-    /// backing the data, so it is expected that by the time this function is called,
-    /// all other processes have detached from this ``rte_fbarray``.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @return
-    ///  - 0 on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Deallocate resources for an already allocated and correctly set up"]
+    #[doc = " ``rte_fbarray`` structure, and remove the underlying file."]
+    #[doc = ""]
+    #[doc = " Call this function to deallocate all resources associated with an"]
+    #[doc = " ``rte_fbarray`` structure within the current process. This will also"]
+    #[doc = " zero-fill data pointed to by ``arr`` pointer and remove the underlying file"]
+    #[doc = " backing the data, so it is expected that by the time this function is called,"]
+    #[doc = " all other processes have detached from this ``rte_fbarray``."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - 0 on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_destroy(arr: *mut rte_fbarray) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Deallocate resources for an already allocated and correctly set up
-    /// ``rte_fbarray`` structure.
-    ///
-    /// Call this function to deallocate all resources associated with an
-    /// ``rte_fbarray`` structure within current process.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @return
-    ///  - 0 on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Deallocate resources for an already allocated and correctly set up"]
+    #[doc = " ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " Call this function to deallocate all resources associated with an"]
+    #[doc = " ``rte_fbarray`` structure within current process."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - 0 on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_detach(arr: *mut rte_fbarray) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get pointer to element residing at specified index.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @param idx
-    ///   Index of an element to get a pointer to.
-    ///
-    /// @return
-    ///  - non-NULL pointer on success.
-    ///  - NULL on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Get pointer to element residing at specified index."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param idx"]
+    #[doc = "   Index of an element to get a pointer to."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - non-NULL pointer on success."]
+    #[doc = "  - NULL on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_get(
         arr: *const rte_fbarray,
         idx: ::std::os::raw::c_uint,
     ) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
-    /// Find index of a specified element within the array.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @param elt
-    ///   Pointer to element to find index to.
-    ///
-    /// @return
-    ///  - non-negative integer on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Find index of a specified element within the array."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param elt"]
+    #[doc = "   Pointer to element to find index to."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - non-negative integer on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_find_idx(
         arr: *const rte_fbarray,
         elt: *const ::std::os::raw::c_void,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Mark specified element as used.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @param idx
-    ///   Element index to mark as used.
-    ///
-    /// @return
-    ///  - 0 on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Mark specified element as used."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param idx"]
+    #[doc = "   Element index to mark as used."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - 0 on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_set_used(
         arr: *mut rte_fbarray,
         idx: ::std::os::raw::c_uint,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Mark specified element as free.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @param idx
-    ///   Element index to mark as free.
-    ///
-    /// @return
-    ///  - 0 on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Mark specified element as free."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param idx"]
+    #[doc = "   Element index to mark as free."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - 0 on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_set_free(
         arr: *mut rte_fbarray,
         idx: ::std::os::raw::c_uint,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Check whether element at specified index is marked as used.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @param idx
-    ///   Element index to check as used.
-    ///
-    /// @return
-    ///  - 1 if element is used.
-    ///  - 0 if element is unused.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Check whether element at specified index is marked as used."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param idx"]
+    #[doc = "   Element index to check as used."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - 1 if element is used."]
+    #[doc = "  - 0 if element is unused."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_is_used(
         arr: *mut rte_fbarray,
         idx: ::std::os::raw::c_uint,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Find index of next free element, starting at specified index.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @param start
-    ///   Element index to start search from.
-    ///
-    /// @return
-    ///  - non-negative integer on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Find index of next free element, starting at specified index."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param start"]
+    #[doc = "   Element index to start search from."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - non-negative integer on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_find_next_free(
         arr: *mut rte_fbarray,
         start: ::std::os::raw::c_uint,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Find index of next used element, starting at specified index.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @param start
-    ///   Element index to start search from.
-    ///
-    /// @return
-    ///  - non-negative integer on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Find index of next used element, starting at specified index."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param start"]
+    #[doc = "   Element index to start search from."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - non-negative integer on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_find_next_used(
         arr: *mut rte_fbarray,
         start: ::std::os::raw::c_uint,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Find index of next chunk of ``n`` free elements, starting at specified index.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @param start
-    ///   Element index to start search from.
-    ///
-    /// @param n
-    ///   Number of free elements to look for.
-    ///
-    /// @return
-    ///  - non-negative integer on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Find index of next chunk of ``n`` free elements, starting at specified index."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param start"]
+    #[doc = "   Element index to start search from."]
+    #[doc = ""]
+    #[doc = " @param n"]
+    #[doc = "   Number of free elements to look for."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - non-negative integer on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_find_next_n_free(
         arr: *mut rte_fbarray,
         start: ::std::os::raw::c_uint,
@@ -18160,20 +18255,20 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Find index of next chunk of ``n`` used elements, starting at specified index.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @param start
-    ///   Element index to start search from.
-    ///
-    /// @param n
-    ///   Number of used elements to look for.
-    ///
-    /// @return
-    ///  - non-negative integer on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Find index of next chunk of ``n`` used elements, starting at specified index."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param start"]
+    #[doc = "   Element index to start search from."]
+    #[doc = ""]
+    #[doc = " @param n"]
+    #[doc = "   Number of used elements to look for."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - non-negative integer on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_find_next_n_used(
         arr: *mut rte_fbarray,
         start: ::std::os::raw::c_uint,
@@ -18181,89 +18276,89 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Find how many more free entries there are, starting at specified index.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @param start
-    ///   Element index to start search from.
-    ///
-    /// @return
-    ///  - non-negative integer on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Find how many more free entries there are, starting at specified index."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param start"]
+    #[doc = "   Element index to start search from."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - non-negative integer on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_find_contig_free(
         arr: *mut rte_fbarray,
         start: ::std::os::raw::c_uint,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Find how many more used entries there are, starting at specified index.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @param start
-    ///   Element index to start search from.
-    ///
-    /// @return
-    ///  - non-negative integer on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Find how many more used entries there are, starting at specified index."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param start"]
+    #[doc = "   Element index to start search from."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - non-negative integer on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_find_contig_used(
         arr: *mut rte_fbarray,
         start: ::std::os::raw::c_uint,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Find index of previous free element, starting at specified index.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @param start
-    ///   Element index to start search from.
-    ///
-    /// @return
-    ///  - non-negative integer on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Find index of previous free element, starting at specified index."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param start"]
+    #[doc = "   Element index to start search from."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - non-negative integer on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_find_prev_free(
         arr: *mut rte_fbarray,
         start: ::std::os::raw::c_uint,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Find index of previous used element, starting at specified index.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @param start
-    ///   Element index to start search from.
-    ///
-    /// @return
-    ///  - non-negative integer on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Find index of previous used element, starting at specified index."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param start"]
+    #[doc = "   Element index to start search from."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - non-negative integer on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_find_prev_used(
         arr: *mut rte_fbarray,
         start: ::std::os::raw::c_uint,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Find lowest start index of chunk of ``n`` free elements, down from specified
-    /// index.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @param start
-    ///   Element index to start search from.
-    ///
-    /// @param n
-    ///   Number of free elements to look for.
-    ///
-    /// @return
-    ///  - non-negative integer on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Find lowest start index of chunk of ``n`` free elements, down from specified"]
+    #[doc = " index."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param start"]
+    #[doc = "   Element index to start search from."]
+    #[doc = ""]
+    #[doc = " @param n"]
+    #[doc = "   Number of free elements to look for."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - non-negative integer on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_find_prev_n_free(
         arr: *mut rte_fbarray,
         start: ::std::os::raw::c_uint,
@@ -18271,21 +18366,21 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Find lowest start index of chunk of ``n`` used elements, down from specified
-    /// index.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @param start
-    ///   Element index to start search from.
-    ///
-    /// @param n
-    ///   Number of used elements to look for.
-    ///
-    /// @return
-    ///  - non-negative integer on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Find lowest start index of chunk of ``n`` used elements, down from specified"]
+    #[doc = " index."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param start"]
+    #[doc = "   Element index to start search from."]
+    #[doc = ""]
+    #[doc = " @param n"]
+    #[doc = "   Number of used elements to look for."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - non-negative integer on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_find_prev_n_used(
         arr: *mut rte_fbarray,
         start: ::std::os::raw::c_uint,
@@ -18293,66 +18388,66 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Find how many more free entries there are before specified index (like
-    /// ``rte_fbarray_find_contig_free`` but going in reverse).
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @param start
-    ///   Element index to start search from.
-    ///
-    /// @return
-    ///  - non-negative integer on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Find how many more free entries there are before specified index (like"]
+    #[doc = " ``rte_fbarray_find_contig_free`` but going in reverse)."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param start"]
+    #[doc = "   Element index to start search from."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - non-negative integer on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_find_rev_contig_free(
         arr: *mut rte_fbarray,
         start: ::std::os::raw::c_uint,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Find how many more used entries there are before specified index (like
-    /// ``rte_fbarray_find_contig_used`` but going in reverse).
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @param start
-    ///   Element index to start search from.
-    ///
-    /// @return
-    ///  - non-negative integer on success.
-    ///  - -1 on failure, with ``rte_errno`` indicating reason for failure.
+    #[doc = " Find how many more used entries there are before specified index (like"]
+    #[doc = " ``rte_fbarray_find_contig_used`` but going in reverse)."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param start"]
+    #[doc = "   Element index to start search from."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - non-negative integer on success."]
+    #[doc = "  - -1 on failure, with ``rte_errno`` indicating reason for failure."]
     pub fn rte_fbarray_find_rev_contig_used(
         arr: *mut rte_fbarray,
         start: ::std::os::raw::c_uint,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Dump ``rte_fbarray`` metadata.
-    ///
-    /// @param arr
-    ///   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure.
-    ///
-    /// @param f
-    ///   File object to dump information into.
+    #[doc = " Dump ``rte_fbarray`` metadata."]
+    #[doc = ""]
+    #[doc = " @param arr"]
+    #[doc = "   Valid pointer to allocated and correctly set up ``rte_fbarray`` structure."]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   File object to dump information into."]
     pub fn rte_fbarray_dump_metadata(arr: *mut rte_fbarray, f: *mut FILE);
 }
-/// memseg list is a special case as we need to store a bunch of other data
-/// together with the array itself.
+#[doc = " memseg list is a special case as we need to store a bunch of other data"]
+#[doc = " together with the array itself."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_memseg_list {
     pub __bindgen_anon_1: rte_memseg_list__bindgen_ty_1,
-    ///< Page size for all memsegs in this list.
+    #[doc = "< Page size for all memsegs in this list."]
     pub page_sz: u64,
-    ///< Socket ID for all memsegs in this list.
+    #[doc = "< Socket ID for all memsegs in this list."]
     pub socket_id: ::std::os::raw::c_int,
-    ///< version number for multiprocess sync.
+    #[doc = "< version number for multiprocess sync."]
     pub version: u32,
-    ///< Length of memory area covered by this memseg list.
+    #[doc = "< Length of memory area covered by this memseg list."]
     pub len: usize,
-    ///< 1 if this list points to external memory
+    #[doc = "< 1 if this list points to external memory"]
     pub external: ::std::os::raw::c_uint,
     pub memseg_arr: rte_fbarray,
 }
@@ -18483,29 +18578,29 @@ impl Default for rte_memseg_list {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// the structure for the memory configuration for the RTE.
-/// Used by the rte_config structure. It is separated out, as for multi-process
-/// support, the memory details should be shared across instances
+#[doc = " the structure for the memory configuration for the RTE."]
+#[doc = " Used by the rte_config structure. It is separated out, as for multi-process"]
+#[doc = " support, the memory details should be shared across instances"]
 #[repr(C, packed)]
 #[derive(Copy, Clone)]
 pub struct rte_mem_config {
-    ///< Magic number - Sanity check.
+    #[doc = "< Magic number - Sanity check."]
     pub magic: u32,
-    ///< Number of channels (0 if unknown).
+    #[doc = "< Number of channels (0 if unknown)."]
     pub nchannel: u32,
-    ///< Number of ranks (0 if unknown).
+    #[doc = "< Number of ranks (0 if unknown)."]
     pub nrank: u32,
-    ///< only used by memzone LIB for thread-safe.
+    #[doc = "< only used by memzone LIB for thread-safe."]
     pub mlock: rte_rwlock_t,
-    ///< used for tailq operation for thread safe.
+    #[doc = "< used for tailq operation for thread safe."]
     pub qlock: rte_rwlock_t,
-    ///< only used by mempool LIB for thread-safe.
+    #[doc = "< only used by mempool LIB for thread-safe."]
     pub mplock: rte_rwlock_t,
     pub memory_hotplug_lock: rte_rwlock_t,
-    ///< Memzone descriptors.
+    #[doc = "< Memzone descriptors."]
     pub memzones: rte_fbarray,
     pub memsegs: [rte_memseg_list; 64usize],
-    ///< Tailqs for objects
+    #[doc = "< Tailqs for objects"]
     pub tailq_head: [rte_tailq_head; 32usize],
     pub malloc_heaps: [malloc_heap; 32usize],
     pub next_socket_id: ::std::os::raw::c_int,
@@ -18696,35 +18791,35 @@ impl Default for rte_mem_config {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// Function to be registered for the specific interrupt
+#[doc = " Function to be registered for the specific interrupt"]
 pub type rte_intr_callback_fn =
     ::std::option::Option<unsafe extern "C" fn(cb_arg: *mut ::std::os::raw::c_void)>;
 pub mod rte_intr_handle_type {
-    /// The interrupt source type, e.g. UIO, VFIO, ALARM etc.
+    #[doc = " The interrupt source type, e.g. UIO, VFIO, ALARM etc."]
     pub type Type = u32;
-    ///< generic unknown handle
+    #[doc = "< generic unknown handle"]
     pub const RTE_INTR_HANDLE_UNKNOWN: Type = 0;
-    ///< uio device handle
+    #[doc = "< uio device handle"]
     pub const RTE_INTR_HANDLE_UIO: Type = 1;
-    ///< uio generic handle
+    #[doc = "< uio generic handle"]
     pub const RTE_INTR_HANDLE_UIO_INTX: Type = 2;
-    ///< vfio device handle (legacy)
+    #[doc = "< vfio device handle (legacy)"]
     pub const RTE_INTR_HANDLE_VFIO_LEGACY: Type = 3;
-    ///< vfio device handle (MSI)
+    #[doc = "< vfio device handle (MSI)"]
     pub const RTE_INTR_HANDLE_VFIO_MSI: Type = 4;
-    ///< vfio device handle (MSIX)
+    #[doc = "< vfio device handle (MSIX)"]
     pub const RTE_INTR_HANDLE_VFIO_MSIX: Type = 5;
-    ///< alarm handle
+    #[doc = "< alarm handle"]
     pub const RTE_INTR_HANDLE_ALARM: Type = 6;
-    ///< external handler
+    #[doc = "< external handler"]
     pub const RTE_INTR_HANDLE_EXT: Type = 7;
-    ///< virtual device
+    #[doc = "< virtual device"]
     pub const RTE_INTR_HANDLE_VDEV: Type = 8;
-    ///< device event handle
+    #[doc = "< device event handle"]
     pub const RTE_INTR_HANDLE_DEV_EVENT: Type = 9;
-    ///< VFIO request handle
+    #[doc = "< VFIO request handle"]
     pub const RTE_INTR_HANDLE_VFIO_REQ: Type = 10;
-    ///< count of elements
+    #[doc = "< count of elements"]
     pub const RTE_INTR_HANDLE_MAX: Type = 11;
 }
 pub type rte_intr_event_cb_t = ::std::option::Option<
@@ -18733,13 +18828,13 @@ pub type rte_intr_event_cb_t = ::std::option::Option<
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_epoll_data {
-    ///< event type
+    #[doc = "< event type"]
     pub event: u32,
-    ///< User data
+    #[doc = "< User data"]
     pub data: *mut ::std::os::raw::c_void,
-    ///< IN: callback fun
+    #[doc = "< IN: callback fun"]
     pub cb_fun: rte_intr_event_cb_t,
-    ///< IN: callback arg
+    #[doc = "< IN: callback arg"]
     pub cb_arg: *mut ::std::os::raw::c_void,
 }
 #[test]
@@ -18806,15 +18901,15 @@ pub mod _bindgen_ty_13 {
     pub const RTE_EPOLL_VALID: Type = 1;
     pub const RTE_EPOLL_EXEC: Type = 2;
 }
-/// interrupt epoll event obj, taken by epoll_event.ptr
+#[doc = " interrupt epoll event obj, taken by epoll_event.ptr"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_epoll_event {
-    ///< OUT: event status
+    #[doc = "< OUT: event status"]
     pub status: u32,
-    ///< OUT: event fd
+    #[doc = "< OUT: event fd"]
     pub fd: ::std::os::raw::c_int,
-    ///< OUT: epoll instance the ev associated with
+    #[doc = "< OUT: epoll instance the ev associated with"]
     pub epfd: ::std::os::raw::c_int,
     pub epdata: rte_epoll_data,
 }
@@ -18876,33 +18971,33 @@ impl Default for rte_epoll_event {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// Interrupt handle
+#[doc = " Interrupt handle"]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_intr_handle {
     pub __bindgen_anon_1: rte_intr_handle__bindgen_ty_1,
-    ///< interrupt event file descriptor
+    #[doc = "< interrupt event file descriptor"]
     pub fd: ::std::os::raw::c_int,
-    ///< handle type
+    #[doc = "< handle type"]
     pub type_: rte_intr_handle_type::Type,
-    ///< max interrupt requested
+    #[doc = "< max interrupt requested"]
     pub max_intr: u32,
-    ///< number of available efd(event fd)
+    #[doc = "< number of available efd(event fd)"]
     pub nb_efd: u32,
-    ///< size of efd counter, used for vdev
+    #[doc = "< size of efd counter, used for vdev"]
     pub efd_counter_size: u8,
-    ///< intr vectors/efds mapping
+    #[doc = "< intr vectors/efds mapping"]
     pub efds: [::std::os::raw::c_int; 32usize],
     pub elist: [rte_epoll_event; 32usize],
-    ///< intr vector number array
+    #[doc = "< intr vector number array"]
     pub intr_vec: *mut ::std::os::raw::c_int,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_intr_handle__bindgen_ty_1 {
-    ///< VFIO device file descriptor
+    #[doc = "< VFIO device file descriptor"]
     pub vfio_dev_fd: ::std::os::raw::c_int,
-    ///< UIO cfg file desc for uio_pci_generic
+    #[doc = "< UIO cfg file desc for uio_pci_generic"]
     pub uio_cfg_fd: ::std::os::raw::c_int,
     _bindgen_union_align: u32,
 }
@@ -19051,20 +19146,20 @@ impl Default for rte_intr_handle {
     }
 }
 extern "C" {
-    /// It waits for events on the epoll instance.
-    ///
-    /// @param epfd
-    ///   Epoll instance fd on which the caller wait for events.
-    /// @param events
-    ///   Memory area contains the events that will be available for the caller.
-    /// @param maxevents
-    ///   Up to maxevents are returned, must greater than zero.
-    /// @param timeout
-    ///   Specifying a timeout of -1 causes a block indefinitely.
-    ///   Specifying a timeout equal to zero cause to return immediately.
-    /// @return
-    ///   - On success, returns the number of available event.
-    ///   - On failure, a negative value.
+    #[doc = " It waits for events on the epoll instance."]
+    #[doc = ""]
+    #[doc = " @param epfd"]
+    #[doc = "   Epoll instance fd on which the caller wait for events."]
+    #[doc = " @param events"]
+    #[doc = "   Memory area contains the events that will be available for the caller."]
+    #[doc = " @param maxevents"]
+    #[doc = "   Up to maxevents are returned, must greater than zero."]
+    #[doc = " @param timeout"]
+    #[doc = "   Specifying a timeout of -1 causes a block indefinitely."]
+    #[doc = "   Specifying a timeout equal to zero cause to return immediately."]
+    #[doc = " @return"]
+    #[doc = "   - On success, returns the number of available event."]
+    #[doc = "   - On failure, a negative value."]
     pub fn rte_epoll_wait(
         epfd: ::std::os::raw::c_int,
         events: *mut rte_epoll_event,
@@ -19073,21 +19168,21 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// It performs control operations on epoll instance referred by the epfd.
-    /// It requests that the operation op be performed for the target fd.
-    ///
-    /// @param epfd
-    ///   Epoll instance fd on which the caller perform control operations.
-    /// @param op
-    ///   The operation be performed for the target fd.
-    /// @param fd
-    ///   The target fd on which the control ops perform.
-    /// @param event
-    ///   Describes the object linked to the fd.
-    ///   Note: The caller must take care the object deletion after CTL_DEL.
-    /// @return
-    ///   - On success, zero.
-    ///   - On failure, a negative value.
+    #[doc = " It performs control operations on epoll instance referred by the epfd."]
+    #[doc = " It requests that the operation op be performed for the target fd."]
+    #[doc = ""]
+    #[doc = " @param epfd"]
+    #[doc = "   Epoll instance fd on which the caller perform control operations."]
+    #[doc = " @param op"]
+    #[doc = "   The operation be performed for the target fd."]
+    #[doc = " @param fd"]
+    #[doc = "   The target fd on which the control ops perform."]
+    #[doc = " @param event"]
+    #[doc = "   Describes the object linked to the fd."]
+    #[doc = "   Note: The caller must take care the object deletion after CTL_DEL."]
+    #[doc = " @return"]
+    #[doc = "   - On success, zero."]
+    #[doc = "   - On failure, a negative value."]
     pub fn rte_epoll_ctl(
         epfd: ::std::os::raw::c_int,
         op: ::std::os::raw::c_int,
@@ -19096,27 +19191,27 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// The function returns the per thread epoll instance.
-    ///
-    /// @return
-    ///   epfd the epoll instance referred to.
+    #[doc = " The function returns the per thread epoll instance."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   epfd the epoll instance referred to."]
     pub fn rte_intr_tls_epfd() -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @param intr_handle
-    ///   Pointer to the interrupt handle.
-    /// @param epfd
-    ///   Epoll instance fd which the intr vector associated to.
-    /// @param op
-    ///   The operation be performed for the vector.
-    ///   Operation type of {ADD, DEL}.
-    /// @param vec
-    ///   RX intr vector number added to the epoll instance wait list.
-    /// @param data
-    ///   User raw data.
-    /// @return
-    ///   - On success, zero.
-    ///   - On failure, a negative value.
+    #[doc = " @param intr_handle"]
+    #[doc = "   Pointer to the interrupt handle."]
+    #[doc = " @param epfd"]
+    #[doc = "   Epoll instance fd which the intr vector associated to."]
+    #[doc = " @param op"]
+    #[doc = "   The operation be performed for the vector."]
+    #[doc = "   Operation type of {ADD, DEL}."]
+    #[doc = " @param vec"]
+    #[doc = "   RX intr vector number added to the epoll instance wait list."]
+    #[doc = " @param data"]
+    #[doc = "   User raw data."]
+    #[doc = " @return"]
+    #[doc = "   - On success, zero."]
+    #[doc = "   - On failure, a negative value."]
     pub fn rte_intr_rx_ctl(
         intr_handle: *mut rte_intr_handle,
         epfd: ::std::os::raw::c_int,
@@ -19126,74 +19221,74 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// It deletes registered eventfds.
-    ///
-    /// @param intr_handle
-    ///   Pointer to the interrupt handle.
+    #[doc = " It deletes registered eventfds."]
+    #[doc = ""]
+    #[doc = " @param intr_handle"]
+    #[doc = "   Pointer to the interrupt handle."]
     pub fn rte_intr_free_epoll_fd(intr_handle: *mut rte_intr_handle);
 }
 extern "C" {
-    /// It enables the packet I/O interrupt event if it's necessary.
-    /// It creates event fd for each interrupt vector when MSIX is used,
-    /// otherwise it multiplexes a single event fd.
-    ///
-    /// @param intr_handle
-    ///   Pointer to the interrupt handle.
-    /// @param nb_efd
-    ///   Number of interrupt vector trying to enable.
-    ///   The value 0 is not allowed.
-    /// @return
-    ///   - On success, zero.
-    ///   - On failure, a negative value.
+    #[doc = " It enables the packet I/O interrupt event if it\'s necessary."]
+    #[doc = " It creates event fd for each interrupt vector when MSIX is used,"]
+    #[doc = " otherwise it multiplexes a single event fd."]
+    #[doc = ""]
+    #[doc = " @param intr_handle"]
+    #[doc = "   Pointer to the interrupt handle."]
+    #[doc = " @param nb_efd"]
+    #[doc = "   Number of interrupt vector trying to enable."]
+    #[doc = "   The value 0 is not allowed."]
+    #[doc = " @return"]
+    #[doc = "   - On success, zero."]
+    #[doc = "   - On failure, a negative value."]
     pub fn rte_intr_efd_enable(
         intr_handle: *mut rte_intr_handle,
         nb_efd: u32,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// It disables the packet I/O interrupt event.
-    /// It deletes registered eventfds and closes the open fds.
-    ///
-    /// @param intr_handle
-    ///   Pointer to the interrupt handle.
+    #[doc = " It disables the packet I/O interrupt event."]
+    #[doc = " It deletes registered eventfds and closes the open fds."]
+    #[doc = ""]
+    #[doc = " @param intr_handle"]
+    #[doc = "   Pointer to the interrupt handle."]
     pub fn rte_intr_efd_disable(intr_handle: *mut rte_intr_handle);
 }
 extern "C" {
-    /// The packet I/O interrupt on datapath is enabled or not.
-    ///
-    /// @param intr_handle
-    ///   Pointer to the interrupt handle.
+    #[doc = " The packet I/O interrupt on datapath is enabled or not."]
+    #[doc = ""]
+    #[doc = " @param intr_handle"]
+    #[doc = "   Pointer to the interrupt handle."]
     pub fn rte_intr_dp_is_en(intr_handle: *mut rte_intr_handle) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// The interrupt handle instance allows other causes or not.
-    /// Other causes stand for any none packet I/O interrupts.
-    ///
-    /// @param intr_handle
-    ///   Pointer to the interrupt handle.
+    #[doc = " The interrupt handle instance allows other causes or not."]
+    #[doc = " Other causes stand for any none packet I/O interrupts."]
+    #[doc = ""]
+    #[doc = " @param intr_handle"]
+    #[doc = "   Pointer to the interrupt handle."]
     pub fn rte_intr_allow_others(intr_handle: *mut rte_intr_handle) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// The multiple interrupt vector capability of interrupt handle instance.
-    /// It returns zero if no multiple interrupt vector support.
-    ///
-    /// @param intr_handle
-    ///   Pointer to the interrupt handle.
+    #[doc = " The multiple interrupt vector capability of interrupt handle instance."]
+    #[doc = " It returns zero if no multiple interrupt vector support."]
+    #[doc = ""]
+    #[doc = " @param intr_handle"]
+    #[doc = "   Pointer to the interrupt handle."]
     pub fn rte_intr_cap_multiple(intr_handle: *mut rte_intr_handle) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// It registers the callback for the specific interrupt. Multiple
-    /// callbacks cal be registered at the same time.
-    /// @param intr_handle
-    ///  Pointer to the interrupt handle.
-    /// @param cb
-    ///  callback address.
-    /// @param cb_arg
-    ///  address of parameter for callback.
-    ///
-    /// @return
-    ///  - On success, zero.
-    ///  - On failure, a negative value.
+    #[doc = " It registers the callback for the specific interrupt. Multiple"]
+    #[doc = " callbacks cal be registered at the same time."]
+    #[doc = " @param intr_handle"]
+    #[doc = "  Pointer to the interrupt handle."]
+    #[doc = " @param cb"]
+    #[doc = "  callback address."]
+    #[doc = " @param cb_arg"]
+    #[doc = "  address of parameter for callback."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - On success, zero."]
+    #[doc = "  - On failure, a negative value."]
     pub fn rte_intr_callback_register(
         intr_handle: *const rte_intr_handle,
         cb: rte_intr_callback_fn,
@@ -19201,19 +19296,19 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// It unregisters the callback according to the specified interrupt handle.
-    ///
-    /// @param intr_handle
-    ///  pointer to the interrupt handle.
-    /// @param cb
-    ///  callback address.
-    /// @param cb_arg
-    ///  address of parameter for callback, (void *)-1 means to remove all
-    ///  registered which has the same callback address.
-    ///
-    /// @return
-    ///  - On success, return the number of callback entities removed.
-    ///  - On failure, a negative value.
+    #[doc = " It unregisters the callback according to the specified interrupt handle."]
+    #[doc = ""]
+    #[doc = " @param intr_handle"]
+    #[doc = "  pointer to the interrupt handle."]
+    #[doc = " @param cb"]
+    #[doc = "  callback address."]
+    #[doc = " @param cb_arg"]
+    #[doc = "  address of parameter for callback, (void *)-1 means to remove all"]
+    #[doc = "  registered which has the same callback address."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - On success, return the number of callback entities removed."]
+    #[doc = "  - On failure, a negative value."]
     pub fn rte_intr_callback_unregister(
         intr_handle: *const rte_intr_handle,
         cb: rte_intr_callback_fn,
@@ -19221,41 +19316,41 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// It enables the interrupt for the specified handle.
-    ///
-    /// @param intr_handle
-    ///  pointer to the interrupt handle.
-    ///
-    /// @return
-    ///  - On success, zero.
-    ///  - On failure, a negative value.
+    #[doc = " It enables the interrupt for the specified handle."]
+    #[doc = ""]
+    #[doc = " @param intr_handle"]
+    #[doc = "  pointer to the interrupt handle."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - On success, zero."]
+    #[doc = "  - On failure, a negative value."]
     pub fn rte_intr_enable(intr_handle: *const rte_intr_handle) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// It disables the interrupt for the specified handle.
-    ///
-    /// @param intr_handle
-    ///  pointer to the interrupt handle.
-    ///
-    /// @return
-    ///  - On success, zero.
-    ///  - On failure, a negative value.
+    #[doc = " It disables the interrupt for the specified handle."]
+    #[doc = ""]
+    #[doc = " @param intr_handle"]
+    #[doc = "  pointer to the interrupt handle."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - On success, zero."]
+    #[doc = "  - On failure, a negative value."]
     pub fn rte_intr_disable(intr_handle: *const rte_intr_handle) -> ::std::os::raw::c_int;
 }
-/// A structure describing an ID for a PCI driver. Each driver provides a
-/// table of these IDs for each device that it supports.
+#[doc = " A structure describing an ID for a PCI driver. Each driver provides a"]
+#[doc = " table of these IDs for each device that it supports."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_pci_id {
-    ///< Class ID or RTE_CLASS_ANY_ID.
+    #[doc = "< Class ID or RTE_CLASS_ANY_ID."]
     pub class_id: u32,
-    ///< Vendor ID or PCI_ANY_ID.
+    #[doc = "< Vendor ID or PCI_ANY_ID."]
     pub vendor_id: u16,
-    ///< Device ID or PCI_ANY_ID.
+    #[doc = "< Device ID or PCI_ANY_ID."]
     pub device_id: u16,
-    ///< Subsystem vendor ID or PCI_ANY_ID.
+    #[doc = "< Subsystem vendor ID or PCI_ANY_ID."]
     pub subsystem_vendor_id: u16,
-    ///< Subsystem device ID or PCI_ANY_ID.
+    #[doc = "< Subsystem device ID or PCI_ANY_ID."]
     pub subsystem_device_id: u16,
 }
 #[test]
@@ -19321,17 +19416,17 @@ fn bindgen_test_layout_rte_pci_id() {
         )
     );
 }
-/// A structure describing the location of a PCI device.
+#[doc = " A structure describing the location of a PCI device."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_pci_addr {
-    ///< Device domain
+    #[doc = "< Device domain"]
     pub domain: u32,
-    ///< Device bus
+    #[doc = "< Device bus"]
     pub bus: u8,
-    ///< Device ID
+    #[doc = "< Device ID"]
     pub devid: u8,
-    ///< Device function.
+    #[doc = "< Device function."]
     pub function: u8,
 }
 #[test]
@@ -19387,7 +19482,7 @@ fn bindgen_test_layout_rte_pci_addr() {
         )
     );
 }
-/// A structure describing a PCI mapping.
+#[doc = " A structure describing a PCI mapping."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct pci_map {
@@ -19515,9 +19610,9 @@ fn bindgen_test_layout_pci_msix_table() {
         )
     );
 }
-/// A structure describing a mapped PCI resource.
-/// For multi-process we need to reproduce all PCI mappings in secondary
-/// processes, so save them in a tailq.
+#[doc = " A structure describing a mapped PCI resource."]
+#[doc = " For multi-process we need to reproduce all PCI mappings in secondary"]
+#[doc = " processes, so save them in a tailq."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct mapped_pci_resource {
@@ -19659,7 +19754,7 @@ impl Default for mapped_pci_resource {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// mapped pci device list
+#[doc = " mapped pci device list"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct mapped_pci_res_list {
@@ -19705,51 +19800,51 @@ impl Default for mapped_pci_res_list {
     }
 }
 extern "C" {
-    /// @deprecated
-    /// Utility function to produce a PCI Bus-Device-Function value
-    /// given a string representation. Assumes that the BDF is provided without
-    /// a domain prefix (i.e. domain returned is always 0)
-    ///
-    /// @param input
-    ///	The input string to be parsed. Should have the format XX:XX.X
-    /// @param dev_addr
-    ///	The PCI Bus-Device-Function address to be returned.
-    ///	Domain will always be returned as 0
-    /// @return
-    ///  0 on success, negative on error.
+    #[doc = " @deprecated"]
+    #[doc = " Utility function to produce a PCI Bus-Device-Function value"]
+    #[doc = " given a string representation. Assumes that the BDF is provided without"]
+    #[doc = " a domain prefix (i.e. domain returned is always 0)"]
+    #[doc = ""]
+    #[doc = " @param input"]
+    #[doc = "\tThe input string to be parsed. Should have the format XX:XX.X"]
+    #[doc = " @param dev_addr"]
+    #[doc = "\tThe PCI Bus-Device-Function address to be returned."]
+    #[doc = "\tDomain will always be returned as 0"]
+    #[doc = " @return"]
+    #[doc = "  0 on success, negative on error."]
     pub fn eal_parse_pci_BDF(
         input: *const ::std::os::raw::c_char,
         dev_addr: *mut rte_pci_addr,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @deprecated
-    /// Utility function to produce a PCI Bus-Device-Function value
-    /// given a string representation. Assumes that the BDF is provided including
-    /// a domain prefix.
-    ///
-    /// @param input
-    ///	The input string to be parsed. Should have the format XXXX:XX:XX.X
-    /// @param dev_addr
-    ///	The PCI Bus-Device-Function address to be returned
-    /// @return
-    ///  0 on success, negative on error.
+    #[doc = " @deprecated"]
+    #[doc = " Utility function to produce a PCI Bus-Device-Function value"]
+    #[doc = " given a string representation. Assumes that the BDF is provided including"]
+    #[doc = " a domain prefix."]
+    #[doc = ""]
+    #[doc = " @param input"]
+    #[doc = "\tThe input string to be parsed. Should have the format XXXX:XX:XX.X"]
+    #[doc = " @param dev_addr"]
+    #[doc = "\tThe PCI Bus-Device-Function address to be returned"]
+    #[doc = " @return"]
+    #[doc = "  0 on success, negative on error."]
     pub fn eal_parse_pci_DomBDF(
         input: *const ::std::os::raw::c_char,
         dev_addr: *mut rte_pci_addr,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Utility function to write a pci device name, this device name can later be
-    /// used to retrieve the corresponding rte_pci_addr using eal_parse_pci_*
-    /// BDF helpers.
-    ///
-    /// @param addr
-    ///	The PCI Bus-Device-Function address
-    /// @param output
-    ///	The output buffer string
-    /// @param size
-    ///	The output buffer size
+    #[doc = " Utility function to write a pci device name, this device name can later be"]
+    #[doc = " used to retrieve the corresponding rte_pci_addr using eal_parse_pci_*"]
+    #[doc = " BDF helpers."]
+    #[doc = ""]
+    #[doc = " @param addr"]
+    #[doc = "\tThe PCI Bus-Device-Function address"]
+    #[doc = " @param output"]
+    #[doc = "\tThe output buffer string"]
+    #[doc = " @param size"]
+    #[doc = "\tThe output buffer size"]
     pub fn rte_pci_device_name(
         addr: *const rte_pci_addr,
         output: *mut ::std::os::raw::c_char,
@@ -19757,70 +19852,70 @@ extern "C" {
     );
 }
 extern "C" {
-    /// @deprecated
-    /// Utility function to compare two PCI device addresses.
-    ///
-    /// @param addr
-    ///	The PCI Bus-Device-Function address to compare
-    /// @param addr2
-    ///	The PCI Bus-Device-Function address to compare
-    /// @return
-    ///	0 on equal PCI address.
-    ///	Positive on addr is greater than addr2.
-    ///	Negative on addr is less than addr2, or error.
+    #[doc = " @deprecated"]
+    #[doc = " Utility function to compare two PCI device addresses."]
+    #[doc = ""]
+    #[doc = " @param addr"]
+    #[doc = "\tThe PCI Bus-Device-Function address to compare"]
+    #[doc = " @param addr2"]
+    #[doc = "\tThe PCI Bus-Device-Function address to compare"]
+    #[doc = " @return"]
+    #[doc = "\t0 on equal PCI address."]
+    #[doc = "\tPositive on addr is greater than addr2."]
+    #[doc = "\tNegative on addr is less than addr2, or error."]
     pub fn rte_eal_compare_pci_addr(
         addr: *const rte_pci_addr,
         addr2: *const rte_pci_addr,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Utility function to compare two PCI device addresses.
-    ///
-    /// @param addr
-    ///	The PCI Bus-Device-Function address to compare
-    /// @param addr2
-    ///	The PCI Bus-Device-Function address to compare
-    /// @return
-    ///	0 on equal PCI address.
-    ///	Positive on addr is greater than addr2.
-    ///	Negative on addr is less than addr2, or error.
+    #[doc = " Utility function to compare two PCI device addresses."]
+    #[doc = ""]
+    #[doc = " @param addr"]
+    #[doc = "\tThe PCI Bus-Device-Function address to compare"]
+    #[doc = " @param addr2"]
+    #[doc = "\tThe PCI Bus-Device-Function address to compare"]
+    #[doc = " @return"]
+    #[doc = "\t0 on equal PCI address."]
+    #[doc = "\tPositive on addr is greater than addr2."]
+    #[doc = "\tNegative on addr is less than addr2, or error."]
     pub fn rte_pci_addr_cmp(
         addr: *const rte_pci_addr,
         addr2: *const rte_pci_addr,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Utility function to parse a string into a PCI location.
-    ///
-    /// @param str
-    ///	The string to parse
-    /// @param addr
-    ///	The reference to the structure where the location
-    ///	is stored.
-    /// @return
-    ///	0 on success
-    ///	<0 otherwise
+    #[doc = " Utility function to parse a string into a PCI location."]
+    #[doc = ""]
+    #[doc = " @param str"]
+    #[doc = "\tThe string to parse"]
+    #[doc = " @param addr"]
+    #[doc = "\tThe reference to the structure where the location"]
+    #[doc = "\tis stored."]
+    #[doc = " @return"]
+    #[doc = "\t0 on success"]
+    #[doc = "\t<0 otherwise"]
     pub fn rte_pci_addr_parse(
         str: *const ::std::os::raw::c_char,
         addr: *mut rte_pci_addr,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Map a particular resource from a file.
-    ///
-    /// @param requested_addr
-    ///      The starting address for the new mapping range.
-    /// @param fd
-    ///      The file descriptor.
-    /// @param offset
-    ///      The offset for the mapping range.
-    /// @param size
-    ///      The size for the mapping range.
-    /// @param additional_flags
-    ///      The additional flags for the mapping range.
-    /// @return
-    ///   - On success, the function returns a pointer to the mapped area.
-    ///   - On error, the value MAP_FAILED is returned.
+    #[doc = " Map a particular resource from a file."]
+    #[doc = ""]
+    #[doc = " @param requested_addr"]
+    #[doc = "      The starting address for the new mapping range."]
+    #[doc = " @param fd"]
+    #[doc = "      The file descriptor."]
+    #[doc = " @param offset"]
+    #[doc = "      The offset for the mapping range."]
+    #[doc = " @param size"]
+    #[doc = "      The size for the mapping range."]
+    #[doc = " @param additional_flags"]
+    #[doc = "      The additional flags for the mapping range."]
+    #[doc = " @return"]
+    #[doc = "   - On success, the function returns a pointer to the mapped area."]
+    #[doc = "   - On error, the value MAP_FAILED is returned."]
     pub fn pci_map_resource(
         requested_addr: *mut ::std::os::raw::c_void,
         fd: ::std::os::raw::c_int,
@@ -19830,50 +19925,50 @@ extern "C" {
     ) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
-    /// Unmap a particular resource.
-    ///
-    /// @param requested_addr
-    ///      The address for the unmapping range.
-    /// @param size
-    ///      The size for the unmapping range.
+    #[doc = " Unmap a particular resource."]
+    #[doc = ""]
+    #[doc = " @param requested_addr"]
+    #[doc = "      The address for the unmapping range."]
+    #[doc = " @param size"]
+    #[doc = "      The size for the unmapping range."]
     pub fn pci_unmap_resource(requested_addr: *mut ::std::os::raw::c_void, size: usize);
 }
 pub mod rte_devtype {
-    /// Type of generic device
+    #[doc = " Type of generic device"]
     pub type Type = u32;
     pub const RTE_DEVTYPE_WHITELISTED_PCI: Type = 0;
     pub const RTE_DEVTYPE_BLACKLISTED_PCI: Type = 1;
     pub const RTE_DEVTYPE_VIRTUAL: Type = 2;
 }
-/// Structure that stores a device given by the user with its arguments
-///
-/// A user device is a physical or a virtual device given by the user to
-/// the DPDK application at startup through command line arguments.
-///
-/// The structure stores the configuration of the device, its PCI
-/// identifier if it's a PCI device or the driver name if it's a virtual
-/// device.
+#[doc = " Structure that stores a device given by the user with its arguments"]
+#[doc = ""]
+#[doc = " A user device is a physical or a virtual device given by the user to"]
+#[doc = " the DPDK application at startup through command line arguments."]
+#[doc = ""]
+#[doc = " The structure stores the configuration of the device, its PCI"]
+#[doc = " identifier if it\'s a PCI device or the driver name if it\'s a virtual"]
+#[doc = " device."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_devargs {
-    /// Next in list.
+    #[doc = " Next in list."]
     pub next: rte_devargs__bindgen_ty_1,
-    /// Type of device.
+    #[doc = " Type of device."]
     pub type_: rte_devtype::Type,
-    /// Device policy.
+    #[doc = " Device policy."]
     pub policy: rte_dev_policy::Type,
-    /// Name of the device.
+    #[doc = " Name of the device."]
     pub name: [::std::os::raw::c_char; 64usize],
     pub __bindgen_anon_1: rte_devargs__bindgen_ty_2,
-    ///< bus handle.
+    #[doc = "< bus handle."]
     pub bus: *mut rte_bus,
-    ///< class handle.
+    #[doc = "< class handle."]
     pub cls: *mut rte_class,
-    ///< bus-related part of device string.
+    #[doc = "< bus-related part of device string."]
     pub bus_str: *const ::std::os::raw::c_char,
-    ///< class-related part of device string.
+    #[doc = "< class-related part of device string."]
     pub cls_str: *const ::std::os::raw::c_char,
-    ///< Device string storage.
+    #[doc = "< Device string storage."]
     pub data: *const ::std::os::raw::c_char,
 }
 #[repr(C)]
@@ -19927,7 +20022,7 @@ impl Default for rte_devargs__bindgen_ty_1 {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_devargs__bindgen_ty_2 {
-    /// Arguments string as given by user or "" for no argument.
+    #[doc = " Arguments string as given by user or \"\" for no argument."]
     pub args: *mut ::std::os::raw::c_char,
     pub drv_str: *const ::std::os::raw::c_char,
     _bindgen_union_align: u64,
@@ -20081,73 +20176,73 @@ impl Default for rte_devargs {
     }
 }
 extern "C" {
-    /// Parse a device string.
-    ///
-    /// Verify that a bus is capable of handling the device passed
-    /// in argument. Store which bus will handle the device, its name
-    /// and the eventual device parameters.
-    ///
-    /// The syntax is:
-    ///
-    ///     bus:device_identifier,arg1=val1,arg2=val2
-    ///
-    /// where "bus:" is the bus name followed by any character separator.
-    /// The bus name is optional. If no bus name is specified, each bus
-    /// will attempt to recognize the device identifier. The first one
-    /// to succeed will be used.
-    ///
-    /// Examples:
-    ///
-    ///     pci:0000:05.00.0,arg=val
-    ///     05.00.0,arg=val
-    ///     vdev:net_ring0
-    ///
-    /// @param da
-    ///   The devargs structure holding the device information.
-    ///
-    /// @param dev
-    ///   String describing a device.
-    ///
-    /// @return
-    ///   - 0 on success.
-    ///   - Negative errno on error.
+    #[doc = " Parse a device string."]
+    #[doc = ""]
+    #[doc = " Verify that a bus is capable of handling the device passed"]
+    #[doc = " in argument. Store which bus will handle the device, its name"]
+    #[doc = " and the eventual device parameters."]
+    #[doc = ""]
+    #[doc = " The syntax is:"]
+    #[doc = ""]
+    #[doc = "     bus:device_identifier,arg1=val1,arg2=val2"]
+    #[doc = ""]
+    #[doc = " where \"bus:\" is the bus name followed by any character separator."]
+    #[doc = " The bus name is optional. If no bus name is specified, each bus"]
+    #[doc = " will attempt to recognize the device identifier. The first one"]
+    #[doc = " to succeed will be used."]
+    #[doc = ""]
+    #[doc = " Examples:"]
+    #[doc = ""]
+    #[doc = "     pci:0000:05.00.0,arg=val"]
+    #[doc = "     05.00.0,arg=val"]
+    #[doc = "     vdev:net_ring0"]
+    #[doc = ""]
+    #[doc = " @param da"]
+    #[doc = "   The devargs structure holding the device information."]
+    #[doc = ""]
+    #[doc = " @param dev"]
+    #[doc = "   String describing a device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0 on success."]
+    #[doc = "   - Negative errno on error."]
     pub fn rte_devargs_parse(
         da: *mut rte_devargs,
         dev: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Parse a device string.
-    ///
-    /// Verify that a bus is capable of handling the device passed
-    /// in argument. Store which bus will handle the device, its name
-    /// and the eventual device parameters.
-    ///
-    /// The device string is built with a printf-like syntax.
-    ///
-    /// The syntax is:
-    ///
-    ///     bus:device_identifier,arg1=val1,arg2=val2
-    ///
-    /// where "bus:" is the bus name followed by any character separator.
-    /// The bus name is optional. If no bus name is specified, each bus
-    /// will attempt to recognize the device identifier. The first one
-    /// to succeed will be used.
-    ///
-    /// Examples:
-    ///
-    ///     pci:0000:05.00.0,arg=val
-    ///     05.00.0,arg=val
-    ///     vdev:net_ring0
-    ///
-    /// @param da
-    ///   The devargs structure holding the device information.
-    /// @param format
-    ///   Format string describing a device.
-    ///
-    /// @return
-    ///   - 0 on success.
-    ///   - Negative errno on error.
+    #[doc = " Parse a device string."]
+    #[doc = ""]
+    #[doc = " Verify that a bus is capable of handling the device passed"]
+    #[doc = " in argument. Store which bus will handle the device, its name"]
+    #[doc = " and the eventual device parameters."]
+    #[doc = ""]
+    #[doc = " The device string is built with a printf-like syntax."]
+    #[doc = ""]
+    #[doc = " The syntax is:"]
+    #[doc = ""]
+    #[doc = "     bus:device_identifier,arg1=val1,arg2=val2"]
+    #[doc = ""]
+    #[doc = " where \"bus:\" is the bus name followed by any character separator."]
+    #[doc = " The bus name is optional. If no bus name is specified, each bus"]
+    #[doc = " will attempt to recognize the device identifier. The first one"]
+    #[doc = " to succeed will be used."]
+    #[doc = ""]
+    #[doc = " Examples:"]
+    #[doc = ""]
+    #[doc = "     pci:0000:05.00.0,arg=val"]
+    #[doc = "     05.00.0,arg=val"]
+    #[doc = "     vdev:net_ring0"]
+    #[doc = ""]
+    #[doc = " @param da"]
+    #[doc = "   The devargs structure holding the device information."]
+    #[doc = " @param format"]
+    #[doc = "   Format string describing a device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0 on success."]
+    #[doc = "   - Negative errno on error."]
     pub fn rte_devargs_parsef(
         da: *mut rte_devargs,
         format: *const ::std::os::raw::c_char,
@@ -20155,81 +20250,81 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Insert an rte_devargs in the global list.
-    ///
-    /// @param da
-    ///  The devargs structure to insert.
-    ///  If a devargs for the same device is already inserted,
-    ///  it will be updated and returned. It means *da pointer can change.
-    ///
-    /// @return
-    ///   - 0 on success
-    ///   - Negative on error.
+    #[doc = " Insert an rte_devargs in the global list."]
+    #[doc = ""]
+    #[doc = " @param da"]
+    #[doc = "  The devargs structure to insert."]
+    #[doc = "  If a devargs for the same device is already inserted,"]
+    #[doc = "  it will be updated and returned. It means *da pointer can change."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0 on success"]
+    #[doc = "   - Negative on error."]
     pub fn rte_devargs_insert(da: *mut *mut rte_devargs) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Add a device to the user device list
-    /// See rte_devargs_parse() for details.
-    ///
-    /// @param devtype
-    ///   The type of the device.
-    /// @param devargs_str
-    ///   The arguments as given by the user.
-    ///
-    /// @return
-    ///   - 0 on success
-    ///   - A negative value on error
+    #[doc = " Add a device to the user device list"]
+    #[doc = " See rte_devargs_parse() for details."]
+    #[doc = ""]
+    #[doc = " @param devtype"]
+    #[doc = "   The type of the device."]
+    #[doc = " @param devargs_str"]
+    #[doc = "   The arguments as given by the user."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0 on success"]
+    #[doc = "   - A negative value on error"]
     pub fn rte_devargs_add(
         devtype: rte_devtype::Type,
         devargs_str: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Remove a device from the user device list.
-    /// Its resources are freed.
-    /// If the devargs cannot be found, nothing happens.
-    ///
-    /// @param devargs
-    ///   The instance or a copy of devargs to remove.
-    ///
-    /// @return
-    ///   0 on success.
-    ///   <0 on error.
-    ///   >0 if the devargs was not within the user device list.
+    #[doc = " Remove a device from the user device list."]
+    #[doc = " Its resources are freed."]
+    #[doc = " If the devargs cannot be found, nothing happens."]
+    #[doc = ""]
+    #[doc = " @param devargs"]
+    #[doc = "   The instance or a copy of devargs to remove."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   0 on success."]
+    #[doc = "   <0 on error."]
+    #[doc = "   >0 if the devargs was not within the user device list."]
     pub fn rte_devargs_remove(devargs: *mut rte_devargs) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Count the number of user devices of a specified type
-    ///
-    /// @param devtype
-    ///   The type of the devices to counted.
-    ///
-    /// @return
-    ///   The number of devices.
+    #[doc = " Count the number of user devices of a specified type"]
+    #[doc = ""]
+    #[doc = " @param devtype"]
+    #[doc = "   The type of the devices to counted."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   The number of devices."]
     pub fn rte_devargs_type_count(devtype: rte_devtype::Type) -> ::std::os::raw::c_uint;
 }
 extern "C" {
-    /// This function dumps the list of user device and their arguments.
-    ///
-    /// @param f
-    ///   A pointer to a file for output
+    #[doc = " This function dumps the list of user device and their arguments."]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   A pointer to a file for output"]
     pub fn rte_devargs_dump(f: *mut FILE);
 }
 extern "C" {
-    /// Find next rte_devargs matching the provided bus name.
-    ///
-    /// @param busname
-    ///   Limit the iteration to devargs related to buses
-    ///   matching this name.
-    ///   Will return any next rte_devargs if NULL.
-    ///
-    /// @param start
-    ///   Starting iteration point. The iteration will start at
-    ///   the first rte_devargs if NULL.
-    ///
-    /// @return
-    ///   Next rte_devargs entry matching the requested bus,
-    ///   NULL if there is none.
+    #[doc = " Find next rte_devargs matching the provided bus name."]
+    #[doc = ""]
+    #[doc = " @param busname"]
+    #[doc = "   Limit the iteration to devargs related to buses"]
+    #[doc = "   matching this name."]
+    #[doc = "   Will return any next rte_devargs if NULL."]
+    #[doc = ""]
+    #[doc = " @param start"]
+    #[doc = "   Starting iteration point. The iteration will start at"]
+    #[doc = "   the first rte_devargs if NULL."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   Next rte_devargs entry matching the requested bus,"]
+    #[doc = "   NULL if there is none."]
     pub fn rte_devargs_next(
         busname: *const ::std::os::raw::c_char,
         start: *const rte_devargs,
@@ -20241,19 +20336,19 @@ pub type rte_be64_t = u64;
 pub type rte_le16_t = u16;
 pub type rte_le32_t = u32;
 pub type rte_le64_t = u64;
-/// Ethernet address:
-/// A universally administered address is uniquely assigned to a device by its
-/// manufacturer. The first three octets (in transmission order) contain the
-/// Organizationally Unique Identifier (OUI). The following three (MAC-48 and
-/// EUI-48) octets are assigned by that organization with the only constraint
-/// of uniqueness.
-/// A locally administered address is assigned to a device by a network
-/// administrator and does not contain OUIs.
-/// See http://standards.ieee.org/regauth/groupmac/tutorial.html
+#[doc = " Ethernet address:"]
+#[doc = " A universally administered address is uniquely assigned to a device by its"]
+#[doc = " manufacturer. The first three octets (in transmission order) contain the"]
+#[doc = " Organizationally Unique Identifier (OUI). The following three (MAC-48 and"]
+#[doc = " EUI-48) octets are assigned by that organization with the only constraint"]
+#[doc = " of uniqueness."]
+#[doc = " A locally administered address is assigned to a device by a network"]
+#[doc = " administrator and does not contain OUIs."]
+#[doc = " See http://standards.ieee.org/regauth/groupmac/tutorial.html"]
 #[repr(C, packed)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct ether_addr {
-    ///< Addr bytes in tx order
+    #[doc = "< Addr bytes in tx order"]
     pub addr_bytes: [u8; 6usize],
 }
 #[test]
@@ -20279,16 +20374,16 @@ fn bindgen_test_layout_ether_addr() {
         )
     );
 }
-/// Ethernet header: Contains the destination address, source address
-/// and frame type.
+#[doc = " Ethernet header: Contains the destination address, source address"]
+#[doc = " and frame type."]
 #[repr(C, packed)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct ether_hdr {
-    ///< Destination address.
+    #[doc = "< Destination address."]
     pub d_addr: ether_addr,
-    ///< Source address.
+    #[doc = "< Source address."]
     pub s_addr: ether_addr,
-    ///< Frame type.
+    #[doc = "< Frame type."]
     pub ether_type: u16,
 }
 #[test]
@@ -20334,15 +20429,15 @@ fn bindgen_test_layout_ether_hdr() {
         )
     );
 }
-/// Ethernet VLAN Header.
-/// Contains the 16-bit VLAN Tag Control Identifier and the Ethernet type
-/// of the encapsulated frame.
+#[doc = " Ethernet VLAN Header."]
+#[doc = " Contains the 16-bit VLAN Tag Control Identifier and the Ethernet type"]
+#[doc = " of the encapsulated frame."]
 #[repr(C, packed)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct vlan_hdr {
-    ///< Priority (3) + CFI (1) + Identifier Code (12)
+    #[doc = "< Priority (3) + CFI (1) + Identifier Code (12)"]
     pub vlan_tci: u16,
-    ///< Ethernet type of encapsulated frame.
+    #[doc = "< Ethernet type of encapsulated frame."]
     pub eth_proto: u16,
 }
 #[test]
@@ -20378,15 +20473,15 @@ fn bindgen_test_layout_vlan_hdr() {
         )
     );
 }
-/// VXLAN protocol header.
-/// Contains the 8-bit flag, 24-bit VXLAN Network Identifier and
-/// Reserved fields (24 bits and 8 bits)
+#[doc = " VXLAN protocol header."]
+#[doc = " Contains the 8-bit flag, 24-bit VXLAN Network Identifier and"]
+#[doc = " Reserved fields (24 bits and 8 bits)"]
 #[repr(C, packed)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct vxlan_hdr {
-    ///< flag (8) + Reserved (24).
+    #[doc = "< flag (8) + Reserved (24)."]
     pub vx_flags: u32,
-    ///< VNI (24) + Reserved (8).
+    #[doc = "< VNI (24) + Reserved (8)."]
     pub vx_vni: u32,
 }
 #[test]
@@ -20422,19 +20517,19 @@ fn bindgen_test_layout_vxlan_hdr() {
         )
     );
 }
-/// VXLAN-GPE protocol header (draft-ietf-nvo3-vxlan-gpe-05).
-/// Contains the 8-bit flag, 8-bit next-protocol, 24-bit VXLAN Network
-/// Identifier and Reserved fields (16 bits and 8 bits).
+#[doc = " VXLAN-GPE protocol header (draft-ietf-nvo3-vxlan-gpe-05)."]
+#[doc = " Contains the 8-bit flag, 8-bit next-protocol, 24-bit VXLAN Network"]
+#[doc = " Identifier and Reserved fields (16 bits and 8 bits)."]
 #[repr(C, packed)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct vxlan_gpe_hdr {
-    ///< flag (8).
+    #[doc = "< flag (8)."]
     pub vx_flags: u8,
-    ///< Reserved (16).
+    #[doc = "< Reserved (16)."]
     pub reserved: [u8; 2usize],
-    ///< next-protocol (8).
+    #[doc = "< next-protocol (8)."]
     pub proto: u8,
-    ///< VNI (24) + Reserved (8).
+    #[doc = "< VNI (24) + Reserved (8)."]
     pub vx_vni: u32,
 }
 #[test]
@@ -20491,7 +20586,7 @@ fn bindgen_test_layout_vxlan_gpe_hdr() {
     );
 }
 pub mod rte_filter_type {
-    /// Feature filter types
+    #[doc = " Feature filter types"]
     pub type Type = u32;
     pub const RTE_ETH_FILTER_NONE: Type = 0;
     pub const RTE_ETH_FILTER_MACVLAN: Type = 1;
@@ -20507,49 +20602,49 @@ pub mod rte_filter_type {
     pub const RTE_ETH_FILTER_MAX: Type = 11;
 }
 pub mod rte_filter_op {
-    /// Generic operations on filters
+    #[doc = " Generic operations on filters"]
     pub type Type = u32;
-    /// used to check whether the type filter is supported
+    #[doc = " used to check whether the type filter is supported"]
     pub const RTE_ETH_FILTER_NOP: Type = 0;
-    ///< add filter entry
+    #[doc = "< add filter entry"]
     pub const RTE_ETH_FILTER_ADD: Type = 1;
-    ///< update filter entry
+    #[doc = "< update filter entry"]
     pub const RTE_ETH_FILTER_UPDATE: Type = 2;
-    ///< delete filter entry
+    #[doc = "< delete filter entry"]
     pub const RTE_ETH_FILTER_DELETE: Type = 3;
-    ///< flush all entries
+    #[doc = "< flush all entries"]
     pub const RTE_ETH_FILTER_FLUSH: Type = 4;
-    ///< get filter entry
+    #[doc = "< get filter entry"]
     pub const RTE_ETH_FILTER_GET: Type = 5;
-    ///< configurations
+    #[doc = "< configurations"]
     pub const RTE_ETH_FILTER_SET: Type = 6;
-    ///< retrieve information
+    #[doc = "< retrieve information"]
     pub const RTE_ETH_FILTER_INFO: Type = 7;
-    ///< retrieve statistics
+    #[doc = "< retrieve statistics"]
     pub const RTE_ETH_FILTER_STATS: Type = 8;
     pub const RTE_ETH_FILTER_OP_MAX: Type = 9;
 }
 pub mod rte_mac_filter_type {
-    /// MAC filter type
+    #[doc = " MAC filter type"]
     pub type Type = u32;
-    ///< exact match of MAC addr.
+    #[doc = "< exact match of MAC addr."]
     pub const RTE_MAC_PERFECT_MATCH: Type = 1;
-    ///< exact match of MAC addr and VLAN ID.
+    #[doc = "< exact match of MAC addr and VLAN ID."]
     pub const RTE_MACVLAN_PERFECT_MATCH: Type = 2;
-    ///< hash match of MAC addr.
+    #[doc = "< hash match of MAC addr."]
     pub const RTE_MAC_HASH_MATCH: Type = 3;
-    /// hash match of MAC addr and exact match of VLAN ID.
+    #[doc = " hash match of MAC addr and exact match of VLAN ID."]
     pub const RTE_MACVLAN_HASH_MATCH: Type = 4;
 }
-/// MAC filter info
+#[doc = " MAC filter info"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_mac_filter {
-    ///< 1 for VF, 0 for port dev
+    #[doc = "< 1 for VF, 0 for port dev"]
     pub is_vf: u8,
-    ///< VF ID, available when is_vf is 1
+    #[doc = "< VF ID, available when is_vf is 1"]
     pub dst_id: u16,
-    ///< MAC filter type
+    #[doc = "< MAC filter type"]
     pub filter_type: rte_mac_filter_type::Type,
     pub mac_addr: ether_addr,
 }
@@ -20611,19 +20706,19 @@ impl Default for rte_eth_mac_filter {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to define the ethertype filter entry
-/// to support RTE_ETH_FILTER_ETHERTYPE with RTE_ETH_FILTER_ADD,
-/// RTE_ETH_FILTER_DELETE and RTE_ETH_FILTER_GET operations.
+#[doc = " A structure used to define the ethertype filter entry"]
+#[doc = " to support RTE_ETH_FILTER_ETHERTYPE with RTE_ETH_FILTER_ADD,"]
+#[doc = " RTE_ETH_FILTER_DELETE and RTE_ETH_FILTER_GET operations."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_ethertype_filter {
-    ///< Mac address to match.
+    #[doc = "< Mac address to match."]
     pub mac_addr: ether_addr,
-    ///< Ether type to match
+    #[doc = "< Ether type to match"]
     pub ether_type: u16,
-    ///< Flags from RTE_ETHTYPE_FLAGS_*
+    #[doc = "< Flags from RTE_ETHTYPE_FLAGS_*"]
     pub flags: u16,
-    ///< Queue assigned to when match
+    #[doc = "< Queue assigned to when match"]
     pub queue: u16,
 }
 #[test]
@@ -20683,20 +20778,20 @@ fn bindgen_test_layout_rte_eth_ethertype_filter() {
         )
     );
 }
-///  A structure used to define the flex filter entry
-///  to support RTE_ETH_FILTER_FLEXIBLE with RTE_ETH_FILTER_ADD,
-///  RTE_ETH_FILTER_DELETE and RTE_ETH_FILTER_GET operations.
+#[doc = "  A structure used to define the flex filter entry"]
+#[doc = "  to support RTE_ETH_FILTER_FLEXIBLE with RTE_ETH_FILTER_ADD,"]
+#[doc = "  RTE_ETH_FILTER_DELETE and RTE_ETH_FILTER_GET operations."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_flex_filter {
     pub len: u16,
-    ///< flex bytes in big endian.
+    #[doc = "< flex bytes in big endian."]
     pub bytes: [u8; 128usize],
-    ///< if mask bit is 1b, do
-    ///not compare corresponding byte.
+    #[doc = "< if mask bit is 1b, do"]
+    #[doc = "not compare corresponding byte."]
     pub mask: [u8; 16usize],
     pub priority: u8,
-    ///< Queue assigned to when match.
+    #[doc = "< Queue assigned to when match."]
     pub queue: u16,
 }
 #[test]
@@ -20767,16 +20862,16 @@ impl Default for rte_eth_flex_filter {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to define the TCP syn filter entry
-/// to support RTE_ETH_FILTER_SYN with RTE_ETH_FILTER_ADD,
-/// RTE_ETH_FILTER_DELETE and RTE_ETH_FILTER_GET operations.
+#[doc = " A structure used to define the TCP syn filter entry"]
+#[doc = " to support RTE_ETH_FILTER_SYN with RTE_ETH_FILTER_ADD,"]
+#[doc = " RTE_ETH_FILTER_DELETE and RTE_ETH_FILTER_GET operations."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_syn_filter {
-    ///< 1 - higher priority than other filters,
-    ///0 - lower priority.
+    #[doc = "< 1 - higher priority than other filters,"]
+    #[doc = "0 - lower priority."]
     pub hig_pri: u8,
-    ///< Queue assigned to when match
+    #[doc = "< Queue assigned to when match"]
     pub queue: u16,
 }
 #[test]
@@ -20812,42 +20907,42 @@ fn bindgen_test_layout_rte_eth_syn_filter() {
         )
     );
 }
-/// A structure used to define the ntuple filter entry
-/// to support RTE_ETH_FILTER_NTUPLE with RTE_ETH_FILTER_ADD,
-/// RTE_ETH_FILTER_DELETE and RTE_ETH_FILTER_GET operations.
+#[doc = " A structure used to define the ntuple filter entry"]
+#[doc = " to support RTE_ETH_FILTER_NTUPLE with RTE_ETH_FILTER_ADD,"]
+#[doc = " RTE_ETH_FILTER_DELETE and RTE_ETH_FILTER_GET operations."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_ntuple_filter {
-    ///< Flags from RTE_NTUPLE_FLAGS_*
+    #[doc = "< Flags from RTE_NTUPLE_FLAGS_*"]
     pub flags: u16,
-    ///< Destination IP address in big endian.
+    #[doc = "< Destination IP address in big endian."]
     pub dst_ip: u32,
-    ///< Mask of destination IP address.
+    #[doc = "< Mask of destination IP address."]
     pub dst_ip_mask: u32,
-    ///< Source IP address in big endian.
+    #[doc = "< Source IP address in big endian."]
     pub src_ip: u32,
-    ///< Mask of destination IP address.
+    #[doc = "< Mask of destination IP address."]
     pub src_ip_mask: u32,
-    ///< Destination port in big endian.
+    #[doc = "< Destination port in big endian."]
     pub dst_port: u16,
-    ///< Mask of destination port.
+    #[doc = "< Mask of destination port."]
     pub dst_port_mask: u16,
-    ///< Source Port in big endian.
+    #[doc = "< Source Port in big endian."]
     pub src_port: u16,
-    ///< Mask of source port.
+    #[doc = "< Mask of source port."]
     pub src_port_mask: u16,
-    ///< L4 protocol.
+    #[doc = "< L4 protocol."]
     pub proto: u8,
-    ///< Mask of L4 protocol.
+    #[doc = "< Mask of L4 protocol."]
     pub proto_mask: u8,
-    /// tcp_flags only meaningful when the proto is TCP.
-    ///The packet matched above ntuple fields and contain
-    ///any set bit in tcp_flags will hit this filter.
+    #[doc = " tcp_flags only meaningful when the proto is TCP."]
+    #[doc = "The packet matched above ntuple fields and contain"]
+    #[doc = "any set bit in tcp_flags will hit this filter."]
     pub tcp_flags: u8,
-    ///< seven levels (001b-111b), 111b is highest,
-    ///used when more than one filter matches.
+    #[doc = "< seven levels (001b-111b), 111b is highest,"]
+    #[doc = "used when more than one filter matches."]
     pub priority: u16,
-    ///< Queue assigned to when match
+    #[doc = "< Queue assigned to when match"]
     pub queue: u16,
 }
 #[test]
@@ -21014,7 +21109,7 @@ fn bindgen_test_layout_rte_eth_ntuple_filter() {
     );
 }
 pub mod rte_eth_tunnel_type {
-    /// Tunneled type.
+    #[doc = " Tunneled type."]
     pub type Type = u32;
     pub const RTE_TUNNEL_TYPE_NONE: Type = 0;
     pub const RTE_TUNNEL_TYPE_VXLAN: Type = 1;
@@ -21026,44 +21121,44 @@ pub mod rte_eth_tunnel_type {
     pub const RTE_TUNNEL_TYPE_MAX: Type = 7;
 }
 pub mod rte_tunnel_iptype {
-    ///  Select IPv4 or IPv6 for tunnel filters.
+    #[doc = "  Select IPv4 or IPv6 for tunnel filters."]
     pub type Type = u32;
-    ///< IPv4.
+    #[doc = "< IPv4."]
     pub const RTE_TUNNEL_IPTYPE_IPV4: Type = 0;
-    ///< IPv6.
+    #[doc = "< IPv6."]
     pub const RTE_TUNNEL_IPTYPE_IPV6: Type = 1;
 }
-/// Tunneling Packet filter configuration.
+#[doc = " Tunneling Packet filter configuration."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_tunnel_filter_conf {
-    ///< Outer MAC address to match.
+    #[doc = "< Outer MAC address to match."]
     pub outer_mac: ether_addr,
-    ///< Inner MAC address to match.
+    #[doc = "< Inner MAC address to match."]
     pub inner_mac: ether_addr,
-    ///< Inner VLAN to match.
+    #[doc = "< Inner VLAN to match."]
     pub inner_vlan: u16,
-    ///< IP address type.
+    #[doc = "< IP address type."]
     pub ip_type: rte_tunnel_iptype::Type,
     pub ip_addr: rte_eth_tunnel_filter_conf__bindgen_ty_1,
-    /// Flags from ETH_TUNNEL_FILTER_XX - see above.
+    #[doc = " Flags from ETH_TUNNEL_FILTER_XX - see above."]
     pub filter_type: u16,
-    ///< Tunnel Type.
+    #[doc = "< Tunnel Type."]
     pub tunnel_type: rte_eth_tunnel_type::Type,
-    ///< Tenant ID to match. VNI, GRE key...
+    #[doc = "< Tenant ID to match. VNI, GRE key..."]
     pub tenant_id: u32,
-    ///< Queue assigned to if match.
+    #[doc = "< Queue assigned to if match."]
     pub queue_id: u16,
 }
-/// Outer destination IP address to match if ETH_TUNNEL_FILTER_OIP
-///is set in filter_type, or inner destination IP address to match
-///if ETH_TUNNEL_FILTER_IIP is set in filter_type .
+#[doc = " Outer destination IP address to match if ETH_TUNNEL_FILTER_OIP"]
+#[doc = "is set in filter_type, or inner destination IP address to match"]
+#[doc = "if ETH_TUNNEL_FILTER_IIP is set in filter_type ."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_eth_tunnel_filter_conf__bindgen_ty_1 {
-    ///< IPv4 address in big endian.
+    #[doc = "< IPv4 address in big endian."]
     pub ipv4_addr: u32,
-    ///< IPv6 address in big endian.
+    #[doc = "< IPv6 address in big endian."]
     pub ipv6_addr: [u32; 4usize],
     _bindgen_union_align: [u32; 4usize],
 }
@@ -21244,26 +21339,26 @@ impl Default for rte_eth_tunnel_filter_conf {
     }
 }
 pub mod rte_eth_global_cfg_type {
-    /// Global eth device configuration type.
+    #[doc = " Global eth device configuration type."]
     pub type Type = u32;
     pub const RTE_ETH_GLOBAL_CFG_TYPE_UNKNOWN: Type = 0;
     pub const RTE_ETH_GLOBAL_CFG_TYPE_GRE_KEY_LEN: Type = 1;
     pub const RTE_ETH_GLOBAL_CFG_TYPE_MAX: Type = 2;
 }
-/// Global eth device configuration.
+#[doc = " Global eth device configuration."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_global_cfg {
-    ///< Global config type.
+    #[doc = "< Global config type."]
     pub cfg_type: rte_eth_global_cfg_type::Type,
     pub cfg: rte_eth_global_cfg__bindgen_ty_1,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_eth_global_cfg__bindgen_ty_1 {
-    ///< Valid GRE key length in byte.
+    #[doc = "< Valid GRE key length in byte."]
     pub gre_key_len: u8,
-    ///< Reserve space for future use.
+    #[doc = "< Reserve space for future use."]
     pub reserved: u64,
     _bindgen_union_align: u64,
 }
@@ -21353,7 +21448,7 @@ impl Default for rte_eth_global_cfg {
     }
 }
 pub mod rte_eth_input_set_field {
-    /// Input set fields for Flow Director and Hash filters
+    #[doc = " Input set fields for Flow Director and Hash filters"]
     pub type Type = u32;
     pub const RTE_ETH_INPUT_SET_UNKNOWN: Type = 0;
     pub const RTE_ETH_INPUT_SET_L2_SRC_MAC: Type = 1;
@@ -21396,17 +21491,17 @@ pub mod rte_eth_input_set_field {
     pub const RTE_ETH_INPUT_SET_MAX: Type = 65535;
 }
 pub mod rte_filter_input_set_op {
-    /// Filters input set operations
+    #[doc = " Filters input set operations"]
     pub type Type = u32;
     pub const RTE_ETH_INPUT_SET_OP_UNKNOWN: Type = 0;
-    ///< select input set
+    #[doc = "< select input set"]
     pub const RTE_ETH_INPUT_SET_SELECT: Type = 1;
-    ///< add input set entry
+    #[doc = "< add input set entry"]
     pub const RTE_ETH_INPUT_SET_ADD: Type = 2;
     pub const RTE_ETH_INPUT_SET_OP_MAX: Type = 3;
 }
-/// A structure used to define the input set configuration for
-/// flow director and hash filters
+#[doc = " A structure used to define the input set configuration for"]
+#[doc = " flow director and hash filters"]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_input_set_conf {
@@ -21477,11 +21572,11 @@ impl Default for rte_eth_input_set_conf {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to define the input for L2 flow
+#[doc = " A structure used to define the input for L2 flow"]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_l2_flow {
-    ///< Ether type in big endian
+    #[doc = "< Ether type in big endian"]
     pub ether_type: u16,
 }
 #[test]
@@ -21507,19 +21602,19 @@ fn bindgen_test_layout_rte_eth_l2_flow() {
         )
     );
 }
-/// A structure used to define the input for IPV4 flow
+#[doc = " A structure used to define the input for IPV4 flow"]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_ipv4_flow {
-    ///< IPv4 source address in big endian.
+    #[doc = "< IPv4 source address in big endian."]
     pub src_ip: u32,
-    ///< IPv4 destination address in big endian.
+    #[doc = "< IPv4 destination address in big endian."]
     pub dst_ip: u32,
-    ///< Type of service to match.
+    #[doc = "< Type of service to match."]
     pub tos: u8,
-    ///< Time to live to match.
+    #[doc = "< Time to live to match."]
     pub ttl: u8,
-    ///< Protocol, next header in big endian.
+    #[doc = "< Protocol, next header in big endian."]
     pub proto: u8,
 }
 #[test]
@@ -21585,15 +21680,15 @@ fn bindgen_test_layout_rte_eth_ipv4_flow() {
         )
     );
 }
-/// A structure used to define the input for IPV4 UDP flow
+#[doc = " A structure used to define the input for IPV4 UDP flow"]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_udpv4_flow {
-    ///< IPv4 fields to match.
+    #[doc = "< IPv4 fields to match."]
     pub ip: rte_eth_ipv4_flow,
-    ///< UDP source port in big endian.
+    #[doc = "< UDP source port in big endian."]
     pub src_port: u16,
-    ///< UDP destination port in big endian.
+    #[doc = "< UDP destination port in big endian."]
     pub dst_port: u16,
 }
 #[test]
@@ -21639,15 +21734,15 @@ fn bindgen_test_layout_rte_eth_udpv4_flow() {
         )
     );
 }
-/// A structure used to define the input for IPV4 TCP flow
+#[doc = " A structure used to define the input for IPV4 TCP flow"]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_tcpv4_flow {
-    ///< IPv4 fields to match.
+    #[doc = "< IPv4 fields to match."]
     pub ip: rte_eth_ipv4_flow,
-    ///< TCP source port in big endian.
+    #[doc = "< TCP source port in big endian."]
     pub src_port: u16,
-    ///< TCP destination port in big endian.
+    #[doc = "< TCP destination port in big endian."]
     pub dst_port: u16,
 }
 #[test]
@@ -21693,17 +21788,17 @@ fn bindgen_test_layout_rte_eth_tcpv4_flow() {
         )
     );
 }
-/// A structure used to define the input for IPV4 SCTP flow
+#[doc = " A structure used to define the input for IPV4 SCTP flow"]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_sctpv4_flow {
-    ///< IPv4 fields to match.
+    #[doc = "< IPv4 fields to match."]
     pub ip: rte_eth_ipv4_flow,
-    ///< SCTP source port in big endian.
+    #[doc = "< SCTP source port in big endian."]
     pub src_port: u16,
-    ///< SCTP destination port in big endian.
+    #[doc = "< SCTP destination port in big endian."]
     pub dst_port: u16,
-    ///< Verify tag in big endian
+    #[doc = "< Verify tag in big endian"]
     pub verify_tag: u32,
 }
 #[test]
@@ -21759,19 +21854,19 @@ fn bindgen_test_layout_rte_eth_sctpv4_flow() {
         )
     );
 }
-/// A structure used to define the input for IPV6 flow
+#[doc = " A structure used to define the input for IPV6 flow"]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_ipv6_flow {
-    ///< IPv6 source address in big endian.
+    #[doc = "< IPv6 source address in big endian."]
     pub src_ip: [u32; 4usize],
-    ///< IPv6 destination address in big endian.
+    #[doc = "< IPv6 destination address in big endian."]
     pub dst_ip: [u32; 4usize],
-    ///< Traffic class to match.
+    #[doc = "< Traffic class to match."]
     pub tc: u8,
-    ///< Protocol, next header to match.
+    #[doc = "< Protocol, next header to match."]
     pub proto: u8,
-    ///< Hop limits to match.
+    #[doc = "< Hop limits to match."]
     pub hop_limits: u8,
 }
 #[test]
@@ -21837,15 +21932,15 @@ fn bindgen_test_layout_rte_eth_ipv6_flow() {
         )
     );
 }
-/// A structure used to define the input for IPV6 UDP flow
+#[doc = " A structure used to define the input for IPV6 UDP flow"]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_udpv6_flow {
-    ///< IPv6 fields to match.
+    #[doc = "< IPv6 fields to match."]
     pub ip: rte_eth_ipv6_flow,
-    ///< UDP source port in big endian.
+    #[doc = "< UDP source port in big endian."]
     pub src_port: u16,
-    ///< UDP destination port in big endian.
+    #[doc = "< UDP destination port in big endian."]
     pub dst_port: u16,
 }
 #[test]
@@ -21891,15 +21986,15 @@ fn bindgen_test_layout_rte_eth_udpv6_flow() {
         )
     );
 }
-/// A structure used to define the input for IPV6 TCP flow
+#[doc = " A structure used to define the input for IPV6 TCP flow"]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_tcpv6_flow {
-    ///< IPv6 fields to match.
+    #[doc = "< IPv6 fields to match."]
     pub ip: rte_eth_ipv6_flow,
-    ///< TCP source port to in big endian.
+    #[doc = "< TCP source port to in big endian."]
     pub src_port: u16,
-    ///< TCP destination port in big endian.
+    #[doc = "< TCP destination port in big endian."]
     pub dst_port: u16,
 }
 #[test]
@@ -21945,17 +22040,17 @@ fn bindgen_test_layout_rte_eth_tcpv6_flow() {
         )
     );
 }
-/// A structure used to define the input for IPV6 SCTP flow
+#[doc = " A structure used to define the input for IPV6 SCTP flow"]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_sctpv6_flow {
-    ///< IPv6 fields to match.
+    #[doc = "< IPv6 fields to match."]
     pub ip: rte_eth_ipv6_flow,
-    ///< SCTP source port in big endian.
+    #[doc = "< SCTP source port in big endian."]
     pub src_port: u16,
-    ///< SCTP destination port in big endian.
+    #[doc = "< SCTP destination port in big endian."]
     pub dst_port: u16,
-    ///< Verify tag in big endian.
+    #[doc = "< Verify tag in big endian."]
     pub verify_tag: u32,
 }
 #[test]
@@ -22011,11 +22106,11 @@ fn bindgen_test_layout_rte_eth_sctpv6_flow() {
         )
     );
 }
-/// A structure used to define the input for MAC VLAN flow
+#[doc = " A structure used to define the input for MAC VLAN flow"]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_mac_vlan_flow {
-    ///< Mac address to match.
+    #[doc = "< Mac address to match."]
     pub mac_addr: ether_addr,
 }
 #[test]
@@ -22042,22 +22137,22 @@ fn bindgen_test_layout_rte_eth_mac_vlan_flow() {
     );
 }
 pub mod rte_eth_fdir_tunnel_type {
-    /// Tunnel type for flow director.
+    #[doc = " Tunnel type for flow director."]
     pub type Type = u32;
     pub const RTE_FDIR_TUNNEL_TYPE_UNKNOWN: Type = 0;
     pub const RTE_FDIR_TUNNEL_TYPE_NVGRE: Type = 1;
     pub const RTE_FDIR_TUNNEL_TYPE_VXLAN: Type = 2;
 }
-/// A structure used to define the input for tunnel flow, now it's VxLAN or
-/// NVGRE
+#[doc = " A structure used to define the input for tunnel flow, now it\'s VxLAN or"]
+#[doc = " NVGRE"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_tunnel_flow {
-    ///< Tunnel type to match.
+    #[doc = "< Tunnel type to match."]
     pub tunnel_type: rte_eth_fdir_tunnel_type::Type,
-    /// Tunnel ID to match. TNI, VNI... in big endian.
+    #[doc = " Tunnel ID to match. TNI, VNI... in big endian."]
     pub tunnel_id: u32,
-    ///< Mac address to match.
+    #[doc = "< Mac address to match."]
     pub mac_addr: ether_addr,
 }
 #[test]
@@ -22108,8 +22203,8 @@ impl Default for rte_eth_tunnel_flow {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// An union contains the inputs for all types of flow
-/// Items in flows need to be in big endian
+#[doc = " An union contains the inputs for all types of flow"]
+#[doc = " Items in flows need to be in big endian"]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_eth_fdir_flow {
@@ -22254,15 +22349,15 @@ impl Default for rte_eth_fdir_flow {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to contain extend input of flow
+#[doc = " A structure used to contain extend input of flow"]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_fdir_flow_ext {
     pub vlan_tci: u16,
     pub flexbytes: [u8; 16usize],
-    ///< 1 for VF, 0 for port dev
+    #[doc = "< 1 for VF, 0 for port dev"]
     pub is_vf: u8,
-    ///< VF ID, available when is_vf is 1
+    #[doc = "< VF ID, available when is_vf is 1"]
     pub dst_id: u16,
 }
 #[test]
@@ -22318,7 +22413,7 @@ fn bindgen_test_layout_rte_eth_fdir_flow_ext() {
         )
     );
 }
-/// A structure used to define the input for a flow director filter entry
+#[doc = " A structure used to define the input for a flow director filter entry"]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_fdir_input {
@@ -22375,34 +22470,34 @@ impl Default for rte_eth_fdir_input {
     }
 }
 pub mod rte_eth_fdir_behavior {
-    /// Behavior will be taken if FDIR match
+    #[doc = " Behavior will be taken if FDIR match"]
     pub type Type = u32;
     pub const RTE_ETH_FDIR_ACCEPT: Type = 0;
     pub const RTE_ETH_FDIR_REJECT: Type = 1;
     pub const RTE_ETH_FDIR_PASSTHRU: Type = 2;
 }
 pub mod rte_eth_fdir_status {
-    /// Flow director report status
-    /// It defines what will be reported if FDIR entry is matched.
+    #[doc = " Flow director report status"]
+    #[doc = " It defines what will be reported if FDIR entry is matched."]
     pub type Type = u32;
-    ///< Report nothing.
+    #[doc = "< Report nothing."]
     pub const RTE_ETH_FDIR_NO_REPORT_STATUS: Type = 0;
-    ///< Only report FD ID.
+    #[doc = "< Only report FD ID."]
     pub const RTE_ETH_FDIR_REPORT_ID: Type = 1;
-    ///< Report FD ID and 4 flex bytes.
+    #[doc = "< Report FD ID and 4 flex bytes."]
     pub const RTE_ETH_FDIR_REPORT_ID_FLEX_4: Type = 2;
-    ///< Report 8 flex bytes.
+    #[doc = "< Report 8 flex bytes."]
     pub const RTE_ETH_FDIR_REPORT_FLEX_8: Type = 3;
 }
-/// A structure used to define an action when match FDIR packet filter.
+#[doc = " A structure used to define an action when match FDIR packet filter."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_fdir_action {
-    ///< Queue assigned to if FDIR match.
+    #[doc = "< Queue assigned to if FDIR match."]
     pub rx_queue: u16,
-    ///< Behavior will be taken
+    #[doc = "< Behavior will be taken"]
     pub behavior: rte_eth_fdir_behavior::Type,
-    ///< Status report option
+    #[doc = "< Status report option"]
     pub report_status: rte_eth_fdir_status::Type,
     pub flex_off: u8,
 }
@@ -22466,16 +22561,16 @@ impl Default for rte_eth_fdir_action {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to define the flow director filter entry by filter_ctrl API
-/// It supports RTE_ETH_FILTER_FDIR with RTE_ETH_FILTER_ADD and
-/// RTE_ETH_FILTER_DELETE operations.
+#[doc = " A structure used to define the flow director filter entry by filter_ctrl API"]
+#[doc = " It supports RTE_ETH_FILTER_FDIR with RTE_ETH_FILTER_ADD and"]
+#[doc = " RTE_ETH_FILTER_DELETE operations."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_fdir_filter {
     pub soft_id: u32,
-    ///< Input set
+    #[doc = "< Input set"]
     pub input: rte_eth_fdir_input,
-    ///< Action taken when match
+    #[doc = "< Action taken when match"]
     pub action: rte_eth_fdir_action,
 }
 #[test]
@@ -22526,28 +22621,28 @@ impl Default for rte_eth_fdir_filter {
         unsafe { ::std::mem::zeroed() }
     }
 }
-///  A structure used to configure FDIR masks that are used by the device
-///  to match the various fields of RX packet headers.
+#[doc = "  A structure used to configure FDIR masks that are used by the device"]
+#[doc = "  to match the various fields of RX packet headers."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_fdir_masks {
-    ///< Bit mask for vlan_tci in big endian
+    #[doc = "< Bit mask for vlan_tci in big endian"]
     pub vlan_tci_mask: u16,
-    /// Bit mask for ipv4 flow in big endian.
+    #[doc = " Bit mask for ipv4 flow in big endian."]
     pub ipv4_mask: rte_eth_ipv4_flow,
-    /// Bit maks for ipv6 flow in big endian.
+    #[doc = " Bit maks for ipv6 flow in big endian."]
     pub ipv6_mask: rte_eth_ipv6_flow,
-    /// Bit mask for L4 source port in big endian.
+    #[doc = " Bit mask for L4 source port in big endian."]
     pub src_port_mask: u16,
-    /// Bit mask for L4 destination port in big endian.
+    #[doc = " Bit mask for L4 destination port in big endian."]
     pub dst_port_mask: u16,
-    /// 6 bit mask for proper 6 bytes of Mac address, bit 0 matches the
-    ///first byte on the wire
+    #[doc = " 6 bit mask for proper 6 bytes of Mac address, bit 0 matches the"]
+    #[doc = "first byte on the wire"]
     pub mac_addr_byte_mask: u8,
-    /// Bit mask for tunnel ID in big endian.
+    #[doc = " Bit mask for tunnel ID in big endian."]
     pub tunnel_id_mask: u32,
-    ///< 1 - Match tunnel type,
-    ///0 - Ignore tunnel type.
+    #[doc = "< 1 - Match tunnel type,"]
+    #[doc = "0 - Ignore tunnel type."]
     pub tunnel_type_mask: u8,
 }
 #[test]
@@ -22656,7 +22751,7 @@ fn bindgen_test_layout_rte_eth_fdir_masks() {
     );
 }
 pub mod rte_eth_payload_type {
-    /// Payload type
+    #[doc = " Payload type"]
     pub type Type = u32;
     pub const RTE_ETH_PAYLOAD_UNKNOWN: Type = 0;
     pub const RTE_ETH_RAW_PAYLOAD: Type = 1;
@@ -22665,12 +22760,12 @@ pub mod rte_eth_payload_type {
     pub const RTE_ETH_L4_PAYLOAD: Type = 4;
     pub const RTE_ETH_PAYLOAD_MAX: Type = 8;
 }
-/// A structure used to select bytes extracted from the protocol layers to
-/// flexible payload for filter
+#[doc = " A structure used to select bytes extracted from the protocol layers to"]
+#[doc = " flexible payload for filter"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_flex_payload_cfg {
-    ///< Payload type
+    #[doc = "< Payload type"]
     pub type_: rte_eth_payload_type::Type,
     pub src_offset: [u16; 16usize],
 }
@@ -22714,8 +22809,8 @@ impl Default for rte_eth_flex_payload_cfg {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to define FDIR masks for flexible payload
-/// for each flow type
+#[doc = " A structure used to define FDIR masks for flexible payload"]
+#[doc = " for each flow type"]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_fdir_flex_mask {
@@ -22757,14 +22852,14 @@ fn bindgen_test_layout_rte_eth_fdir_flex_mask() {
         )
     );
 }
-/// A structure used to define all flexible payload related setting
-/// include flex payload and flex mask
+#[doc = " A structure used to define all flexible payload related setting"]
+#[doc = " include flex payload and flex mask"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_fdir_flex_conf {
-    ///< The number of following payload cfg
+    #[doc = "< The number of following payload cfg"]
     pub nb_payloads: u16,
-    ///< The number of following mask
+    #[doc = "< The number of following mask"]
     pub nb_flexmasks: u16,
     pub flex_set: [rte_eth_flex_payload_cfg; 8usize],
     pub flex_mask: [rte_eth_fdir_flex_mask; 23usize],
@@ -22834,54 +22929,54 @@ impl Default for rte_eth_fdir_flex_conf {
     }
 }
 pub mod rte_fdir_mode {
-    ///  Flow Director setting modes: none, signature or perfect.
+    #[doc = "  Flow Director setting modes: none, signature or perfect."]
     pub type Type = u32;
-    ///< Disable FDIR support.
+    #[doc = "< Disable FDIR support."]
     pub const RTE_FDIR_MODE_NONE: Type = 0;
-    ///< Enable FDIR signature filter mode.
+    #[doc = "< Enable FDIR signature filter mode."]
     pub const RTE_FDIR_MODE_SIGNATURE: Type = 1;
-    ///< Enable FDIR perfect filter mode.
+    #[doc = "< Enable FDIR perfect filter mode."]
     pub const RTE_FDIR_MODE_PERFECT: Type = 2;
-    ///< Enable FDIR filter mode - MAC VLAN.
+    #[doc = "< Enable FDIR filter mode - MAC VLAN."]
     pub const RTE_FDIR_MODE_PERFECT_MAC_VLAN: Type = 3;
-    ///< Enable FDIR filter mode - tunnel.
+    #[doc = "< Enable FDIR filter mode - tunnel."]
     pub const RTE_FDIR_MODE_PERFECT_TUNNEL: Type = 4;
 }
-/// A structure used to get the information of flow director filter.
-/// It supports RTE_ETH_FILTER_FDIR with RTE_ETH_FILTER_INFO operation.
-/// It includes the mode, flexible payload configuration information,
-/// capabilities and supported flow types, flexible payload characters.
-/// It can be gotten to help taking specific configurations per device.
+#[doc = " A structure used to get the information of flow director filter."]
+#[doc = " It supports RTE_ETH_FILTER_FDIR with RTE_ETH_FILTER_INFO operation."]
+#[doc = " It includes the mode, flexible payload configuration information,"]
+#[doc = " capabilities and supported flow types, flexible payload characters."]
+#[doc = " It can be gotten to help taking specific configurations per device."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_fdir_info {
-    ///< Flow director mode
+    #[doc = "< Flow director mode"]
     pub mode: rte_fdir_mode::Type,
     pub mask: rte_eth_fdir_masks,
-    /// Flex payload configuration information
+    #[doc = " Flex payload configuration information"]
     pub flex_conf: rte_eth_fdir_flex_conf,
-    ///< Guaranteed spaces.
+    #[doc = "< Guaranteed spaces."]
     pub guarant_spc: u32,
-    ///< Best effort spaces.
+    #[doc = "< Best effort spaces."]
     pub best_spc: u32,
-    /// Bit mask for every supported flow type.
+    #[doc = " Bit mask for every supported flow type."]
     pub flow_types_mask: [u64; 1usize],
-    ///< Total flex payload in bytes.
+    #[doc = "< Total flex payload in bytes."]
     pub max_flexpayload: u32,
-    /// Flexible payload unit in bytes. Size and alignments of all flex
-    ///payload segments should be multiplies of this value.
+    #[doc = " Flexible payload unit in bytes. Size and alignments of all flex"]
+    #[doc = "payload segments should be multiplies of this value."]
     pub flex_payload_unit: u32,
-    /// Max number of flexible payload continuous segments.
-    ///Each segment should be a multiple of flex_payload_unit.
+    #[doc = " Max number of flexible payload continuous segments."]
+    #[doc = "Each segment should be a multiple of flex_payload_unit."]
     pub max_flex_payload_segment_num: u32,
-    /// Maximum src_offset in bytes allowed. It indicates that
-    ///src_offset[i] in struct rte_eth_flex_payload_cfg should be less
-    ///than this value.
+    #[doc = " Maximum src_offset in bytes allowed. It indicates that"]
+    #[doc = "src_offset[i] in struct rte_eth_flex_payload_cfg should be less"]
+    #[doc = "than this value."]
     pub flex_payload_limit: u16,
-    /// Flex bitmask unit in bytes. Size of flex bitmasks should be a
-    ///multiply of this value.
+    #[doc = " Flex bitmask unit in bytes. Size of flex bitmasks should be a"]
+    #[doc = "multiply of this value."]
     pub flex_bitmask_unit: u32,
-    /// Max supported size of flex bitmasks in flex_bitmask_unit
+    #[doc = " Max supported size of flex bitmasks in flex_bitmask_unit"]
     pub max_flex_bitmask_num: u32,
 }
 #[test]
@@ -23037,29 +23132,29 @@ impl Default for rte_eth_fdir_info {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to define the statistics of flow director.
-/// It supports RTE_ETH_FILTER_FDIR with RTE_ETH_FILTER_STATS operation.
+#[doc = " A structure used to define the statistics of flow director."]
+#[doc = " It supports RTE_ETH_FILTER_FDIR with RTE_ETH_FILTER_STATS operation."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_fdir_stats {
-    ///< Number of filters with collision.
+    #[doc = "< Number of filters with collision."]
     pub collision: u32,
-    ///< Number of free filters.
+    #[doc = "< Number of free filters."]
     pub free: u32,
     pub maxhash: u32,
-    ///< Longest linked list of filters.
+    #[doc = "< Longest linked list of filters."]
     pub maxlen: u32,
-    ///< Number of added filters.
+    #[doc = "< Number of added filters."]
     pub add: u64,
-    ///< Number of removed filters.
+    #[doc = "< Number of removed filters."]
     pub remove: u64,
-    ///< Number of failed added filters.
+    #[doc = "< Number of failed added filters."]
     pub f_add: u64,
-    ///< Number of failed removed filters.
+    #[doc = "< Number of failed removed filters."]
     pub f_remove: u64,
-    ///< Number of filters in guaranteed spaces.
+    #[doc = "< Number of filters in guaranteed spaces."]
     pub guarant_cnt: u32,
-    ///< Number of filters in best effort spaces.
+    #[doc = "< Number of filters in best effort spaces."]
     pub best_cnt: u32,
 }
 #[test]
@@ -23176,28 +23271,28 @@ fn bindgen_test_layout_rte_eth_fdir_stats() {
     );
 }
 pub mod rte_eth_fdir_filter_info_type {
-    /// Flow Director filter information types.
+    #[doc = " Flow Director filter information types."]
     pub type Type = u32;
     pub const RTE_ETH_FDIR_FILTER_INFO_TYPE_UNKNOWN: Type = 0;
-    /// Flow Director filter input set configuration
+    #[doc = " Flow Director filter input set configuration"]
     pub const RTE_ETH_FDIR_FILTER_INPUT_SET_SELECT: Type = 1;
-    /// Flow Director filter input set configuration
+    #[doc = " Flow Director filter input set configuration"]
     pub const RTE_ETH_FDIR_FILTER_INFO_TYPE_MAX: Type = 2;
 }
-/// A structure used to set FDIR filter information, to support filter type
-/// of 'RTE_ETH_FILTER_FDIR' RTE_ETH_FDIR_FILTER_INPUT_SET_SELECT operation.
+#[doc = " A structure used to set FDIR filter information, to support filter type"]
+#[doc = " of \'RTE_ETH_FILTER_FDIR\' RTE_ETH_FDIR_FILTER_INPUT_SET_SELECT operation."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_fdir_filter_info {
-    ///< Information type
+    #[doc = "< Information type"]
     pub info_type: rte_eth_fdir_filter_info_type::Type,
     pub info: rte_eth_fdir_filter_info__bindgen_ty_1,
 }
-/// Details of fdir filter information
+#[doc = " Details of fdir filter information"]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_eth_fdir_filter_info__bindgen_ty_1 {
-    /// Flow Director input set configuration per port
+    #[doc = " Flow Director input set configuration per port"]
     pub input_set_conf: rte_eth_input_set_conf,
     _bindgen_union_align: [u32; 130usize],
 }
@@ -23279,50 +23374,50 @@ impl Default for rte_eth_fdir_filter_info {
     }
 }
 pub mod rte_eth_hash_filter_info_type {
-    /// Hash filter information types.
-    /// - RTE_ETH_HASH_FILTER_SYM_HASH_ENA_PER_PORT is for getting/setting the
-    ///   information/configuration of 'symmetric hash enable' per port.
-    /// - RTE_ETH_HASH_FILTER_GLOBAL_CONFIG is for getting/setting the global
-    ///   configurations of hash filters. Those global configurations are valid
-    ///   for all ports of the same NIC.
-    /// - RTE_ETH_HASH_FILTER_INPUT_SET_SELECT is for setting the global
-    ///   hash input set fields
+    #[doc = " Hash filter information types."]
+    #[doc = " - RTE_ETH_HASH_FILTER_SYM_HASH_ENA_PER_PORT is for getting/setting the"]
+    #[doc = "   information/configuration of \'symmetric hash enable\' per port."]
+    #[doc = " - RTE_ETH_HASH_FILTER_GLOBAL_CONFIG is for getting/setting the global"]
+    #[doc = "   configurations of hash filters. Those global configurations are valid"]
+    #[doc = "   for all ports of the same NIC."]
+    #[doc = " - RTE_ETH_HASH_FILTER_INPUT_SET_SELECT is for setting the global"]
+    #[doc = "   hash input set fields"]
     pub type Type = u32;
     pub const RTE_ETH_HASH_FILTER_INFO_TYPE_UNKNOWN: Type = 0;
-    /// Symmetric hash enable per port
+    #[doc = " Symmetric hash enable per port"]
     pub const RTE_ETH_HASH_FILTER_SYM_HASH_ENA_PER_PORT: Type = 1;
-    /// Configure globally for hash filter
+    #[doc = " Configure globally for hash filter"]
     pub const RTE_ETH_HASH_FILTER_GLOBAL_CONFIG: Type = 2;
-    /// Global Hash filter input set configuration
+    #[doc = " Global Hash filter input set configuration"]
     pub const RTE_ETH_HASH_FILTER_INPUT_SET_SELECT: Type = 3;
-    /// Global Hash filter input set configuration
+    #[doc = " Global Hash filter input set configuration"]
     pub const RTE_ETH_HASH_FILTER_INFO_TYPE_MAX: Type = 4;
 }
 pub mod rte_eth_hash_function {
-    /// Hash function types.
+    #[doc = " Hash function types."]
     pub type Type = u32;
     pub const RTE_ETH_HASH_FUNCTION_DEFAULT: Type = 0;
-    ///< Toeplitz
+    #[doc = "< Toeplitz"]
     pub const RTE_ETH_HASH_FUNCTION_TOEPLITZ: Type = 1;
-    ///< Simple XOR
+    #[doc = "< Simple XOR"]
     pub const RTE_ETH_HASH_FUNCTION_SIMPLE_XOR: Type = 2;
     pub const RTE_ETH_HASH_FUNCTION_MAX: Type = 3;
 }
-/// A structure used to set or get global hash function configurations which
-/// include symmetric hash enable per flow type and hash function type.
-/// Each bit in sym_hash_enable_mask[] indicates if the symmetric hash of the
-/// corresponding flow type is enabled or not.
-/// Each bit in valid_bit_mask[] indicates if the corresponding bit in
-/// sym_hash_enable_mask[] is valid or not. For the configurations gotten, it
-/// also means if the flow type is supported by hardware or not.
+#[doc = " A structure used to set or get global hash function configurations which"]
+#[doc = " include symmetric hash enable per flow type and hash function type."]
+#[doc = " Each bit in sym_hash_enable_mask[] indicates if the symmetric hash of the"]
+#[doc = " corresponding flow type is enabled or not."]
+#[doc = " Each bit in valid_bit_mask[] indicates if the corresponding bit in"]
+#[doc = " sym_hash_enable_mask[] is valid or not. For the configurations gotten, it"]
+#[doc = " also means if the flow type is supported by hardware or not."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_hash_global_conf {
-    ///< Hash function type
+    #[doc = "< Hash function type"]
     pub hash_func: rte_eth_hash_function::Type,
-    /// Bit mask for symmetric hash enable per flow type
+    #[doc = " Bit mask for symmetric hash enable per flow type"]
     pub sym_hash_enable_mask: [u64; 1usize],
-    /// Bit mask indicates if the corresponding bit is valid
+    #[doc = " Bit mask indicates if the corresponding bit is valid"]
     pub valid_bit_mask: [u64; 1usize],
 }
 #[test]
@@ -23380,24 +23475,24 @@ impl Default for rte_eth_hash_global_conf {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to set or get hash filter information, to support filter
-/// type of 'RTE_ETH_FILTER_HASH' and its operations.
+#[doc = " A structure used to set or get hash filter information, to support filter"]
+#[doc = " type of \'RTE_ETH_FILTER_HASH\' and its operations."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_hash_filter_info {
-    ///< Information type
+    #[doc = "< Information type"]
     pub info_type: rte_eth_hash_filter_info_type::Type,
     pub info: rte_eth_hash_filter_info__bindgen_ty_1,
 }
-/// Details of hash filter information
+#[doc = " Details of hash filter information"]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_eth_hash_filter_info__bindgen_ty_1 {
-    /// For RTE_ETH_HASH_FILTER_SYM_HASH_ENA_PER_PORT
+    #[doc = " For RTE_ETH_HASH_FILTER_SYM_HASH_ENA_PER_PORT"]
     pub enable: u8,
-    /// Global configurations of hash filter
+    #[doc = " Global configurations of hash filter"]
     pub global_conf: rte_eth_hash_global_conf,
-    /// Global configurations of hash filter input set
+    #[doc = " Global configurations of hash filter input set"]
     pub input_set_conf: rte_eth_input_set_conf,
     _bindgen_union_align: [u64; 65usize],
 }
@@ -23504,7 +23599,7 @@ impl Default for rte_eth_hash_filter_info {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// l2 tunnel configuration.
+#[doc = " l2 tunnel configuration."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_l2_tunnel_conf {
@@ -23591,15 +23686,15 @@ impl Default for rte_eth_l2_tunnel_conf {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_dev_reg_info {
-    ///< Buffer for return registers
+    #[doc = "< Buffer for return registers"]
     pub data: *mut ::std::os::raw::c_void,
-    ///< Start register table location for access
+    #[doc = "< Start register table location for access"]
     pub offset: u32,
-    ///< Number of registers to fetch
+    #[doc = "< Number of registers to fetch"]
     pub length: u32,
-    ///< Size of device register
+    #[doc = "< Size of device register"]
     pub width: u32,
-    ///< Device version
+    #[doc = "< Device version"]
     pub version: u32,
 }
 #[test]
@@ -23673,13 +23768,13 @@ impl Default for rte_dev_reg_info {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_dev_eeprom_info {
-    ///< Buffer for return eeprom
+    #[doc = "< Buffer for return eeprom"]
     pub data: *mut ::std::os::raw::c_void,
-    ///< Start eeprom address for access
+    #[doc = "< Start eeprom address for access"]
     pub offset: u32,
-    ///< Length of eeprom region to access
+    #[doc = "< Length of eeprom region to access"]
     pub length: u32,
-    ///< Device-specific key, such as device-id
+    #[doc = "< Device-specific key, such as device-id"]
     pub magic: u32,
 }
 #[test]
@@ -23740,13 +23835,13 @@ impl Default for rte_dev_eeprom_info {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// Placeholder for accessing plugin module eeprom
+#[doc = " Placeholder for accessing plugin module eeprom"]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_dev_module_info {
-    ///< Type of plugin module eeprom
+    #[doc = "< Type of plugin module eeprom"]
     pub type_: u32,
-    ///< Length of plugin module eeprom
+    #[doc = "< Length of plugin module eeprom"]
     pub eeprom_len: u32,
 }
 #[test]
@@ -23789,74 +23884,74 @@ extern "C" {
     pub static mut rte_eth_dev_logtype: ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Initializes a device iterator.
-    ///
-    /// This iterator allows accessing a list of devices matching some devargs.
-    ///
-    /// @param iter
-    ///   Device iterator handle initialized by the function.
-    ///   The fields bus_str and cls_str might be dynamically allocated,
-    ///   and could be freed by calling rte_eth_iterator_cleanup().
-    ///
-    /// @param devargs
-    ///   Device description string.
-    ///
-    /// @return
-    ///   0 on successful initialization, negative otherwise.
+    #[doc = " Initializes a device iterator."]
+    #[doc = ""]
+    #[doc = " This iterator allows accessing a list of devices matching some devargs."]
+    #[doc = ""]
+    #[doc = " @param iter"]
+    #[doc = "   Device iterator handle initialized by the function."]
+    #[doc = "   The fields bus_str and cls_str might be dynamically allocated,"]
+    #[doc = "   and could be freed by calling rte_eth_iterator_cleanup()."]
+    #[doc = ""]
+    #[doc = " @param devargs"]
+    #[doc = "   Device description string."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   0 on successful initialization, negative otherwise."]
     pub fn rte_eth_iterator_init(
         iter: *mut rte_dev_iterator,
         devargs: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Iterates on devices with devargs filter.
-    /// The ownership is not checked.
-    ///
-    /// The next port id is returned, and the iterator is updated.
-    ///
-    /// @param iter
-    ///   Device iterator handle initialized by rte_eth_iterator_init().
-    ///   Some fields bus_str and cls_str might be freed when no more port is found,
-    ///   by calling rte_eth_iterator_cleanup().
-    ///
-    /// @return
-    ///   A port id if found, RTE_MAX_ETHPORTS otherwise.
+    #[doc = " Iterates on devices with devargs filter."]
+    #[doc = " The ownership is not checked."]
+    #[doc = ""]
+    #[doc = " The next port id is returned, and the iterator is updated."]
+    #[doc = ""]
+    #[doc = " @param iter"]
+    #[doc = "   Device iterator handle initialized by rte_eth_iterator_init()."]
+    #[doc = "   Some fields bus_str and cls_str might be freed when no more port is found,"]
+    #[doc = "   by calling rte_eth_iterator_cleanup()."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   A port id if found, RTE_MAX_ETHPORTS otherwise."]
     pub fn rte_eth_iterator_next(iter: *mut rte_dev_iterator) -> u16;
 }
 extern "C" {
-    /// Free some allocated fields of the iterator.
-    ///
-    /// This function is automatically called by rte_eth_iterator_next()
-    /// on the last iteration (i.e. when no more matching port is found).
-    ///
-    /// It is safe to call this function twice; it will do nothing more.
-    ///
-    /// @param iter
-    ///   Device iterator handle initialized by rte_eth_iterator_init().
-    ///   The fields bus_str and cls_str are freed if needed.
+    #[doc = " Free some allocated fields of the iterator."]
+    #[doc = ""]
+    #[doc = " This function is automatically called by rte_eth_iterator_next()"]
+    #[doc = " on the last iteration (i.e. when no more matching port is found)."]
+    #[doc = ""]
+    #[doc = " It is safe to call this function twice; it will do nothing more."]
+    #[doc = ""]
+    #[doc = " @param iter"]
+    #[doc = "   Device iterator handle initialized by rte_eth_iterator_init()."]
+    #[doc = "   The fields bus_str and cls_str are freed if needed."]
     pub fn rte_eth_iterator_cleanup(iter: *mut rte_dev_iterator);
 }
-/// A structure used to retrieve statistics for an Ethernet port.
-/// Not all statistics fields in struct rte_eth_stats are supported
-/// by any type of network interface card (NIC). If any statistics
-/// field is not supported, its value is 0.
+#[doc = " A structure used to retrieve statistics for an Ethernet port."]
+#[doc = " Not all statistics fields in struct rte_eth_stats are supported"]
+#[doc = " by any type of network interface card (NIC). If any statistics"]
+#[doc = " field is not supported, its value is 0."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_stats {
-    ///< Total number of successfully received packets.
+    #[doc = "< Total number of successfully received packets."]
     pub ipackets: u64,
-    ///< Total number of successfully transmitted packets.
+    #[doc = "< Total number of successfully transmitted packets."]
     pub opackets: u64,
-    ///< Total number of successfully received bytes.
+    #[doc = "< Total number of successfully received bytes."]
     pub ibytes: u64,
-    ///< Total number of successfully transmitted bytes.
+    #[doc = "< Total number of successfully transmitted bytes."]
     pub obytes: u64,
     pub imissed: u64,
-    ///< Total number of erroneous received packets.
+    #[doc = "< Total number of erroneous received packets."]
     pub ierrors: u64,
-    ///< Total number of failed transmitted packets.
+    #[doc = "< Total number of failed transmitted packets."]
     pub oerrors: u64,
-    ///< Total number of RX mbuf allocation failures.
+    #[doc = "< Total number of RX mbuf allocation failures."]
     pub rx_nombuf: u64,
     pub q_ipackets: [u64; 16usize],
     pub q_opackets: [u64; 16usize],
@@ -24007,11 +24102,11 @@ fn bindgen_test_layout_rte_eth_stats() {
         )
     );
 }
-/// A structure used to retrieve link-level information of an Ethernet port.
+#[doc = " A structure used to retrieve link-level information of an Ethernet port."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_link {
-    ///< ETH_SPEED_NUM_
+    #[doc = "< ETH_SPEED_NUM_"]
     pub link_speed: u32,
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize], u8>,
     pub __bindgen_padding_0: [u8; 3usize],
@@ -24097,16 +24192,16 @@ impl rte_eth_link {
         __bindgen_bitfield_unit
     }
 }
-/// A structure used to configure the ring threshold registers of an RX/TX
-/// queue for an Ethernet port.
+#[doc = " A structure used to configure the ring threshold registers of an RX/TX"]
+#[doc = " queue for an Ethernet port."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_thresh {
-    ///< Ring prefetch threshold.
+    #[doc = "< Ring prefetch threshold."]
     pub pthresh: u8,
-    ///< Ring host threshold.
+    #[doc = "< Ring host threshold."]
     pub hthresh: u8,
-    ///< Ring writeback threshold.
+    #[doc = "< Ring writeback threshold."]
     pub wthresh: u8,
 }
 #[test]
@@ -24153,52 +24248,52 @@ fn bindgen_test_layout_rte_eth_thresh() {
     );
 }
 pub mod rte_eth_rx_mq_mode {
-    ///  A set of values to identify what method is to be used to route
-    ///  packets to multiple queues.
+    #[doc = "  A set of values to identify what method is to be used to route"]
+    #[doc = "  packets to multiple queues."]
     pub type Type = u32;
-    /// None of DCB,RSS or VMDQ mode
+    #[doc = " None of DCB,RSS or VMDQ mode"]
     pub const ETH_MQ_RX_NONE: Type = 0;
-    /// For RX side, only RSS is on
+    #[doc = " For RX side, only RSS is on"]
     pub const ETH_MQ_RX_RSS: Type = 1;
-    /// For RX side,only DCB is on.
+    #[doc = " For RX side,only DCB is on."]
     pub const ETH_MQ_RX_DCB: Type = 2;
-    /// Both DCB and RSS enable
+    #[doc = " Both DCB and RSS enable"]
     pub const ETH_MQ_RX_DCB_RSS: Type = 3;
-    /// Only VMDQ, no RSS nor DCB
+    #[doc = " Only VMDQ, no RSS nor DCB"]
     pub const ETH_MQ_RX_VMDQ_ONLY: Type = 4;
-    /// RSS mode with VMDQ
+    #[doc = " RSS mode with VMDQ"]
     pub const ETH_MQ_RX_VMDQ_RSS: Type = 5;
-    /// Use VMDQ+DCB to route traffic to queues
+    #[doc = " Use VMDQ+DCB to route traffic to queues"]
     pub const ETH_MQ_RX_VMDQ_DCB: Type = 6;
-    /// Enable both VMDQ and DCB in VMDq
+    #[doc = " Enable both VMDQ and DCB in VMDq"]
     pub const ETH_MQ_RX_VMDQ_DCB_RSS: Type = 7;
 }
 pub mod rte_eth_tx_mq_mode {
-    /// A set of values to identify what method is to be used to transmit
-    /// packets using multi-TCs.
+    #[doc = " A set of values to identify what method is to be used to transmit"]
+    #[doc = " packets using multi-TCs."]
     pub type Type = u32;
-    ///< It is in neither DCB nor VT mode.
+    #[doc = "< It is in neither DCB nor VT mode."]
     pub const ETH_MQ_TX_NONE: Type = 0;
-    ///< For TX side,only DCB is on.
+    #[doc = "< For TX side,only DCB is on."]
     pub const ETH_MQ_TX_DCB: Type = 1;
-    ///< For TX side,both DCB and VT is on.
+    #[doc = "< For TX side,both DCB and VT is on."]
     pub const ETH_MQ_TX_VMDQ_DCB: Type = 2;
-    ///< Only VT on, no DCB
+    #[doc = "< Only VT on, no DCB"]
     pub const ETH_MQ_TX_VMDQ_ONLY: Type = 3;
 }
-/// A structure used to configure the RX features of an Ethernet port.
+#[doc = " A structure used to configure the RX features of an Ethernet port."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_rxmode {
-    /// The multi-queue packet distribution mode to be used, e.g. RSS.
+    #[doc = " The multi-queue packet distribution mode to be used, e.g. RSS."]
     pub mq_mode: rte_eth_rx_mq_mode::Type,
-    ///< Only used if JUMBO_FRAME enabled.
+    #[doc = "< Only used if JUMBO_FRAME enabled."]
     pub max_rx_pkt_len: u32,
-    ///< hdr buf size (header_split enabled).
+    #[doc = "< hdr buf size (header_split enabled)."]
     pub split_hdr_size: u16,
-    /// Per-port Rx offloads to be set using DEV_RX_OFFLOAD_* flags.
-    /// Only offloads set on rx_offload_capa field on rte_eth_dev_info
-    /// structure are allowed to be set.
+    #[doc = " Per-port Rx offloads to be set using DEV_RX_OFFLOAD_* flags."]
+    #[doc = " Only offloads set on rx_offload_capa field on rte_eth_dev_info"]
+    #[doc = " structure are allowed to be set."]
     pub offloads: u64,
 }
 #[test]
@@ -24260,18 +24355,18 @@ impl Default for rte_eth_rxmode {
     }
 }
 pub mod rte_vlan_type {
-    /// VLAN types to indicate if it is for single VLAN, inner VLAN or outer VLAN.
-    /// Note that single VLAN is treated the same as inner VLAN.
+    #[doc = " VLAN types to indicate if it is for single VLAN, inner VLAN or outer VLAN."]
+    #[doc = " Note that single VLAN is treated the same as inner VLAN."]
     pub type Type = u32;
     pub const ETH_VLAN_TYPE_UNKNOWN: Type = 0;
-    ///< Inner VLAN.
+    #[doc = "< Inner VLAN."]
     pub const ETH_VLAN_TYPE_INNER: Type = 1;
-    ///< Single VLAN, or outer VLAN.
+    #[doc = "< Single VLAN, or outer VLAN."]
     pub const ETH_VLAN_TYPE_OUTER: Type = 2;
     pub const ETH_VLAN_TYPE_MAX: Type = 3;
 }
-/// A structure used to describe a vlan filter.
-/// If the bit corresponding to a VID is set, such VID is on.
+#[doc = " A structure used to describe a vlan filter."]
+#[doc = " If the bit corresponding to a VID is set, such VID is on."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_vlan_filter_conf {
@@ -24305,29 +24400,29 @@ impl Default for rte_vlan_filter_conf {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to configure the Receive Side Scaling (RSS) feature
-/// of an Ethernet port.
-/// If not NULL, the *rss_key* pointer of the *rss_conf* structure points
-/// to an array holding the RSS key to use for hashing specific header
-/// fields of received packets. The length of this array should be indicated
-/// by *rss_key_len* below. Otherwise, a default random hash key is used by
-/// the device driver.
-///
-/// The *rss_key_len* field of the *rss_conf* structure indicates the length
-/// in bytes of the array pointed by *rss_key*. To be compatible, this length
-/// will be checked in i40e only. Others assume 40 bytes to be used as before.
-///
-/// The *rss_hf* field of the *rss_conf* structure indicates the different
-/// types of IPv4/IPv6 packets to which the RSS hashing must be applied.
-/// Supplying an *rss_hf* equal to zero disables the RSS feature.
+#[doc = " A structure used to configure the Receive Side Scaling (RSS) feature"]
+#[doc = " of an Ethernet port."]
+#[doc = " If not NULL, the *rss_key* pointer of the *rss_conf* structure points"]
+#[doc = " to an array holding the RSS key to use for hashing specific header"]
+#[doc = " fields of received packets. The length of this array should be indicated"]
+#[doc = " by *rss_key_len* below. Otherwise, a default random hash key is used by"]
+#[doc = " the device driver."]
+#[doc = ""]
+#[doc = " The *rss_key_len* field of the *rss_conf* structure indicates the length"]
+#[doc = " in bytes of the array pointed by *rss_key*. To be compatible, this length"]
+#[doc = " will be checked in i40e only. Others assume 40 bytes to be used as before."]
+#[doc = ""]
+#[doc = " The *rss_hf* field of the *rss_conf* structure indicates the different"]
+#[doc = " types of IPv4/IPv6 packets to which the RSS hashing must be applied."]
+#[doc = " Supplying an *rss_hf* equal to zero disables the RSS feature."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_rss_conf {
-    ///< If not NULL, 40-byte hash key.
+    #[doc = "< If not NULL, 40-byte hash key."]
     pub rss_key: *mut u8,
-    ///< hash key length in bytes.
+    #[doc = "< hash key length in bytes."]
     pub rss_key_len: u8,
-    ///< Hash functions to apply - see below.
+    #[doc = "< Hash functions to apply - see below."]
     pub rss_hf: u64,
 }
 #[test]
@@ -24378,13 +24473,13 @@ impl Default for rte_eth_rss_conf {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to configure VLAN traffic mirror of an Ethernet port.
+#[doc = " A structure used to configure VLAN traffic mirror of an Ethernet port."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_vlan_mirror {
-    ///< mask for valid VLAN ID.
+    #[doc = "< mask for valid VLAN ID."]
     pub vlan_mask: u64,
-    /// VLAN ID list for vlan mirroring.
+    #[doc = " VLAN ID list for vlan mirroring."]
     pub vlan_id: [u16; 64usize],
 }
 #[test]
@@ -24425,17 +24520,17 @@ impl Default for rte_eth_vlan_mirror {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to configure traffic mirror of an Ethernet port.
+#[doc = " A structure used to configure traffic mirror of an Ethernet port."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_mirror_conf {
-    ///< Mirroring rule type
+    #[doc = "< Mirroring rule type"]
     pub rule_type: u8,
-    ///< Destination pool for this mirror rule.
+    #[doc = "< Destination pool for this mirror rule."]
     pub dst_pool: u8,
-    ///< Bitmap of pool for pool mirroring
+    #[doc = "< Bitmap of pool for pool mirroring"]
     pub pool_mask: u64,
-    /// VLAN ID setting for VLAN mirroring.
+    #[doc = " VLAN ID setting for VLAN mirroring."]
     pub vlan: rte_eth_vlan_mirror,
 }
 #[test]
@@ -24496,10 +24591,10 @@ impl Default for rte_eth_mirror_conf {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to configure 64 entries of Redirection Table of the
-/// Receive Side Scaling (RSS) feature of an Ethernet port. To configure
-/// more than 64 entries supported by hardware, an array of this structure
-/// is needed.
+#[doc = " A structure used to configure 64 entries of Redirection Table of the"]
+#[doc = " Receive Side Scaling (RSS) feature of an Ethernet port. To configure"]
+#[doc = " more than 64 entries supported by hardware, an array of this structure"]
+#[doc = " is needed."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_rss_reta_entry64 {
@@ -24545,33 +24640,33 @@ impl Default for rte_eth_rss_reta_entry64 {
     }
 }
 pub mod rte_eth_nb_tcs {
-    /// This enum indicates the possible number of traffic classes
-    /// in DCB configurations
+    #[doc = " This enum indicates the possible number of traffic classes"]
+    #[doc = " in DCB configurations"]
     pub type Type = u32;
-    ///< 4 TCs with DCB.
+    #[doc = "< 4 TCs with DCB."]
     pub const ETH_4_TCS: Type = 4;
-    ///< 8 TCs with DCB.
+    #[doc = "< 8 TCs with DCB."]
     pub const ETH_8_TCS: Type = 8;
 }
 pub mod rte_eth_nb_pools {
-    /// This enum indicates the possible number of queue pools
-    /// in VMDQ configurations.
+    #[doc = " This enum indicates the possible number of queue pools"]
+    #[doc = " in VMDQ configurations."]
     pub type Type = u32;
-    ///< 8 VMDq pools.
+    #[doc = "< 8 VMDq pools."]
     pub const ETH_8_POOLS: Type = 8;
-    ///< 16 VMDq pools.
+    #[doc = "< 16 VMDq pools."]
     pub const ETH_16_POOLS: Type = 16;
-    ///< 32 VMDq pools.
+    #[doc = "< 32 VMDq pools."]
     pub const ETH_32_POOLS: Type = 32;
-    ///< 64 VMDq pools.
+    #[doc = "< 64 VMDq pools."]
     pub const ETH_64_POOLS: Type = 64;
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_dcb_rx_conf {
-    ///< Possible DCB TCs, 4 or 8 TCs
+    #[doc = "< Possible DCB TCs, 4 or 8 TCs"]
     pub nb_tcs: rte_eth_nb_tcs::Type,
-    /// Traffic class each UP mapped to.
+    #[doc = " Traffic class each UP mapped to."]
     pub dcb_tc: [u8; 8usize],
 }
 #[test]
@@ -24615,9 +24710,9 @@ impl Default for rte_eth_dcb_rx_conf {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_vmdq_dcb_tx_conf {
-    ///< With DCB, 16 or 32 pools.
+    #[doc = "< With DCB, 16 or 32 pools."]
     pub nb_queue_pools: rte_eth_nb_pools::Type,
-    /// Traffic class each UP mapped to.
+    #[doc = " Traffic class each UP mapped to."]
     pub dcb_tc: [u8; 8usize],
 }
 #[test]
@@ -24663,9 +24758,9 @@ impl Default for rte_eth_vmdq_dcb_tx_conf {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_dcb_tx_conf {
-    ///< Possible DCB TCs, 4 or 8 TCs.
+    #[doc = "< Possible DCB TCs, 4 or 8 TCs."]
     pub nb_tcs: rte_eth_nb_tcs::Type,
-    /// Traffic class each UP mapped to.
+    #[doc = " Traffic class each UP mapped to."]
     pub dcb_tc: [u8; 8usize],
 }
 #[test]
@@ -24709,7 +24804,7 @@ impl Default for rte_eth_dcb_tx_conf {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_vmdq_tx_conf {
-    ///< VMDq mode, 64 pools.
+    #[doc = "< VMDq mode, 64 pools."]
     pub nb_queue_pools: rte_eth_nb_pools::Type,
 }
 #[test]
@@ -24742,36 +24837,36 @@ impl Default for rte_eth_vmdq_tx_conf {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to configure the VMDQ+DCB feature
-/// of an Ethernet port.
-///
-/// Using this feature, packets are routed to a pool of queues, based
-/// on the vlan id in the vlan tag, and then to a specific queue within
-/// that pool, using the user priority vlan tag field.
-///
-/// A default pool may be used, if desired, to route all traffic which
-/// does not match the vlan filter rules.
+#[doc = " A structure used to configure the VMDQ+DCB feature"]
+#[doc = " of an Ethernet port."]
+#[doc = ""]
+#[doc = " Using this feature, packets are routed to a pool of queues, based"]
+#[doc = " on the vlan id in the vlan tag, and then to a specific queue within"]
+#[doc = " that pool, using the user priority vlan tag field."]
+#[doc = ""]
+#[doc = " A default pool may be used, if desired, to route all traffic which"]
+#[doc = " does not match the vlan filter rules."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_vmdq_dcb_conf {
-    ///< With DCB, 16 or 32 pools
+    #[doc = "< With DCB, 16 or 32 pools"]
     pub nb_queue_pools: rte_eth_nb_pools::Type,
-    ///< If non-zero, use a default pool
+    #[doc = "< If non-zero, use a default pool"]
     pub enable_default_pool: u8,
-    ///< The default pool, if applicable
+    #[doc = "< The default pool, if applicable"]
     pub default_pool: u8,
-    ///< We can have up to 64 filters/mappings
+    #[doc = "< We can have up to 64 filters/mappings"]
     pub nb_pool_maps: u8,
-    ///< VMDq vlan pool maps.
+    #[doc = "< VMDq vlan pool maps."]
     pub pool_map: [rte_eth_vmdq_dcb_conf__bindgen_ty_1; 64usize],
     pub dcb_tc: [u8; 8usize],
 }
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_vmdq_dcb_conf__bindgen_ty_1 {
-    ///< The vlan id of the received frame
+    #[doc = "< The vlan id of the received frame"]
     pub vlan_id: u16,
-    ///< Bitmask of pools for packet rx
+    #[doc = "< Bitmask of pools for packet rx"]
     pub pools: u64,
 }
 #[test]
@@ -24903,46 +24998,46 @@ impl Default for rte_eth_vmdq_dcb_conf {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to configure the VMDQ feature of an Ethernet port when
-/// not combined with the DCB feature.
-///
-/// Using this feature, packets are routed to a pool of queues. By default,
-/// the pool selection is based on the MAC address, the vlan id in the
-/// vlan tag as specified in the pool_map array.
-/// Passing the ETH_VMDQ_ACCEPT_UNTAG in the rx_mode field allows pool
-/// selection using only the MAC address. MAC address to pool mapping is done
-/// using the rte_eth_dev_mac_addr_add function, with the pool parameter
-/// corresponding to the pool id.
-///
-/// Queue selection within the selected pool will be done using RSS when
-/// it is enabled or revert to the first queue of the pool if not.
-///
-/// A default pool may be used, if desired, to route all traffic which
-/// does not match the vlan filter rules or any pool MAC address.
+#[doc = " A structure used to configure the VMDQ feature of an Ethernet port when"]
+#[doc = " not combined with the DCB feature."]
+#[doc = ""]
+#[doc = " Using this feature, packets are routed to a pool of queues. By default,"]
+#[doc = " the pool selection is based on the MAC address, the vlan id in the"]
+#[doc = " vlan tag as specified in the pool_map array."]
+#[doc = " Passing the ETH_VMDQ_ACCEPT_UNTAG in the rx_mode field allows pool"]
+#[doc = " selection using only the MAC address. MAC address to pool mapping is done"]
+#[doc = " using the rte_eth_dev_mac_addr_add function, with the pool parameter"]
+#[doc = " corresponding to the pool id."]
+#[doc = ""]
+#[doc = " Queue selection within the selected pool will be done using RSS when"]
+#[doc = " it is enabled or revert to the first queue of the pool if not."]
+#[doc = ""]
+#[doc = " A default pool may be used, if desired, to route all traffic which"]
+#[doc = " does not match the vlan filter rules or any pool MAC address."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_vmdq_rx_conf {
-    ///< VMDq only mode, 8 or 64 pools
+    #[doc = "< VMDq only mode, 8 or 64 pools"]
     pub nb_queue_pools: rte_eth_nb_pools::Type,
-    ///< If non-zero, use a default pool
+    #[doc = "< If non-zero, use a default pool"]
     pub enable_default_pool: u8,
-    ///< The default pool, if applicable
+    #[doc = "< The default pool, if applicable"]
     pub default_pool: u8,
-    ///< Enable VT loop back
+    #[doc = "< Enable VT loop back"]
     pub enable_loop_back: u8,
-    ///< We can have up to 64 filters/mappings
+    #[doc = "< We can have up to 64 filters/mappings"]
     pub nb_pool_maps: u8,
-    ///< Flags from ETH_VMDQ_ACCEPT_*
+    #[doc = "< Flags from ETH_VMDQ_ACCEPT_*"]
     pub rx_mode: u32,
-    ///< VMDq vlan pool maps.
+    #[doc = "< VMDq vlan pool maps."]
     pub pool_map: [rte_eth_vmdq_rx_conf__bindgen_ty_1; 64usize],
 }
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_vmdq_rx_conf__bindgen_ty_1 {
-    ///< The vlan id of the received frame
+    #[doc = "< The vlan id of the received frame"]
     pub vlan_id: u16,
-    ///< Bitmask of pools for packet rx
+    #[doc = "< Bitmask of pools for packet rx"]
     pub pools: u64,
 }
 #[test]
@@ -25086,15 +25181,15 @@ impl Default for rte_eth_vmdq_rx_conf {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to configure the TX features of an Ethernet port.
+#[doc = " A structure used to configure the TX features of an Ethernet port."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_txmode {
-    ///< TX multi-queues mode.
+    #[doc = "< TX multi-queues mode."]
     pub mq_mode: rte_eth_tx_mq_mode::Type,
-    /// Per-port Tx offloads to be set using DEV_TX_OFFLOAD_* flags.
-    /// Only offloads set on tx_offload_capa field on rte_eth_dev_info
-    /// structure are allowed to be set.
+    #[doc = " Per-port Tx offloads to be set using DEV_TX_OFFLOAD_* flags."]
+    #[doc = " Only offloads set on tx_offload_capa field on rte_eth_dev_info"]
+    #[doc = " structure are allowed to be set."]
     pub offloads: u64,
     pub pvid: u16,
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize], u8>,
@@ -25206,21 +25301,21 @@ impl rte_eth_txmode {
         __bindgen_bitfield_unit
     }
 }
-/// A structure used to configure an RX ring of an Ethernet port.
+#[doc = " A structure used to configure an RX ring of an Ethernet port."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_rxconf {
-    ///< RX ring threshold registers.
+    #[doc = "< RX ring threshold registers."]
     pub rx_thresh: rte_eth_thresh,
-    ///< Drives the freeing of RX descriptors.
+    #[doc = "< Drives the freeing of RX descriptors."]
     pub rx_free_thresh: u16,
-    ///< Drop packets if no descriptors are available.
+    #[doc = "< Drop packets if no descriptors are available."]
     pub rx_drop_en: u8,
-    ///< Do not start queue with rte_eth_dev_start().
+    #[doc = "< Do not start queue with rte_eth_dev_start()."]
     pub rx_deferred_start: u8,
-    /// Per-queue Rx offloads to be set using DEV_RX_OFFLOAD_* flags.
-    /// Only offloads set on rx_queue_offload_capa or rx_offload_capa
-    /// fields on rte_eth_dev_info structure are allowed to be set.
+    #[doc = " Per-queue Rx offloads to be set using DEV_RX_OFFLOAD_* flags."]
+    #[doc = " Only offloads set on rx_queue_offload_capa or rx_offload_capa"]
+    #[doc = " fields on rte_eth_dev_info structure are allowed to be set."]
     pub offloads: u64,
 }
 #[test]
@@ -25288,22 +25383,22 @@ fn bindgen_test_layout_rte_eth_rxconf() {
         )
     );
 }
-/// A structure used to configure a TX ring of an Ethernet port.
+#[doc = " A structure used to configure a TX ring of an Ethernet port."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_txconf {
-    ///< TX ring threshold registers.
+    #[doc = "< TX ring threshold registers."]
     pub tx_thresh: rte_eth_thresh,
-    ///< Drives the setting of RS bit on TXDs.
+    #[doc = "< Drives the setting of RS bit on TXDs."]
     pub tx_rs_thresh: u16,
-    ///< Start freeing TX buffers if there are
-    ///less free descriptors than this value.
+    #[doc = "< Start freeing TX buffers if there are"]
+    #[doc = "less free descriptors than this value."]
     pub tx_free_thresh: u16,
-    ///< Do not start queue with rte_eth_dev_start().
+    #[doc = "< Do not start queue with rte_eth_dev_start()."]
     pub tx_deferred_start: u8,
-    /// Per-queue Tx offloads to be set  using DEV_TX_OFFLOAD_* flags.
-    /// Only offloads set on tx_queue_offload_capa or tx_offload_capa
-    /// fields on rte_eth_dev_info structure are allowed to be set.
+    #[doc = " Per-queue Tx offloads to be set  using DEV_TX_OFFLOAD_* flags."]
+    #[doc = " Only offloads set on tx_queue_offload_capa or tx_offload_capa"]
+    #[doc = " fields on rte_eth_dev_info structure are allowed to be set."]
     pub offloads: u64,
 }
 #[test]
@@ -25371,32 +25466,32 @@ fn bindgen_test_layout_rte_eth_txconf() {
         )
     );
 }
-/// A structure contains information about HW descriptor ring limitations.
+#[doc = " A structure contains information about HW descriptor ring limitations."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_desc_lim {
-    ///< Max allowed number of descriptors.
+    #[doc = "< Max allowed number of descriptors."]
     pub nb_max: u16,
-    ///< Min allowed number of descriptors.
+    #[doc = "< Min allowed number of descriptors."]
     pub nb_min: u16,
-    ///< Number of descriptors should be aligned to.
+    #[doc = "< Number of descriptors should be aligned to."]
     pub nb_align: u16,
-    /// Max allowed number of segments per whole packet.
-    ///
-    /// - For TSO packet this is the total number of data descriptors allowed
-    ///   by device.
-    ///
-    /// @see nb_mtu_seg_max
+    #[doc = " Max allowed number of segments per whole packet."]
+    #[doc = ""]
+    #[doc = " - For TSO packet this is the total number of data descriptors allowed"]
+    #[doc = "   by device."]
+    #[doc = ""]
+    #[doc = " @see nb_mtu_seg_max"]
     pub nb_seg_max: u16,
-    /// Max number of segments per one MTU.
-    ///
-    /// - For non-TSO packet, this is the maximum allowed number of segments
-    ///   in a single transmit packet.
-    ///
-    /// - For TSO packet each segment within the TSO may span up to this
-    ///   value.
-    ///
-    /// @see nb_seg_max
+    #[doc = " Max number of segments per one MTU."]
+    #[doc = ""]
+    #[doc = " - For non-TSO packet, this is the maximum allowed number of segments"]
+    #[doc = "   in a single transmit packet."]
+    #[doc = ""]
+    #[doc = " - For TSO packet each segment within the TSO may span up to this"]
+    #[doc = "   value."]
+    #[doc = ""]
+    #[doc = " @see nb_seg_max"]
     pub nb_mtu_seg_max: u16,
 }
 #[test]
@@ -25463,36 +25558,36 @@ fn bindgen_test_layout_rte_eth_desc_lim() {
     );
 }
 pub mod rte_eth_fc_mode {
-    /// This enum indicates the flow control mode
+    #[doc = " This enum indicates the flow control mode"]
     pub type Type = u32;
-    ///< Disable flow control.
+    #[doc = "< Disable flow control."]
     pub const RTE_FC_NONE: Type = 0;
-    ///< RX pause frame, enable flowctrl on TX side.
+    #[doc = "< RX pause frame, enable flowctrl on TX side."]
     pub const RTE_FC_RX_PAUSE: Type = 1;
-    ///< TX pause frame, enable flowctrl on RX side.
+    #[doc = "< TX pause frame, enable flowctrl on RX side."]
     pub const RTE_FC_TX_PAUSE: Type = 2;
-    ///< Enable flow control on both side.
+    #[doc = "< Enable flow control on both side."]
     pub const RTE_FC_FULL: Type = 3;
 }
-/// A structure used to configure Ethernet flow control parameter.
-/// These parameters will be configured into the register of the NIC.
-/// Please refer to the corresponding data sheet for proper value.
+#[doc = " A structure used to configure Ethernet flow control parameter."]
+#[doc = " These parameters will be configured into the register of the NIC."]
+#[doc = " Please refer to the corresponding data sheet for proper value."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_fc_conf {
-    ///< High threshold value to trigger XOFF
+    #[doc = "< High threshold value to trigger XOFF"]
     pub high_water: u32,
-    ///< Low threshold value to trigger XON
+    #[doc = "< Low threshold value to trigger XON"]
     pub low_water: u32,
-    ///< Pause quota in the Pause frame
+    #[doc = "< Pause quota in the Pause frame"]
     pub pause_time: u16,
-    ///< Is XON frame need be sent
+    #[doc = "< Is XON frame need be sent"]
     pub send_xon: u16,
-    ///< Link flow control mode
+    #[doc = "< Link flow control mode"]
     pub mode: rte_eth_fc_mode::Type,
-    ///< Forward MAC control frames
+    #[doc = "< Forward MAC control frames"]
     pub mac_ctrl_frame_fwd: u8,
-    ///< Use Pause autoneg
+    #[doc = "< Use Pause autoneg"]
     pub autoneg: u8,
 }
 #[test]
@@ -25585,15 +25680,15 @@ impl Default for rte_eth_fc_conf {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to configure Ethernet priority flow control parameter.
-/// These parameters will be configured into the register of the NIC.
-/// Please refer to the corresponding data sheet for proper value.
+#[doc = " A structure used to configure Ethernet priority flow control parameter."]
+#[doc = " These parameters will be configured into the register of the NIC."]
+#[doc = " Please refer to the corresponding data sheet for proper value."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_pfc_conf {
-    ///< General flow control parameter.
+    #[doc = "< General flow control parameter."]
     pub fc: rte_eth_fc_conf,
-    ///< VLAN User Priority.
+    #[doc = "< VLAN User Priority."]
     pub priority: u8,
 }
 #[test]
@@ -25635,40 +25730,40 @@ impl Default for rte_eth_pfc_conf {
     }
 }
 pub mod rte_fdir_pballoc_type {
-    ///  Memory space that can be configured to store Flow Director filters
-    ///  in the board memory.
+    #[doc = "  Memory space that can be configured to store Flow Director filters"]
+    #[doc = "  in the board memory."]
     pub type Type = u32;
-    ///< 64k.
+    #[doc = "< 64k."]
     pub const RTE_FDIR_PBALLOC_64K: Type = 0;
-    ///< 128k.
+    #[doc = "< 128k."]
     pub const RTE_FDIR_PBALLOC_128K: Type = 1;
-    ///< 256k.
+    #[doc = "< 256k."]
     pub const RTE_FDIR_PBALLOC_256K: Type = 2;
 }
 pub mod rte_fdir_status_mode {
-    ///  Select report mode of FDIR hash information in RX descriptors.
+    #[doc = "  Select report mode of FDIR hash information in RX descriptors."]
     pub type Type = u32;
-    ///< Never report FDIR hash.
+    #[doc = "< Never report FDIR hash."]
     pub const RTE_FDIR_NO_REPORT_STATUS: Type = 0;
-    ///< Only report FDIR hash for matching pkts.
+    #[doc = "< Only report FDIR hash for matching pkts."]
     pub const RTE_FDIR_REPORT_STATUS: Type = 1;
-    ///< Always report FDIR hash.
+    #[doc = "< Always report FDIR hash."]
     pub const RTE_FDIR_REPORT_STATUS_ALWAYS: Type = 2;
 }
-/// A structure used to configure the Flow Director (FDIR) feature
-/// of an Ethernet port.
-///
-/// If mode is RTE_FDIR_DISABLE, the pballoc value is ignored.
+#[doc = " A structure used to configure the Flow Director (FDIR) feature"]
+#[doc = " of an Ethernet port."]
+#[doc = ""]
+#[doc = " If mode is RTE_FDIR_DISABLE, the pballoc value is ignored."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_fdir_conf {
-    ///< Flow Director mode.
+    #[doc = "< Flow Director mode."]
     pub mode: rte_fdir_mode::Type,
-    ///< Space for FDIR filters.
+    #[doc = "< Space for FDIR filters."]
     pub pballoc: rte_fdir_pballoc_type::Type,
-    ///< How to report FDIR hash.
+    #[doc = "< How to report FDIR hash."]
     pub status: rte_fdir_status_mode::Type,
-    /// RX queue of packets matching a "drop" filter in perfect mode.
+    #[doc = " RX queue of packets matching a \"drop\" filter in perfect mode."]
     pub drop_queue: u8,
     pub mask: rte_eth_fdir_masks,
     pub flex_conf: rte_eth_fdir_flex_conf,
@@ -25751,17 +25846,17 @@ impl Default for rte_fdir_conf {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// UDP tunneling configuration.
-/// Used to config the UDP port for a type of tunnel.
-/// NICs need the UDP port to identify the tunnel type.
-/// Normally a type of tunnel has a default UDP port, this structure can be used
-/// in case if the users want to change or support more UDP port.
+#[doc = " UDP tunneling configuration."]
+#[doc = " Used to config the UDP port for a type of tunnel."]
+#[doc = " NICs need the UDP port to identify the tunnel type."]
+#[doc = " Normally a type of tunnel has a default UDP port, this structure can be used"]
+#[doc = " in case if the users want to change or support more UDP port."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_udp_tunnel {
-    ///< UDP port used for the tunnel.
+    #[doc = "< UDP port used for the tunnel."]
     pub udp_port: u16,
-    ///< Tunnel type. Defined in rte_eth_tunnel_type.
+    #[doc = "< Tunnel type. Defined in rte_eth_tunnel_type."]
     pub prot_type: u8,
 }
 #[test]
@@ -25797,7 +25892,7 @@ fn bindgen_test_layout_rte_eth_udp_tunnel() {
         )
     );
 }
-/// A structure used to enable/disable specific device interrupts.
+#[doc = " A structure used to enable/disable specific device interrupts."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_intr_conf {
@@ -25871,46 +25966,46 @@ impl rte_intr_conf {
         __bindgen_bitfield_unit
     }
 }
-/// A structure used to configure an Ethernet port.
-/// Depending upon the RX multi-queue mode, extra advanced
-/// configuration settings may be needed.
+#[doc = " A structure used to configure an Ethernet port."]
+#[doc = " Depending upon the RX multi-queue mode, extra advanced"]
+#[doc = " configuration settings may be needed."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_conf {
-    ///< bitmap of ETH_LINK_SPEED_XXX of speeds to be
-    ///used. ETH_LINK_SPEED_FIXED disables link
-    ///autonegotiation, and a unique speed shall be
-    ///set. Otherwise, the bitmap defines the set of
-    ///speeds to be advertised. If the special value
-    ///ETH_LINK_SPEED_AUTONEG (0) is used, all speeds
-    ///supported are advertised.
+    #[doc = "< bitmap of ETH_LINK_SPEED_XXX of speeds to be"]
+    #[doc = "used. ETH_LINK_SPEED_FIXED disables link"]
+    #[doc = "autonegotiation, and a unique speed shall be"]
+    #[doc = "set. Otherwise, the bitmap defines the set of"]
+    #[doc = "speeds to be advertised. If the special value"]
+    #[doc = "ETH_LINK_SPEED_AUTONEG (0) is used, all speeds"]
+    #[doc = "supported are advertised."]
     pub link_speeds: u32,
-    ///< Port RX configuration.
+    #[doc = "< Port RX configuration."]
     pub rxmode: rte_eth_rxmode,
-    ///< Port TX configuration.
+    #[doc = "< Port TX configuration."]
     pub txmode: rte_eth_txmode,
-    ///< Loopback operation mode. By default the value
-    ///is 0, meaning the loopback mode is disabled.
-    ///Read the datasheet of given ethernet controller
-    ///for details. The possible values of this field
-    ///are defined in implementation of each driver.
+    #[doc = "< Loopback operation mode. By default the value"]
+    #[doc = "is 0, meaning the loopback mode is disabled."]
+    #[doc = "Read the datasheet of given ethernet controller"]
+    #[doc = "for details. The possible values of this field"]
+    #[doc = "are defined in implementation of each driver."]
     pub lpbk_mode: u32,
-    ///< Port RX filtering configuration.
+    #[doc = "< Port RX filtering configuration."]
     pub rx_adv_conf: rte_eth_conf__bindgen_ty_1,
-    ///< Port TX DCB configuration (union).
+    #[doc = "< Port TX DCB configuration (union)."]
     pub tx_adv_conf: rte_eth_conf__bindgen_ty_2,
-    /// Currently,Priority Flow Control(PFC) are supported,if DCB with PFC
-    ///is needed,and the variable must be set ETH_DCB_PFC_SUPPORT.
+    #[doc = " Currently,Priority Flow Control(PFC) are supported,if DCB with PFC"]
+    #[doc = "is needed,and the variable must be set ETH_DCB_PFC_SUPPORT."]
     pub dcb_capability_en: u32,
-    ///< FDIR configuration.
+    #[doc = "< FDIR configuration."]
     pub fdir_conf: rte_fdir_conf,
-    ///< Interrupt mode configuration.
+    #[doc = "< Interrupt mode configuration."]
     pub intr_conf: rte_intr_conf,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_conf__bindgen_ty_1 {
-    ///< Port RSS configuration
+    #[doc = "< Port RSS configuration"]
     pub rss_conf: rte_eth_rss_conf,
     pub vmdq_dcb_conf: rte_eth_vmdq_dcb_conf,
     pub dcb_rx_conf: rte_eth_dcb_rx_conf,
@@ -26154,17 +26249,17 @@ impl Default for rte_eth_conf {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// Preferred Rx/Tx port parameters.
-/// There are separate instances of this structure for transmission
-/// and reception respectively.
+#[doc = " Preferred Rx/Tx port parameters."]
+#[doc = " There are separate instances of this structure for transmission"]
+#[doc = " and reception respectively."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_dev_portconf {
-    ///< Device-preferred burst size
+    #[doc = "< Device-preferred burst size"]
     pub burst_size: u16,
-    ///< Device-preferred size of queue rings
+    #[doc = "< Device-preferred size of queue rings"]
     pub ring_size: u16,
-    ///< Device-preferred number of queues
+    #[doc = "< Device-preferred number of queues"]
     pub nb_queues: u16,
 }
 #[test]
@@ -26210,13 +26305,13 @@ fn bindgen_test_layout_rte_eth_dev_portconf() {
         )
     );
 }
-/// Ethernet device associated switch information
+#[doc = " Ethernet device associated switch information"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_switch_info {
-    ///< switch name
+    #[doc = "< switch name"]
     pub name: *const ::std::os::raw::c_char,
-    ///< switch domain id
+    #[doc = "< switch domain id"]
     pub domain_id: u16,
     pub port_id: u16,
 }
@@ -26268,72 +26363,72 @@ impl Default for rte_eth_switch_info {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to retrieve the contextual information of
-/// an Ethernet device, such as the controlling driver of the
-/// device, etc...
+#[doc = " A structure used to retrieve the contextual information of"]
+#[doc = " an Ethernet device, such as the controlling driver of the"]
+#[doc = " device, etc..."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_dev_info {
     pub device: *mut rte_device,
-    ///< Device Driver name.
+    #[doc = "< Device Driver name."]
     pub driver_name: *const ::std::os::raw::c_char,
-    ///< Index to bound host interface, or 0 if none.
-    ///Use if_indextoname() to translate into an interface name.
+    #[doc = "< Index to bound host interface, or 0 if none."]
+    #[doc = "Use if_indextoname() to translate into an interface name."]
     pub if_index: ::std::os::raw::c_uint,
-    ///< Device flags
+    #[doc = "< Device flags"]
     pub dev_flags: *const u32,
-    ///< Minimum size of RX buffer.
+    #[doc = "< Minimum size of RX buffer."]
     pub min_rx_bufsize: u32,
-    ///< Maximum configurable length of RX pkt.
+    #[doc = "< Maximum configurable length of RX pkt."]
     pub max_rx_pktlen: u32,
-    ///< Maximum number of RX queues.
+    #[doc = "< Maximum number of RX queues."]
     pub max_rx_queues: u16,
-    ///< Maximum number of TX queues.
+    #[doc = "< Maximum number of TX queues."]
     pub max_tx_queues: u16,
-    ///< Maximum number of MAC addresses.
+    #[doc = "< Maximum number of MAC addresses."]
     pub max_mac_addrs: u32,
     pub max_hash_mac_addrs: u32,
-    ///< Maximum number of VFs.
+    #[doc = "< Maximum number of VFs."]
     pub max_vfs: u16,
-    ///< Maximum number of VMDq pools.
+    #[doc = "< Maximum number of VMDq pools."]
     pub max_vmdq_pools: u16,
     pub rx_offload_capa: u64,
     pub tx_offload_capa: u64,
     pub rx_queue_offload_capa: u64,
     pub tx_queue_offload_capa: u64,
     pub reta_size: u16,
-    ///< Hash key size in bytes
+    #[doc = "< Hash key size in bytes"]
     pub hash_key_size: u8,
-    /// Bit mask of RSS offloads, the bit offset also means flow type
+    #[doc = " Bit mask of RSS offloads, the bit offset also means flow type"]
     pub flow_type_rss_offloads: u64,
-    ///< Default RX configuration
+    #[doc = "< Default RX configuration"]
     pub default_rxconf: rte_eth_rxconf,
-    ///< Default TX configuration
+    #[doc = "< Default TX configuration"]
     pub default_txconf: rte_eth_txconf,
-    ///< First queue ID for VMDQ pools.
+    #[doc = "< First queue ID for VMDQ pools."]
     pub vmdq_queue_base: u16,
-    ///< Queue number for VMDQ pools.
+    #[doc = "< Queue number for VMDQ pools."]
     pub vmdq_queue_num: u16,
-    ///< First ID of VMDQ pools.
+    #[doc = "< First ID of VMDQ pools."]
     pub vmdq_pool_base: u16,
-    ///< RX descriptors limits
+    #[doc = "< RX descriptors limits"]
     pub rx_desc_lim: rte_eth_desc_lim,
-    ///< TX descriptors limits
+    #[doc = "< TX descriptors limits"]
     pub tx_desc_lim: rte_eth_desc_lim,
-    ///< Supported speeds bitmap (ETH_LINK_SPEED_).
+    #[doc = "< Supported speeds bitmap (ETH_LINK_SPEED_)."]
     pub speed_capa: u32,
-    ///< Number of RX queues.
+    #[doc = "< Number of RX queues."]
     pub nb_rx_queues: u16,
-    ///< Number of TX queues.
+    #[doc = "< Number of TX queues."]
     pub nb_tx_queues: u16,
-    /// Rx parameter recommendations
+    #[doc = " Rx parameter recommendations"]
     pub default_rxportconf: rte_eth_dev_portconf,
-    /// Tx parameter recommendations
+    #[doc = " Tx parameter recommendations"]
     pub default_txportconf: rte_eth_dev_portconf,
-    /// Generic device capabilities (RTE_ETH_DEV_CAPA_).
+    #[doc = " Generic device capabilities (RTE_ETH_DEV_CAPA_)."]
     pub dev_capa: u64,
-    /// Switching information for ports on a device with a
-    /// embedded managed interconnect/switch.
+    #[doc = " Switching information for ports on a device with a"]
+    #[doc = " embedded managed interconnect/switch."]
     pub switch_info: rte_eth_switch_info,
 }
 #[test]
@@ -26702,18 +26797,18 @@ impl Default for rte_eth_dev_info {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// Ethernet device RX queue information structure.
-/// Used to retieve information about configured queue.
+#[doc = " Ethernet device RX queue information structure."]
+#[doc = " Used to retieve information about configured queue."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_rxq_info {
-    ///< mempool used by that queue.
+    #[doc = "< mempool used by that queue."]
     pub mp: *mut rte_mempool,
-    ///< queue config parameters.
+    #[doc = "< queue config parameters."]
     pub conf: rte_eth_rxconf,
-    ///< scattered packets RX supported.
+    #[doc = "< scattered packets RX supported."]
     pub scattered_rx: u8,
-    ///< configured number of RXDs.
+    #[doc = "< configured number of RXDs."]
     pub nb_desc: u16,
     pub __bindgen_padding_0: [u32; 9usize],
 }
@@ -26770,14 +26865,14 @@ impl Default for rte_eth_rxq_info {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// Ethernet device TX queue information structure.
-/// Used to retrieve information about configured queue.
+#[doc = " Ethernet device TX queue information structure."]
+#[doc = " Used to retrieve information about configured queue."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_txq_info {
-    ///< queue config parameters.
+    #[doc = "< queue config parameters."]
     pub conf: rte_eth_txconf,
-    ///< configured number of TXDs.
+    #[doc = "< configured number of TXDs."]
     pub nb_desc: u16,
     pub __bindgen_padding_0: [u16; 19usize],
 }
@@ -26814,19 +26909,19 @@ impl Default for rte_eth_txq_info {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// An Ethernet device extended statistic structure
-///
-/// This structure is used by rte_eth_xstats_get() to provide
-/// statistics that are not provided in the generic *rte_eth_stats*
-/// structure.
-/// It maps a name id, corresponding to an index in the array returned
-/// by rte_eth_xstats_get_names(), to a statistic value.
+#[doc = " An Ethernet device extended statistic structure"]
+#[doc = ""]
+#[doc = " This structure is used by rte_eth_xstats_get() to provide"]
+#[doc = " statistics that are not provided in the generic *rte_eth_stats*"]
+#[doc = " structure."]
+#[doc = " It maps a name id, corresponding to an index in the array returned"]
+#[doc = " by rte_eth_xstats_get_names(), to a statistic value."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_xstat {
-    ///< The index in xstats name array.
+    #[doc = "< The index in xstats name array."]
     pub id: u64,
-    ///< The statistic counter value.
+    #[doc = "< The statistic counter value."]
     pub value: u64,
 }
 #[test]
@@ -26862,15 +26957,15 @@ fn bindgen_test_layout_rte_eth_xstat() {
         )
     );
 }
-/// A name element for extended statistics.
-///
-/// An array of this structure is returned by rte_eth_xstats_get_names().
-/// It lists the names of extended statistics for a PMD. The *rte_eth_xstat*
-/// structure references these names by their array index.
+#[doc = " A name element for extended statistics."]
+#[doc = ""]
+#[doc = " An array of this structure is returned by rte_eth_xstats_get_names()."]
+#[doc = " It lists the names of extended statistics for a PMD. The *rte_eth_xstat*"]
+#[doc = " structure references these names by their array index."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_xstat_name {
-    ///< The statistic name.
+    #[doc = "< The statistic name."]
     pub name: [::std::os::raw::c_char; 64usize],
 }
 #[test]
@@ -26901,15 +26996,15 @@ impl Default for rte_eth_xstat_name {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to get the information of queue and
-/// TC mapping on both TX and RX paths.
+#[doc = " A structure used to get the information of queue and"]
+#[doc = " TC mapping on both TX and RX paths."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_dcb_tc_queue_mapping {
     pub tc_rxq: [[rte_eth_dcb_tc_queue_mapping__bindgen_ty_1; 8usize]; 64usize],
     pub tc_txq: [[rte_eth_dcb_tc_queue_mapping__bindgen_ty_2; 8usize]; 64usize],
 }
-/// rx queues assigned to tc per Pool
+#[doc = " rx queues assigned to tc per Pool"]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_dcb_tc_queue_mapping__bindgen_ty_1 {
@@ -26961,7 +27056,7 @@ fn bindgen_test_layout_rte_eth_dcb_tc_queue_mapping__bindgen_ty_1() {
         )
     );
 }
-/// rx queues assigned to tc per Pool
+#[doc = " rx queues assigned to tc per Pool"]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_dcb_tc_queue_mapping__bindgen_ty_2 {
@@ -27055,18 +27150,18 @@ impl Default for rte_eth_dcb_tc_queue_mapping {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// A structure used to get the information of DCB.
-/// It includes TC UP mapping and queue TC mapping.
+#[doc = " A structure used to get the information of DCB."]
+#[doc = " It includes TC UP mapping and queue TC mapping."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_dcb_info {
-    ///< number of TCs
+    #[doc = "< number of TCs"]
     pub nb_tcs: u8,
-    ///< Priority to tc
+    #[doc = "< Priority to tc"]
     pub prio_tc: [u8; 8usize],
-    ///< TX BW percentage for each TC
+    #[doc = "< TX BW percentage for each TC"]
     pub tc_bws: [u8; 8usize],
-    /// rx queues assigned to tc
+    #[doc = " rx queues assigned to tc"]
     pub tc_queue: rte_eth_dcb_tc_queue_mapping,
 }
 #[test]
@@ -27127,26 +27222,26 @@ impl Default for rte_eth_dcb_info {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// Function type used for RX packet processing packet callbacks.
-///
-/// The callback function is called on RX with a burst of packets that have
-/// been received on the given port and queue.
-///
-/// @param port_id
-///   The Ethernet port on which RX is being performed.
-/// @param queue
-///   The queue on the Ethernet port which is being used to receive the packets.
-/// @param pkts
-///   The burst of packets that have just been received.
-/// @param nb_pkts
-///   The number of packets in the burst pointed to by "pkts".
-/// @param max_pkts
-///   The max number of packets that can be stored in the "pkts" array.
-/// @param user_param
-///   The arbitrary user parameter passed in by the application when the callback
-///   was originally configured.
-/// @return
-///   The number of packets returned to the user.
+#[doc = " Function type used for RX packet processing packet callbacks."]
+#[doc = ""]
+#[doc = " The callback function is called on RX with a burst of packets that have"]
+#[doc = " been received on the given port and queue."]
+#[doc = ""]
+#[doc = " @param port_id"]
+#[doc = "   The Ethernet port on which RX is being performed."]
+#[doc = " @param queue"]
+#[doc = "   The queue on the Ethernet port which is being used to receive the packets."]
+#[doc = " @param pkts"]
+#[doc = "   The burst of packets that have just been received."]
+#[doc = " @param nb_pkts"]
+#[doc = "   The number of packets in the burst pointed to by \"pkts\"."]
+#[doc = " @param max_pkts"]
+#[doc = "   The max number of packets that can be stored in the \"pkts\" array."]
+#[doc = " @param user_param"]
+#[doc = "   The arbitrary user parameter passed in by the application when the callback"]
+#[doc = "   was originally configured."]
+#[doc = " @return"]
+#[doc = "   The number of packets returned to the user."]
 pub type rte_rx_callback_fn = ::std::option::Option<
     unsafe extern "C" fn(
         port_id: u16,
@@ -27157,24 +27252,24 @@ pub type rte_rx_callback_fn = ::std::option::Option<
         user_param: *mut ::std::os::raw::c_void,
     ) -> u16,
 >;
-/// Function type used for TX packet processing packet callbacks.
-///
-/// The callback function is called on TX with a burst of packets immediately
-/// before the packets are put onto the hardware queue for transmission.
-///
-/// @param port_id
-///   The Ethernet port on which TX is being performed.
-/// @param queue
-///   The queue on the Ethernet port which is being used to transmit the packets.
-/// @param pkts
-///   The burst of packets that are about to be transmitted.
-/// @param nb_pkts
-///   The number of packets in the burst pointed to by "pkts".
-/// @param user_param
-///   The arbitrary user parameter passed in by the application when the callback
-///   was originally configured.
-/// @return
-///   The number of packets to be written to the NIC.
+#[doc = " Function type used for TX packet processing packet callbacks."]
+#[doc = ""]
+#[doc = " The callback function is called on TX with a burst of packets immediately"]
+#[doc = " before the packets are put onto the hardware queue for transmission."]
+#[doc = ""]
+#[doc = " @param port_id"]
+#[doc = "   The Ethernet port on which TX is being performed."]
+#[doc = " @param queue"]
+#[doc = "   The queue on the Ethernet port which is being used to transmit the packets."]
+#[doc = " @param pkts"]
+#[doc = "   The burst of packets that are about to be transmitted."]
+#[doc = " @param nb_pkts"]
+#[doc = "   The number of packets in the burst pointed to by \"pkts\"."]
+#[doc = " @param user_param"]
+#[doc = "   The arbitrary user parameter passed in by the application when the callback"]
+#[doc = "   was originally configured."]
+#[doc = " @return"]
+#[doc = "   The number of packets to be written to the NIC."]
 pub type rte_tx_callback_fn = ::std::option::Option<
     unsafe extern "C" fn(
         port_id: u16,
@@ -27185,25 +27280,25 @@ pub type rte_tx_callback_fn = ::std::option::Option<
     ) -> u16,
 >;
 pub mod rte_eth_dev_state {
-    /// Possible states of an ethdev port.
+    #[doc = " Possible states of an ethdev port."]
     pub type Type = u32;
-    /// Device is unused before being probed.
+    #[doc = " Device is unused before being probed."]
     pub const RTE_ETH_DEV_UNUSED: Type = 0;
-    /// Device is attached when allocated in probing.
+    #[doc = " Device is attached when allocated in probing."]
     pub const RTE_ETH_DEV_ATTACHED: Type = 1;
-    /// Device is in removed state when plug-out is detected.
+    #[doc = " Device is in removed state when plug-out is detected."]
     pub const RTE_ETH_DEV_REMOVED: Type = 2;
 }
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_eth_dev_sriov {
-    ///< SRIOV is active with 16, 32 or 64 pools
+    #[doc = "< SRIOV is active with 16, 32 or 64 pools"]
     pub active: u8,
-    ///< rx queue number per pool
+    #[doc = "< rx queue number per pool"]
     pub nb_q_per_pool: u8,
-    ///< Default pool num used for PF
+    #[doc = "< Default pool num used for PF"]
     pub def_vmdq_idx: u16,
-    ///< Default pool queue start reg index
+    #[doc = "< Default pool queue start reg index"]
     pub def_pool_q_idx: u16,
 }
 #[test]
@@ -27264,9 +27359,9 @@ fn bindgen_test_layout_rte_eth_dev_sriov() {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_dev_owner {
-    ///< The owner unique identifier.
+    #[doc = "< The owner unique identifier."]
     pub id: u64,
-    ///< The owner name.
+    #[doc = "< The owner name."]
     pub name: [::std::os::raw::c_char; 64usize],
 }
 #[test]
@@ -27308,199 +27403,199 @@ impl Default for rte_eth_dev_owner {
     }
 }
 extern "C" {
-    /// Iterates over valid ethdev ports owned by a specific owner.
-    ///
-    /// @param port_id
-    ///   The id of the next possible valid owned port.
-    /// @param	owner_id
-    ///  The owner identifier.
-    ///  RTE_ETH_DEV_NO_OWNER means iterate over all valid ownerless ports.
-    /// @return
-    ///   Next valid port id owned by owner_id, RTE_MAX_ETHPORTS if there is none.
+    #[doc = " Iterates over valid ethdev ports owned by a specific owner."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The id of the next possible valid owned port."]
+    #[doc = " @param\towner_id"]
+    #[doc = "  The owner identifier."]
+    #[doc = "  RTE_ETH_DEV_NO_OWNER means iterate over all valid ownerless ports."]
+    #[doc = " @return"]
+    #[doc = "   Next valid port id owned by owner_id, RTE_MAX_ETHPORTS if there is none."]
     pub fn rte_eth_find_next_owned_by(port_id: u16, owner_id: u64) -> u64;
 }
 extern "C" {
-    /// Iterates over valid ethdev ports.
-    ///
-    /// @param port_id
-    ///   The id of the next possible valid port.
-    /// @return
-    ///   Next valid port id, RTE_MAX_ETHPORTS if there is none.
+    #[doc = " Iterates over valid ethdev ports."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The id of the next possible valid port."]
+    #[doc = " @return"]
+    #[doc = "   Next valid port id, RTE_MAX_ETHPORTS if there is none."]
     pub fn rte_eth_find_next(port_id: u16) -> u16;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice.
-    ///
-    /// Get a new unique owner identifier.
-    /// An owner identifier is used to owns Ethernet devices by only one DPDK entity
-    /// to avoid multiple management of device by different entities.
-    ///
-    /// @param	owner_id
-    ///   Owner identifier pointer.
-    /// @return
-    ///   Negative errno value on error, 0 on success.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice."]
+    #[doc = ""]
+    #[doc = " Get a new unique owner identifier."]
+    #[doc = " An owner identifier is used to owns Ethernet devices by only one DPDK entity"]
+    #[doc = " to avoid multiple management of device by different entities."]
+    #[doc = ""]
+    #[doc = " @param\towner_id"]
+    #[doc = "   Owner identifier pointer."]
+    #[doc = " @return"]
+    #[doc = "   Negative errno value on error, 0 on success."]
     pub fn rte_eth_dev_owner_new(owner_id: *mut u64) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice.
-    ///
-    /// Set an Ethernet device owner.
-    ///
-    /// @param	port_id
-    ///  The identifier of the port to own.
-    /// @param	owner
-    ///  The owner pointer.
-    /// @return
-    ///  Negative errno value on error, 0 on success.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice."]
+    #[doc = ""]
+    #[doc = " Set an Ethernet device owner."]
+    #[doc = ""]
+    #[doc = " @param\tport_id"]
+    #[doc = "  The identifier of the port to own."]
+    #[doc = " @param\towner"]
+    #[doc = "  The owner pointer."]
+    #[doc = " @return"]
+    #[doc = "  Negative errno value on error, 0 on success."]
     pub fn rte_eth_dev_owner_set(
         port_id: u16,
         owner: *const rte_eth_dev_owner,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice.
-    ///
-    /// Unset Ethernet device owner to make the device ownerless.
-    ///
-    /// @param	port_id
-    ///  The identifier of port to make ownerless.
-    /// @param	owner_id
-    ///  The owner identifier.
-    /// @return
-    ///  0 on success, negative errno value on error.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice."]
+    #[doc = ""]
+    #[doc = " Unset Ethernet device owner to make the device ownerless."]
+    #[doc = ""]
+    #[doc = " @param\tport_id"]
+    #[doc = "  The identifier of port to make ownerless."]
+    #[doc = " @param\towner_id"]
+    #[doc = "  The owner identifier."]
+    #[doc = " @return"]
+    #[doc = "  0 on success, negative errno value on error."]
     pub fn rte_eth_dev_owner_unset(port_id: u16, owner_id: u64) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice.
-    ///
-    /// Remove owner from all Ethernet devices owned by a specific owner.
-    ///
-    /// @param	owner_id
-    ///  The owner identifier.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice."]
+    #[doc = ""]
+    #[doc = " Remove owner from all Ethernet devices owned by a specific owner."]
+    #[doc = ""]
+    #[doc = " @param\towner_id"]
+    #[doc = "  The owner identifier."]
     pub fn rte_eth_dev_owner_delete(owner_id: u64);
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice.
-    ///
-    /// Get the owner of an Ethernet device.
-    ///
-    /// @param	port_id
-    ///  The port identifier.
-    /// @param	owner
-    ///  The owner structure pointer to fill.
-    /// @return
-    ///  0 on success, negative errno value on error..
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice."]
+    #[doc = ""]
+    #[doc = " Get the owner of an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param\tport_id"]
+    #[doc = "  The port identifier."]
+    #[doc = " @param\towner"]
+    #[doc = "  The owner structure pointer to fill."]
+    #[doc = " @return"]
+    #[doc = "  0 on success, negative errno value on error.."]
     pub fn rte_eth_dev_owner_get(
         port_id: u16,
         owner: *mut rte_eth_dev_owner,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get the total number of Ethernet devices that have been successfully
-    /// initialized by the matching Ethernet driver during the PCI probing phase
-    /// and that are available for applications to use. These devices must be
-    /// accessed by using the ``RTE_ETH_FOREACH_DEV()`` macro to deal with
-    /// non-contiguous ranges of devices.
-    /// These non-contiguous ranges can be created by calls to hotplug functions or
-    /// by some PMDs.
-    ///
-    /// @return
-    ///   - The total number of usable Ethernet devices.
+    #[doc = " Get the total number of Ethernet devices that have been successfully"]
+    #[doc = " initialized by the matching Ethernet driver during the PCI probing phase"]
+    #[doc = " and that are available for applications to use. These devices must be"]
+    #[doc = " accessed by using the ``RTE_ETH_FOREACH_DEV()`` macro to deal with"]
+    #[doc = " non-contiguous ranges of devices."]
+    #[doc = " These non-contiguous ranges can be created by calls to hotplug functions or"]
+    #[doc = " by some PMDs."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - The total number of usable Ethernet devices."]
     pub fn rte_eth_dev_count() -> u16;
 }
 extern "C" {
-    /// Get the number of ports which are usable for the application.
-    ///
-    /// These devices must be iterated by using the macro
-    /// ``RTE_ETH_FOREACH_DEV`` or ``RTE_ETH_FOREACH_DEV_OWNED_BY``
-    /// to deal with non-contiguous ranges of devices.
-    ///
-    /// @return
-    ///   The count of available Ethernet devices.
+    #[doc = " Get the number of ports which are usable for the application."]
+    #[doc = ""]
+    #[doc = " These devices must be iterated by using the macro"]
+    #[doc = " ``RTE_ETH_FOREACH_DEV`` or ``RTE_ETH_FOREACH_DEV_OWNED_BY``"]
+    #[doc = " to deal with non-contiguous ranges of devices."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   The count of available Ethernet devices."]
     pub fn rte_eth_dev_count_avail() -> u16;
 }
 extern "C" {
-    /// Get the total number of ports which are allocated.
-    ///
-    /// Some devices may not be available for the application.
-    ///
-    /// @return
-    ///   The total count of Ethernet devices.
+    #[doc = " Get the total number of ports which are allocated."]
+    #[doc = ""]
+    #[doc = " Some devices may not be available for the application."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   The total count of Ethernet devices."]
     pub fn rte_eth_dev_count_total() -> u16;
 }
 extern "C" {
-    /// Convert a numerical speed in Mbps to a bitmap flag that can be used in
-    /// the bitmap link_speeds of the struct rte_eth_conf
-    ///
-    /// @param speed
-    ///   Numerical speed value in Mbps
-    /// @param duplex
-    ///   ETH_LINK_[HALF/FULL]_DUPLEX (only for 10/100M speeds)
-    /// @return
-    ///   0 if the speed cannot be mapped
+    #[doc = " Convert a numerical speed in Mbps to a bitmap flag that can be used in"]
+    #[doc = " the bitmap link_speeds of the struct rte_eth_conf"]
+    #[doc = ""]
+    #[doc = " @param speed"]
+    #[doc = "   Numerical speed value in Mbps"]
+    #[doc = " @param duplex"]
+    #[doc = "   ETH_LINK_[HALF/FULL]_DUPLEX (only for 10/100M speeds)"]
+    #[doc = " @return"]
+    #[doc = "   0 if the speed cannot be mapped"]
     pub fn rte_eth_speed_bitflag(speed: u32, duplex: ::std::os::raw::c_int) -> u32;
 }
 extern "C" {
-    /// Get DEV_RX_OFFLOAD_* flag name.
-    ///
-    /// @param offload
-    ///   Offload flag.
-    /// @return
-    ///   Offload name or 'UNKNOWN' if the flag cannot be recognised.
+    #[doc = " Get DEV_RX_OFFLOAD_* flag name."]
+    #[doc = ""]
+    #[doc = " @param offload"]
+    #[doc = "   Offload flag."]
+    #[doc = " @return"]
+    #[doc = "   Offload name or \'UNKNOWN\' if the flag cannot be recognised."]
     pub fn rte_eth_dev_rx_offload_name(offload: u64) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Get DEV_TX_OFFLOAD_* flag name.
-    ///
-    /// @param offload
-    ///   Offload flag.
-    /// @return
-    ///   Offload name or 'UNKNOWN' if the flag cannot be recognised.
+    #[doc = " Get DEV_TX_OFFLOAD_* flag name."]
+    #[doc = ""]
+    #[doc = " @param offload"]
+    #[doc = "   Offload flag."]
+    #[doc = " @return"]
+    #[doc = "   Offload name or \'UNKNOWN\' if the flag cannot be recognised."]
     pub fn rte_eth_dev_tx_offload_name(offload: u64) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Configure an Ethernet device.
-    /// This function must be invoked first before any other function in the
-    /// Ethernet API. This function can also be re-invoked when a device is in the
-    /// stopped state.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device to configure.
-    /// @param nb_rx_queue
-    ///   The number of receive queues to set up for the Ethernet device.
-    /// @param nb_tx_queue
-    ///   The number of transmit queues to set up for the Ethernet device.
-    /// @param eth_conf
-    ///   The pointer to the configuration data to be used for the Ethernet device.
-    ///   The *rte_eth_conf* structure includes:
-    ///     -  the hardware offload features to activate, with dedicated fields for
-    ///        each statically configurable offload hardware feature provided by
-    ///        Ethernet devices, such as IP checksum or VLAN tag stripping for
-    ///        example.
-    ///        The Rx offload bitfield API is obsolete and will be deprecated.
-    ///        Applications should set the ignore_bitfield_offloads bit on *rxmode*
-    ///        structure and use offloads field to set per-port offloads instead.
-    ///     -  Any offloading set in eth_conf->[rt]xmode.offloads must be within
-    ///        the [rt]x_offload_capa returned from rte_eth_dev_infos_get().
-    ///        Any type of device supported offloading set in the input argument
-    ///        eth_conf->[rt]xmode.offloads to rte_eth_dev_configure() is enabled
-    ///        on all queues and it can't be disabled in rte_eth_[rt]x_queue_setup()
-    ///     -  the Receive Side Scaling (RSS) configuration when using multiple RX
-    ///        queues per port. Any RSS hash function set in eth_conf->rss_conf.rss_hf
-    ///        must be within the flow_type_rss_offloads provided by drivers via
-    ///        rte_eth_dev_infos_get() API.
-    ///
-    ///   Embedding all configuration information in a single data structure
-    ///   is the more flexible method that allows the addition of new features
-    ///   without changing the syntax of the API.
-    /// @return
-    ///   - 0: Success, device configured.
-    ///   - <0: Error code returned by the driver configuration function.
+    #[doc = " Configure an Ethernet device."]
+    #[doc = " This function must be invoked first before any other function in the"]
+    #[doc = " Ethernet API. This function can also be re-invoked when a device is in the"]
+    #[doc = " stopped state."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device to configure."]
+    #[doc = " @param nb_rx_queue"]
+    #[doc = "   The number of receive queues to set up for the Ethernet device."]
+    #[doc = " @param nb_tx_queue"]
+    #[doc = "   The number of transmit queues to set up for the Ethernet device."]
+    #[doc = " @param eth_conf"]
+    #[doc = "   The pointer to the configuration data to be used for the Ethernet device."]
+    #[doc = "   The *rte_eth_conf* structure includes:"]
+    #[doc = "     -  the hardware offload features to activate, with dedicated fields for"]
+    #[doc = "        each statically configurable offload hardware feature provided by"]
+    #[doc = "        Ethernet devices, such as IP checksum or VLAN tag stripping for"]
+    #[doc = "        example."]
+    #[doc = "        The Rx offload bitfield API is obsolete and will be deprecated."]
+    #[doc = "        Applications should set the ignore_bitfield_offloads bit on *rxmode*"]
+    #[doc = "        structure and use offloads field to set per-port offloads instead."]
+    #[doc = "     -  Any offloading set in eth_conf->[rt]xmode.offloads must be within"]
+    #[doc = "        the [rt]x_offload_capa returned from rte_eth_dev_infos_get()."]
+    #[doc = "        Any type of device supported offloading set in the input argument"]
+    #[doc = "        eth_conf->[rt]xmode.offloads to rte_eth_dev_configure() is enabled"]
+    #[doc = "        on all queues and it can\'t be disabled in rte_eth_[rt]x_queue_setup()"]
+    #[doc = "     -  the Receive Side Scaling (RSS) configuration when using multiple RX"]
+    #[doc = "        queues per port. Any RSS hash function set in eth_conf->rss_conf.rss_hf"]
+    #[doc = "        must be within the flow_type_rss_offloads provided by drivers via"]
+    #[doc = "        rte_eth_dev_infos_get() API."]
+    #[doc = ""]
+    #[doc = "   Embedding all configuration information in a single data structure"]
+    #[doc = "   is the more flexible method that allows the addition of new features"]
+    #[doc = "   without changing the syntax of the API."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success, device configured."]
+    #[doc = "   - <0: Error code returned by the driver configuration function."]
     pub fn rte_eth_dev_configure(
         port_id: u16,
         nb_rx_queue: u16,
@@ -27509,65 +27604,65 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice.
-    ///
-    /// Check if an Ethernet device was physically removed.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @return
-    ///   1 when the Ethernet device is removed, otherwise 0.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice."]
+    #[doc = ""]
+    #[doc = " Check if an Ethernet device was physically removed."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @return"]
+    #[doc = "   1 when the Ethernet device is removed, otherwise 0."]
     pub fn rte_eth_dev_is_removed(port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Allocate and set up a receive queue for an Ethernet device.
-    ///
-    /// The function allocates a contiguous block of memory for *nb_rx_desc*
-    /// receive descriptors from a memory zone associated with *socket_id*
-    /// and initializes each receive descriptor with a network buffer allocated
-    /// from the memory pool *mb_pool*.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param rx_queue_id
-    ///   The index of the receive queue to set up.
-    ///   The value must be in the range [0, nb_rx_queue - 1] previously supplied
-    ///   to rte_eth_dev_configure().
-    /// @param nb_rx_desc
-    ///   The number of receive descriptors to allocate for the receive ring.
-    /// @param socket_id
-    ///   The *socket_id* argument is the socket identifier in case of NUMA.
-    ///   The value can be *SOCKET_ID_ANY* if there is no NUMA constraint for
-    ///   the DMA memory allocated for the receive descriptors of the ring.
-    /// @param rx_conf
-    ///   The pointer to the configuration data to be used for the receive queue.
-    ///   NULL value is allowed, in which case default RX configuration
-    ///   will be used.
-    ///   The *rx_conf* structure contains an *rx_thresh* structure with the values
-    ///   of the Prefetch, Host, and Write-Back threshold registers of the receive
-    ///   ring.
-    ///   In addition it contains the hardware offloads features to activate using
-    ///   the DEV_RX_OFFLOAD_* flags.
-    ///   If an offloading set in rx_conf->offloads
-    ///   hasn't been set in the input argument eth_conf->rxmode.offloads
-    ///   to rte_eth_dev_configure(), it is a new added offloading, it must be
-    ///   per-queue type and it is enabled for the queue.
-    ///   No need to repeat any bit in rx_conf->offloads which has already been
-    ///   enabled in rte_eth_dev_configure() at port level. An offloading enabled
-    ///   at port level can't be disabled at queue level.
-    /// @param mb_pool
-    ///   The pointer to the memory pool from which to allocate *rte_mbuf* network
-    ///   memory buffers to populate each descriptor of the receive ring.
-    /// @return
-    ///   - 0: Success, receive queue correctly set up.
-    ///   - -EIO: if device is removed.
-    ///   - -EINVAL: The size of network buffers which can be allocated from the
-    ///      memory pool does not fit the various buffer sizes allowed by the
-    ///      device controller.
-    ///   - -ENOMEM: Unable to allocate the receive ring descriptors or to
-    ///      allocate network memory buffers from the memory pool when
-    ///      initializing receive descriptors.
+    #[doc = " Allocate and set up a receive queue for an Ethernet device."]
+    #[doc = ""]
+    #[doc = " The function allocates a contiguous block of memory for *nb_rx_desc*"]
+    #[doc = " receive descriptors from a memory zone associated with *socket_id*"]
+    #[doc = " and initializes each receive descriptor with a network buffer allocated"]
+    #[doc = " from the memory pool *mb_pool*."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param rx_queue_id"]
+    #[doc = "   The index of the receive queue to set up."]
+    #[doc = "   The value must be in the range [0, nb_rx_queue - 1] previously supplied"]
+    #[doc = "   to rte_eth_dev_configure()."]
+    #[doc = " @param nb_rx_desc"]
+    #[doc = "   The number of receive descriptors to allocate for the receive ring."]
+    #[doc = " @param socket_id"]
+    #[doc = "   The *socket_id* argument is the socket identifier in case of NUMA."]
+    #[doc = "   The value can be *SOCKET_ID_ANY* if there is no NUMA constraint for"]
+    #[doc = "   the DMA memory allocated for the receive descriptors of the ring."]
+    #[doc = " @param rx_conf"]
+    #[doc = "   The pointer to the configuration data to be used for the receive queue."]
+    #[doc = "   NULL value is allowed, in which case default RX configuration"]
+    #[doc = "   will be used."]
+    #[doc = "   The *rx_conf* structure contains an *rx_thresh* structure with the values"]
+    #[doc = "   of the Prefetch, Host, and Write-Back threshold registers of the receive"]
+    #[doc = "   ring."]
+    #[doc = "   In addition it contains the hardware offloads features to activate using"]
+    #[doc = "   the DEV_RX_OFFLOAD_* flags."]
+    #[doc = "   If an offloading set in rx_conf->offloads"]
+    #[doc = "   hasn\'t been set in the input argument eth_conf->rxmode.offloads"]
+    #[doc = "   to rte_eth_dev_configure(), it is a new added offloading, it must be"]
+    #[doc = "   per-queue type and it is enabled for the queue."]
+    #[doc = "   No need to repeat any bit in rx_conf->offloads which has already been"]
+    #[doc = "   enabled in rte_eth_dev_configure() at port level. An offloading enabled"]
+    #[doc = "   at port level can\'t be disabled at queue level."]
+    #[doc = " @param mb_pool"]
+    #[doc = "   The pointer to the memory pool from which to allocate *rte_mbuf* network"]
+    #[doc = "   memory buffers to populate each descriptor of the receive ring."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success, receive queue correctly set up."]
+    #[doc = "   - -EIO: if device is removed."]
+    #[doc = "   - -EINVAL: The size of network buffers which can be allocated from the"]
+    #[doc = "      memory pool does not fit the various buffer sizes allowed by the"]
+    #[doc = "      device controller."]
+    #[doc = "   - -ENOMEM: Unable to allocate the receive ring descriptors or to"]
+    #[doc = "      allocate network memory buffers from the memory pool when"]
+    #[doc = "      initializing receive descriptors."]
     pub fn rte_eth_rx_queue_setup(
         port_id: u16,
         rx_queue_id: u16,
@@ -27578,52 +27673,52 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Allocate and set up a transmit queue for an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param tx_queue_id
-    ///   The index of the transmit queue to set up.
-    ///   The value must be in the range [0, nb_tx_queue - 1] previously supplied
-    ///   to rte_eth_dev_configure().
-    /// @param nb_tx_desc
-    ///   The number of transmit descriptors to allocate for the transmit ring.
-    /// @param socket_id
-    ///   The *socket_id* argument is the socket identifier in case of NUMA.
-    ///   Its value can be *SOCKET_ID_ANY* if there is no NUMA constraint for
-    ///   the DMA memory allocated for the transmit descriptors of the ring.
-    /// @param tx_conf
-    ///   The pointer to the configuration data to be used for the transmit queue.
-    ///   NULL value is allowed, in which case default TX configuration
-    ///   will be used.
-    ///   The *tx_conf* structure contains the following data:
-    ///   - The *tx_thresh* structure with the values of the Prefetch, Host, and
-    ///     Write-Back threshold registers of the transmit ring.
-    ///     When setting Write-Back threshold to the value greater then zero,
-    ///     *tx_rs_thresh* value should be explicitly set to one.
-    ///   - The *tx_free_thresh* value indicates the [minimum] number of network
-    ///     buffers that must be pending in the transmit ring to trigger their
-    ///     [implicit] freeing by the driver transmit function.
-    ///   - The *tx_rs_thresh* value indicates the [minimum] number of transmit
-    ///     descriptors that must be pending in the transmit ring before setting the
-    ///     RS bit on a descriptor by the driver transmit function.
-    ///     The *tx_rs_thresh* value should be less or equal then
-    ///     *tx_free_thresh* value, and both of them should be less then
-    ///     *nb_tx_desc* - 3.
-    ///   - The *offloads* member contains Tx offloads to be enabled.
-    ///     If an offloading set in tx_conf->offloads
-    ///     hasn't been set in the input argument eth_conf->txmode.offloads
-    ///     to rte_eth_dev_configure(), it is a new added offloading, it must be
-    ///     per-queue type and it is enabled for the queue.
-    ///     No need to repeat any bit in tx_conf->offloads which has already been
-    ///     enabled in rte_eth_dev_configure() at port level. An offloading enabled
-    ///     at port level can't be disabled at queue level.
-    ///
-    ///     Note that setting *tx_free_thresh* or *tx_rs_thresh* value to 0 forces
-    ///     the transmit function to use default values.
-    /// @return
-    ///   - 0: Success, the transmit queue is correctly set up.
-    ///   - -ENOMEM: Unable to allocate the transmit ring descriptors.
+    #[doc = " Allocate and set up a transmit queue for an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param tx_queue_id"]
+    #[doc = "   The index of the transmit queue to set up."]
+    #[doc = "   The value must be in the range [0, nb_tx_queue - 1] previously supplied"]
+    #[doc = "   to rte_eth_dev_configure()."]
+    #[doc = " @param nb_tx_desc"]
+    #[doc = "   The number of transmit descriptors to allocate for the transmit ring."]
+    #[doc = " @param socket_id"]
+    #[doc = "   The *socket_id* argument is the socket identifier in case of NUMA."]
+    #[doc = "   Its value can be *SOCKET_ID_ANY* if there is no NUMA constraint for"]
+    #[doc = "   the DMA memory allocated for the transmit descriptors of the ring."]
+    #[doc = " @param tx_conf"]
+    #[doc = "   The pointer to the configuration data to be used for the transmit queue."]
+    #[doc = "   NULL value is allowed, in which case default TX configuration"]
+    #[doc = "   will be used."]
+    #[doc = "   The *tx_conf* structure contains the following data:"]
+    #[doc = "   - The *tx_thresh* structure with the values of the Prefetch, Host, and"]
+    #[doc = "     Write-Back threshold registers of the transmit ring."]
+    #[doc = "     When setting Write-Back threshold to the value greater then zero,"]
+    #[doc = "     *tx_rs_thresh* value should be explicitly set to one."]
+    #[doc = "   - The *tx_free_thresh* value indicates the [minimum] number of network"]
+    #[doc = "     buffers that must be pending in the transmit ring to trigger their"]
+    #[doc = "     [implicit] freeing by the driver transmit function."]
+    #[doc = "   - The *tx_rs_thresh* value indicates the [minimum] number of transmit"]
+    #[doc = "     descriptors that must be pending in the transmit ring before setting the"]
+    #[doc = "     RS bit on a descriptor by the driver transmit function."]
+    #[doc = "     The *tx_rs_thresh* value should be less or equal then"]
+    #[doc = "     *tx_free_thresh* value, and both of them should be less then"]
+    #[doc = "     *nb_tx_desc* - 3."]
+    #[doc = "   - The *offloads* member contains Tx offloads to be enabled."]
+    #[doc = "     If an offloading set in tx_conf->offloads"]
+    #[doc = "     hasn\'t been set in the input argument eth_conf->txmode.offloads"]
+    #[doc = "     to rte_eth_dev_configure(), it is a new added offloading, it must be"]
+    #[doc = "     per-queue type and it is enabled for the queue."]
+    #[doc = "     No need to repeat any bit in tx_conf->offloads which has already been"]
+    #[doc = "     enabled in rte_eth_dev_configure() at port level. An offloading enabled"]
+    #[doc = "     at port level can\'t be disabled at queue level."]
+    #[doc = ""]
+    #[doc = "     Note that setting *tx_free_thresh* or *tx_rs_thresh* value to 0 forces"]
+    #[doc = "     the transmit function to use default values."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success, the transmit queue is correctly set up."]
+    #[doc = "   - -ENOMEM: Unable to allocate the transmit ring descriptors."]
     pub fn rte_eth_tx_queue_setup(
         port_id: u16,
         tx_queue_id: u16,
@@ -27633,321 +27728,321 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Return the NUMA socket to which an Ethernet device is connected
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device
-    /// @return
-    ///   The NUMA socket id to which the Ethernet device is connected or
-    ///   a default of zero if the socket could not be determined.
-    ///   -1 is returned is the port_id value is out of range.
+    #[doc = " Return the NUMA socket to which an Ethernet device is connected"]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device"]
+    #[doc = " @return"]
+    #[doc = "   The NUMA socket id to which the Ethernet device is connected or"]
+    #[doc = "   a default of zero if the socket could not be determined."]
+    #[doc = "   -1 is returned is the port_id value is out of range."]
     pub fn rte_eth_dev_socket_id(port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Check if port_id of device is attached
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device
-    /// @return
-    ///   - 0 if port is out of range or not attached
-    ///   - 1 if device is attached
+    #[doc = " Check if port_id of device is attached"]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device"]
+    #[doc = " @return"]
+    #[doc = "   - 0 if port is out of range or not attached"]
+    #[doc = "   - 1 if device is attached"]
     pub fn rte_eth_dev_is_valid_port(port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Start specified RX queue of a port. It is used when rx_deferred_start
-    /// flag of the specified queue is true.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device
-    /// @param rx_queue_id
-    ///   The index of the rx queue to update the ring.
-    ///   The value must be in the range [0, nb_rx_queue - 1] previously supplied
-    ///   to rte_eth_dev_configure().
-    /// @return
-    ///   - 0: Success, the receive queue is started.
-    ///   - -EINVAL: The port_id or the queue_id out of range.
-    ///   - -EIO: if device is removed.
-    ///   - -ENOTSUP: The function not supported in PMD driver.
+    #[doc = " Start specified RX queue of a port. It is used when rx_deferred_start"]
+    #[doc = " flag of the specified queue is true."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device"]
+    #[doc = " @param rx_queue_id"]
+    #[doc = "   The index of the rx queue to update the ring."]
+    #[doc = "   The value must be in the range [0, nb_rx_queue - 1] previously supplied"]
+    #[doc = "   to rte_eth_dev_configure()."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success, the receive queue is started."]
+    #[doc = "   - -EINVAL: The port_id or the queue_id out of range."]
+    #[doc = "   - -EIO: if device is removed."]
+    #[doc = "   - -ENOTSUP: The function not supported in PMD driver."]
     pub fn rte_eth_dev_rx_queue_start(port_id: u16, rx_queue_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Stop specified RX queue of a port
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device
-    /// @param rx_queue_id
-    ///   The index of the rx queue to update the ring.
-    ///   The value must be in the range [0, nb_rx_queue - 1] previously supplied
-    ///   to rte_eth_dev_configure().
-    /// @return
-    ///   - 0: Success, the receive queue is stopped.
-    ///   - -EINVAL: The port_id or the queue_id out of range.
-    ///   - -EIO: if device is removed.
-    ///   - -ENOTSUP: The function not supported in PMD driver.
+    #[doc = " Stop specified RX queue of a port"]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device"]
+    #[doc = " @param rx_queue_id"]
+    #[doc = "   The index of the rx queue to update the ring."]
+    #[doc = "   The value must be in the range [0, nb_rx_queue - 1] previously supplied"]
+    #[doc = "   to rte_eth_dev_configure()."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success, the receive queue is stopped."]
+    #[doc = "   - -EINVAL: The port_id or the queue_id out of range."]
+    #[doc = "   - -EIO: if device is removed."]
+    #[doc = "   - -ENOTSUP: The function not supported in PMD driver."]
     pub fn rte_eth_dev_rx_queue_stop(port_id: u16, rx_queue_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Start TX for specified queue of a port. It is used when tx_deferred_start
-    /// flag of the specified queue is true.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device
-    /// @param tx_queue_id
-    ///   The index of the tx queue to update the ring.
-    ///   The value must be in the range [0, nb_tx_queue - 1] previously supplied
-    ///   to rte_eth_dev_configure().
-    /// @return
-    ///   - 0: Success, the transmit queue is started.
-    ///   - -EINVAL: The port_id or the queue_id out of range.
-    ///   - -EIO: if device is removed.
-    ///   - -ENOTSUP: The function not supported in PMD driver.
+    #[doc = " Start TX for specified queue of a port. It is used when tx_deferred_start"]
+    #[doc = " flag of the specified queue is true."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device"]
+    #[doc = " @param tx_queue_id"]
+    #[doc = "   The index of the tx queue to update the ring."]
+    #[doc = "   The value must be in the range [0, nb_tx_queue - 1] previously supplied"]
+    #[doc = "   to rte_eth_dev_configure()."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success, the transmit queue is started."]
+    #[doc = "   - -EINVAL: The port_id or the queue_id out of range."]
+    #[doc = "   - -EIO: if device is removed."]
+    #[doc = "   - -ENOTSUP: The function not supported in PMD driver."]
     pub fn rte_eth_dev_tx_queue_start(port_id: u16, tx_queue_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Stop specified TX queue of a port
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device
-    /// @param tx_queue_id
-    ///   The index of the tx queue to update the ring.
-    ///   The value must be in the range [0, nb_tx_queue - 1] previously supplied
-    ///   to rte_eth_dev_configure().
-    /// @return
-    ///   - 0: Success, the transmit queue is stopped.
-    ///   - -EINVAL: The port_id or the queue_id out of range.
-    ///   - -EIO: if device is removed.
-    ///   - -ENOTSUP: The function not supported in PMD driver.
+    #[doc = " Stop specified TX queue of a port"]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device"]
+    #[doc = " @param tx_queue_id"]
+    #[doc = "   The index of the tx queue to update the ring."]
+    #[doc = "   The value must be in the range [0, nb_tx_queue - 1] previously supplied"]
+    #[doc = "   to rte_eth_dev_configure()."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success, the transmit queue is stopped."]
+    #[doc = "   - -EINVAL: The port_id or the queue_id out of range."]
+    #[doc = "   - -EIO: if device is removed."]
+    #[doc = "   - -ENOTSUP: The function not supported in PMD driver."]
     pub fn rte_eth_dev_tx_queue_stop(port_id: u16, tx_queue_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Start an Ethernet device.
-    ///
-    /// The device start step is the last one and consists of setting the configured
-    /// offload features and in starting the transmit and the receive units of the
-    /// device.
-    ///
-    /// Device RTE_ETH_DEV_NOLIVE_MAC_ADDR flag causes MAC address to be set before
-    /// PMD port start callback function is invoked.
-    ///
-    /// On success, all basic functions exported by the Ethernet API (link status,
-    /// receive/transmit, and so on) can be invoked.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @return
-    ///   - 0: Success, Ethernet device started.
-    ///   - <0: Error code of the driver device start function.
+    #[doc = " Start an Ethernet device."]
+    #[doc = ""]
+    #[doc = " The device start step is the last one and consists of setting the configured"]
+    #[doc = " offload features and in starting the transmit and the receive units of the"]
+    #[doc = " device."]
+    #[doc = ""]
+    #[doc = " Device RTE_ETH_DEV_NOLIVE_MAC_ADDR flag causes MAC address to be set before"]
+    #[doc = " PMD port start callback function is invoked."]
+    #[doc = ""]
+    #[doc = " On success, all basic functions exported by the Ethernet API (link status,"]
+    #[doc = " receive/transmit, and so on) can be invoked."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success, Ethernet device started."]
+    #[doc = "   - <0: Error code of the driver device start function."]
     pub fn rte_eth_dev_start(port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Stop an Ethernet device. The device can be restarted with a call to
-    /// rte_eth_dev_start()
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
+    #[doc = " Stop an Ethernet device. The device can be restarted with a call to"]
+    #[doc = " rte_eth_dev_start()"]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
     pub fn rte_eth_dev_stop(port_id: u16);
 }
 extern "C" {
-    /// Link up an Ethernet device.
-    ///
-    /// Set device link up will re-enable the device rx/tx
-    /// functionality after it is previously set device linked down.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @return
-    ///   - 0: Success, Ethernet device linked up.
-    ///   - <0: Error code of the driver device link up function.
+    #[doc = " Link up an Ethernet device."]
+    #[doc = ""]
+    #[doc = " Set device link up will re-enable the device rx/tx"]
+    #[doc = " functionality after it is previously set device linked down."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success, Ethernet device linked up."]
+    #[doc = "   - <0: Error code of the driver device link up function."]
     pub fn rte_eth_dev_set_link_up(port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Link down an Ethernet device.
-    /// The device rx/tx functionality will be disabled if success,
-    /// and it can be re-enabled with a call to
-    /// rte_eth_dev_set_link_up()
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
+    #[doc = " Link down an Ethernet device."]
+    #[doc = " The device rx/tx functionality will be disabled if success,"]
+    #[doc = " and it can be re-enabled with a call to"]
+    #[doc = " rte_eth_dev_set_link_up()"]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
     pub fn rte_eth_dev_set_link_down(port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Close a stopped Ethernet device. The device cannot be restarted!
-    /// The function frees all port resources if the driver supports
-    /// the flag RTE_ETH_DEV_CLOSE_REMOVE.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
+    #[doc = " Close a stopped Ethernet device. The device cannot be restarted!"]
+    #[doc = " The function frees all port resources if the driver supports"]
+    #[doc = " the flag RTE_ETH_DEV_CLOSE_REMOVE."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
     pub fn rte_eth_dev_close(port_id: u16);
 }
 extern "C" {
-    /// Reset a Ethernet device and keep its port id.
-    ///
-    /// When a port has to be reset passively, the DPDK application can invoke
-    /// this function. For example when a PF is reset, all its VFs should also
-    /// be reset. Normally a DPDK application can invoke this function when
-    /// RTE_ETH_EVENT_INTR_RESET event is detected, but can also use it to start
-    /// a port reset in other circumstances.
-    ///
-    /// When this function is called, it first stops the port and then calls the
-    /// PMD specific dev_uninit( ) and dev_init( ) to return the port to initial
-    /// state, in which no Tx and Rx queues are setup, as if the port has been
-    /// reset and not started. The port keeps the port id it had before the
-    /// function call.
-    ///
-    /// After calling rte_eth_dev_reset( ), the application should use
-    /// rte_eth_dev_configure( ), rte_eth_rx_queue_setup( ),
-    /// rte_eth_tx_queue_setup( ), and rte_eth_dev_start( )
-    /// to reconfigure the device as appropriate.
-    ///
-    /// Note: To avoid unexpected behavior, the application should stop calling
-    /// Tx and Rx functions before calling rte_eth_dev_reset( ). For thread
-    /// safety, all these controlling functions should be called from the same
-    /// thread.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    ///
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-EINVAL) if port identifier is invalid.
-    ///   - (-ENOTSUP) if hardware doesn't support this function.
-    ///   - (-EPERM) if not ran from the primary process.
-    ///   - (-EIO) if re-initialisation failed or device is removed.
-    ///   - (-ENOMEM) if the reset failed due to OOM.
-    ///   - (-EAGAIN) if the reset temporarily failed and should be retried later.
+    #[doc = " Reset a Ethernet device and keep its port id."]
+    #[doc = ""]
+    #[doc = " When a port has to be reset passively, the DPDK application can invoke"]
+    #[doc = " this function. For example when a PF is reset, all its VFs should also"]
+    #[doc = " be reset. Normally a DPDK application can invoke this function when"]
+    #[doc = " RTE_ETH_EVENT_INTR_RESET event is detected, but can also use it to start"]
+    #[doc = " a port reset in other circumstances."]
+    #[doc = ""]
+    #[doc = " When this function is called, it first stops the port and then calls the"]
+    #[doc = " PMD specific dev_uninit( ) and dev_init( ) to return the port to initial"]
+    #[doc = " state, in which no Tx and Rx queues are setup, as if the port has been"]
+    #[doc = " reset and not started. The port keeps the port id it had before the"]
+    #[doc = " function call."]
+    #[doc = ""]
+    #[doc = " After calling rte_eth_dev_reset( ), the application should use"]
+    #[doc = " rte_eth_dev_configure( ), rte_eth_rx_queue_setup( ),"]
+    #[doc = " rte_eth_tx_queue_setup( ), and rte_eth_dev_start( )"]
+    #[doc = " to reconfigure the device as appropriate."]
+    #[doc = ""]
+    #[doc = " Note: To avoid unexpected behavior, the application should stop calling"]
+    #[doc = " Tx and Rx functions before calling rte_eth_dev_reset( ). For thread"]
+    #[doc = " safety, all these controlling functions should be called from the same"]
+    #[doc = " thread."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-EINVAL) if port identifier is invalid."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support this function."]
+    #[doc = "   - (-EPERM) if not ran from the primary process."]
+    #[doc = "   - (-EIO) if re-initialisation failed or device is removed."]
+    #[doc = "   - (-ENOMEM) if the reset failed due to OOM."]
+    #[doc = "   - (-EAGAIN) if the reset temporarily failed and should be retried later."]
     pub fn rte_eth_dev_reset(port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Enable receipt in promiscuous mode for an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
+    #[doc = " Enable receipt in promiscuous mode for an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
     pub fn rte_eth_promiscuous_enable(port_id: u16);
 }
 extern "C" {
-    /// Disable receipt in promiscuous mode for an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
+    #[doc = " Disable receipt in promiscuous mode for an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
     pub fn rte_eth_promiscuous_disable(port_id: u16);
 }
 extern "C" {
-    /// Return the value of promiscuous mode for an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @return
-    ///   - (1) if promiscuous is enabled
-    ///   - (0) if promiscuous is disabled.
-    ///   - (-1) on error
+    #[doc = " Return the value of promiscuous mode for an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @return"]
+    #[doc = "   - (1) if promiscuous is enabled"]
+    #[doc = "   - (0) if promiscuous is disabled."]
+    #[doc = "   - (-1) on error"]
     pub fn rte_eth_promiscuous_get(port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Enable the receipt of any multicast frame by an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
+    #[doc = " Enable the receipt of any multicast frame by an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
     pub fn rte_eth_allmulticast_enable(port_id: u16);
 }
 extern "C" {
-    /// Disable the receipt of all multicast frames by an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
+    #[doc = " Disable the receipt of all multicast frames by an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
     pub fn rte_eth_allmulticast_disable(port_id: u16);
 }
 extern "C" {
-    /// Return the value of allmulticast mode for an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @return
-    ///   - (1) if allmulticast is enabled
-    ///   - (0) if allmulticast is disabled.
-    ///   - (-1) on error
+    #[doc = " Return the value of allmulticast mode for an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @return"]
+    #[doc = "   - (1) if allmulticast is enabled"]
+    #[doc = "   - (0) if allmulticast is disabled."]
+    #[doc = "   - (-1) on error"]
     pub fn rte_eth_allmulticast_get(port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Retrieve the status (ON/OFF), the speed (in Mbps) and the mode (HALF-DUPLEX
-    /// or FULL-DUPLEX) of the physical link of an Ethernet device. It might need
-    /// to wait up to 9 seconds in it.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param link
-    ///   A pointer to an *rte_eth_link* structure to be filled with
-    ///   the status, the speed and the mode of the Ethernet device link.
+    #[doc = " Retrieve the status (ON/OFF), the speed (in Mbps) and the mode (HALF-DUPLEX"]
+    #[doc = " or FULL-DUPLEX) of the physical link of an Ethernet device. It might need"]
+    #[doc = " to wait up to 9 seconds in it."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param link"]
+    #[doc = "   A pointer to an *rte_eth_link* structure to be filled with"]
+    #[doc = "   the status, the speed and the mode of the Ethernet device link."]
     pub fn rte_eth_link_get(port_id: u16, link: *mut rte_eth_link);
 }
 extern "C" {
-    /// Retrieve the status (ON/OFF), the speed (in Mbps) and the mode (HALF-DUPLEX
-    /// or FULL-DUPLEX) of the physical link of an Ethernet device. It is a no-wait
-    /// version of rte_eth_link_get().
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param link
-    ///   A pointer to an *rte_eth_link* structure to be filled with
-    ///   the status, the speed and the mode of the Ethernet device link.
+    #[doc = " Retrieve the status (ON/OFF), the speed (in Mbps) and the mode (HALF-DUPLEX"]
+    #[doc = " or FULL-DUPLEX) of the physical link of an Ethernet device. It is a no-wait"]
+    #[doc = " version of rte_eth_link_get()."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param link"]
+    #[doc = "   A pointer to an *rte_eth_link* structure to be filled with"]
+    #[doc = "   the status, the speed and the mode of the Ethernet device link."]
     pub fn rte_eth_link_get_nowait(port_id: u16, link: *mut rte_eth_link);
 }
 extern "C" {
-    /// Retrieve the general I/O statistics of an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param stats
-    ///   A pointer to a structure of type *rte_eth_stats* to be filled with
-    ///   the values of device counters for the following set of statistics:
-    ///   - *ipackets* with the total of successfully received packets.
-    ///   - *opackets* with the total of successfully transmitted packets.
-    ///   - *ibytes*   with the total of successfully received bytes.
-    ///   - *obytes*   with the total of successfully transmitted bytes.
-    ///   - *ierrors*  with the total of erroneous received packets.
-    ///   - *oerrors*  with the total of failed transmitted packets.
-    /// @return
-    ///   Zero if successful. Non-zero otherwise.
+    #[doc = " Retrieve the general I/O statistics of an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param stats"]
+    #[doc = "   A pointer to a structure of type *rte_eth_stats* to be filled with"]
+    #[doc = "   the values of device counters for the following set of statistics:"]
+    #[doc = "   - *ipackets* with the total of successfully received packets."]
+    #[doc = "   - *opackets* with the total of successfully transmitted packets."]
+    #[doc = "   - *ibytes*   with the total of successfully received bytes."]
+    #[doc = "   - *obytes*   with the total of successfully transmitted bytes."]
+    #[doc = "   - *ierrors*  with the total of erroneous received packets."]
+    #[doc = "   - *oerrors*  with the total of failed transmitted packets."]
+    #[doc = " @return"]
+    #[doc = "   Zero if successful. Non-zero otherwise."]
     pub fn rte_eth_stats_get(port_id: u16, stats: *mut rte_eth_stats) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Reset the general I/O statistics of an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @return
-    ///   - (0) if device notified to reset stats.
-    ///   - (-ENOTSUP) if hardware doesn't support.
-    ///   - (-ENODEV) if *port_id* invalid.
+    #[doc = " Reset the general I/O statistics of an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if device notified to reset stats."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
     pub fn rte_eth_stats_reset(port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Retrieve names of extended statistics of an Ethernet device.
-    ///
-    /// There is an assumption that 'xstat_names' and 'xstats' arrays are matched
-    /// by array index:
-    ///  xstats_names[i].name => xstats[i].value
-    ///
-    /// And the array index is same with id field of 'struct rte_eth_xstat':
-    ///  xstats[i].id == i
-    ///
-    /// This assumption makes key-value pair matching less flexible but simpler.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param xstats_names
-    ///   An rte_eth_xstat_name array of at least *size* elements to
-    ///   be filled. If set to NULL, the function returns the required number
-    ///   of elements.
-    /// @param size
-    ///   The size of the xstats_names array (number of elements).
-    /// @return
-    ///   - A positive value lower or equal to size: success. The return value
-    ///     is the number of entries filled in the stats table.
-    ///   - A positive value higher than size: error, the given statistics table
-    ///     is too small. The return value corresponds to the size that should
-    ///     be given to succeed. The entries in the table are not valid and
-    ///     shall not be used by the caller.
-    ///   - A negative value on error (invalid port id).
+    #[doc = " Retrieve names of extended statistics of an Ethernet device."]
+    #[doc = ""]
+    #[doc = " There is an assumption that \'xstat_names\' and \'xstats\' arrays are matched"]
+    #[doc = " by array index:"]
+    #[doc = "  xstats_names[i].name => xstats[i].value"]
+    #[doc = ""]
+    #[doc = " And the array index is same with id field of \'struct rte_eth_xstat\':"]
+    #[doc = "  xstats[i].id == i"]
+    #[doc = ""]
+    #[doc = " This assumption makes key-value pair matching less flexible but simpler."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param xstats_names"]
+    #[doc = "   An rte_eth_xstat_name array of at least *size* elements to"]
+    #[doc = "   be filled. If set to NULL, the function returns the required number"]
+    #[doc = "   of elements."]
+    #[doc = " @param size"]
+    #[doc = "   The size of the xstats_names array (number of elements)."]
+    #[doc = " @return"]
+    #[doc = "   - A positive value lower or equal to size: success. The return value"]
+    #[doc = "     is the number of entries filled in the stats table."]
+    #[doc = "   - A positive value higher than size: error, the given statistics table"]
+    #[doc = "     is too small. The return value corresponds to the size that should"]
+    #[doc = "     be given to succeed. The entries in the table are not valid and"]
+    #[doc = "     shall not be used by the caller."]
+    #[doc = "   - A negative value on error (invalid port id)."]
     pub fn rte_eth_xstats_get_names(
         port_id: u16,
         xstats_names: *mut rte_eth_xstat_name,
@@ -27955,33 +28050,33 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Retrieve extended statistics of an Ethernet device.
-    ///
-    /// There is an assumption that 'xstat_names' and 'xstats' arrays are matched
-    /// by array index:
-    ///  xstats_names[i].name => xstats[i].value
-    ///
-    /// And the array index is same with id field of 'struct rte_eth_xstat':
-    ///  xstats[i].id == i
-    ///
-    /// This assumption makes key-value pair matching less flexible but simpler.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param xstats
-    ///   A pointer to a table of structure of type *rte_eth_xstat*
-    ///   to be filled with device statistics ids and values.
-    ///   This parameter can be set to NULL if n is 0.
-    /// @param n
-    ///   The size of the xstats array (number of elements).
-    /// @return
-    ///   - A positive value lower or equal to n: success. The return value
-    ///     is the number of entries filled in the stats table.
-    ///   - A positive value higher than n: error, the given statistics table
-    ///     is too small. The return value corresponds to the size that should
-    ///     be given to succeed. The entries in the table are not valid and
-    ///     shall not be used by the caller.
-    ///   - A negative value on error (invalid port id).
+    #[doc = " Retrieve extended statistics of an Ethernet device."]
+    #[doc = ""]
+    #[doc = " There is an assumption that \'xstat_names\' and \'xstats\' arrays are matched"]
+    #[doc = " by array index:"]
+    #[doc = "  xstats_names[i].name => xstats[i].value"]
+    #[doc = ""]
+    #[doc = " And the array index is same with id field of \'struct rte_eth_xstat\':"]
+    #[doc = "  xstats[i].id == i"]
+    #[doc = ""]
+    #[doc = " This assumption makes key-value pair matching less flexible but simpler."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param xstats"]
+    #[doc = "   A pointer to a table of structure of type *rte_eth_xstat*"]
+    #[doc = "   to be filled with device statistics ids and values."]
+    #[doc = "   This parameter can be set to NULL if n is 0."]
+    #[doc = " @param n"]
+    #[doc = "   The size of the xstats array (number of elements)."]
+    #[doc = " @return"]
+    #[doc = "   - A positive value lower or equal to n: success. The return value"]
+    #[doc = "     is the number of entries filled in the stats table."]
+    #[doc = "   - A positive value higher than n: error, the given statistics table"]
+    #[doc = "     is too small. The return value corresponds to the size that should"]
+    #[doc = "     be given to succeed. The entries in the table are not valid and"]
+    #[doc = "     shall not be used by the caller."]
+    #[doc = "   - A negative value on error (invalid port id)."]
     pub fn rte_eth_xstats_get(
         port_id: u16,
         xstats: *mut rte_eth_xstat,
@@ -27989,26 +28084,26 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Retrieve names of extended statistics of an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param xstats_names
-    ///   An rte_eth_xstat_name array of at least *size* elements to
-    ///   be filled. If set to NULL, the function returns the required number
-    ///   of elements.
-    /// @param ids
-    ///   IDs array given by app to retrieve specific statistics
-    /// @param size
-    ///   The size of the xstats_names array (number of elements).
-    /// @return
-    ///   - A positive value lower or equal to size: success. The return value
-    ///     is the number of entries filled in the stats table.
-    ///   - A positive value higher than size: error, the given statistics table
-    ///     is too small. The return value corresponds to the size that should
-    ///     be given to succeed. The entries in the table are not valid and
-    ///     shall not be used by the caller.
-    ///   - A negative value on error (invalid port id).
+    #[doc = " Retrieve names of extended statistics of an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param xstats_names"]
+    #[doc = "   An rte_eth_xstat_name array of at least *size* elements to"]
+    #[doc = "   be filled. If set to NULL, the function returns the required number"]
+    #[doc = "   of elements."]
+    #[doc = " @param ids"]
+    #[doc = "   IDs array given by app to retrieve specific statistics"]
+    #[doc = " @param size"]
+    #[doc = "   The size of the xstats_names array (number of elements)."]
+    #[doc = " @return"]
+    #[doc = "   - A positive value lower or equal to size: success. The return value"]
+    #[doc = "     is the number of entries filled in the stats table."]
+    #[doc = "   - A positive value higher than size: error, the given statistics table"]
+    #[doc = "     is too small. The return value corresponds to the size that should"]
+    #[doc = "     be given to succeed. The entries in the table are not valid and"]
+    #[doc = "     shall not be used by the caller."]
+    #[doc = "   - A negative value on error (invalid port id)."]
     pub fn rte_eth_xstats_get_names_by_id(
         port_id: u16,
         xstats_names: *mut rte_eth_xstat_name,
@@ -28017,27 +28112,27 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Retrieve extended statistics of an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param ids
-    ///   A pointer to an ids array passed by application. This tells which
-    ///   statistics values function should retrieve. This parameter
-    ///   can be set to NULL if size is 0. In this case function will retrieve
-    ///   all avalible statistics.
-    /// @param values
-    ///   A pointer to a table to be filled with device statistics values.
-    /// @param size
-    ///   The size of the ids array (number of elements).
-    /// @return
-    ///   - A positive value lower or equal to size: success. The return value
-    ///     is the number of entries filled in the stats table.
-    ///   - A positive value higher than size: error, the given statistics table
-    ///     is too small. The return value corresponds to the size that should
-    ///     be given to succeed. The entries in the table are not valid and
-    ///     shall not be used by the caller.
-    ///   - A negative value on error (invalid port id).
+    #[doc = " Retrieve extended statistics of an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param ids"]
+    #[doc = "   A pointer to an ids array passed by application. This tells which"]
+    #[doc = "   statistics values function should retrieve. This parameter"]
+    #[doc = "   can be set to NULL if size is 0. In this case function will retrieve"]
+    #[doc = "   all avalible statistics."]
+    #[doc = " @param values"]
+    #[doc = "   A pointer to a table to be filled with device statistics values."]
+    #[doc = " @param size"]
+    #[doc = "   The size of the ids array (number of elements)."]
+    #[doc = " @return"]
+    #[doc = "   - A positive value lower or equal to size: success. The return value"]
+    #[doc = "     is the number of entries filled in the stats table."]
+    #[doc = "   - A positive value higher than size: error, the given statistics table"]
+    #[doc = "     is too small. The return value corresponds to the size that should"]
+    #[doc = "     be given to succeed. The entries in the table are not valid and"]
+    #[doc = "     shall not be used by the caller."]
+    #[doc = "   - A negative value on error (invalid port id)."]
     pub fn rte_eth_xstats_get_by_id(
         port_id: u16,
         ids: *const u64,
@@ -28046,22 +28141,22 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Gets the ID of a statistic from its name.
-    ///
-    /// This function searches for the statistics using string compares, and
-    /// as such should not be used on the fast-path. For fast-path retrieval of
-    /// specific statistics, store the ID as provided in *id* from this function,
-    /// and pass the ID to rte_eth_xstats_get()
-    ///
-    /// @param port_id The port to look up statistics from
-    /// @param xstat_name The name of the statistic to return
-    /// @param[out] id A pointer to an app-supplied uint64_t which should be
-    ///                set to the ID of the stat if the stat exists.
-    /// @return
-    ///    0 on success
-    ///    -ENODEV for invalid port_id,
-    ///    -EIO if device is removed,
-    ///    -EINVAL if the xstat_name doesn't exist in port_id
+    #[doc = " Gets the ID of a statistic from its name."]
+    #[doc = ""]
+    #[doc = " This function searches for the statistics using string compares, and"]
+    #[doc = " as such should not be used on the fast-path. For fast-path retrieval of"]
+    #[doc = " specific statistics, store the ID as provided in *id* from this function,"]
+    #[doc = " and pass the ID to rte_eth_xstats_get()"]
+    #[doc = ""]
+    #[doc = " @param port_id The port to look up statistics from"]
+    #[doc = " @param xstat_name The name of the statistic to return"]
+    #[doc = " @param[out] id A pointer to an app-supplied uint64_t which should be"]
+    #[doc = "                set to the ID of the stat if the stat exists."]
+    #[doc = " @return"]
+    #[doc = "    0 on success"]
+    #[doc = "    -ENODEV for invalid port_id,"]
+    #[doc = "    -EIO if device is removed,"]
+    #[doc = "    -EINVAL if the xstat_name doesn\'t exist in port_id"]
     pub fn rte_eth_xstats_get_id_by_name(
         port_id: u16,
         xstat_name: *const ::std::os::raw::c_char,
@@ -28069,28 +28164,28 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Reset extended statistics of an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
+    #[doc = " Reset extended statistics of an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
     pub fn rte_eth_xstats_reset(port_id: u16);
 }
 extern "C" {
-    ///  Set a mapping for the specified transmit queue to the specified per-queue
-    ///  statistics counter.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param tx_queue_id
-    ///   The index of the transmit queue for which a queue stats mapping is required.
-    ///   The value must be in the range [0, nb_tx_queue - 1] previously supplied
-    ///   to rte_eth_dev_configure().
-    /// @param stat_idx
-    ///   The per-queue packet statistics functionality number that the transmit
-    ///   queue is to be assigned.
-    ///   The value must be in the range [0, RTE_ETHDEV_QUEUE_STAT_CNTRS - 1].
-    /// @return
-    ///   Zero if successful. Non-zero otherwise.
+    #[doc = "  Set a mapping for the specified transmit queue to the specified per-queue"]
+    #[doc = "  statistics counter."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param tx_queue_id"]
+    #[doc = "   The index of the transmit queue for which a queue stats mapping is required."]
+    #[doc = "   The value must be in the range [0, nb_tx_queue - 1] previously supplied"]
+    #[doc = "   to rte_eth_dev_configure()."]
+    #[doc = " @param stat_idx"]
+    #[doc = "   The per-queue packet statistics functionality number that the transmit"]
+    #[doc = "   queue is to be assigned."]
+    #[doc = "   The value must be in the range [0, RTE_ETHDEV_QUEUE_STAT_CNTRS - 1]."]
+    #[doc = " @return"]
+    #[doc = "   Zero if successful. Non-zero otherwise."]
     pub fn rte_eth_dev_set_tx_queue_stats_mapping(
         port_id: u16,
         tx_queue_id: u16,
@@ -28098,21 +28193,21 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    ///  Set a mapping for the specified receive queue to the specified per-queue
-    ///  statistics counter.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param rx_queue_id
-    ///   The index of the receive queue for which a queue stats mapping is required.
-    ///   The value must be in the range [0, nb_rx_queue - 1] previously supplied
-    ///   to rte_eth_dev_configure().
-    /// @param stat_idx
-    ///   The per-queue packet statistics functionality number that the receive
-    ///   queue is to be assigned.
-    ///   The value must be in the range [0, RTE_ETHDEV_QUEUE_STAT_CNTRS - 1].
-    /// @return
-    ///   Zero if successful. Non-zero otherwise.
+    #[doc = "  Set a mapping for the specified receive queue to the specified per-queue"]
+    #[doc = "  statistics counter."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param rx_queue_id"]
+    #[doc = "   The index of the receive queue for which a queue stats mapping is required."]
+    #[doc = "   The value must be in the range [0, nb_rx_queue - 1] previously supplied"]
+    #[doc = "   to rte_eth_dev_configure()."]
+    #[doc = " @param stat_idx"]
+    #[doc = "   The per-queue packet statistics functionality number that the receive"]
+    #[doc = "   queue is to be assigned."]
+    #[doc = "   The value must be in the range [0, RTE_ETHDEV_QUEUE_STAT_CNTRS - 1]."]
+    #[doc = " @return"]
+    #[doc = "   Zero if successful. Non-zero otherwise."]
     pub fn rte_eth_dev_set_rx_queue_stats_mapping(
         port_id: u16,
         rx_queue_id: u16,
@@ -28120,43 +28215,43 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Retrieve the Ethernet address of an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param mac_addr
-    ///   A pointer to a structure of type *ether_addr* to be filled with
-    ///   the Ethernet address of the Ethernet device.
+    #[doc = " Retrieve the Ethernet address of an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param mac_addr"]
+    #[doc = "   A pointer to a structure of type *ether_addr* to be filled with"]
+    #[doc = "   the Ethernet address of the Ethernet device."]
     pub fn rte_eth_macaddr_get(port_id: u16, mac_addr: *mut ether_addr);
 }
 extern "C" {
-    /// Retrieve the contextual information of an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param dev_info
-    ///   A pointer to a structure of type *rte_eth_dev_info* to be filled with
-    ///   the contextual information of the Ethernet device.
+    #[doc = " Retrieve the contextual information of an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param dev_info"]
+    #[doc = "   A pointer to a structure of type *rte_eth_dev_info* to be filled with"]
+    #[doc = "   the contextual information of the Ethernet device."]
     pub fn rte_eth_dev_info_get(port_id: u16, dev_info: *mut rte_eth_dev_info);
 }
 extern "C" {
-    /// Retrieve the firmware version of a device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the device.
-    /// @param fw_version
-    ///   A pointer to a string array storing the firmware version of a device,
-    ///   the string includes terminating null. This pointer is allocated by caller.
-    /// @param fw_size
-    ///   The size of the string array pointed by fw_version, which should be
-    ///   large enough to store firmware version of the device.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if operation is not supported.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - (>0) if *fw_size* is not enough to store firmware version, return
-    ///          the size of the non truncated string.
+    #[doc = " Retrieve the firmware version of a device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the device."]
+    #[doc = " @param fw_version"]
+    #[doc = "   A pointer to a string array storing the firmware version of a device,"]
+    #[doc = "   the string includes terminating null. This pointer is allocated by caller."]
+    #[doc = " @param fw_size"]
+    #[doc = "   The size of the string array pointed by fw_version, which should be"]
+    #[doc = "   large enough to store firmware version of the device."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if operation is not supported."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - (>0) if *fw_size* is not enough to store firmware version, return"]
+    #[doc = "          the size of the non truncated string."]
     pub fn rte_eth_dev_fw_version_get(
         port_id: u16,
         fw_version: *mut ::std::os::raw::c_char,
@@ -28164,42 +28259,42 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Retrieve the supported packet types of an Ethernet device.
-    ///
-    /// When a packet type is announced as supported, it *must* be recognized by
-    /// the PMD. For instance, if RTE_PTYPE_L2_ETHER, RTE_PTYPE_L2_ETHER_VLAN
-    /// and RTE_PTYPE_L3_IPV4 are announced, the PMD must return the following
-    /// packet types for these packets:
-    /// - Ether/IPv4              -> RTE_PTYPE_L2_ETHER | RTE_PTYPE_L3_IPV4
-    /// - Ether/Vlan/IPv4         -> RTE_PTYPE_L2_ETHER_VLAN | RTE_PTYPE_L3_IPV4
-    /// - Ether/[anything else]   -> RTE_PTYPE_L2_ETHER
-    /// - Ether/Vlan/[anything else] -> RTE_PTYPE_L2_ETHER_VLAN
-    ///
-    /// When a packet is received by a PMD, the most precise type must be
-    /// returned among the ones supported. However a PMD is allowed to set
-    /// packet type that is not in the supported list, at the condition that it
-    /// is more precise. Therefore, a PMD announcing no supported packet types
-    /// can still set a matching packet type in a received packet.
-    ///
-    /// @note
-    ///   Better to invoke this API after the device is already started or rx burst
-    ///   function is decided, to obtain correct supported ptypes.
-    /// @note
-    ///   if a given PMD does not report what ptypes it supports, then the supported
-    ///   ptype count is reported as 0.
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param ptype_mask
-    ///   A hint of what kind of packet type which the caller is interested in.
-    /// @param ptypes
-    ///   An array pointer to store adequate packet types, allocated by caller.
-    /// @param num
-    ///  Size of the array pointed by param ptypes.
-    /// @return
-    ///   - (>=0) Number of supported ptypes. If the number of types exceeds num,
-    ///           only num entries will be filled into the ptypes array, but the full
-    ///           count of supported ptypes will be returned.
-    ///   - (-ENODEV) if *port_id* invalid.
+    #[doc = " Retrieve the supported packet types of an Ethernet device."]
+    #[doc = ""]
+    #[doc = " When a packet type is announced as supported, it *must* be recognized by"]
+    #[doc = " the PMD. For instance, if RTE_PTYPE_L2_ETHER, RTE_PTYPE_L2_ETHER_VLAN"]
+    #[doc = " and RTE_PTYPE_L3_IPV4 are announced, the PMD must return the following"]
+    #[doc = " packet types for these packets:"]
+    #[doc = " - Ether/IPv4              -> RTE_PTYPE_L2_ETHER | RTE_PTYPE_L3_IPV4"]
+    #[doc = " - Ether/Vlan/IPv4         -> RTE_PTYPE_L2_ETHER_VLAN | RTE_PTYPE_L3_IPV4"]
+    #[doc = " - Ether/[anything else]   -> RTE_PTYPE_L2_ETHER"]
+    #[doc = " - Ether/Vlan/[anything else] -> RTE_PTYPE_L2_ETHER_VLAN"]
+    #[doc = ""]
+    #[doc = " When a packet is received by a PMD, the most precise type must be"]
+    #[doc = " returned among the ones supported. However a PMD is allowed to set"]
+    #[doc = " packet type that is not in the supported list, at the condition that it"]
+    #[doc = " is more precise. Therefore, a PMD announcing no supported packet types"]
+    #[doc = " can still set a matching packet type in a received packet."]
+    #[doc = ""]
+    #[doc = " @note"]
+    #[doc = "   Better to invoke this API after the device is already started or rx burst"]
+    #[doc = "   function is decided, to obtain correct supported ptypes."]
+    #[doc = " @note"]
+    #[doc = "   if a given PMD does not report what ptypes it supports, then the supported"]
+    #[doc = "   ptype count is reported as 0."]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param ptype_mask"]
+    #[doc = "   A hint of what kind of packet type which the caller is interested in."]
+    #[doc = " @param ptypes"]
+    #[doc = "   An array pointer to store adequate packet types, allocated by caller."]
+    #[doc = " @param num"]
+    #[doc = "  Size of the array pointed by param ptypes."]
+    #[doc = " @return"]
+    #[doc = "   - (>=0) Number of supported ptypes. If the number of types exceeds num,"]
+    #[doc = "           only num entries will be filled into the ptypes array, but the full"]
+    #[doc = "           count of supported ptypes will be returned."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
     pub fn rte_eth_dev_get_supported_ptypes(
         port_id: u16,
         ptype_mask: u32,
@@ -28208,51 +28303,51 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Retrieve the MTU of an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param mtu
-    ///   A pointer to a uint16_t where the retrieved MTU is to be stored.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENODEV) if *port_id* invalid.
+    #[doc = " Retrieve the MTU of an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param mtu"]
+    #[doc = "   A pointer to a uint16_t where the retrieved MTU is to be stored."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
     pub fn rte_eth_dev_get_mtu(port_id: u16, mtu: *mut u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Change the MTU of an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param mtu
-    ///   A uint16_t for the MTU to be applied.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if operation is not supported.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - (-EINVAL) if *mtu* invalid.
-    ///   - (-EBUSY) if operation is not allowed when the port is running
+    #[doc = " Change the MTU of an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param mtu"]
+    #[doc = "   A uint16_t for the MTU to be applied."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if operation is not supported."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - (-EINVAL) if *mtu* invalid."]
+    #[doc = "   - (-EBUSY) if operation is not allowed when the port is running"]
     pub fn rte_eth_dev_set_mtu(port_id: u16, mtu: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Enable/Disable hardware filtering by an Ethernet device of received
-    /// VLAN packets tagged with a given VLAN Tag Identifier.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param vlan_id
-    ///   The VLAN Tag Identifier whose filtering must be enabled or disabled.
-    /// @param on
-    ///   If > 0, enable VLAN filtering of VLAN packets tagged with *vlan_id*.
-    ///   Otherwise, disable VLAN filtering of VLAN packets tagged with *vlan_id*.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOSUP) if hardware-assisted VLAN filtering not configured.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - (-ENOSYS) if VLAN filtering on *port_id* disabled.
-    ///   - (-EINVAL) if *vlan_id* > 4095.
+    #[doc = " Enable/Disable hardware filtering by an Ethernet device of received"]
+    #[doc = " VLAN packets tagged with a given VLAN Tag Identifier."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param vlan_id"]
+    #[doc = "   The VLAN Tag Identifier whose filtering must be enabled or disabled."]
+    #[doc = " @param on"]
+    #[doc = "   If > 0, enable VLAN filtering of VLAN packets tagged with *vlan_id*."]
+    #[doc = "   Otherwise, disable VLAN filtering of VLAN packets tagged with *vlan_id*."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOSUP) if hardware-assisted VLAN filtering not configured."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - (-ENOSYS) if VLAN filtering on *port_id* disabled."]
+    #[doc = "   - (-EINVAL) if *vlan_id* > 4095."]
     pub fn rte_eth_dev_vlan_filter(
         port_id: u16,
         vlan_id: u16,
@@ -28260,23 +28355,23 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Enable/Disable hardware VLAN Strip by a rx queue of an Ethernet device.
-    /// 82599/X540/X550 can support VLAN stripping at the rx queue level
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param rx_queue_id
-    ///   The index of the receive queue for which a queue stats mapping is required.
-    ///   The value must be in the range [0, nb_rx_queue - 1] previously supplied
-    ///   to rte_eth_dev_configure().
-    /// @param on
-    ///   If 1, Enable VLAN Stripping of the receive queue of the Ethernet port.
-    ///   If 0, Disable VLAN Stripping of the receive queue of the Ethernet port.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOSUP) if hardware-assisted VLAN stripping not configured.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EINVAL) if *rx_queue_id* invalid.
+    #[doc = " Enable/Disable hardware VLAN Strip by a rx queue of an Ethernet device."]
+    #[doc = " 82599/X540/X550 can support VLAN stripping at the rx queue level"]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param rx_queue_id"]
+    #[doc = "   The index of the receive queue for which a queue stats mapping is required."]
+    #[doc = "   The value must be in the range [0, nb_rx_queue - 1] previously supplied"]
+    #[doc = "   to rte_eth_dev_configure()."]
+    #[doc = " @param on"]
+    #[doc = "   If 1, Enable VLAN Stripping of the receive queue of the Ethernet port."]
+    #[doc = "   If 0, Disable VLAN Stripping of the receive queue of the Ethernet port."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOSUP) if hardware-assisted VLAN stripping not configured."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EINVAL) if *rx_queue_id* invalid."]
     pub fn rte_eth_dev_set_vlan_strip_on_queue(
         port_id: u16,
         rx_queue_id: u16,
@@ -28284,21 +28379,21 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set the Outer VLAN Ether Type by an Ethernet device, it can be inserted to
-    /// the VLAN Header. This is a register setup available on some Intel NIC, not
-    /// but all, please check the data sheet for availability.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param vlan_type
-    ///   The vlan type.
-    /// @param tag_type
-    ///   The Tag Protocol ID
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOSUP) if hardware-assisted VLAN TPID setup is not supported.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
+    #[doc = " Set the Outer VLAN Ether Type by an Ethernet device, it can be inserted to"]
+    #[doc = " the VLAN Header. This is a register setup available on some Intel NIC, not"]
+    #[doc = " but all, please check the data sheet for availability."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param vlan_type"]
+    #[doc = "   The vlan type."]
+    #[doc = " @param tag_type"]
+    #[doc = "   The Tag Protocol ID"]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOSUP) if hardware-assisted VLAN TPID setup is not supported."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
     pub fn rte_eth_dev_set_vlan_ether_type(
         port_id: u16,
         vlan_type: rte_vlan_type::Type,
@@ -28306,56 +28401,56 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set VLAN offload configuration on an Ethernet device
-    /// Enable/Disable Extended VLAN by an Ethernet device, This is a register setup
-    /// available on some Intel NIC, not but all, please check the data sheet for
-    /// availability.
-    /// Enable/Disable VLAN Strip can be done on rx queue for certain NIC, but here
-    /// the configuration is applied on the port level.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param offload_mask
-    ///   The VLAN Offload bit mask can be mixed use with "OR"
-    ///       ETH_VLAN_STRIP_OFFLOAD
-    ///       ETH_VLAN_FILTER_OFFLOAD
-    ///       ETH_VLAN_EXTEND_OFFLOAD
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOSUP) if hardware-assisted VLAN filtering not configured.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
+    #[doc = " Set VLAN offload configuration on an Ethernet device"]
+    #[doc = " Enable/Disable Extended VLAN by an Ethernet device, This is a register setup"]
+    #[doc = " available on some Intel NIC, not but all, please check the data sheet for"]
+    #[doc = " availability."]
+    #[doc = " Enable/Disable VLAN Strip can be done on rx queue for certain NIC, but here"]
+    #[doc = " the configuration is applied on the port level."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param offload_mask"]
+    #[doc = "   The VLAN Offload bit mask can be mixed use with \"OR\""]
+    #[doc = "       ETH_VLAN_STRIP_OFFLOAD"]
+    #[doc = "       ETH_VLAN_FILTER_OFFLOAD"]
+    #[doc = "       ETH_VLAN_EXTEND_OFFLOAD"]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOSUP) if hardware-assisted VLAN filtering not configured."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
     pub fn rte_eth_dev_set_vlan_offload(
         port_id: u16,
         offload_mask: ::std::os::raw::c_int,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Read VLAN Offload configuration from an Ethernet device
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @return
-    ///   - (>0) if successful. Bit mask to indicate
-    ///       ETH_VLAN_STRIP_OFFLOAD
-    ///       ETH_VLAN_FILTER_OFFLOAD
-    ///       ETH_VLAN_EXTEND_OFFLOAD
-    ///   - (-ENODEV) if *port_id* invalid.
+    #[doc = " Read VLAN Offload configuration from an Ethernet device"]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @return"]
+    #[doc = "   - (>0) if successful. Bit mask to indicate"]
+    #[doc = "       ETH_VLAN_STRIP_OFFLOAD"]
+    #[doc = "       ETH_VLAN_FILTER_OFFLOAD"]
+    #[doc = "       ETH_VLAN_EXTEND_OFFLOAD"]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
     pub fn rte_eth_dev_get_vlan_offload(port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set port based TX VLAN insertion on or off.
-    ///
-    /// @param port_id
-    ///  The port identifier of the Ethernet device.
-    /// @param pvid
-    ///  Port based TX VLAN identifier together with user priority.
-    /// @param on
-    ///  Turn on or off the port based TX VLAN insertion.
-    ///
-    /// @return
-    ///   - (0) if successful.
-    ///   - negative if failed.
+    #[doc = " Set port based TX VLAN insertion on or off."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "  The port identifier of the Ethernet device."]
+    #[doc = " @param pvid"]
+    #[doc = "  Port based TX VLAN identifier together with user priority."]
+    #[doc = " @param on"]
+    #[doc = "  Turn on or off the port based TX VLAN insertion."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - negative if failed."]
     pub fn rte_eth_dev_set_vlan_pvid(
         port_id: u16,
         pvid: u16,
@@ -28369,16 +28464,16 @@ pub type buffer_tx_error_fn = ::std::option::Option<
         userdata: *mut ::std::os::raw::c_void,
     ),
 >;
-/// Structure used to buffer packets for future TX
-/// Used by APIs rte_eth_tx_buffer and rte_eth_tx_buffer_flush
+#[doc = " Structure used to buffer packets for future TX"]
+#[doc = " Used by APIs rte_eth_tx_buffer and rte_eth_tx_buffer_flush"]
 #[repr(C)]
 #[derive(Debug)]
 pub struct rte_eth_dev_tx_buffer {
     pub error_callback: buffer_tx_error_fn,
     pub error_userdata: *mut ::std::os::raw::c_void,
-    ///< Size of buffer for buffered tx
+    #[doc = "< Size of buffer for buffered tx"]
     pub size: u16,
-    ///< Number of packets in the array
+    #[doc = "< Number of packets in the array"]
     pub length: u16,
     pub pkts: __IncompleteArrayField<*mut rte_mbuf>,
 }
@@ -28401,42 +28496,42 @@ impl Default for rte_eth_dev_tx_buffer {
     }
 }
 extern "C" {
-    /// Initialize default values for buffered transmitting
-    ///
-    /// @param buffer
-    ///   Tx buffer to be initialized.
-    /// @param size
-    ///   Buffer size
-    /// @return
-    ///   0 if no error
+    #[doc = " Initialize default values for buffered transmitting"]
+    #[doc = ""]
+    #[doc = " @param buffer"]
+    #[doc = "   Tx buffer to be initialized."]
+    #[doc = " @param size"]
+    #[doc = "   Buffer size"]
+    #[doc = " @return"]
+    #[doc = "   0 if no error"]
     pub fn rte_eth_tx_buffer_init(
         buffer: *mut rte_eth_dev_tx_buffer,
         size: u16,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Configure a callback for buffered packets which cannot be sent
-    ///
-    /// Register a specific callback to be called when an attempt is made to send
-    /// all packets buffered on an ethernet port, but not all packets can
-    /// successfully be sent. The callback registered here will be called only
-    /// from calls to rte_eth_tx_buffer() and rte_eth_tx_buffer_flush() APIs.
-    /// The default callback configured for each queue by default just frees the
-    /// packets back to the calling mempool. If additional behaviour is required,
-    /// for example, to count dropped packets, or to retry transmission of packets
-    /// which cannot be sent, this function should be used to register a suitable
-    /// callback function to implement the desired behaviour.
-    /// The example callback "rte_eth_count_unsent_packet_callback()" is also
-    /// provided as reference.
-    ///
-    /// @param buffer
-    ///   The port identifier of the Ethernet device.
-    /// @param callback
-    ///   The function to be used as the callback.
-    /// @param userdata
-    ///   Arbitrary parameter to be passed to the callback function
-    /// @return
-    ///   0 on success, or -1 on error with rte_errno set appropriately
+    #[doc = " Configure a callback for buffered packets which cannot be sent"]
+    #[doc = ""]
+    #[doc = " Register a specific callback to be called when an attempt is made to send"]
+    #[doc = " all packets buffered on an ethernet port, but not all packets can"]
+    #[doc = " successfully be sent. The callback registered here will be called only"]
+    #[doc = " from calls to rte_eth_tx_buffer() and rte_eth_tx_buffer_flush() APIs."]
+    #[doc = " The default callback configured for each queue by default just frees the"]
+    #[doc = " packets back to the calling mempool. If additional behaviour is required,"]
+    #[doc = " for example, to count dropped packets, or to retry transmission of packets"]
+    #[doc = " which cannot be sent, this function should be used to register a suitable"]
+    #[doc = " callback function to implement the desired behaviour."]
+    #[doc = " The example callback \"rte_eth_count_unsent_packet_callback()\" is also"]
+    #[doc = " provided as reference."]
+    #[doc = ""]
+    #[doc = " @param buffer"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param callback"]
+    #[doc = "   The function to be used as the callback."]
+    #[doc = " @param userdata"]
+    #[doc = "   Arbitrary parameter to be passed to the callback function"]
+    #[doc = " @return"]
+    #[doc = "   0 on success, or -1 on error with rte_errno set appropriately"]
     pub fn rte_eth_tx_buffer_set_err_callback(
         buffer: *mut rte_eth_dev_tx_buffer,
         callback: buffer_tx_error_fn,
@@ -28444,26 +28539,26 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Callback function for silently dropping unsent buffered packets.
-    ///
-    /// This function can be passed to rte_eth_tx_buffer_set_err_callback() to
-    /// adjust the default behavior when buffered packets cannot be sent. This
-    /// function drops any unsent packets silently and is used by tx buffered
-    /// operations as default behavior.
-    ///
-    /// NOTE: this function should not be called directly, instead it should be used
-    ///       as a callback for packet buffering.
-    ///
-    /// NOTE: when configuring this function as a callback with
-    ///       rte_eth_tx_buffer_set_err_callback(), the final, userdata parameter
-    ///       should point to an uint64_t value.
-    ///
-    /// @param pkts
-    ///   The previously buffered packets which could not be sent
-    /// @param unsent
-    ///   The number of unsent packets in the pkts array
-    /// @param userdata
-    ///   Not used
+    #[doc = " Callback function for silently dropping unsent buffered packets."]
+    #[doc = ""]
+    #[doc = " This function can be passed to rte_eth_tx_buffer_set_err_callback() to"]
+    #[doc = " adjust the default behavior when buffered packets cannot be sent. This"]
+    #[doc = " function drops any unsent packets silently and is used by tx buffered"]
+    #[doc = " operations as default behavior."]
+    #[doc = ""]
+    #[doc = " NOTE: this function should not be called directly, instead it should be used"]
+    #[doc = "       as a callback for packet buffering."]
+    #[doc = ""]
+    #[doc = " NOTE: when configuring this function as a callback with"]
+    #[doc = "       rte_eth_tx_buffer_set_err_callback(), the final, userdata parameter"]
+    #[doc = "       should point to an uint64_t value."]
+    #[doc = ""]
+    #[doc = " @param pkts"]
+    #[doc = "   The previously buffered packets which could not be sent"]
+    #[doc = " @param unsent"]
+    #[doc = "   The number of unsent packets in the pkts array"]
+    #[doc = " @param userdata"]
+    #[doc = "   Not used"]
     pub fn rte_eth_tx_buffer_drop_callback(
         pkts: *mut *mut rte_mbuf,
         unsent: u16,
@@ -28471,27 +28566,27 @@ extern "C" {
     );
 }
 extern "C" {
-    /// Callback function for tracking unsent buffered packets.
-    ///
-    /// This function can be passed to rte_eth_tx_buffer_set_err_callback() to
-    /// adjust the default behavior when buffered packets cannot be sent. This
-    /// function drops any unsent packets, but also updates a user-supplied counter
-    /// to track the overall number of packets dropped. The counter should be an
-    /// uint64_t variable.
-    ///
-    /// NOTE: this function should not be called directly, instead it should be used
-    ///       as a callback for packet buffering.
-    ///
-    /// NOTE: when configuring this function as a callback with
-    ///       rte_eth_tx_buffer_set_err_callback(), the final, userdata parameter
-    ///       should point to an uint64_t value.
-    ///
-    /// @param pkts
-    ///   The previously buffered packets which could not be sent
-    /// @param unsent
-    ///   The number of unsent packets in the pkts array
-    /// @param userdata
-    ///   Pointer to an uint64_t value, which will be incremented by unsent
+    #[doc = " Callback function for tracking unsent buffered packets."]
+    #[doc = ""]
+    #[doc = " This function can be passed to rte_eth_tx_buffer_set_err_callback() to"]
+    #[doc = " adjust the default behavior when buffered packets cannot be sent. This"]
+    #[doc = " function drops any unsent packets, but also updates a user-supplied counter"]
+    #[doc = " to track the overall number of packets dropped. The counter should be an"]
+    #[doc = " uint64_t variable."]
+    #[doc = ""]
+    #[doc = " NOTE: this function should not be called directly, instead it should be used"]
+    #[doc = "       as a callback for packet buffering."]
+    #[doc = ""]
+    #[doc = " NOTE: when configuring this function as a callback with"]
+    #[doc = "       rte_eth_tx_buffer_set_err_callback(), the final, userdata parameter"]
+    #[doc = "       should point to an uint64_t value."]
+    #[doc = ""]
+    #[doc = " @param pkts"]
+    #[doc = "   The previously buffered packets which could not be sent"]
+    #[doc = " @param unsent"]
+    #[doc = "   The number of unsent packets in the pkts array"]
+    #[doc = " @param userdata"]
+    #[doc = "   Pointer to an uint64_t value, which will be incremented by unsent"]
     pub fn rte_eth_tx_buffer_count_callback(
         pkts: *mut *mut rte_mbuf,
         unsent: u16,
@@ -28499,29 +28594,29 @@ extern "C" {
     );
 }
 extern "C" {
-    /// Request the driver to free mbufs currently cached by the driver. The
-    /// driver will only free the mbuf if it is no longer in use. It is the
-    /// application's responsibity to ensure rte_eth_tx_buffer_flush(..) is
-    /// called if needed.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param queue_id
-    ///   The index of the transmit queue through which output packets must be
-    ///   sent.
-    ///   The value must be in the range [0, nb_tx_queue - 1] previously supplied
-    ///   to rte_eth_dev_configure().
-    /// @param free_cnt
-    ///   Maximum number of packets to free. Use 0 to indicate all possible packets
-    ///   should be freed. Note that a packet may be using multiple mbufs.
-    /// @return
-    ///   Failure: < 0
-    ///     -ENODEV: Invalid interface
-    ///     -EIO: device is removed
-    ///     -ENOTSUP: Driver does not support function
-    ///   Success: >= 0
-    ///     0-n: Number of packets freed. More packets may still remain in ring that
-    ///     are in use.
+    #[doc = " Request the driver to free mbufs currently cached by the driver. The"]
+    #[doc = " driver will only free the mbuf if it is no longer in use. It is the"]
+    #[doc = " application\'s responsibity to ensure rte_eth_tx_buffer_flush(..) is"]
+    #[doc = " called if needed."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param queue_id"]
+    #[doc = "   The index of the transmit queue through which output packets must be"]
+    #[doc = "   sent."]
+    #[doc = "   The value must be in the range [0, nb_tx_queue - 1] previously supplied"]
+    #[doc = "   to rte_eth_dev_configure()."]
+    #[doc = " @param free_cnt"]
+    #[doc = "   Maximum number of packets to free. Use 0 to indicate all possible packets"]
+    #[doc = "   should be freed. Note that a packet may be using multiple mbufs."]
+    #[doc = " @return"]
+    #[doc = "   Failure: < 0"]
+    #[doc = "     -ENODEV: Invalid interface"]
+    #[doc = "     -EIO: device is removed"]
+    #[doc = "     -ENOTSUP: Driver does not support function"]
+    #[doc = "   Success: >= 0"]
+    #[doc = "     0-n: Number of packets freed. More packets may still remain in ring that"]
+    #[doc = "     are in use."]
     pub fn rte_eth_tx_done_cleanup(
         port_id: u16,
         queue_id: u16,
@@ -28529,8 +28624,8 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 pub mod rte_eth_event_ipsec_subtype {
-    /// Subtypes for IPsec offload event(@ref RTE_ETH_EVENT_IPSEC) raised by
-    /// eth device.
+    #[doc = " Subtypes for IPsec offload event(@ref RTE_ETH_EVENT_IPSEC) raised by"]
+    #[doc = " eth device."]
     pub type Type = u32;
     pub const RTE_ETH_EVENT_IPSEC_UNKNOWN: Type = 0;
     pub const RTE_ETH_EVENT_IPSEC_ESN_OVERFLOW: Type = 1;
@@ -28538,8 +28633,8 @@ pub mod rte_eth_event_ipsec_subtype {
     pub const RTE_ETH_EVENT_IPSEC_SA_BYTE_EXPIRY: Type = 3;
     pub const RTE_ETH_EVENT_IPSEC_MAX: Type = 4;
 }
-/// Descriptor for @ref RTE_ETH_EVENT_IPSEC event. Used by eth dev to send extra
-/// information of the IPsec offload event.
+#[doc = " Descriptor for @ref RTE_ETH_EVENT_IPSEC event. Used by eth dev to send extra"]
+#[doc = " information of the IPsec offload event."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_event_ipsec_desc {
@@ -28589,27 +28684,27 @@ impl Default for rte_eth_event_ipsec_desc {
     }
 }
 pub mod rte_eth_event_type {
-    /// The eth device event type for interrupt, and maybe others in the future.
+    #[doc = " The eth device event type for interrupt, and maybe others in the future."]
     pub type Type = u32;
-    ///< unknown event type
+    #[doc = "< unknown event type"]
     pub const RTE_ETH_EVENT_UNKNOWN: Type = 0;
-    ///< lsc interrupt event
+    #[doc = "< lsc interrupt event"]
     pub const RTE_ETH_EVENT_INTR_LSC: Type = 1;
     pub const RTE_ETH_EVENT_QUEUE_STATE: Type = 2;
     pub const RTE_ETH_EVENT_INTR_RESET: Type = 3;
-    ///< message from the VF received by PF
+    #[doc = "< message from the VF received by PF"]
     pub const RTE_ETH_EVENT_VF_MBOX: Type = 4;
-    ///< MACsec offload related event
+    #[doc = "< MACsec offload related event"]
     pub const RTE_ETH_EVENT_MACSEC: Type = 5;
-    ///< device removal event
+    #[doc = "< device removal event"]
     pub const RTE_ETH_EVENT_INTR_RMV: Type = 6;
-    ///< port is probed
+    #[doc = "< port is probed"]
     pub const RTE_ETH_EVENT_NEW: Type = 7;
-    ///< port is released
+    #[doc = "< port is released"]
     pub const RTE_ETH_EVENT_DESTROY: Type = 8;
-    ///< IPsec offload related event
+    #[doc = "< IPsec offload related event"]
     pub const RTE_ETH_EVENT_IPSEC: Type = 9;
-    ///< max value of this enum
+    #[doc = "< max value of this enum"]
     pub const RTE_ETH_EVENT_MAX: Type = 10;
 }
 pub type rte_eth_dev_cb_fn = ::std::option::Option<
@@ -28621,21 +28716,21 @@ pub type rte_eth_dev_cb_fn = ::std::option::Option<
     ) -> ::std::os::raw::c_int,
 >;
 extern "C" {
-    /// Register a callback function for port event.
-    ///
-    /// @param port_id
-    ///  Port id.
-    ///  RTE_ETH_ALL means register the event for all port ids.
-    /// @param event
-    ///  Event interested.
-    /// @param cb_fn
-    ///  User supplied callback function to be called.
-    /// @param cb_arg
-    ///  Pointer to the parameters for the registered callback.
-    ///
-    /// @return
-    ///  - On success, zero.
-    ///  - On failure, a negative value.
+    #[doc = " Register a callback function for port event."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "  Port id."]
+    #[doc = "  RTE_ETH_ALL means register the event for all port ids."]
+    #[doc = " @param event"]
+    #[doc = "  Event interested."]
+    #[doc = " @param cb_fn"]
+    #[doc = "  User supplied callback function to be called."]
+    #[doc = " @param cb_arg"]
+    #[doc = "  Pointer to the parameters for the registered callback."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - On success, zero."]
+    #[doc = "  - On failure, a negative value."]
     pub fn rte_eth_dev_callback_register(
         port_id: u16,
         event: rte_eth_event_type::Type,
@@ -28644,22 +28739,22 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Unregister a callback function for port event.
-    ///
-    /// @param port_id
-    ///  Port id.
-    ///  RTE_ETH_ALL means unregister the event for all port ids.
-    /// @param event
-    ///  Event interested.
-    /// @param cb_fn
-    ///  User supplied callback function to be called.
-    /// @param cb_arg
-    ///  Pointer to the parameters for the registered callback. -1 means to
-    ///  remove all for the same callback address and same event.
-    ///
-    /// @return
-    ///  - On success, zero.
-    ///  - On failure, a negative value.
+    #[doc = " Unregister a callback function for port event."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "  Port id."]
+    #[doc = "  RTE_ETH_ALL means unregister the event for all port ids."]
+    #[doc = " @param event"]
+    #[doc = "  Event interested."]
+    #[doc = " @param cb_fn"]
+    #[doc = "  User supplied callback function to be called."]
+    #[doc = " @param cb_arg"]
+    #[doc = "  Pointer to the parameters for the registered callback. -1 means to"]
+    #[doc = "  remove all for the same callback address and same event."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - On success, zero."]
+    #[doc = "  - On failure, a negative value."]
     pub fn rte_eth_dev_callback_unregister(
         port_id: u16,
         event: rte_eth_event_type::Type,
@@ -28668,64 +28763,64 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// When there is no rx packet coming in Rx Queue for a long time, we can
-    /// sleep lcore related to RX Queue for power saving, and enable rx interrupt
-    /// to be triggered when Rx packet arrives.
-    ///
-    /// The rte_eth_dev_rx_intr_enable() function enables rx queue
-    /// interrupt on specific rx queue of a port.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param queue_id
-    ///   The index of the receive queue from which to retrieve input packets.
-    ///   The value must be in the range [0, nb_rx_queue - 1] previously supplied
-    ///   to rte_eth_dev_configure().
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if underlying hardware OR driver doesn't support
-    ///     that operation.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
+    #[doc = " When there is no rx packet coming in Rx Queue for a long time, we can"]
+    #[doc = " sleep lcore related to RX Queue for power saving, and enable rx interrupt"]
+    #[doc = " to be triggered when Rx packet arrives."]
+    #[doc = ""]
+    #[doc = " The rte_eth_dev_rx_intr_enable() function enables rx queue"]
+    #[doc = " interrupt on specific rx queue of a port."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param queue_id"]
+    #[doc = "   The index of the receive queue from which to retrieve input packets."]
+    #[doc = "   The value must be in the range [0, nb_rx_queue - 1] previously supplied"]
+    #[doc = "   to rte_eth_dev_configure()."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if underlying hardware OR driver doesn\'t support"]
+    #[doc = "     that operation."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
     pub fn rte_eth_dev_rx_intr_enable(port_id: u16, queue_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// When lcore wakes up from rx interrupt indicating packet coming, disable rx
-    /// interrupt and returns to polling mode.
-    ///
-    /// The rte_eth_dev_rx_intr_disable() function disables rx queue
-    /// interrupt on specific rx queue of a port.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param queue_id
-    ///   The index of the receive queue from which to retrieve input packets.
-    ///   The value must be in the range [0, nb_rx_queue - 1] previously supplied
-    ///   to rte_eth_dev_configure().
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if underlying hardware OR driver doesn't support
-    ///     that operation.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
+    #[doc = " When lcore wakes up from rx interrupt indicating packet coming, disable rx"]
+    #[doc = " interrupt and returns to polling mode."]
+    #[doc = ""]
+    #[doc = " The rte_eth_dev_rx_intr_disable() function disables rx queue"]
+    #[doc = " interrupt on specific rx queue of a port."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param queue_id"]
+    #[doc = "   The index of the receive queue from which to retrieve input packets."]
+    #[doc = "   The value must be in the range [0, nb_rx_queue - 1] previously supplied"]
+    #[doc = "   to rte_eth_dev_configure()."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if underlying hardware OR driver doesn\'t support"]
+    #[doc = "     that operation."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
     pub fn rte_eth_dev_rx_intr_disable(port_id: u16, queue_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// RX Interrupt control per port.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param epfd
-    ///   Epoll instance fd which the intr vector associated to.
-    ///   Using RTE_EPOLL_PER_THREAD allows to use per thread epoll instance.
-    /// @param op
-    ///   The operation be performed for the vector.
-    ///   Operation type of {RTE_INTR_EVENT_ADD, RTE_INTR_EVENT_DEL}.
-    /// @param data
-    ///   User raw data.
-    /// @return
-    ///   - On success, zero.
-    ///   - On failure, a negative value.
+    #[doc = " RX Interrupt control per port."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param epfd"]
+    #[doc = "   Epoll instance fd which the intr vector associated to."]
+    #[doc = "   Using RTE_EPOLL_PER_THREAD allows to use per thread epoll instance."]
+    #[doc = " @param op"]
+    #[doc = "   The operation be performed for the vector."]
+    #[doc = "   Operation type of {RTE_INTR_EVENT_ADD, RTE_INTR_EVENT_DEL}."]
+    #[doc = " @param data"]
+    #[doc = "   User raw data."]
+    #[doc = " @return"]
+    #[doc = "   - On success, zero."]
+    #[doc = "   - On failure, a negative value."]
     pub fn rte_eth_dev_rx_intr_ctl(
         port_id: u16,
         epfd: ::std::os::raw::c_int,
@@ -28734,25 +28829,25 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// RX Interrupt control per queue.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param queue_id
-    ///   The index of the receive queue from which to retrieve input packets.
-    ///   The value must be in the range [0, nb_rx_queue - 1] previously supplied
-    ///   to rte_eth_dev_configure().
-    /// @param epfd
-    ///   Epoll instance fd which the intr vector associated to.
-    ///   Using RTE_EPOLL_PER_THREAD allows to use per thread epoll instance.
-    /// @param op
-    ///   The operation be performed for the vector.
-    ///   Operation type of {RTE_INTR_EVENT_ADD, RTE_INTR_EVENT_DEL}.
-    /// @param data
-    ///   User raw data.
-    /// @return
-    ///   - On success, zero.
-    ///   - On failure, a negative value.
+    #[doc = " RX Interrupt control per queue."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param queue_id"]
+    #[doc = "   The index of the receive queue from which to retrieve input packets."]
+    #[doc = "   The value must be in the range [0, nb_rx_queue - 1] previously supplied"]
+    #[doc = "   to rte_eth_dev_configure()."]
+    #[doc = " @param epfd"]
+    #[doc = "   Epoll instance fd which the intr vector associated to."]
+    #[doc = "   Using RTE_EPOLL_PER_THREAD allows to use per thread epoll instance."]
+    #[doc = " @param op"]
+    #[doc = "   The operation be performed for the vector."]
+    #[doc = "   Operation type of {RTE_INTR_EVENT_ADD, RTE_INTR_EVENT_DEL}."]
+    #[doc = " @param data"]
+    #[doc = "   User raw data."]
+    #[doc = " @return"]
+    #[doc = "   - On success, zero."]
+    #[doc = "   - On failure, a negative value."]
     pub fn rte_eth_dev_rx_intr_ctl_q(
         port_id: u16,
         queue_id: u16,
@@ -28762,123 +28857,123 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice.
-    ///
-    /// Get interrupt fd per Rx queue.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param queue_id
-    ///   The index of the receive queue from which to retrieve input packets.
-    ///   The value must be in the range [0, nb_rx_queue - 1] previously supplied
-    ///   to rte_eth_dev_configure().
-    /// @return
-    ///   - (>=0) the interrupt fd associated to the requested Rx queue if
-    ///           successful.
-    ///   - (-1) on error.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice."]
+    #[doc = ""]
+    #[doc = " Get interrupt fd per Rx queue."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param queue_id"]
+    #[doc = "   The index of the receive queue from which to retrieve input packets."]
+    #[doc = "   The value must be in the range [0, nb_rx_queue - 1] previously supplied"]
+    #[doc = "   to rte_eth_dev_configure()."]
+    #[doc = " @return"]
+    #[doc = "   - (>=0) the interrupt fd associated to the requested Rx queue if"]
+    #[doc = "           successful."]
+    #[doc = "   - (-1) on error."]
     pub fn rte_eth_dev_rx_intr_ctl_q_get_fd(port_id: u16, queue_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Turn on the LED on the Ethernet device.
-    /// This function turns on the LED on the Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if underlying hardware OR driver doesn't support
-    ///     that operation.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
+    #[doc = " Turn on the LED on the Ethernet device."]
+    #[doc = " This function turns on the LED on the Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if underlying hardware OR driver doesn\'t support"]
+    #[doc = "     that operation."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
     pub fn rte_eth_led_on(port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Turn off the LED on the Ethernet device.
-    /// This function turns off the LED on the Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if underlying hardware OR driver doesn't support
-    ///     that operation.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
+    #[doc = " Turn off the LED on the Ethernet device."]
+    #[doc = " This function turns off the LED on the Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if underlying hardware OR driver doesn\'t support"]
+    #[doc = "     that operation."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
     pub fn rte_eth_led_off(port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get current status of the Ethernet link flow control for Ethernet device
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param fc_conf
-    ///   The pointer to the structure where to store the flow control parameters.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if hardware doesn't support flow control.
-    ///   - (-ENODEV)  if *port_id* invalid.
-    ///   - (-EIO)  if device is removed.
+    #[doc = " Get current status of the Ethernet link flow control for Ethernet device"]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param fc_conf"]
+    #[doc = "   The pointer to the structure where to store the flow control parameters."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support flow control."]
+    #[doc = "   - (-ENODEV)  if *port_id* invalid."]
+    #[doc = "   - (-EIO)  if device is removed."]
     pub fn rte_eth_dev_flow_ctrl_get(
         port_id: u16,
         fc_conf: *mut rte_eth_fc_conf,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Configure the Ethernet link flow control for Ethernet device
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param fc_conf
-    ///   The pointer to the structure of the flow control parameters.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if hardware doesn't support flow control mode.
-    ///   - (-ENODEV)  if *port_id* invalid.
-    ///   - (-EINVAL)  if bad parameter
-    ///   - (-EIO)     if flow control setup failure or device is removed.
+    #[doc = " Configure the Ethernet link flow control for Ethernet device"]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param fc_conf"]
+    #[doc = "   The pointer to the structure of the flow control parameters."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support flow control mode."]
+    #[doc = "   - (-ENODEV)  if *port_id* invalid."]
+    #[doc = "   - (-EINVAL)  if bad parameter"]
+    #[doc = "   - (-EIO)     if flow control setup failure or device is removed."]
     pub fn rte_eth_dev_flow_ctrl_set(
         port_id: u16,
         fc_conf: *mut rte_eth_fc_conf,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Configure the Ethernet priority flow control under DCB environment
-    /// for Ethernet device.
-    ///
-    /// @param port_id
-    /// The port identifier of the Ethernet device.
-    /// @param pfc_conf
-    /// The pointer to the structure of the priority flow control parameters.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if hardware doesn't support priority flow control mode.
-    ///   - (-ENODEV)  if *port_id* invalid.
-    ///   - (-EINVAL)  if bad parameter
-    ///   - (-EIO)     if flow control setup failure or device is removed.
+    #[doc = " Configure the Ethernet priority flow control under DCB environment"]
+    #[doc = " for Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = " The port identifier of the Ethernet device."]
+    #[doc = " @param pfc_conf"]
+    #[doc = " The pointer to the structure of the priority flow control parameters."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support priority flow control mode."]
+    #[doc = "   - (-ENODEV)  if *port_id* invalid."]
+    #[doc = "   - (-EINVAL)  if bad parameter"]
+    #[doc = "   - (-EIO)     if flow control setup failure or device is removed."]
     pub fn rte_eth_dev_priority_flow_ctrl_set(
         port_id: u16,
         pfc_conf: *mut rte_eth_pfc_conf,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Add a MAC address to an internal array of addresses used to enable whitelist
-    /// filtering to accept packets only if the destination MAC address matches.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param mac_addr
-    ///   The MAC address to add.
-    /// @param pool
-    ///   VMDq pool index to associate address with (if VMDq is enabled). If VMDq is
-    ///   not enabled, this should be set to 0.
-    /// @return
-    ///   - (0) if successfully added or *mac_addr* was already added.
-    ///   - (-ENOTSUP) if hardware doesn't support this feature.
-    ///   - (-ENODEV) if *port* is invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - (-ENOSPC) if no more MAC addresses can be added.
-    ///   - (-EINVAL) if MAC address is invalid.
+    #[doc = " Add a MAC address to an internal array of addresses used to enable whitelist"]
+    #[doc = " filtering to accept packets only if the destination MAC address matches."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param mac_addr"]
+    #[doc = "   The MAC address to add."]
+    #[doc = " @param pool"]
+    #[doc = "   VMDq pool index to associate address with (if VMDq is enabled). If VMDq is"]
+    #[doc = "   not enabled, this should be set to 0."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successfully added or *mac_addr* was already added."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support this feature."]
+    #[doc = "   - (-ENODEV) if *port* is invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - (-ENOSPC) if no more MAC addresses can be added."]
+    #[doc = "   - (-EINVAL) if MAC address is invalid."]
     pub fn rte_eth_dev_mac_addr_add(
         port_id: u16,
         mac_addr: *mut ether_addr,
@@ -28886,54 +28981,54 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Remove a MAC address from the internal array of addresses.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param mac_addr
-    ///   MAC address to remove.
-    /// @return
-    ///   - (0) if successful, or *mac_addr* didn't exist.
-    ///   - (-ENOTSUP) if hardware doesn't support.
-    ///   - (-ENODEV) if *port* invalid.
-    ///   - (-EADDRINUSE) if attempting to remove the default MAC address
+    #[doc = " Remove a MAC address from the internal array of addresses."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param mac_addr"]
+    #[doc = "   MAC address to remove."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful, or *mac_addr* didn\'t exist."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support."]
+    #[doc = "   - (-ENODEV) if *port* invalid."]
+    #[doc = "   - (-EADDRINUSE) if attempting to remove the default MAC address"]
     pub fn rte_eth_dev_mac_addr_remove(
         port_id: u16,
         mac_addr: *mut ether_addr,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set the default MAC address.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param mac_addr
-    ///   New default MAC address.
-    /// @return
-    ///   - (0) if successful, or *mac_addr* didn't exist.
-    ///   - (-ENOTSUP) if hardware doesn't support.
-    ///   - (-ENODEV) if *port* invalid.
-    ///   - (-EINVAL) if MAC address is invalid.
+    #[doc = " Set the default MAC address."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param mac_addr"]
+    #[doc = "   New default MAC address."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful, or *mac_addr* didn\'t exist."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support."]
+    #[doc = "   - (-ENODEV) if *port* invalid."]
+    #[doc = "   - (-EINVAL) if MAC address is invalid."]
     pub fn rte_eth_dev_default_mac_addr_set(
         port_id: u16,
         mac_addr: *mut ether_addr,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Update Redirection Table(RETA) of Receive Side Scaling of Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param reta_conf
-    ///   RETA to update.
-    /// @param reta_size
-    ///   Redirection table size. The table size can be queried by
-    ///   rte_eth_dev_info_get().
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if hardware doesn't support.
-    ///   - (-EINVAL) if bad parameter.
-    ///   - (-EIO) if device is removed.
+    #[doc = " Update Redirection Table(RETA) of Receive Side Scaling of Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param reta_conf"]
+    #[doc = "   RETA to update."]
+    #[doc = " @param reta_size"]
+    #[doc = "   Redirection table size. The table size can be queried by"]
+    #[doc = "   rte_eth_dev_info_get()."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support."]
+    #[doc = "   - (-EINVAL) if bad parameter."]
+    #[doc = "   - (-EIO) if device is removed."]
     pub fn rte_eth_dev_rss_reta_update(
         port_id: u16,
         reta_conf: *mut rte_eth_rss_reta_entry64,
@@ -28941,20 +29036,20 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Query Redirection Table(RETA) of Receive Side Scaling of Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param reta_conf
-    ///   RETA to query.
-    /// @param reta_size
-    ///   Redirection table size. The table size can be queried by
-    ///   rte_eth_dev_info_get().
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if hardware doesn't support.
-    ///   - (-EINVAL) if bad parameter.
-    ///   - (-EIO) if device is removed.
+    #[doc = " Query Redirection Table(RETA) of Receive Side Scaling of Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param reta_conf"]
+    #[doc = "   RETA to query."]
+    #[doc = " @param reta_size"]
+    #[doc = "   Redirection table size. The table size can be queried by"]
+    #[doc = "   rte_eth_dev_info_get()."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support."]
+    #[doc = "   - (-EINVAL) if bad parameter."]
+    #[doc = "   - (-EIO) if device is removed."]
     pub fn rte_eth_dev_rss_reta_query(
         port_id: u16,
         reta_conf: *mut rte_eth_rss_reta_entry64,
@@ -28962,23 +29057,23 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Updates unicast hash table for receiving packet with the given destination
-    /// MAC address, and the packet is routed to all VFs for which the RX mode is
-    /// accept packets that match the unicast hash table.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param addr
-    ///   Unicast MAC address.
-    /// @param on
-    ///    1 - Set an unicast hash bit for receiving packets with the MAC address.
-    ///    0 - Clear an unicast hash bit.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if hardware doesn't support.
-    ///  - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - (-EINVAL) if bad parameter.
+    #[doc = " Updates unicast hash table for receiving packet with the given destination"]
+    #[doc = " MAC address, and the packet is routed to all VFs for which the RX mode is"]
+    #[doc = " accept packets that match the unicast hash table."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param addr"]
+    #[doc = "   Unicast MAC address."]
+    #[doc = " @param on"]
+    #[doc = "    1 - Set an unicast hash bit for receiving packets with the MAC address."]
+    #[doc = "    0 - Clear an unicast hash bit."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support."]
+    #[doc = "  - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - (-EINVAL) if bad parameter."]
     pub fn rte_eth_dev_uc_hash_table_set(
         port_id: u16,
         addr: *mut ether_addr,
@@ -28986,45 +29081,45 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Updates all unicast hash bitmaps for receiving packet with any Unicast
-    /// Ethernet MAC addresses,the packet is routed to all VFs for which the RX
-    /// mode is accept packets that match the unicast hash table.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param on
-    ///    1 - Set all unicast hash bitmaps for receiving all the Ethernet
-    ///         MAC addresses
-    ///    0 - Clear all unicast hash bitmaps
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if hardware doesn't support.
-    ///  - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - (-EINVAL) if bad parameter.
+    #[doc = " Updates all unicast hash bitmaps for receiving packet with any Unicast"]
+    #[doc = " Ethernet MAC addresses,the packet is routed to all VFs for which the RX"]
+    #[doc = " mode is accept packets that match the unicast hash table."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param on"]
+    #[doc = "    1 - Set all unicast hash bitmaps for receiving all the Ethernet"]
+    #[doc = "         MAC addresses"]
+    #[doc = "    0 - Clear all unicast hash bitmaps"]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support."]
+    #[doc = "  - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - (-EINVAL) if bad parameter."]
     pub fn rte_eth_dev_uc_all_hash_table_set(port_id: u16, on: u8) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set a traffic mirroring rule on an Ethernet device
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param mirror_conf
-    ///   The pointer to the traffic mirroring structure describing the mirroring rule.
-    ///   The *rte_eth_vm_mirror_conf* structure includes the type of mirroring rule,
-    ///   destination pool and the value of rule if enable vlan or pool mirroring.
-    ///
-    /// @param rule_id
-    ///   The index of traffic mirroring rule, we support four separated rules.
-    /// @param on
-    ///   1 - Enable a mirroring rule.
-    ///   0 - Disable a mirroring rule.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if hardware doesn't support this feature.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - (-EINVAL) if the mr_conf information is not correct.
+    #[doc = " Set a traffic mirroring rule on an Ethernet device"]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param mirror_conf"]
+    #[doc = "   The pointer to the traffic mirroring structure describing the mirroring rule."]
+    #[doc = "   The *rte_eth_vm_mirror_conf* structure includes the type of mirroring rule,"]
+    #[doc = "   destination pool and the value of rule if enable vlan or pool mirroring."]
+    #[doc = ""]
+    #[doc = " @param rule_id"]
+    #[doc = "   The index of traffic mirroring rule, we support four separated rules."]
+    #[doc = " @param on"]
+    #[doc = "   1 - Enable a mirroring rule."]
+    #[doc = "   0 - Disable a mirroring rule."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support this feature."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - (-EINVAL) if the mr_conf information is not correct."]
     pub fn rte_eth_mirror_rule_set(
         port_id: u16,
         mirror_conf: *mut rte_eth_mirror_conf,
@@ -29033,35 +29128,35 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Reset a traffic mirroring rule on an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param rule_id
-    ///   The index of traffic mirroring rule, we support four separated rules.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if hardware doesn't support this feature.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - (-EINVAL) if bad parameter.
+    #[doc = " Reset a traffic mirroring rule on an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param rule_id"]
+    #[doc = "   The index of traffic mirroring rule, we support four separated rules."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support this feature."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - (-EINVAL) if bad parameter."]
     pub fn rte_eth_mirror_rule_reset(port_id: u16, rule_id: u8) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set the rate limitation for a queue on an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param queue_idx
-    ///   The queue id.
-    /// @param tx_rate
-    ///   The tx rate in Mbps. Allocated from the total port link speed.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if hardware doesn't support this feature.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - (-EINVAL) if bad parameter.
+    #[doc = " Set the rate limitation for a queue on an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param queue_idx"]
+    #[doc = "   The queue id."]
+    #[doc = " @param tx_rate"]
+    #[doc = "   The tx rate in Mbps. Allocated from the total port link speed."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support this feature."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - (-EINVAL) if bad parameter."]
     pub fn rte_eth_set_queue_rate_limit(
         port_id: u16,
         queue_idx: u16,
@@ -29069,122 +29164,122 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Configuration of Receive Side Scaling hash computation of Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param rss_conf
-    ///   The new configuration to use for RSS hash computation on the port.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENODEV) if port identifier is invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - (-ENOTSUP) if hardware doesn't support.
-    ///   - (-EINVAL) if bad parameter.
+    #[doc = " Configuration of Receive Side Scaling hash computation of Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param rss_conf"]
+    #[doc = "   The new configuration to use for RSS hash computation on the port."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENODEV) if port identifier is invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support."]
+    #[doc = "   - (-EINVAL) if bad parameter."]
     pub fn rte_eth_dev_rss_hash_update(
         port_id: u16,
         rss_conf: *mut rte_eth_rss_conf,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Retrieve current configuration of Receive Side Scaling hash computation
-    /// of Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param rss_conf
-    ///   Where to store the current RSS hash configuration of the Ethernet device.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENODEV) if port identifier is invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - (-ENOTSUP) if hardware doesn't support RSS.
+    #[doc = " Retrieve current configuration of Receive Side Scaling hash computation"]
+    #[doc = " of Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param rss_conf"]
+    #[doc = "   Where to store the current RSS hash configuration of the Ethernet device."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENODEV) if port identifier is invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support RSS."]
     pub fn rte_eth_dev_rss_hash_conf_get(
         port_id: u16,
         rss_conf: *mut rte_eth_rss_conf,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Add UDP tunneling port for a specific type of tunnel.
-    /// The packets with this UDP port will be identified as this type of tunnel.
-    /// Before enabling any offloading function for a tunnel, users can call this API
-    /// to change or add more UDP port for the tunnel. So the offloading function
-    /// can take effect on the packets with the specific UDP port.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param tunnel_udp
-    ///   UDP tunneling configuration.
-    ///
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENODEV) if port identifier is invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - (-ENOTSUP) if hardware doesn't support tunnel type.
+    #[doc = " Add UDP tunneling port for a specific type of tunnel."]
+    #[doc = " The packets with this UDP port will be identified as this type of tunnel."]
+    #[doc = " Before enabling any offloading function for a tunnel, users can call this API"]
+    #[doc = " to change or add more UDP port for the tunnel. So the offloading function"]
+    #[doc = " can take effect on the packets with the specific UDP port."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param tunnel_udp"]
+    #[doc = "   UDP tunneling configuration."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENODEV) if port identifier is invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support tunnel type."]
     pub fn rte_eth_dev_udp_tunnel_port_add(
         port_id: u16,
         tunnel_udp: *mut rte_eth_udp_tunnel,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Delete UDP tunneling port a specific type of tunnel.
-    /// The packets with this UDP port will not be identified as this type of tunnel
-    /// any more.
-    /// Before enabling any offloading function for a tunnel, users can call this API
-    /// to delete a UDP port for the tunnel. So the offloading function will not take
-    /// effect on the packets with the specific UDP port.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param tunnel_udp
-    ///   UDP tunneling configuration.
-    ///
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENODEV) if port identifier is invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - (-ENOTSUP) if hardware doesn't support tunnel type.
+    #[doc = " Delete UDP tunneling port a specific type of tunnel."]
+    #[doc = " The packets with this UDP port will not be identified as this type of tunnel"]
+    #[doc = " any more."]
+    #[doc = " Before enabling any offloading function for a tunnel, users can call this API"]
+    #[doc = " to delete a UDP port for the tunnel. So the offloading function will not take"]
+    #[doc = " effect on the packets with the specific UDP port."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param tunnel_udp"]
+    #[doc = "   UDP tunneling configuration."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENODEV) if port identifier is invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support tunnel type."]
     pub fn rte_eth_dev_udp_tunnel_port_delete(
         port_id: u16,
         tunnel_udp: *mut rte_eth_udp_tunnel,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Check whether the filter type is supported on an Ethernet device.
-    /// All the supported filter types are defined in 'rte_eth_ctrl.h'.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param filter_type
-    ///   Filter type.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if hardware doesn't support this filter type.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
+    #[doc = " Check whether the filter type is supported on an Ethernet device."]
+    #[doc = " All the supported filter types are defined in \'rte_eth_ctrl.h\'."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param filter_type"]
+    #[doc = "   Filter type."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support this filter type."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
     pub fn rte_eth_dev_filter_supported(
         port_id: u16,
         filter_type: rte_filter_type::Type,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Take operations to assigned filter type on an Ethernet device.
-    /// All the supported operations and filter types are defined in 'rte_eth_ctrl.h'.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param filter_type
-    ///   Filter type.
-    /// @param filter_op
-    ///   Type of operation.
-    /// @param arg
-    ///   A pointer to arguments defined specifically for the operation.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if hardware doesn't support.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - others depends on the specific operations implementation.
+    #[doc = " Take operations to assigned filter type on an Ethernet device."]
+    #[doc = " All the supported operations and filter types are defined in \'rte_eth_ctrl.h\'."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param filter_type"]
+    #[doc = "   Filter type."]
+    #[doc = " @param filter_op"]
+    #[doc = "   Type of operation."]
+    #[doc = " @param arg"]
+    #[doc = "   A pointer to arguments defined specifically for the operation."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - others depends on the specific operations implementation."]
     pub fn rte_eth_dev_filter_ctrl(
         port_id: u16,
         filter_type: rte_filter_type::Type,
@@ -29193,45 +29288,45 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get DCB information on an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param dcb_info
-    ///   dcb information.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENODEV) if port identifier is invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - (-ENOTSUP) if hardware doesn't support.
+    #[doc = " Get DCB information on an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param dcb_info"]
+    #[doc = "   dcb information."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENODEV) if port identifier is invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support."]
     pub fn rte_eth_dev_get_dcb_info(
         port_id: u16,
         dcb_info: *mut rte_eth_dcb_info,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Add a callback to be called on packet RX on a given port and queue.
-    ///
-    /// This API configures a function to be called for each burst of
-    /// packets received on a given NIC port queue. The return value is a pointer
-    /// that can be used to later remove the callback using
-    /// rte_eth_remove_rx_callback().
-    ///
-    /// Multiple functions are called in the order that they are added.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param queue_id
-    ///   The queue on the Ethernet device on which the callback is to be added.
-    /// @param fn
-    ///   The callback function
-    /// @param user_param
-    ///   A generic pointer parameter which will be passed to each invocation of the
-    ///   callback function on this port and queue.
-    ///
-    /// @return
-    ///   NULL on error.
-    ///   On success, a pointer value which can later be used to remove the callback.
+    #[doc = " Add a callback to be called on packet RX on a given port and queue."]
+    #[doc = ""]
+    #[doc = " This API configures a function to be called for each burst of"]
+    #[doc = " packets received on a given NIC port queue. The return value is a pointer"]
+    #[doc = " that can be used to later remove the callback using"]
+    #[doc = " rte_eth_remove_rx_callback()."]
+    #[doc = ""]
+    #[doc = " Multiple functions are called in the order that they are added."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param queue_id"]
+    #[doc = "   The queue on the Ethernet device on which the callback is to be added."]
+    #[doc = " @param fn"]
+    #[doc = "   The callback function"]
+    #[doc = " @param user_param"]
+    #[doc = "   A generic pointer parameter which will be passed to each invocation of the"]
+    #[doc = "   callback function on this port and queue."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   NULL on error."]
+    #[doc = "   On success, a pointer value which can later be used to remove the callback."]
     pub fn rte_eth_add_rx_callback(
         port_id: u16,
         queue_id: u16,
@@ -29240,29 +29335,29 @@ extern "C" {
     ) -> *const rte_eth_rxtx_callback;
 }
 extern "C" {
-    /// Add a callback that must be called first on packet RX on a given port
-    /// and queue.
-    ///
-    /// This API configures a first function to be called for each burst of
-    /// packets received on a given NIC port queue. The return value is a pointer
-    /// that can be used to later remove the callback using
-    /// rte_eth_remove_rx_callback().
-    ///
-    /// Multiple functions are called in the order that they are added.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param queue_id
-    ///   The queue on the Ethernet device on which the callback is to be added.
-    /// @param fn
-    ///   The callback function
-    /// @param user_param
-    ///   A generic pointer parameter which will be passed to each invocation of the
-    ///   callback function on this port and queue.
-    ///
-    /// @return
-    ///   NULL on error.
-    ///   On success, a pointer value which can later be used to remove the callback.
+    #[doc = " Add a callback that must be called first on packet RX on a given port"]
+    #[doc = " and queue."]
+    #[doc = ""]
+    #[doc = " This API configures a first function to be called for each burst of"]
+    #[doc = " packets received on a given NIC port queue. The return value is a pointer"]
+    #[doc = " that can be used to later remove the callback using"]
+    #[doc = " rte_eth_remove_rx_callback()."]
+    #[doc = ""]
+    #[doc = " Multiple functions are called in the order that they are added."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param queue_id"]
+    #[doc = "   The queue on the Ethernet device on which the callback is to be added."]
+    #[doc = " @param fn"]
+    #[doc = "   The callback function"]
+    #[doc = " @param user_param"]
+    #[doc = "   A generic pointer parameter which will be passed to each invocation of the"]
+    #[doc = "   callback function on this port and queue."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   NULL on error."]
+    #[doc = "   On success, a pointer value which can later be used to remove the callback."]
     pub fn rte_eth_add_first_rx_callback(
         port_id: u16,
         queue_id: u16,
@@ -29271,28 +29366,28 @@ extern "C" {
     ) -> *const rte_eth_rxtx_callback;
 }
 extern "C" {
-    /// Add a callback to be called on packet TX on a given port and queue.
-    ///
-    /// This API configures a function to be called for each burst of
-    /// packets sent on a given NIC port queue. The return value is a pointer
-    /// that can be used to later remove the callback using
-    /// rte_eth_remove_tx_callback().
-    ///
-    /// Multiple functions are called in the order that they are added.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param queue_id
-    ///   The queue on the Ethernet device on which the callback is to be added.
-    /// @param fn
-    ///   The callback function
-    /// @param user_param
-    ///   A generic pointer parameter which will be passed to each invocation of the
-    ///   callback function on this port and queue.
-    ///
-    /// @return
-    ///   NULL on error.
-    ///   On success, a pointer value which can later be used to remove the callback.
+    #[doc = " Add a callback to be called on packet TX on a given port and queue."]
+    #[doc = ""]
+    #[doc = " This API configures a function to be called for each burst of"]
+    #[doc = " packets sent on a given NIC port queue. The return value is a pointer"]
+    #[doc = " that can be used to later remove the callback using"]
+    #[doc = " rte_eth_remove_tx_callback()."]
+    #[doc = ""]
+    #[doc = " Multiple functions are called in the order that they are added."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param queue_id"]
+    #[doc = "   The queue on the Ethernet device on which the callback is to be added."]
+    #[doc = " @param fn"]
+    #[doc = "   The callback function"]
+    #[doc = " @param user_param"]
+    #[doc = "   A generic pointer parameter which will be passed to each invocation of the"]
+    #[doc = "   callback function on this port and queue."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   NULL on error."]
+    #[doc = "   On success, a pointer value which can later be used to remove the callback."]
     pub fn rte_eth_add_tx_callback(
         port_id: u16,
         queue_id: u16,
@@ -29301,34 +29396,34 @@ extern "C" {
     ) -> *const rte_eth_rxtx_callback;
 }
 extern "C" {
-    /// Remove an RX packet callback from a given port and queue.
-    ///
-    /// This function is used to removed callbacks that were added to a NIC port
-    /// queue using rte_eth_add_rx_callback().
-    ///
-    /// Note: the callback is removed from the callback list but it isn't freed
-    /// since the it may still be in use. The memory for the callback can be
-    /// subsequently freed back by the application by calling rte_free():
-    ///
-    /// - Immediately - if the port is stopped, or the user knows that no
-    ///   callbacks are in flight e.g. if called from the thread doing RX/TX
-    ///   on that queue.
-    ///
-    /// - After a short delay - where the delay is sufficient to allow any
-    ///   in-flight callbacks to complete.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param queue_id
-    ///   The queue on the Ethernet device from which the callback is to be removed.
-    /// @param user_cb
-    ///   User supplied callback created via rte_eth_add_rx_callback().
-    ///
-    /// @return
-    ///   - 0: Success. Callback was removed.
-    ///   - -ENOTSUP: Callback support is not available.
-    ///   - -EINVAL:  The port_id or the queue_id is out of range, or the callback
-    ///               is NULL or not found for the port/queue.
+    #[doc = " Remove an RX packet callback from a given port and queue."]
+    #[doc = ""]
+    #[doc = " This function is used to removed callbacks that were added to a NIC port"]
+    #[doc = " queue using rte_eth_add_rx_callback()."]
+    #[doc = ""]
+    #[doc = " Note: the callback is removed from the callback list but it isn\'t freed"]
+    #[doc = " since the it may still be in use. The memory for the callback can be"]
+    #[doc = " subsequently freed back by the application by calling rte_free():"]
+    #[doc = ""]
+    #[doc = " - Immediately - if the port is stopped, or the user knows that no"]
+    #[doc = "   callbacks are in flight e.g. if called from the thread doing RX/TX"]
+    #[doc = "   on that queue."]
+    #[doc = ""]
+    #[doc = " - After a short delay - where the delay is sufficient to allow any"]
+    #[doc = "   in-flight callbacks to complete."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param queue_id"]
+    #[doc = "   The queue on the Ethernet device from which the callback is to be removed."]
+    #[doc = " @param user_cb"]
+    #[doc = "   User supplied callback created via rte_eth_add_rx_callback()."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success. Callback was removed."]
+    #[doc = "   - -ENOTSUP: Callback support is not available."]
+    #[doc = "   - -EINVAL:  The port_id or the queue_id is out of range, or the callback"]
+    #[doc = "               is NULL or not found for the port/queue."]
     pub fn rte_eth_remove_rx_callback(
         port_id: u16,
         queue_id: u16,
@@ -29336,34 +29431,34 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Remove a TX packet callback from a given port and queue.
-    ///
-    /// This function is used to removed callbacks that were added to a NIC port
-    /// queue using rte_eth_add_tx_callback().
-    ///
-    /// Note: the callback is removed from the callback list but it isn't freed
-    /// since the it may still be in use. The memory for the callback can be
-    /// subsequently freed back by the application by calling rte_free():
-    ///
-    /// - Immediately - if the port is stopped, or the user knows that no
-    ///   callbacks are in flight e.g. if called from the thread doing RX/TX
-    ///   on that queue.
-    ///
-    /// - After a short delay - where the delay is sufficient to allow any
-    ///   in-flight callbacks to complete.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param queue_id
-    ///   The queue on the Ethernet device from which the callback is to be removed.
-    /// @param user_cb
-    ///   User supplied callback created via rte_eth_add_tx_callback().
-    ///
-    /// @return
-    ///   - 0: Success. Callback was removed.
-    ///   - -ENOTSUP: Callback support is not available.
-    ///   - -EINVAL:  The port_id or the queue_id is out of range, or the callback
-    ///               is NULL or not found for the port/queue.
+    #[doc = " Remove a TX packet callback from a given port and queue."]
+    #[doc = ""]
+    #[doc = " This function is used to removed callbacks that were added to a NIC port"]
+    #[doc = " queue using rte_eth_add_tx_callback()."]
+    #[doc = ""]
+    #[doc = " Note: the callback is removed from the callback list but it isn\'t freed"]
+    #[doc = " since the it may still be in use. The memory for the callback can be"]
+    #[doc = " subsequently freed back by the application by calling rte_free():"]
+    #[doc = ""]
+    #[doc = " - Immediately - if the port is stopped, or the user knows that no"]
+    #[doc = "   callbacks are in flight e.g. if called from the thread doing RX/TX"]
+    #[doc = "   on that queue."]
+    #[doc = ""]
+    #[doc = " - After a short delay - where the delay is sufficient to allow any"]
+    #[doc = "   in-flight callbacks to complete."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param queue_id"]
+    #[doc = "   The queue on the Ethernet device from which the callback is to be removed."]
+    #[doc = " @param user_cb"]
+    #[doc = "   User supplied callback created via rte_eth_add_tx_callback()."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success. Callback was removed."]
+    #[doc = "   - -ENOTSUP: Callback support is not available."]
+    #[doc = "   - -EINVAL:  The port_id or the queue_id is out of range, or the callback"]
+    #[doc = "               is NULL or not found for the port/queue."]
     pub fn rte_eth_remove_tx_callback(
         port_id: u16,
         queue_id: u16,
@@ -29371,21 +29466,21 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Retrieve information about given port's RX queue.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param queue_id
-    ///   The RX queue on the Ethernet device for which information
-    ///   will be retrieved.
-    /// @param qinfo
-    ///   A pointer to a structure of type *rte_eth_rxq_info_info* to be filled with
-    ///   the information of the Ethernet device.
-    ///
-    /// @return
-    ///   - 0: Success
-    ///   - -ENOTSUP: routine is not supported by the device PMD.
-    ///   - -EINVAL:  The port_id or the queue_id is out of range.
+    #[doc = " Retrieve information about given port\'s RX queue."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param queue_id"]
+    #[doc = "   The RX queue on the Ethernet device for which information"]
+    #[doc = "   will be retrieved."]
+    #[doc = " @param qinfo"]
+    #[doc = "   A pointer to a structure of type *rte_eth_rxq_info_info* to be filled with"]
+    #[doc = "   the information of the Ethernet device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success"]
+    #[doc = "   - -ENOTSUP: routine is not supported by the device PMD."]
+    #[doc = "   - -EINVAL:  The port_id or the queue_id is out of range."]
     pub fn rte_eth_rx_queue_info_get(
         port_id: u16,
         queue_id: u16,
@@ -29393,21 +29488,21 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Retrieve information about given port's TX queue.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param queue_id
-    ///   The TX queue on the Ethernet device for which information
-    ///   will be retrieved.
-    /// @param qinfo
-    ///   A pointer to a structure of type *rte_eth_txq_info_info* to be filled with
-    ///   the information of the Ethernet device.
-    ///
-    /// @return
-    ///   - 0: Success
-    ///   - -ENOTSUP: routine is not supported by the device PMD.
-    ///   - -EINVAL:  The port_id or the queue_id is out of range.
+    #[doc = " Retrieve information about given port\'s TX queue."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param queue_id"]
+    #[doc = "   The TX queue on the Ethernet device for which information"]
+    #[doc = "   will be retrieved."]
+    #[doc = " @param qinfo"]
+    #[doc = "   A pointer to a structure of type *rte_eth_txq_info_info* to be filled with"]
+    #[doc = "   the information of the Ethernet device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success"]
+    #[doc = "   - -ENOTSUP: routine is not supported by the device PMD."]
+    #[doc = "   - -EINVAL:  The port_id or the queue_id is out of range."]
     pub fn rte_eth_tx_queue_info_get(
         port_id: u16,
         queue_id: u16,
@@ -29415,137 +29510,137 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Retrieve device registers and register attributes (number of registers and
-    /// register size)
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param info
-    ///   Pointer to rte_dev_reg_info structure to fill in. If info->data is
-    ///   NULL the function fills in the width and length fields. If non-NULL
-    ///   the registers are put into the buffer pointed at by the data field.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if hardware doesn't support.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - others depends on the specific operations implementation.
+    #[doc = " Retrieve device registers and register attributes (number of registers and"]
+    #[doc = " register size)"]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param info"]
+    #[doc = "   Pointer to rte_dev_reg_info structure to fill in. If info->data is"]
+    #[doc = "   NULL the function fills in the width and length fields. If non-NULL"]
+    #[doc = "   the registers are put into the buffer pointed at by the data field."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - others depends on the specific operations implementation."]
     pub fn rte_eth_dev_get_reg_info(
         port_id: u16,
         info: *mut rte_dev_reg_info,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Retrieve size of device EEPROM
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @return
-    ///   - (>=0) EEPROM size if successful.
-    ///   - (-ENOTSUP) if hardware doesn't support.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - others depends on the specific operations implementation.
+    #[doc = " Retrieve size of device EEPROM"]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @return"]
+    #[doc = "   - (>=0) EEPROM size if successful."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - others depends on the specific operations implementation."]
     pub fn rte_eth_dev_get_eeprom_length(port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Retrieve EEPROM and EEPROM attribute
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param info
-    ///   The template includes buffer for return EEPROM data and
-    ///   EEPROM attributes to be filled.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if hardware doesn't support.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - others depends on the specific operations implementation.
+    #[doc = " Retrieve EEPROM and EEPROM attribute"]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param info"]
+    #[doc = "   The template includes buffer for return EEPROM data and"]
+    #[doc = "   EEPROM attributes to be filled."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - others depends on the specific operations implementation."]
     pub fn rte_eth_dev_get_eeprom(
         port_id: u16,
         info: *mut rte_dev_eeprom_info,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Program EEPROM with provided data
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param info
-    ///   The template includes EEPROM data for programming and
-    ///   EEPROM attributes to be filled
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if hardware doesn't support.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - others depends on the specific operations implementation.
+    #[doc = " Program EEPROM with provided data"]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param info"]
+    #[doc = "   The template includes EEPROM data for programming and"]
+    #[doc = "   EEPROM attributes to be filled"]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - others depends on the specific operations implementation."]
     pub fn rte_eth_dev_set_eeprom(
         port_id: u16,
         info: *mut rte_dev_eeprom_info,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice.
-    ///
-    /// Retrieve the type and size of plugin module EEPROM
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param modinfo
-    ///   The type and size of plugin module EEPROM.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if hardware doesn't support.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - others depends on the specific operations implementation.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice."]
+    #[doc = ""]
+    #[doc = " Retrieve the type and size of plugin module EEPROM"]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param modinfo"]
+    #[doc = "   The type and size of plugin module EEPROM."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - others depends on the specific operations implementation."]
     pub fn rte_eth_dev_get_module_info(
         port_id: u16,
         modinfo: *mut rte_eth_dev_module_info,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice.
-    ///
-    /// Retrieve the data of plugin module EEPROM
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param info
-    ///   The template includes the plugin module EEPROM attributes, and the
-    ///   buffer for return plugin module EEPROM data.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP) if hardware doesn't support.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - others depends on the specific operations implementation.
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice."]
+    #[doc = ""]
+    #[doc = " Retrieve the data of plugin module EEPROM"]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param info"]
+    #[doc = "   The template includes the plugin module EEPROM attributes, and the"]
+    #[doc = "   buffer for return plugin module EEPROM data."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - others depends on the specific operations implementation."]
     pub fn rte_eth_dev_get_module_eeprom(
         port_id: u16,
         info: *mut rte_dev_eeprom_info,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set the list of multicast addresses to filter on an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param mc_addr_set
-    ///   The array of multicast addresses to set. Equal to NULL when the function
-    ///   is invoked to flush the set of filtered addresses.
-    /// @param nb_mc_addr
-    ///   The number of multicast addresses in the *mc_addr_set* array. Equal to 0
-    ///   when the function is invoked to flush the set of filtered addresses.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENODEV) if *port_id* invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - (-ENOTSUP) if PMD of *port_id* doesn't support multicast filtering.
-    ///   - (-ENOSPC) if *port_id* has not enough multicast filtering resources.
+    #[doc = " Set the list of multicast addresses to filter on an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param mc_addr_set"]
+    #[doc = "   The array of multicast addresses to set. Equal to NULL when the function"]
+    #[doc = "   is invoked to flush the set of filtered addresses."]
+    #[doc = " @param nb_mc_addr"]
+    #[doc = "   The number of multicast addresses in the *mc_addr_set* array. Equal to 0"]
+    #[doc = "   when the function is invoked to flush the set of filtered addresses."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENODEV) if *port_id* invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - (-ENOTSUP) if PMD of *port_id* doesn\'t support multicast filtering."]
+    #[doc = "   - (-ENOSPC) if *port_id* has not enough multicast filtering resources."]
     pub fn rte_eth_dev_set_mc_addr_list(
         port_id: u16,
         mc_addr_set: *mut ether_addr,
@@ -29553,48 +29648,48 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Enable IEEE1588/802.1AS timestamping for an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    ///
-    /// @return
-    ///   - 0: Success.
-    ///   - -ENODEV: The port ID is invalid.
-    ///   - -EIO: if device is removed.
-    ///   - -ENOTSUP: The function is not supported by the Ethernet driver.
+    #[doc = " Enable IEEE1588/802.1AS timestamping for an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success."]
+    #[doc = "   - -ENODEV: The port ID is invalid."]
+    #[doc = "   - -EIO: if device is removed."]
+    #[doc = "   - -ENOTSUP: The function is not supported by the Ethernet driver."]
     pub fn rte_eth_timesync_enable(port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Disable IEEE1588/802.1AS timestamping for an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    ///
-    /// @return
-    ///   - 0: Success.
-    ///   - -ENODEV: The port ID is invalid.
-    ///   - -EIO: if device is removed.
-    ///   - -ENOTSUP: The function is not supported by the Ethernet driver.
+    #[doc = " Disable IEEE1588/802.1AS timestamping for an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success."]
+    #[doc = "   - -ENODEV: The port ID is invalid."]
+    #[doc = "   - -EIO: if device is removed."]
+    #[doc = "   - -ENOTSUP: The function is not supported by the Ethernet driver."]
     pub fn rte_eth_timesync_disable(port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Read an IEEE1588/802.1AS RX timestamp from an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param timestamp
-    ///   Pointer to the timestamp struct.
-    /// @param flags
-    ///   Device specific flags. Used to pass the RX timesync register index to
-    ///   i40e. Unused in igb/ixgbe, pass 0 instead.
-    ///
-    /// @return
-    ///   - 0: Success.
-    ///   - -EINVAL: No timestamp is available.
-    ///   - -ENODEV: The port ID is invalid.
-    ///   - -EIO: if device is removed.
-    ///   - -ENOTSUP: The function is not supported by the Ethernet driver.
+    #[doc = " Read an IEEE1588/802.1AS RX timestamp from an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param timestamp"]
+    #[doc = "   Pointer to the timestamp struct."]
+    #[doc = " @param flags"]
+    #[doc = "   Device specific flags. Used to pass the RX timesync register index to"]
+    #[doc = "   i40e. Unused in igb/ixgbe, pass 0 instead."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success."]
+    #[doc = "   - -EINVAL: No timestamp is available."]
+    #[doc = "   - -ENODEV: The port ID is invalid."]
+    #[doc = "   - -EIO: if device is removed."]
+    #[doc = "   - -ENOTSUP: The function is not supported by the Ethernet driver."]
     pub fn rte_eth_timesync_read_rx_timestamp(
         port_id: u16,
         timestamp: *mut timespec,
@@ -29602,121 +29697,121 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Read an IEEE1588/802.1AS TX timestamp from an Ethernet device.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param timestamp
-    ///   Pointer to the timestamp struct.
-    ///
-    /// @return
-    ///   - 0: Success.
-    ///   - -EINVAL: No timestamp is available.
-    ///   - -ENODEV: The port ID is invalid.
-    ///   - -EIO: if device is removed.
-    ///   - -ENOTSUP: The function is not supported by the Ethernet driver.
+    #[doc = " Read an IEEE1588/802.1AS TX timestamp from an Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param timestamp"]
+    #[doc = "   Pointer to the timestamp struct."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success."]
+    #[doc = "   - -EINVAL: No timestamp is available."]
+    #[doc = "   - -ENODEV: The port ID is invalid."]
+    #[doc = "   - -EIO: if device is removed."]
+    #[doc = "   - -ENOTSUP: The function is not supported by the Ethernet driver."]
     pub fn rte_eth_timesync_read_tx_timestamp(
         port_id: u16,
         timestamp: *mut timespec,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Adjust the timesync clock on an Ethernet device.
-    ///
-    /// This is usually used in conjunction with other Ethdev timesync functions to
-    /// synchronize the device time using the IEEE1588/802.1AS protocol.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param delta
-    ///   The adjustment in nanoseconds.
-    ///
-    /// @return
-    ///   - 0: Success.
-    ///   - -ENODEV: The port ID is invalid.
-    ///   - -EIO: if device is removed.
-    ///   - -ENOTSUP: The function is not supported by the Ethernet driver.
+    #[doc = " Adjust the timesync clock on an Ethernet device."]
+    #[doc = ""]
+    #[doc = " This is usually used in conjunction with other Ethdev timesync functions to"]
+    #[doc = " synchronize the device time using the IEEE1588/802.1AS protocol."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param delta"]
+    #[doc = "   The adjustment in nanoseconds."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success."]
+    #[doc = "   - -ENODEV: The port ID is invalid."]
+    #[doc = "   - -EIO: if device is removed."]
+    #[doc = "   - -ENOTSUP: The function is not supported by the Ethernet driver."]
     pub fn rte_eth_timesync_adjust_time(port_id: u16, delta: i64) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Read the time from the timesync clock on an Ethernet device.
-    ///
-    /// This is usually used in conjunction with other Ethdev timesync functions to
-    /// synchronize the device time using the IEEE1588/802.1AS protocol.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param time
-    ///   Pointer to the timespec struct that holds the time.
-    ///
-    /// @return
-    ///   - 0: Success.
+    #[doc = " Read the time from the timesync clock on an Ethernet device."]
+    #[doc = ""]
+    #[doc = " This is usually used in conjunction with other Ethdev timesync functions to"]
+    #[doc = " synchronize the device time using the IEEE1588/802.1AS protocol."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param time"]
+    #[doc = "   Pointer to the timespec struct that holds the time."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success."]
     pub fn rte_eth_timesync_read_time(port_id: u16, time: *mut timespec) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set the time of the timesync clock on an Ethernet device.
-    ///
-    /// This is usually used in conjunction with other Ethdev timesync functions to
-    /// synchronize the device time using the IEEE1588/802.1AS protocol.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param time
-    ///   Pointer to the timespec struct that holds the time.
-    ///
-    /// @return
-    ///   - 0: Success.
-    ///   - -EINVAL: No timestamp is available.
-    ///   - -ENODEV: The port ID is invalid.
-    ///   - -EIO: if device is removed.
-    ///   - -ENOTSUP: The function is not supported by the Ethernet driver.
+    #[doc = " Set the time of the timesync clock on an Ethernet device."]
+    #[doc = ""]
+    #[doc = " This is usually used in conjunction with other Ethdev timesync functions to"]
+    #[doc = " synchronize the device time using the IEEE1588/802.1AS protocol."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param time"]
+    #[doc = "   Pointer to the timespec struct that holds the time."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success."]
+    #[doc = "   - -EINVAL: No timestamp is available."]
+    #[doc = "   - -ENODEV: The port ID is invalid."]
+    #[doc = "   - -EIO: if device is removed."]
+    #[doc = "   - -ENOTSUP: The function is not supported by the Ethernet driver."]
     pub fn rte_eth_timesync_write_time(
         port_id: u16,
         time: *const timespec,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Config l2 tunnel ether type of an Ethernet device for filtering specific
-    /// tunnel packets by ether type.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param l2_tunnel
-    ///   l2 tunnel configuration.
-    ///
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENODEV) if port identifier is invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - (-ENOTSUP) if hardware doesn't support tunnel type.
+    #[doc = " Config l2 tunnel ether type of an Ethernet device for filtering specific"]
+    #[doc = " tunnel packets by ether type."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param l2_tunnel"]
+    #[doc = "   l2 tunnel configuration."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENODEV) if port identifier is invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support tunnel type."]
     pub fn rte_eth_dev_l2_tunnel_eth_type_conf(
         port_id: u16,
         l2_tunnel: *mut rte_eth_l2_tunnel_conf,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Enable/disable l2 tunnel offload functions. Include,
-    /// 1, The ability of parsing a type of l2 tunnel of an Ethernet device.
-    ///    Filtering, forwarding and offloading this type of tunnel packets depend on
-    ///    this ability.
-    /// 2, Stripping the l2 tunnel tag.
-    /// 3, Insertion of the l2 tunnel tag.
-    /// 4, Forwarding the packets based on the l2 tunnel tag.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param l2_tunnel
-    ///   l2 tunnel parameters.
-    /// @param mask
-    ///   Indicate the offload function.
-    /// @param en
-    ///   Enable or disable this function.
-    ///
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENODEV) if port identifier is invalid.
-    ///   - (-EIO) if device is removed.
-    ///   - (-ENOTSUP) if hardware doesn't support tunnel type.
+    #[doc = " Enable/disable l2 tunnel offload functions. Include,"]
+    #[doc = " 1, The ability of parsing a type of l2 tunnel of an Ethernet device."]
+    #[doc = "    Filtering, forwarding and offloading this type of tunnel packets depend on"]
+    #[doc = "    this ability."]
+    #[doc = " 2, Stripping the l2 tunnel tag."]
+    #[doc = " 3, Insertion of the l2 tunnel tag."]
+    #[doc = " 4, Forwarding the packets based on the l2 tunnel tag."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param l2_tunnel"]
+    #[doc = "   l2 tunnel parameters."]
+    #[doc = " @param mask"]
+    #[doc = "   Indicate the offload function."]
+    #[doc = " @param en"]
+    #[doc = "   Enable or disable this function."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENODEV) if port identifier is invalid."]
+    #[doc = "   - (-EIO) if device is removed."]
+    #[doc = "   - (-ENOTSUP) if hardware doesn\'t support tunnel type."]
     pub fn rte_eth_dev_l2_tunnel_offload_set(
         port_id: u16,
         l2_tunnel: *mut rte_eth_l2_tunnel_conf,
@@ -29725,57 +29820,57 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get the port id from device name. The device name should be specified
-    /// as below:
-    /// - PCIe address (Domain:Bus:Device.Function), for example- 0000:2:00.0
-    /// - SoC device name, for example- fsl-gmac0
-    /// - vdev dpdk name, for example- net_[pcap0|null0|tap0]
-    ///
-    /// @param name
-    ///  pci address or name of the device
-    /// @param port_id
-    ///   pointer to port identifier of the device
-    /// @return
-    ///   - (0) if successful and port_id is filled.
-    ///   - (-ENODEV or -EINVAL) on failure.
+    #[doc = " Get the port id from device name. The device name should be specified"]
+    #[doc = " as below:"]
+    #[doc = " - PCIe address (Domain:Bus:Device.Function), for example- 0000:2:00.0"]
+    #[doc = " - SoC device name, for example- fsl-gmac0"]
+    #[doc = " - vdev dpdk name, for example- net_[pcap0|null0|tap0]"]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "  pci address or name of the device"]
+    #[doc = " @param port_id"]
+    #[doc = "   pointer to port identifier of the device"]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful and port_id is filled."]
+    #[doc = "   - (-ENODEV or -EINVAL) on failure."]
     pub fn rte_eth_dev_get_port_by_name(
         name: *const ::std::os::raw::c_char,
         port_id: *mut u16,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get the device name from port id. The device name is specified as below:
-    /// - PCIe address (Domain:Bus:Device.Function), for example- 0000:02:00.0
-    /// - SoC device name, for example- fsl-gmac0
-    /// - vdev dpdk name, for example- net_[pcap0|null0|tun0|tap0]
-    ///
-    /// @param port_id
-    ///   Port identifier of the device.
-    /// @param name
-    ///   Buffer of size RTE_ETH_NAME_MAX_LEN to store the name.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-EINVAL) on failure.
+    #[doc = " Get the device name from port id. The device name is specified as below:"]
+    #[doc = " - PCIe address (Domain:Bus:Device.Function), for example- 0000:02:00.0"]
+    #[doc = " - SoC device name, for example- fsl-gmac0"]
+    #[doc = " - vdev dpdk name, for example- net_[pcap0|null0|tun0|tap0]"]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   Port identifier of the device."]
+    #[doc = " @param name"]
+    #[doc = "   Buffer of size RTE_ETH_NAME_MAX_LEN to store the name."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-EINVAL) on failure."]
     pub fn rte_eth_dev_get_name_by_port(
         port_id: u16,
         name: *mut ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Check that numbers of Rx and Tx descriptors satisfy descriptors limits from
-    /// the ethernet device information, otherwise adjust them to boundaries.
-    ///
-    /// @param port_id
-    ///   The port identifier of the Ethernet device.
-    /// @param nb_rx_desc
-    ///   A pointer to a uint16_t where the number of receive
-    ///   descriptors stored.
-    /// @param nb_tx_desc
-    ///   A pointer to a uint16_t where the number of transmit
-    ///   descriptors stored.
-    /// @return
-    ///   - (0) if successful.
-    ///   - (-ENOTSUP, -ENODEV or -EINVAL) on failure.
+    #[doc = " Check that numbers of Rx and Tx descriptors satisfy descriptors limits from"]
+    #[doc = " the ethernet device information, otherwise adjust them to boundaries."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   The port identifier of the Ethernet device."]
+    #[doc = " @param nb_rx_desc"]
+    #[doc = "   A pointer to a uint16_t where the number of receive"]
+    #[doc = "   descriptors stored."]
+    #[doc = " @param nb_tx_desc"]
+    #[doc = "   A pointer to a uint16_t where the number of transmit"]
+    #[doc = "   descriptors stored."]
+    #[doc = " @return"]
+    #[doc = "   - (0) if successful."]
+    #[doc = "   - (-ENOTSUP, -ENODEV or -EINVAL) on failure."]
     pub fn rte_eth_dev_adjust_nb_rx_tx_desc(
         port_id: u16,
         nb_rx_desc: *mut u16,
@@ -29783,48 +29878,48 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Test if a port supports specific mempool ops.
-    ///
-    /// @param port_id
-    ///   Port identifier of the Ethernet device.
-    /// @param [in] pool
-    ///   The name of the pool operations to test.
-    /// @return
-    ///   - 0: best mempool ops choice for this port.
-    ///   - 1: mempool ops are supported for this port.
-    ///   - -ENOTSUP: mempool ops not supported for this port.
-    ///   - -ENODEV: Invalid port Identifier.
-    ///   - -EINVAL: Pool param is null.
+    #[doc = " Test if a port supports specific mempool ops."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   Port identifier of the Ethernet device."]
+    #[doc = " @param [in] pool"]
+    #[doc = "   The name of the pool operations to test."]
+    #[doc = " @return"]
+    #[doc = "   - 0: best mempool ops choice for this port."]
+    #[doc = "   - 1: mempool ops are supported for this port."]
+    #[doc = "   - -ENOTSUP: mempool ops not supported for this port."]
+    #[doc = "   - -ENODEV: Invalid port Identifier."]
+    #[doc = "   - -EINVAL: Pool param is null."]
     pub fn rte_eth_dev_pool_ops_supported(
         port_id: u16,
         pool: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get the security context for the Ethernet device.
-    ///
-    /// @param port_id
-    ///   Port identifier of the Ethernet device
-    /// @return
-    ///   - NULL on error.
-    ///   - pointer to security context on success.
+    #[doc = " Get the security context for the Ethernet device."]
+    #[doc = ""]
+    #[doc = " @param port_id"]
+    #[doc = "   Port identifier of the Ethernet device"]
+    #[doc = " @return"]
+    #[doc = "   - NULL on error."]
+    #[doc = "   - pointer to security context on success."]
     pub fn rte_eth_dev_get_sec_ctx(port_id: u16) -> *mut ::std::os::raw::c_void;
 }
-/// @file
-///
-/// RTE Ethernet Device internal header.
-///
-/// This header contains internal data types. But they are still part of the
-/// public API because they are used by inline functions in the published API.
-///
-/// Applications should not use these directly.
-///
+#[doc = " @file"]
+#[doc = ""]
+#[doc = " RTE Ethernet Device internal header."]
+#[doc = ""]
+#[doc = " This header contains internal data types. But they are still part of the"]
+#[doc = " public API because they are used by inline functions in the published API."]
+#[doc = ""]
+#[doc = " Applications should not use these directly."]
+#[doc = ""]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rte_eth_dev_callback {
     _unused: [u8; 0],
 }
-/// @internal Structure to keep track of registered callbacks
+#[doc = " @internal Structure to keep track of registered callbacks"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_eth_dev_cb_list {
@@ -29881,7 +29976,7 @@ pub type eth_dev_set_link_down_t =
 pub type eth_dev_close_t = ::std::option::Option<unsafe extern "C" fn(dev: *mut rte_eth_dev)>;
 pub type eth_dev_reset_t =
     ::std::option::Option<unsafe extern "C" fn(dev: *mut rte_eth_dev) -> ::std::os::raw::c_int>;
-/// <@internal Function used to reset a configured Ethernet device.
+#[doc = " <@internal Function used to reset a configured Ethernet device."]
 pub type eth_is_removed_t =
     ::std::option::Option<unsafe extern "C" fn(dev: *mut rte_eth_dev) -> ::std::os::raw::c_int>;
 pub type eth_promiscuous_enable_t =
@@ -30204,164 +30299,164 @@ pub type eth_pool_ops_supported_t = ::std::option::Option<
     unsafe extern "C" fn(dev: *mut rte_eth_dev, pool: *const ::std::os::raw::c_char)
         -> ::std::os::raw::c_int,
 >;
-/// @internal A structure containing the functions exported by an Ethernet driver.
+#[doc = " @internal A structure containing the functions exported by an Ethernet driver."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct eth_dev_ops {
-    ///< Configure device.
+    #[doc = "< Configure device."]
     pub dev_configure: eth_dev_configure_t,
-    ///< Start device.
+    #[doc = "< Start device."]
     pub dev_start: eth_dev_start_t,
-    ///< Stop device.
+    #[doc = "< Stop device."]
     pub dev_stop: eth_dev_stop_t,
-    ///< Device link up.
+    #[doc = "< Device link up."]
     pub dev_set_link_up: eth_dev_set_link_up_t,
-    ///< Device link down.
+    #[doc = "< Device link down."]
     pub dev_set_link_down: eth_dev_set_link_down_t,
-    ///< Close device.
+    #[doc = "< Close device."]
     pub dev_close: eth_dev_close_t,
-    ///< Reset device.
+    #[doc = "< Reset device."]
     pub dev_reset: eth_dev_reset_t,
-    ///< Get device link state.
+    #[doc = "< Get device link state."]
     pub link_update: eth_link_update_t,
     pub is_removed: eth_is_removed_t,
-    ///< Promiscuous ON.
+    #[doc = "< Promiscuous ON."]
     pub promiscuous_enable: eth_promiscuous_enable_t,
-    ///< Promiscuous OFF.
+    #[doc = "< Promiscuous OFF."]
     pub promiscuous_disable: eth_promiscuous_disable_t,
-    ///< RX multicast ON.
+    #[doc = "< RX multicast ON."]
     pub allmulticast_enable: eth_allmulticast_enable_t,
-    ///< RX multicast OFF.
+    #[doc = "< RX multicast OFF."]
     pub allmulticast_disable: eth_allmulticast_disable_t,
-    ///< Remove MAC address.
+    #[doc = "< Remove MAC address."]
     pub mac_addr_remove: eth_mac_addr_remove_t,
-    ///< Add a MAC address.
+    #[doc = "< Add a MAC address."]
     pub mac_addr_add: eth_mac_addr_add_t,
-    ///< Set a MAC address.
+    #[doc = "< Set a MAC address."]
     pub mac_addr_set: eth_mac_addr_set_t,
-    ///< set list of mcast addrs.
+    #[doc = "< set list of mcast addrs."]
     pub set_mc_addr_list: eth_set_mc_addr_list_t,
-    ///< Set MTU.
+    #[doc = "< Set MTU."]
     pub mtu_set: mtu_set_t,
-    ///< Get generic device statistics.
+    #[doc = "< Get generic device statistics."]
     pub stats_get: eth_stats_get_t,
-    ///< Reset generic device statistics.
+    #[doc = "< Reset generic device statistics."]
     pub stats_reset: eth_stats_reset_t,
-    ///< Get extended device statistics.
+    #[doc = "< Get extended device statistics."]
     pub xstats_get: eth_xstats_get_t,
-    ///< Reset extended device statistics.
+    #[doc = "< Reset extended device statistics."]
     pub xstats_reset: eth_xstats_reset_t,
     pub xstats_get_names: eth_xstats_get_names_t,
     pub queue_stats_mapping_set: eth_queue_stats_mapping_set_t,
-    ///< Get device info.
+    #[doc = "< Get device info."]
     pub dev_infos_get: eth_dev_infos_get_t,
-    ///< retrieve RX queue information.
+    #[doc = "< retrieve RX queue information."]
     pub rxq_info_get: eth_rxq_info_get_t,
-    ///< retrieve TX queue information.
+    #[doc = "< retrieve TX queue information."]
     pub txq_info_get: eth_txq_info_get_t,
-    ///< Get firmware version.
+    #[doc = "< Get firmware version."]
     pub fw_version_get: eth_fw_version_get_t,
     pub dev_supported_ptypes_get: eth_dev_supported_ptypes_get_t,
-    ///< Filter VLAN Setup.
+    #[doc = "< Filter VLAN Setup."]
     pub vlan_filter_set: vlan_filter_set_t,
-    ///< Outer/Inner VLAN TPID Setup.
+    #[doc = "< Outer/Inner VLAN TPID Setup."]
     pub vlan_tpid_set: vlan_tpid_set_t,
-    ///< VLAN Stripping on queue.
+    #[doc = "< VLAN Stripping on queue."]
     pub vlan_strip_queue_set: vlan_strip_queue_set_t,
-    ///< Set VLAN Offload.
+    #[doc = "< Set VLAN Offload."]
     pub vlan_offload_set: vlan_offload_set_t,
-    ///< Set port based TX VLAN insertion.
+    #[doc = "< Set port based TX VLAN insertion."]
     pub vlan_pvid_set: vlan_pvid_set_t,
-    ///< Start RX for a queue.
+    #[doc = "< Start RX for a queue."]
     pub rx_queue_start: eth_queue_start_t,
-    ///< Stop RX for a queue.
+    #[doc = "< Stop RX for a queue."]
     pub rx_queue_stop: eth_queue_stop_t,
-    ///< Start TX for a queue.
+    #[doc = "< Start TX for a queue."]
     pub tx_queue_start: eth_queue_start_t,
-    ///< Stop TX for a queue.
+    #[doc = "< Stop TX for a queue."]
     pub tx_queue_stop: eth_queue_stop_t,
-    ///< Set up device RX queue.
+    #[doc = "< Set up device RX queue."]
     pub rx_queue_setup: eth_rx_queue_setup_t,
-    ///< Release RX queue.
+    #[doc = "< Release RX queue."]
     pub rx_queue_release: eth_queue_release_t,
     pub rx_queue_count: eth_rx_queue_count_t,
-    ///< Check rxd DD bit.
+    #[doc = "< Check rxd DD bit."]
     pub rx_descriptor_done: eth_rx_descriptor_done_t,
     pub rx_descriptor_status: eth_rx_descriptor_status_t,
     pub tx_descriptor_status: eth_tx_descriptor_status_t,
-    ///< Enable Rx queue interrupt.
+    #[doc = "< Enable Rx queue interrupt."]
     pub rx_queue_intr_enable: eth_rx_enable_intr_t,
-    ///< Disable Rx queue interrupt.
+    #[doc = "< Disable Rx queue interrupt."]
     pub rx_queue_intr_disable: eth_rx_disable_intr_t,
-    ///< Set up device TX queue.
+    #[doc = "< Set up device TX queue."]
     pub tx_queue_setup: eth_tx_queue_setup_t,
-    ///< Release TX queue.
+    #[doc = "< Release TX queue."]
     pub tx_queue_release: eth_queue_release_t,
-    ///< Free tx ring mbufs
+    #[doc = "< Free tx ring mbufs"]
     pub tx_done_cleanup: eth_tx_done_cleanup_t,
-    ///< Turn on LED.
+    #[doc = "< Turn on LED."]
     pub dev_led_on: eth_dev_led_on_t,
-    ///< Turn off LED.
+    #[doc = "< Turn off LED."]
     pub dev_led_off: eth_dev_led_off_t,
-    ///< Get flow control.
+    #[doc = "< Get flow control."]
     pub flow_ctrl_get: flow_ctrl_get_t,
-    ///< Setup flow control.
+    #[doc = "< Setup flow control."]
     pub flow_ctrl_set: flow_ctrl_set_t,
-    ///< Setup priority flow control.
+    #[doc = "< Setup priority flow control."]
     pub priority_flow_ctrl_set: priority_flow_ctrl_set_t,
-    ///< Set Unicast Table Array.
+    #[doc = "< Set Unicast Table Array."]
     pub uc_hash_table_set: eth_uc_hash_table_set_t,
-    ///< Set Unicast hash bitmap.
+    #[doc = "< Set Unicast hash bitmap."]
     pub uc_all_hash_table_set: eth_uc_all_hash_table_set_t,
-    ///< Add a traffic mirror rule.
+    #[doc = "< Add a traffic mirror rule."]
     pub mirror_rule_set: eth_mirror_rule_set_t,
-    ///< reset a traffic mirror rule.
+    #[doc = "< reset a traffic mirror rule."]
     pub mirror_rule_reset: eth_mirror_rule_reset_t,
     pub udp_tunnel_port_add: eth_udp_tunnel_port_add_t,
-    /// Add UDP tunnel port.
+    #[doc = " Add UDP tunnel port."]
     pub udp_tunnel_port_del: eth_udp_tunnel_port_del_t,
-    /// Del UDP tunnel port.
+    #[doc = " Del UDP tunnel port."]
     pub l2_tunnel_eth_type_conf: eth_l2_tunnel_eth_type_conf_t,
-    /// Config ether type of l2 tunnel.
+    #[doc = " Config ether type of l2 tunnel."]
     pub l2_tunnel_offload_set: eth_l2_tunnel_offload_set_t,
-    ///< Set queue rate limit.
+    #[doc = "< Set queue rate limit."]
     pub set_queue_rate_limit: eth_set_queue_rate_limit_t,
     pub rss_hash_update: rss_hash_update_t,
-    /// Configure RSS hash protocols.
+    #[doc = " Configure RSS hash protocols."]
     pub rss_hash_conf_get: rss_hash_conf_get_t,
-    /// Get current RSS hash configuration.
+    #[doc = " Get current RSS hash configuration."]
     pub reta_update: reta_update_t,
-    /// Update redirection table.
+    #[doc = " Update redirection table."]
     pub reta_query: reta_query_t,
-    ///< Get registers.
+    #[doc = "< Get registers."]
     pub get_reg: eth_get_reg_t,
-    ///< Get eeprom length.
+    #[doc = "< Get eeprom length."]
     pub get_eeprom_length: eth_get_eeprom_length_t,
-    ///< Get eeprom data.
+    #[doc = "< Get eeprom data."]
     pub get_eeprom: eth_get_eeprom_t,
-    ///< Set eeprom.
+    #[doc = "< Set eeprom."]
     pub set_eeprom: eth_set_eeprom_t,
     pub get_module_info: eth_get_module_info_t,
-    /// Get plugin module eeprom attribute.
+    #[doc = " Get plugin module eeprom attribute."]
     pub get_module_eeprom: eth_get_module_eeprom_t,
-    ///< common filter control.
+    #[doc = "< common filter control."]
     pub filter_ctrl: eth_filter_ctrl_t,
     pub get_dcb_info: eth_get_dcb_info,
-    /// Get DCB information.
+    #[doc = " Get DCB information."]
     pub timesync_enable: eth_timesync_enable_t,
-    /// Turn IEEE1588/802.1AS timestamping on.
+    #[doc = " Turn IEEE1588/802.1AS timestamping on."]
     pub timesync_disable: eth_timesync_disable_t,
-    /// Turn IEEE1588/802.1AS timestamping off.
+    #[doc = " Turn IEEE1588/802.1AS timestamping off."]
     pub timesync_read_rx_timestamp: eth_timesync_read_rx_timestamp_t,
-    /// Read the IEEE1588/802.1AS RX timestamp.
+    #[doc = " Read the IEEE1588/802.1AS RX timestamp."]
     pub timesync_read_tx_timestamp: eth_timesync_read_tx_timestamp_t,
-    /// Read the IEEE1588/802.1AS TX timestamp.
+    #[doc = " Read the IEEE1588/802.1AS TX timestamp."]
     pub timesync_adjust_time: eth_timesync_adjust_time,
-    /// Adjust the device clock.
+    #[doc = " Adjust the device clock."]
     pub timesync_read_time: eth_timesync_read_time,
-    /// Get the device clock time.
+    #[doc = " Get the device clock time."]
     pub timesync_write_time: eth_timesync_write_time,
-    /// Set the device clock time.
+    #[doc = " Set the device clock time."]
     pub xstats_get_by_id: eth_xstats_get_by_id_t,
     pub xstats_get_names_by_id: eth_xstats_get_names_by_id_t,
     pub tm_ops_get: eth_tm_ops_get_t,
@@ -31290,9 +31385,9 @@ impl Default for eth_dev_ops {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// @internal
-/// Structure used to hold information about the callbacks to be called for a
-/// queue on RX and TX.
+#[doc = " @internal"]
+#[doc = " Structure used to hold information about the callbacks to be called for a"]
+#[doc = " queue on RX and TX."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_rxtx_callback {
@@ -31400,44 +31495,44 @@ impl Default for rte_eth_rxtx_callback {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// @internal
-/// The generic data structure associated with each ethernet device.
-///
-/// Pointers to burst-oriented packet receive and transmit functions are
-/// located at the beginning of the structure, along with the pointer to
-/// where all the data elements for the particular device are stored in shared
-/// memory. This split allows the function pointer and driver data to be per-
-/// process, while the actual configuration data for the device is shared.
+#[doc = " @internal"]
+#[doc = " The generic data structure associated with each ethernet device."]
+#[doc = ""]
+#[doc = " Pointers to burst-oriented packet receive and transmit functions are"]
+#[doc = " located at the beginning of the structure, along with the pointer to"]
+#[doc = " where all the data elements for the particular device are stored in shared"]
+#[doc = " memory. This split allows the function pointer and driver data to be per-"]
+#[doc = " process, while the actual configuration data for the device is shared."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_dev {
-    ///< Pointer to PMD receive function.
+    #[doc = "< Pointer to PMD receive function."]
     pub rx_pkt_burst: eth_rx_burst_t,
-    ///< Pointer to PMD transmit function.
+    #[doc = "< Pointer to PMD transmit function."]
     pub tx_pkt_burst: eth_tx_burst_t,
-    ///< Pointer to PMD transmit prepare function.
+    #[doc = "< Pointer to PMD transmit prepare function."]
     pub tx_pkt_prepare: eth_tx_prep_t,
-    ///< Pointer to device data.
+    #[doc = "< Pointer to device data."]
     pub data: *mut rte_eth_dev_data,
-    ///< Pointer to per-process device data.
+    #[doc = "< Pointer to per-process device data."]
     pub process_private: *mut ::std::os::raw::c_void,
-    ///< Functions exported by PMD
+    #[doc = "< Functions exported by PMD"]
     pub dev_ops: *const eth_dev_ops,
-    ///< Backing device
+    #[doc = "< Backing device"]
     pub device: *mut rte_device,
-    ///< Device interrupt handle
+    #[doc = "< Device interrupt handle"]
     pub intr_handle: *mut rte_intr_handle,
-    /// User application callbacks for NIC interrupts
+    #[doc = " User application callbacks for NIC interrupts"]
     pub link_intr_cbs: rte_eth_dev_cb_list,
-    /// User-supplied functions called from rx_burst to post-process
-    /// received packets before passing them to the user
+    #[doc = " User-supplied functions called from rx_burst to post-process"]
+    #[doc = " received packets before passing them to the user"]
     pub post_rx_burst_cbs: [*mut rte_eth_rxtx_callback; 1024usize],
-    /// User-supplied functions called from tx_burst to pre-process
-    /// received packets before passing them to the driver for transmission.
+    #[doc = " User-supplied functions called from tx_burst to pre-process"]
+    #[doc = " received packets before passing them to the driver for transmission."]
     pub pre_tx_burst_cbs: [*mut rte_eth_rxtx_callback; 1024usize],
-    ///< Flag indicating the port state
+    #[doc = "< Flag indicating the port state"]
     pub state: rte_eth_dev_state::Type,
-    ///< Context for security ops
+    #[doc = "< Context for security ops"]
     pub security_ctx: *mut ::std::os::raw::c_void,
     pub __bindgen_padding_0: [u64; 4usize],
 }
@@ -31584,52 +31679,52 @@ impl Default for rte_eth_dev {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// @internal
-/// The data part, with no function pointers, associated with each ethernet device.
-///
-/// This structure is safe to place in shared memory to be common among different
-/// processes in a multi-process configuration.
+#[doc = " @internal"]
+#[doc = " The data part, with no function pointers, associated with each ethernet device."]
+#[doc = ""]
+#[doc = " This structure is safe to place in shared memory to be common among different"]
+#[doc = " processes in a multi-process configuration."]
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct rte_eth_dev_data {
-    ///< Unique identifier name
+    #[doc = "< Unique identifier name"]
     pub name: [::std::os::raw::c_char; 64usize],
-    ///< Array of pointers to RX queues.
+    #[doc = "< Array of pointers to RX queues."]
     pub rx_queues: *mut *mut ::std::os::raw::c_void,
-    ///< Array of pointers to TX queues.
+    #[doc = "< Array of pointers to TX queues."]
     pub tx_queues: *mut *mut ::std::os::raw::c_void,
-    ///< Number of RX queues.
+    #[doc = "< Number of RX queues."]
     pub nb_rx_queues: u16,
-    ///< Number of TX queues.
+    #[doc = "< Number of TX queues."]
     pub nb_tx_queues: u16,
-    ///< SRIOV data
+    #[doc = "< SRIOV data"]
     pub sriov: rte_eth_dev_sriov,
     pub dev_private: *mut ::std::os::raw::c_void,
-    ///< Link-level information & status.
+    #[doc = "< Link-level information & status."]
     pub dev_link: rte_eth_link,
-    ///< Configuration applied to device.
+    #[doc = "< Configuration applied to device."]
     pub dev_conf: rte_eth_conf,
-    ///< Maximum Transmission Unit.
+    #[doc = "< Maximum Transmission Unit."]
     pub mtu: u16,
     pub min_rx_buf_size: u32,
-    ///< RX ring mbuf allocation failures.
+    #[doc = "< RX ring mbuf allocation failures."]
     pub rx_mbuf_alloc_failed: u64,
     pub mac_addrs: *mut ether_addr,
     pub mac_pool_sel: [u64; 128usize],
     pub hash_mac_addrs: *mut ether_addr,
-    ///< Device [external] port identifier.
+    #[doc = "< Device [external] port identifier."]
     pub port_id: u16,
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize], u8>,
     pub rx_queue_state: [u8; 1024usize],
     pub tx_queue_state: [u8; 1024usize],
-    ///< Capabilities.
+    #[doc = "< Capabilities."]
     pub dev_flags: u32,
-    ///< Kernel driver passthrough.
+    #[doc = "< Kernel driver passthrough."]
     pub kdrv: rte_kernel_driver::Type,
-    ///< NUMA node connection.
+    #[doc = "< NUMA node connection."]
     pub numa_node: ::std::os::raw::c_int,
     pub vlan_filter_conf: rte_vlan_filter_conf,
-    ///< The port owner.
+    #[doc = "< The port owner."]
     pub owner: rte_eth_dev_owner,
     pub representor_id: u16,
     pub __bindgen_padding_0: [u16; 15usize],
@@ -31998,22 +32093,22 @@ pub mod rte_kni_req_id {
 #[repr(C, packed)]
 #[derive(Copy, Clone)]
 pub struct rte_kni_request {
-    ///< Request id
+    #[doc = "< Request id"]
     pub req_id: u32,
     pub __bindgen_anon_1: rte_kni_request__bindgen_ty_1,
-    ///< Result for processing request
+    #[doc = "< Result for processing request"]
     pub result: i32,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union rte_kni_request__bindgen_ty_1 {
-    ///< New MTU
+    #[doc = "< New MTU"]
     pub new_mtu: u32,
-    ///< 1: interface up, 0: interface down
+    #[doc = "< 1: interface up, 0: interface down"]
     pub if_up: u8,
-    ///< MAC address for interface
+    #[doc = "< MAC address for interface"]
     pub mac_addr: [u8; 6usize],
-    ///< 1: promisc mode enable, 0: disable
+    #[doc = "< 1: promisc mode enable, 0: disable"]
     pub promiscusity: u8,
     _bindgen_union_align: [u32; 2usize],
 }
@@ -32125,15 +32220,15 @@ impl Default for rte_kni_request {
 #[repr(C)]
 #[derive(Debug)]
 pub struct rte_kni_fifo {
-    ///< Next position to be written
+    #[doc = "< Next position to be written"]
     pub write: ::std::os::raw::c_uint,
-    ///< Next position to be read
+    #[doc = "< Next position to be read"]
     pub read: ::std::os::raw::c_uint,
-    ///< Circular buffer length
+    #[doc = "< Circular buffer length"]
     pub len: ::std::os::raw::c_uint,
-    ///< Pointer size - for 32/64 bit OS
+    #[doc = "< Pointer size - for 32/64 bit OS"]
     pub elem_size: ::std::os::raw::c_uint,
-    ///< The buffer contains mbuf pointers
+    #[doc = "< The buffer contains mbuf pointers"]
     pub buffer: __IncompleteArrayField<*mut ::std::os::raw::c_void>,
     pub __bindgen_align: [u64; 0usize],
 }
@@ -32160,18 +32255,18 @@ impl Default for rte_kni_fifo {
 pub struct rte_kni_mbuf {
     pub buf_addr: *mut ::std::os::raw::c_void,
     pub buf_physaddr: u64,
-    ///< Start address of data in segment buffer.
+    #[doc = "< Start address of data in segment buffer."]
     pub data_off: u16,
     pub pad1: [::std::os::raw::c_char; 2usize],
-    ///< Number of segments.
+    #[doc = "< Number of segments."]
     pub nb_segs: u16,
     pub pad4: [::std::os::raw::c_char; 2usize],
-    ///< Offload features.
+    #[doc = "< Offload features."]
     pub ol_flags: u64,
     pub pad2: [::std::os::raw::c_char; 4usize],
-    ///< Total pkt len: sum of all segment data_len.
+    #[doc = "< Total pkt len: sum of all segment data_len."]
     pub pkt_len: u32,
-    ///< Amount of data in segment buffer.
+    #[doc = "< Amount of data in segment buffer."]
     pub data_len: u16,
     pub __bindgen_padding_0: [u8; 22usize],
     pub pad3: [::std::os::raw::c_char; 8usize],
@@ -32325,7 +32420,7 @@ impl Default for rte_kni_mbuf {
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_kni_device_info {
-    ///< Network device name for KNI
+    #[doc = "< Network device name for KNI"]
     pub name: [::std::os::raw::c_char; 32usize],
     pub tx_phys: phys_addr_t,
     pub rx_phys: phys_addr_t,
@@ -32337,19 +32432,19 @@ pub struct rte_kni_device_info {
     pub sync_va: *mut ::std::os::raw::c_void,
     pub mbuf_va: *mut ::std::os::raw::c_void,
     pub mbuf_phys: phys_addr_t,
-    ///< Vendor ID or PCI_ANY_ID.
+    #[doc = "< Vendor ID or PCI_ANY_ID."]
     pub vendor_id: u16,
-    ///< Device ID or PCI_ANY_ID.
+    #[doc = "< Device ID or PCI_ANY_ID."]
     pub device_id: u16,
-    ///< Device bus
+    #[doc = "< Device bus"]
     pub bus: u8,
-    ///< Device ID
+    #[doc = "< Device ID"]
     pub devid: u8,
-    ///< Device function.
+    #[doc = "< Device function."]
     pub function: u8,
-    ///< Group ID
+    #[doc = "< Group ID"]
     pub group_id: u16,
-    ///< core ID to bind for kernel thread
+    #[doc = "< core ID to bind for kernel thread"]
     pub core_id: u32,
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize], u8>,
     pub mbuf_size: ::std::os::raw::c_uint,
@@ -32612,7 +32707,7 @@ impl rte_kni_device_info {
 pub struct rte_kni {
     _unused: [u8; 0],
 }
-/// Structure which has the function pointers for KNI interface.
+#[doc = " Structure which has the function pointers for KNI interface."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct rte_kni_ops {
@@ -32699,7 +32794,7 @@ impl Default for rte_kni_ops {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// Structure for configuring KNI device.
+#[doc = " Structure for configuring KNI device."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_kni_conf {
@@ -32830,42 +32925,42 @@ impl rte_kni_conf {
     }
 }
 extern "C" {
-    /// Initialize and preallocate KNI subsystem
-    ///
-    /// This function is to be executed on the MASTER lcore only, after EAL
-    /// initialization and before any KNI interface is attempted to be
-    /// allocated
-    ///
-    /// @param max_kni_ifaces
-    ///  The maximum number of KNI interfaces that can coexist concurrently
-    ///
-    /// @return
-    ///  - 0 indicates success.
-    ///  - negative value indicates failure.
+    #[doc = " Initialize and preallocate KNI subsystem"]
+    #[doc = ""]
+    #[doc = " This function is to be executed on the MASTER lcore only, after EAL"]
+    #[doc = " initialization and before any KNI interface is attempted to be"]
+    #[doc = " allocated"]
+    #[doc = ""]
+    #[doc = " @param max_kni_ifaces"]
+    #[doc = "  The maximum number of KNI interfaces that can coexist concurrently"]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - 0 indicates success."]
+    #[doc = "  - negative value indicates failure."]
     pub fn rte_kni_init(max_kni_ifaces: ::std::os::raw::c_uint) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Allocate KNI interface according to the port id, mbuf size, mbuf pool,
-    /// configurations and callbacks for kernel requests.The KNI interface created
-    /// in the kernel space is the net interface the traditional Linux application
-    /// talking to.
-    ///
-    /// The rte_kni_alloc shall not be called before rte_kni_init() has been
-    /// called. rte_kni_alloc is thread safe.
-    ///
-    /// The mempool should have capacity of more than "2 x KNI_FIFO_COUNT_MAX"
-    /// elements for each KNI interface allocated.
-    ///
-    /// @param pktmbuf_pool
-    ///  The mempool for allocating mbufs for packets.
-    /// @param conf
-    ///  The pointer to the configurations of the KNI device.
-    /// @param ops
-    ///  The pointer to the callbacks for the KNI kernel requests.
-    ///
-    /// @return
-    ///  - The pointer to the context of a KNI interface.
-    ///  - NULL indicate error.
+    #[doc = " Allocate KNI interface according to the port id, mbuf size, mbuf pool,"]
+    #[doc = " configurations and callbacks for kernel requests.The KNI interface created"]
+    #[doc = " in the kernel space is the net interface the traditional Linux application"]
+    #[doc = " talking to."]
+    #[doc = ""]
+    #[doc = " The rte_kni_alloc shall not be called before rte_kni_init() has been"]
+    #[doc = " called. rte_kni_alloc is thread safe."]
+    #[doc = ""]
+    #[doc = " The mempool should have capacity of more than \"2 x KNI_FIFO_COUNT_MAX\""]
+    #[doc = " elements for each KNI interface allocated."]
+    #[doc = ""]
+    #[doc = " @param pktmbuf_pool"]
+    #[doc = "  The mempool for allocating mbufs for packets."]
+    #[doc = " @param conf"]
+    #[doc = "  The pointer to the configurations of the KNI device."]
+    #[doc = " @param ops"]
+    #[doc = "  The pointer to the callbacks for the KNI kernel requests."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - The pointer to the context of a KNI interface."]
+    #[doc = "  - NULL indicate error."]
     pub fn rte_kni_alloc(
         pktmbuf_pool: *mut rte_mempool,
         conf: *const rte_kni_conf,
@@ -32873,48 +32968,48 @@ extern "C" {
     ) -> *mut rte_kni;
 }
 extern "C" {
-    /// Release KNI interface according to the context. It will also release the
-    /// paired KNI interface in kernel space. All processing on the specific KNI
-    /// context need to be stopped before calling this interface.
-    ///
-    /// rte_kni_release is thread safe.
-    ///
-    /// @param kni
-    ///  The pointer to the context of an existent KNI interface.
-    ///
-    /// @return
-    ///  - 0 indicates success.
-    ///  - negative value indicates failure.
+    #[doc = " Release KNI interface according to the context. It will also release the"]
+    #[doc = " paired KNI interface in kernel space. All processing on the specific KNI"]
+    #[doc = " context need to be stopped before calling this interface."]
+    #[doc = ""]
+    #[doc = " rte_kni_release is thread safe."]
+    #[doc = ""]
+    #[doc = " @param kni"]
+    #[doc = "  The pointer to the context of an existent KNI interface."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - 0 indicates success."]
+    #[doc = "  - negative value indicates failure."]
     pub fn rte_kni_release(kni: *mut rte_kni) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// It is used to handle the request mbufs sent from kernel space.
-    /// Then analyzes it and calls the specific actions for the specific requests.
-    /// Finally constructs the response mbuf and puts it back to the resp_q.
-    ///
-    /// @param kni
-    ///  The pointer to the context of an existent KNI interface.
-    ///
-    /// @return
-    ///  - 0
-    ///  - negative value indicates failure.
+    #[doc = " It is used to handle the request mbufs sent from kernel space."]
+    #[doc = " Then analyzes it and calls the specific actions for the specific requests."]
+    #[doc = " Finally constructs the response mbuf and puts it back to the resp_q."]
+    #[doc = ""]
+    #[doc = " @param kni"]
+    #[doc = "  The pointer to the context of an existent KNI interface."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - 0"]
+    #[doc = "  - negative value indicates failure."]
     pub fn rte_kni_handle_request(kni: *mut rte_kni) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Retrieve a burst of packets from a KNI interface. The retrieved packets are
-    /// stored in rte_mbuf structures whose pointers are supplied in the array of
-    /// mbufs, and the maximum number is indicated by num. It handles allocating
-    /// the mbufs for KNI interface alloc queue.
-    ///
-    /// @param kni
-    ///  The KNI interface context.
-    /// @param mbufs
-    ///  The array to store the pointers of mbufs.
-    /// @param num
-    ///  The maximum number per burst.
-    ///
-    /// @return
-    ///  The actual number of packets retrieved.
+    #[doc = " Retrieve a burst of packets from a KNI interface. The retrieved packets are"]
+    #[doc = " stored in rte_mbuf structures whose pointers are supplied in the array of"]
+    #[doc = " mbufs, and the maximum number is indicated by num. It handles allocating"]
+    #[doc = " the mbufs for KNI interface alloc queue."]
+    #[doc = ""]
+    #[doc = " @param kni"]
+    #[doc = "  The KNI interface context."]
+    #[doc = " @param mbufs"]
+    #[doc = "  The array to store the pointers of mbufs."]
+    #[doc = " @param num"]
+    #[doc = "  The maximum number per burst."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  The actual number of packets retrieved."]
     pub fn rte_kni_rx_burst(
         kni: *mut rte_kni,
         mbufs: *mut *mut rte_mbuf,
@@ -32922,20 +33017,20 @@ extern "C" {
     ) -> ::std::os::raw::c_uint;
 }
 extern "C" {
-    /// Send a burst of packets to a KNI interface. The packets to be sent out are
-    /// stored in rte_mbuf structures whose pointers are supplied in the array of
-    /// mbufs, and the maximum number is indicated by num. It handles the freeing of
-    /// the mbufs in the free queue of KNI interface.
-    ///
-    /// @param kni
-    ///  The KNI interface context.
-    /// @param mbufs
-    ///  The array to store the pointers of mbufs.
-    /// @param num
-    ///  The maximum number per burst.
-    ///
-    /// @return
-    ///  The actual number of packets sent.
+    #[doc = " Send a burst of packets to a KNI interface. The packets to be sent out are"]
+    #[doc = " stored in rte_mbuf structures whose pointers are supplied in the array of"]
+    #[doc = " mbufs, and the maximum number is indicated by num. It handles the freeing of"]
+    #[doc = " the mbufs in the free queue of KNI interface."]
+    #[doc = ""]
+    #[doc = " @param kni"]
+    #[doc = "  The KNI interface context."]
+    #[doc = " @param mbufs"]
+    #[doc = "  The array to store the pointers of mbufs."]
+    #[doc = " @param num"]
+    #[doc = "  The maximum number per burst."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  The actual number of packets sent."]
     pub fn rte_kni_tx_burst(
         kni: *mut rte_kni,
         mbufs: *mut *mut rte_mbuf,
@@ -32943,87 +33038,87 @@ extern "C" {
     ) -> ::std::os::raw::c_uint;
 }
 extern "C" {
-    /// Get the KNI context of its name.
-    ///
-    /// @param name
-    ///  pointer to the KNI device name.
-    ///
-    /// @return
-    ///  On success: Pointer to KNI interface.
-    ///  On failure: NULL.
+    #[doc = " Get the KNI context of its name."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "  pointer to the KNI device name."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  On success: Pointer to KNI interface."]
+    #[doc = "  On failure: NULL."]
     pub fn rte_kni_get(name: *const ::std::os::raw::c_char) -> *mut rte_kni;
 }
 extern "C" {
-    /// Get the name given to a KNI device
-    ///
-    /// @param kni
-    ///   The KNI instance to query
-    /// @return
-    ///   The pointer to the KNI name
+    #[doc = " Get the name given to a KNI device"]
+    #[doc = ""]
+    #[doc = " @param kni"]
+    #[doc = "   The KNI instance to query"]
+    #[doc = " @return"]
+    #[doc = "   The pointer to the KNI name"]
     pub fn rte_kni_get_name(kni: *const rte_kni) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Register KNI request handling for a specified port,and it can
-    /// be called by master process or slave process.
-    ///
-    /// @param kni
-    ///  pointer to struct rte_kni.
-    /// @param ops
-    ///  pointer to struct rte_kni_ops.
-    ///
-    /// @return
-    ///  On success: 0
-    ///  On failure: -1
+    #[doc = " Register KNI request handling for a specified port,and it can"]
+    #[doc = " be called by master process or slave process."]
+    #[doc = ""]
+    #[doc = " @param kni"]
+    #[doc = "  pointer to struct rte_kni."]
+    #[doc = " @param ops"]
+    #[doc = "  pointer to struct rte_kni_ops."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  On success: 0"]
+    #[doc = "  On failure: -1"]
     pub fn rte_kni_register_handlers(
         kni: *mut rte_kni,
         ops: *mut rte_kni_ops,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    ///  Unregister KNI request handling for a specified port.
-    ///
-    ///  @param kni
-    ///   pointer to struct rte_kni.
-    ///
-    ///  @return
-    ///   On success: 0
-    ///   On failure: -1
+    #[doc = "  Unregister KNI request handling for a specified port."]
+    #[doc = ""]
+    #[doc = "  @param kni"]
+    #[doc = "   pointer to struct rte_kni."]
+    #[doc = ""]
+    #[doc = "  @return"]
+    #[doc = "   On success: 0"]
+    #[doc = "   On failure: -1"]
     pub fn rte_kni_unregister_handlers(kni: *mut rte_kni) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Update link carrier state for KNI port.
-    ///
-    /// Update the linkup/linkdown state of a KNI interface in the kernel.
-    ///
-    /// @param kni
-    ///  pointer to struct rte_kni.
-    /// @param linkup
-    ///  New link state:
-    ///  0 for linkdown.
-    ///  > 0 for linkup.
-    ///
-    /// @return
-    ///  On failure: -1
-    ///  Previous link state == linkdown: 0
-    ///  Previous link state == linkup: 1
+    #[doc = " Update link carrier state for KNI port."]
+    #[doc = ""]
+    #[doc = " Update the linkup/linkdown state of a KNI interface in the kernel."]
+    #[doc = ""]
+    #[doc = " @param kni"]
+    #[doc = "  pointer to struct rte_kni."]
+    #[doc = " @param linkup"]
+    #[doc = "  New link state:"]
+    #[doc = "  0 for linkdown."]
+    #[doc = "  > 0 for linkup."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  On failure: -1"]
+    #[doc = "  Previous link state == linkdown: 0"]
+    #[doc = "  Previous link state == linkup: 1"]
     pub fn rte_kni_update_link(
         kni: *mut rte_kni,
         linkup: ::std::os::raw::c_uint,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    ///  Close KNI device.
+    #[doc = "  Close KNI device."]
     pub fn rte_kni_close();
 }
 extern "C" {
-    /// Create a bonded rte_eth_dev device
-    ///
-    /// @param name			Name of new link bonding device.
-    /// @param mode			Mode to initialize bonding device in.
-    /// @param socket_id		Socket Id on which to allocate eth_dev resources.
-    ///
-    /// @return
-    ///	Port Id of created rte_eth_dev on success, negative value otherwise
+    #[doc = " Create a bonded rte_eth_dev device"]
+    #[doc = ""]
+    #[doc = " @param name\t\t\tName of new link bonding device."]
+    #[doc = " @param mode\t\t\tMode to initialize bonding device in."]
+    #[doc = " @param socket_id\t\tSocket Id on which to allocate eth_dev resources."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "\tPort Id of created rte_eth_dev on success, negative value otherwise"]
     pub fn rte_eth_bond_create(
         name: *const ::std::os::raw::c_char,
         mode: u8,
@@ -33031,89 +33126,89 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Free a bonded rte_eth_dev device
-    ///
-    /// @param name			Name of the link bonding device.
-    ///
-    /// @return
-    ///	0 on success, negative value otherwise
+    #[doc = " Free a bonded rte_eth_dev device"]
+    #[doc = ""]
+    #[doc = " @param name\t\t\tName of the link bonding device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "\t0 on success, negative value otherwise"]
     pub fn rte_eth_bond_free(name: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Add a rte_eth_dev device as a slave to the bonded device
-    ///
-    /// @param bonded_port_id	Port ID of bonded device.
-    /// @param slave_port_id		Port ID of slave device.
-    ///
-    /// @return
-    ///	0 on success, negative value otherwise
+    #[doc = " Add a rte_eth_dev device as a slave to the bonded device"]
+    #[doc = ""]
+    #[doc = " @param bonded_port_id\tPort ID of bonded device."]
+    #[doc = " @param slave_port_id\t\tPort ID of slave device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "\t0 on success, negative value otherwise"]
     pub fn rte_eth_bond_slave_add(bonded_port_id: u16, slave_port_id: u16)
         -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Remove a slave rte_eth_dev device from the bonded device
-    ///
-    /// @param bonded_port_id	Port ID of bonded device.
-    /// @param slave_port_id		Port ID of slave device.
-    ///
-    /// @return
-    ///	0 on success, negative value otherwise
+    #[doc = " Remove a slave rte_eth_dev device from the bonded device"]
+    #[doc = ""]
+    #[doc = " @param bonded_port_id\tPort ID of bonded device."]
+    #[doc = " @param slave_port_id\t\tPort ID of slave device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "\t0 on success, negative value otherwise"]
     pub fn rte_eth_bond_slave_remove(
         bonded_port_id: u16,
         slave_port_id: u16,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set link bonding mode of bonded device
-    ///
-    /// @param bonded_port_id	Port ID of bonded device.
-    /// @param mode				Bonding mode to set
-    ///
-    /// @return
-    ///	0 on success, negative value otherwise
+    #[doc = " Set link bonding mode of bonded device"]
+    #[doc = ""]
+    #[doc = " @param bonded_port_id\tPort ID of bonded device."]
+    #[doc = " @param mode\t\t\t\tBonding mode to set"]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "\t0 on success, negative value otherwise"]
     pub fn rte_eth_bond_mode_set(bonded_port_id: u16, mode: u8) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get link bonding mode of bonded device
-    ///
-    /// @param bonded_port_id	Port ID of bonded device.
-    ///
-    /// @return
-    ///	link bonding mode on success, negative value otherwise
+    #[doc = " Get link bonding mode of bonded device"]
+    #[doc = ""]
+    #[doc = " @param bonded_port_id\tPort ID of bonded device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "\tlink bonding mode on success, negative value otherwise"]
     pub fn rte_eth_bond_mode_get(bonded_port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set slave rte_eth_dev as primary slave of bonded device
-    ///
-    /// @param bonded_port_id	Port ID of bonded device.
-    /// @param slave_port_id		Port ID of slave device.
-    ///
-    /// @return
-    ///	0 on success, negative value otherwise
+    #[doc = " Set slave rte_eth_dev as primary slave of bonded device"]
+    #[doc = ""]
+    #[doc = " @param bonded_port_id\tPort ID of bonded device."]
+    #[doc = " @param slave_port_id\t\tPort ID of slave device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "\t0 on success, negative value otherwise"]
     pub fn rte_eth_bond_primary_set(
         bonded_port_id: u16,
         slave_port_id: u16,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get primary slave of bonded device
-    ///
-    /// @param bonded_port_id	Port ID of bonded device.
-    ///
-    /// @return
-    ///	Port Id of primary slave on success, -1 on failure
+    #[doc = " Get primary slave of bonded device"]
+    #[doc = ""]
+    #[doc = " @param bonded_port_id\tPort ID of bonded device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "\tPort Id of primary slave on success, -1 on failure"]
     pub fn rte_eth_bond_primary_get(bonded_port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Populate an array with list of the slaves port id's of the bonded device
-    ///
-    /// @param bonded_port_id	Port ID of bonded eth_dev to interrogate
-    /// @param slaves			Array to be populated with the current active slaves
-    /// @param len				Length of slaves array
-    ///
-    /// @return
-    ///	Number of slaves associated with bonded device on success,
-    ///	negative value otherwise
+    #[doc = " Populate an array with list of the slaves port id\'s of the bonded device"]
+    #[doc = ""]
+    #[doc = " @param bonded_port_id\tPort ID of bonded eth_dev to interrogate"]
+    #[doc = " @param slaves\t\t\tArray to be populated with the current active slaves"]
+    #[doc = " @param len\t\t\t\tLength of slaves array"]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "\tNumber of slaves associated with bonded device on success,"]
+    #[doc = "\tnegative value otherwise"]
     pub fn rte_eth_bond_slaves_get(
         bonded_port_id: u16,
         slaves: *mut u16,
@@ -33121,16 +33216,16 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Populate an array with list of the active slaves port id's of the bonded
-    /// device.
-    ///
-    /// @param bonded_port_id	Port ID of bonded eth_dev to interrogate
-    /// @param slaves			Array to be populated with the current active slaves
-    /// @param len				Length of slaves array
-    ///
-    /// @return
-    ///	Number of active slaves associated with bonded device on success,
-    ///	negative value otherwise
+    #[doc = " Populate an array with list of the active slaves port id\'s of the bonded"]
+    #[doc = " device."]
+    #[doc = ""]
+    #[doc = " @param bonded_port_id\tPort ID of bonded eth_dev to interrogate"]
+    #[doc = " @param slaves\t\t\tArray to be populated with the current active slaves"]
+    #[doc = " @param len\t\t\t\tLength of slaves array"]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "\tNumber of active slaves associated with bonded device on success,"]
+    #[doc = "\tnegative value otherwise"]
     pub fn rte_eth_bond_active_slaves_get(
         bonded_port_id: u16,
         slaves: *mut u16,
@@ -33138,133 +33233,133 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set explicit MAC address to use on bonded device and it's slaves.
-    ///
-    /// @param bonded_port_id	Port ID of bonded device.
-    /// @param mac_addr			MAC Address to use on bonded device overriding
-    ///							slaves MAC addresses
-    ///
-    /// @return
-    ///	0 on success, negative value otherwise
+    #[doc = " Set explicit MAC address to use on bonded device and it\'s slaves."]
+    #[doc = ""]
+    #[doc = " @param bonded_port_id\tPort ID of bonded device."]
+    #[doc = " @param mac_addr\t\t\tMAC Address to use on bonded device overriding"]
+    #[doc = "\t\t\t\t\t\t\tslaves MAC addresses"]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "\t0 on success, negative value otherwise"]
     pub fn rte_eth_bond_mac_address_set(
         bonded_port_id: u16,
         mac_addr: *mut ether_addr,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Reset bonded device to use MAC from primary slave on bonded device and it's
-    /// slaves.
-    ///
-    /// @param bonded_port_id	Port ID of bonded device.
-    ///
-    /// @return
-    ///	0 on success, negative value otherwise
+    #[doc = " Reset bonded device to use MAC from primary slave on bonded device and it\'s"]
+    #[doc = " slaves."]
+    #[doc = ""]
+    #[doc = " @param bonded_port_id\tPort ID of bonded device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "\t0 on success, negative value otherwise"]
     pub fn rte_eth_bond_mac_address_reset(bonded_port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set the transmit policy for bonded device to use when it is operating in
-    /// balance mode, this parameter is otherwise ignored in other modes of
-    /// operation.
-    ///
-    /// @param bonded_port_id	Port ID of bonded device.
-    /// @param policy			Balance mode transmission policy.
-    ///
-    /// @return
-    ///	0 on success, negative value otherwise.
+    #[doc = " Set the transmit policy for bonded device to use when it is operating in"]
+    #[doc = " balance mode, this parameter is otherwise ignored in other modes of"]
+    #[doc = " operation."]
+    #[doc = ""]
+    #[doc = " @param bonded_port_id\tPort ID of bonded device."]
+    #[doc = " @param policy\t\t\tBalance mode transmission policy."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "\t0 on success, negative value otherwise."]
     pub fn rte_eth_bond_xmit_policy_set(bonded_port_id: u16, policy: u8) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get the transmit policy set on bonded device for balance mode operation
-    ///
-    /// @param bonded_port_id	Port ID of bonded device.
-    ///
-    /// @return
-    ///	Balance transmit policy on success, negative value otherwise.
+    #[doc = " Get the transmit policy set on bonded device for balance mode operation"]
+    #[doc = ""]
+    #[doc = " @param bonded_port_id\tPort ID of bonded device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "\tBalance transmit policy on success, negative value otherwise."]
     pub fn rte_eth_bond_xmit_policy_get(bonded_port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set the link monitoring frequency (in ms) for monitoring the link status of
-    /// slave devices
-    ///
-    /// @param bonded_port_id	Port ID of bonded device.
-    /// @param internal_ms		Monitoring interval in milliseconds
-    ///
-    /// @return
-    ///	0 on success, negative value otherwise.
+    #[doc = " Set the link monitoring frequency (in ms) for monitoring the link status of"]
+    #[doc = " slave devices"]
+    #[doc = ""]
+    #[doc = " @param bonded_port_id\tPort ID of bonded device."]
+    #[doc = " @param internal_ms\t\tMonitoring interval in milliseconds"]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "\t0 on success, negative value otherwise."]
     pub fn rte_eth_bond_link_monitoring_set(
         bonded_port_id: u16,
         internal_ms: u32,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get the current link monitoring frequency (in ms) for monitoring of the link
-    /// status of slave devices
-    ///
-    /// @param bonded_port_id	Port ID of bonded device.
-    ///
-    /// @return
-    ///	Monitoring interval on success, negative value otherwise.
+    #[doc = " Get the current link monitoring frequency (in ms) for monitoring of the link"]
+    #[doc = " status of slave devices"]
+    #[doc = ""]
+    #[doc = " @param bonded_port_id\tPort ID of bonded device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "\tMonitoring interval on success, negative value otherwise."]
     pub fn rte_eth_bond_link_monitoring_get(bonded_port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set the period in milliseconds for delaying the disabling of a bonded link
-    /// when the link down status has been detected
-    ///
-    /// @param bonded_port_id	Port ID of bonded device.
-    /// @param delay_ms			Delay period in milliseconds.
-    ///
-    /// @return
-    ///  0 on success, negative value otherwise.
+    #[doc = " Set the period in milliseconds for delaying the disabling of a bonded link"]
+    #[doc = " when the link down status has been detected"]
+    #[doc = ""]
+    #[doc = " @param bonded_port_id\tPort ID of bonded device."]
+    #[doc = " @param delay_ms\t\t\tDelay period in milliseconds."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  0 on success, negative value otherwise."]
     pub fn rte_eth_bond_link_down_prop_delay_set(
         bonded_port_id: u16,
         delay_ms: u32,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get the period in milliseconds set for delaying the disabling of a bonded
-    /// link when the link down status has been detected
-    ///
-    /// @param bonded_port_id	Port ID of bonded device.
-    ///
-    /// @return
-    ///  Delay period on success, negative value otherwise.
+    #[doc = " Get the period in milliseconds set for delaying the disabling of a bonded"]
+    #[doc = " link when the link down status has been detected"]
+    #[doc = ""]
+    #[doc = " @param bonded_port_id\tPort ID of bonded device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  Delay period on success, negative value otherwise."]
     pub fn rte_eth_bond_link_down_prop_delay_get(bonded_port_id: u16) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set the period in milliseconds for delaying the enabling of a bonded link
-    /// when the link up status has been detected
-    ///
-    /// @param bonded_port_id	Port ID of bonded device.
-    /// @param delay_ms			Delay period in milliseconds.
-    ///
-    /// @return
-    ///  0 on success, negative value otherwise.
+    #[doc = " Set the period in milliseconds for delaying the enabling of a bonded link"]
+    #[doc = " when the link up status has been detected"]
+    #[doc = ""]
+    #[doc = " @param bonded_port_id\tPort ID of bonded device."]
+    #[doc = " @param delay_ms\t\t\tDelay period in milliseconds."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  0 on success, negative value otherwise."]
     pub fn rte_eth_bond_link_up_prop_delay_set(
         bonded_port_id: u16,
         delay_ms: u32,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Get the period in milliseconds set for delaying the enabling of a bonded
-    /// link when the link up status has been detected
-    ///
-    /// @param bonded_port_id	Port ID of bonded device.
-    ///
-    /// @return
-    ///  Delay period on success, negative value otherwise.
+    #[doc = " Get the period in milliseconds set for delaying the enabling of a bonded"]
+    #[doc = " link when the link up status has been detected"]
+    #[doc = ""]
+    #[doc = " @param bonded_port_id\tPort ID of bonded device."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  Delay period on success, negative value otherwise."]
     pub fn rte_eth_bond_link_up_prop_delay_get(bonded_port_id: u16) -> ::std::os::raw::c_int;
 }
-/// ARP header IPv4 payload.
+#[doc = " ARP header IPv4 payload."]
 #[repr(C, packed)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct arp_ipv4 {
-    ///< sender hardware address
+    #[doc = "< sender hardware address"]
     pub arp_sha: ether_addr,
-    ///< sender IP address
+    #[doc = "< sender IP address"]
     pub arp_sip: u32,
-    ///< target hardware address
+    #[doc = "< target hardware address"]
     pub arp_tha: ether_addr,
-    ///< target IP address
+    #[doc = "< target IP address"]
     pub arp_tip: u32,
 }
 #[test]
@@ -33320,7 +33415,7 @@ fn bindgen_test_layout_arp_ipv4() {
         )
     );
 }
-/// ARP header.
+#[doc = " ARP header."]
 #[repr(C, packed)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct arp_hdr {
@@ -33405,18 +33500,18 @@ fn bindgen_test_layout_arp_hdr() {
     );
 }
 extern "C" {
-    /// @warning
-    /// @b EXPERIMENTAL: this API may change without prior notice
-    ///
-    /// Make a RARP packet based on MAC addr.
-    ///
-    /// @param mpool
-    ///   Pointer to the rte_mempool
-    /// @param mac
-    ///   Pointer to the MAC addr
-    ///
-    /// @return
-    ///   - RARP packet pointer on success, or NULL on error
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Make a RARP packet based on MAC addr."]
+    #[doc = ""]
+    #[doc = " @param mpool"]
+    #[doc = "   Pointer to the rte_mempool"]
+    #[doc = " @param mac"]
+    #[doc = "   Pointer to the MAC addr"]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - RARP packet pointer on success, or NULL on error"]
     pub fn rte_net_make_rarp_packet(
         mpool: *mut rte_mempool,
         mac: *const ether_addr,
@@ -34834,29 +34929,29 @@ extern "C" {
         __sock_in: *mut sockaddr_in6,
     ) -> ::std::os::raw::c_int;
 }
-/// IPv4 Header
+#[doc = " IPv4 Header"]
 #[repr(C, packed)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct ipv4_hdr {
-    ///< version and header length
+    #[doc = "< version and header length"]
     pub version_ihl: u8,
-    ///< type of service
+    #[doc = "< type of service"]
     pub type_of_service: u8,
-    ///< length of packet
+    #[doc = "< length of packet"]
     pub total_length: u16,
-    ///< packet ID
+    #[doc = "< packet ID"]
     pub packet_id: u16,
-    ///< fragmentation offset
+    #[doc = "< fragmentation offset"]
     pub fragment_offset: u16,
-    ///< time to live
+    #[doc = "< time to live"]
     pub time_to_live: u8,
-    ///< protocol ID
+    #[doc = "< protocol ID"]
     pub next_proto_id: u8,
-    ///< header checksum
+    #[doc = "< header checksum"]
     pub hdr_checksum: u16,
-    ///< source address
+    #[doc = "< source address"]
     pub src_addr: u32,
-    ///< destination address
+    #[doc = "< destination address"]
     pub dst_addr: u32,
 }
 #[test]
@@ -34972,21 +35067,21 @@ fn bindgen_test_layout_ipv4_hdr() {
         )
     );
 }
-/// IPv6 Header
+#[doc = " IPv6 Header"]
 #[repr(C, packed)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct ipv6_hdr {
-    ///< IP version, traffic class & flow label.
+    #[doc = "< IP version, traffic class & flow label."]
     pub vtc_flow: u32,
-    ///< IP packet length - includes sizeof(ip_header).
+    #[doc = "< IP packet length - includes sizeof(ip_header)."]
     pub payload_len: u16,
-    ///< Protocol, next header.
+    #[doc = "< Protocol, next header."]
     pub proto: u8,
-    ///< Hop limits.
+    #[doc = "< Hop limits."]
     pub hop_limits: u8,
-    ///< IP address of source host.
+    #[doc = "< IP address of source host."]
     pub src_addr: [u8; 16usize],
-    ///< IP address of destination host(s).
+    #[doc = "< IP address of destination host(s)."]
     pub dst_addr: [u8; 16usize],
 }
 #[test]
@@ -35062,7 +35157,7 @@ fn bindgen_test_layout_ipv6_hdr() {
         )
     );
 }
-/// ICMP Header
+#[doc = " ICMP Header"]
 #[repr(C, packed)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct icmp_hdr {
@@ -35135,27 +35230,27 @@ fn bindgen_test_layout_icmp_hdr() {
         )
     );
 }
-/// TCP Header
+#[doc = " TCP Header"]
 #[repr(C, packed)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct tcp_hdr {
-    ///< TCP source port.
+    #[doc = "< TCP source port."]
     pub src_port: u16,
-    ///< TCP destination port.
+    #[doc = "< TCP destination port."]
     pub dst_port: u16,
-    ///< TX data sequence number.
+    #[doc = "< TX data sequence number."]
     pub sent_seq: u32,
-    ///< RX data acknowledgement sequence number.
+    #[doc = "< RX data acknowledgement sequence number."]
     pub recv_ack: u32,
-    ///< Data offset.
+    #[doc = "< Data offset."]
     pub data_off: u8,
-    ///< TCP flags
+    #[doc = "< TCP flags"]
     pub tcp_flags: u8,
-    ///< RX flow control window.
+    #[doc = "< RX flow control window."]
     pub rx_win: u16,
-    ///< TCP checksum.
+    #[doc = "< TCP checksum."]
     pub cksum: u16,
-    ///< TCP urgent pointer, if any.
+    #[doc = "< TCP urgent pointer, if any."]
     pub tcp_urp: u16,
 }
 #[test]
@@ -35261,17 +35356,17 @@ fn bindgen_test_layout_tcp_hdr() {
         )
     );
 }
-/// UDP Header
+#[doc = " UDP Header"]
 #[repr(C, packed)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct udp_hdr {
-    ///< UDP source port.
+    #[doc = "< UDP source port."]
     pub src_port: u16,
-    ///< UDP destination port.
+    #[doc = "< UDP destination port."]
     pub dst_port: u16,
-    ///< UDP datagram length
+    #[doc = "< UDP datagram length"]
     pub dgram_len: u16,
-    ///< UDP datagram checksum
+    #[doc = "< UDP datagram checksum"]
     pub dgram_cksum: u16,
 }
 #[test]
@@ -35327,17 +35422,17 @@ fn bindgen_test_layout_udp_hdr() {
         )
     );
 }
-/// SCTP Header
+#[doc = " SCTP Header"]
 #[repr(C, packed)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct sctp_hdr {
-    ///< Source port.
+    #[doc = "< Source port."]
     pub src_port: u16,
-    ///< Destin port.
+    #[doc = "< Destin port."]
     pub dst_port: u16,
-    ///< Validation tag.
+    #[doc = "< Validation tag."]
     pub tag: u32,
-    ///< Checksum.
+    #[doc = "< Checksum."]
     pub cksum: u32,
 }
 #[test]
@@ -35393,17 +35488,17 @@ fn bindgen_test_layout_sctp_hdr() {
         )
     );
 }
-/// This structure is the header of a cirbuf type.
+#[doc = " This structure is the header of a cirbuf type."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct cirbuf {
-    ///< total len of the fifo (number of elements)
+    #[doc = "< total len of the fifo (number of elements)"]
     pub maxlen: ::std::os::raw::c_uint,
-    ///< indice of the first elt
+    #[doc = "< indice of the first elt"]
     pub start: ::std::os::raw::c_uint,
-    ///< indice of the last elt
+    #[doc = "< indice of the last elt"]
     pub end: ::std::os::raw::c_uint,
-    ///< current len of fifo
+    #[doc = "< current len of fifo"]
     pub len: ::std::os::raw::c_uint,
     pub buf: *mut ::std::os::raw::c_char,
 }
@@ -35476,7 +35571,7 @@ impl Default for cirbuf {
     }
 }
 extern "C" {
-    /// Init the circular buffer
+    #[doc = " Init the circular buffer"]
     pub fn cirbuf_init(
         cbuf: *mut cirbuf,
         buf: *mut ::std::os::raw::c_char,
@@ -35485,65 +35580,65 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Add a character at head of the circular buffer. Return 0 on success, or
-    /// a negative value on error.
+    #[doc = " Add a character at head of the circular buffer. Return 0 on success, or"]
+    #[doc = " a negative value on error."]
     pub fn cirbuf_add_head_safe(
         cbuf: *mut cirbuf,
         c: ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Add a character at head of the circular buffer. You _must_ check that you
-    /// have enough free space in the buffer before calling this func.
+    #[doc = " Add a character at head of the circular buffer. You _must_ check that you"]
+    #[doc = " have enough free space in the buffer before calling this func."]
     pub fn cirbuf_add_head(cbuf: *mut cirbuf, c: ::std::os::raw::c_char);
 }
 extern "C" {
-    /// Add a character at tail of the circular buffer. Return 0 on success, or
-    /// a negative value on error.
+    #[doc = " Add a character at tail of the circular buffer. Return 0 on success, or"]
+    #[doc = " a negative value on error."]
     pub fn cirbuf_add_tail_safe(
         cbuf: *mut cirbuf,
         c: ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Add a character at tail of the circular buffer. You _must_ check that you
-    /// have enough free space in the buffer before calling this func.
+    #[doc = " Add a character at tail of the circular buffer. You _must_ check that you"]
+    #[doc = " have enough free space in the buffer before calling this func."]
     pub fn cirbuf_add_tail(cbuf: *mut cirbuf, c: ::std::os::raw::c_char);
 }
 extern "C" {
-    /// Remove a char at the head of the circular buffer. Return 0 on
-    /// success, or a negative value on error.
+    #[doc = " Remove a char at the head of the circular buffer. Return 0 on"]
+    #[doc = " success, or a negative value on error."]
     pub fn cirbuf_del_head_safe(cbuf: *mut cirbuf) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Remove a char at the head of the circular buffer. You _must_ check
-    /// that buffer is not empty before calling the function.
+    #[doc = " Remove a char at the head of the circular buffer. You _must_ check"]
+    #[doc = " that buffer is not empty before calling the function."]
     pub fn cirbuf_del_head(cbuf: *mut cirbuf);
 }
 extern "C" {
-    /// Remove a char at the tail of the circular buffer. Return 0 on
-    /// success, or a negative value on error.
+    #[doc = " Remove a char at the tail of the circular buffer. Return 0 on"]
+    #[doc = " success, or a negative value on error."]
     pub fn cirbuf_del_tail_safe(cbuf: *mut cirbuf) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Remove a char at the tail of the circular buffer. You _must_ check
-    /// that buffer is not empty before calling the function.
+    #[doc = " Remove a char at the tail of the circular buffer. You _must_ check"]
+    #[doc = " that buffer is not empty before calling the function."]
     pub fn cirbuf_del_tail(cbuf: *mut cirbuf);
 }
 extern "C" {
-    /// Return the head of the circular buffer. You _must_ check that
-    /// buffer is not empty before calling the function.
+    #[doc = " Return the head of the circular buffer. You _must_ check that"]
+    #[doc = " buffer is not empty before calling the function."]
     pub fn cirbuf_get_head(cbuf: *mut cirbuf) -> ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Return the tail of the circular buffer. You _must_ check that
-    /// buffer is not empty before calling the function.
+    #[doc = " Return the tail of the circular buffer. You _must_ check that"]
+    #[doc = " buffer is not empty before calling the function."]
     pub fn cirbuf_get_tail(cbuf: *mut cirbuf) -> ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Add a buffer at head of the circular buffer. 'c' is a pointer to a
-    /// buffer, and n is the number of char to add. Return the number of
-    /// copied bytes on success, or a negative value on error.
+    #[doc = " Add a buffer at head of the circular buffer. \'c\' is a pointer to a"]
+    #[doc = " buffer, and n is the number of char to add. Return the number of"]
+    #[doc = " copied bytes on success, or a negative value on error."]
     pub fn cirbuf_add_buf_head(
         cbuf: *mut cirbuf,
         c: *const ::std::os::raw::c_char,
@@ -35551,9 +35646,9 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Add a buffer at tail of the circular buffer. 'c' is a pointer to a
-    /// buffer, and n is the number of char to add. Return the number of
-    /// copied bytes on success, or a negative value on error.
+    #[doc = " Add a buffer at tail of the circular buffer. \'c\' is a pointer to a"]
+    #[doc = " buffer, and n is the number of char to add. Return the number of"]
+    #[doc = " copied bytes on success, or a negative value on error."]
     pub fn cirbuf_add_buf_tail(
         cbuf: *mut cirbuf,
         c: *const ::std::os::raw::c_char,
@@ -35561,25 +35656,25 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Remove chars at the head of the circular buffer. Return 0 on
-    /// success, or a negative value on error.
+    #[doc = " Remove chars at the head of the circular buffer. Return 0 on"]
+    #[doc = " success, or a negative value on error."]
     pub fn cirbuf_del_buf_head(
         cbuf: *mut cirbuf,
         size: ::std::os::raw::c_uint,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Remove chars at the tail of the circular buffer. Return 0 on
-    /// success, or a negative value on error.
+    #[doc = " Remove chars at the tail of the circular buffer. Return 0 on"]
+    #[doc = " success, or a negative value on error."]
     pub fn cirbuf_del_buf_tail(
         cbuf: *mut cirbuf,
         size: ::std::os::raw::c_uint,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Copy a maximum of 'size' characters from the head of the circular
-    /// buffer to a flat one pointed by 'c'. Return the number of copied
-    /// chars.
+    #[doc = " Copy a maximum of \'size\' characters from the head of the circular"]
+    #[doc = " buffer to a flat one pointed by \'c\'. Return the number of copied"]
+    #[doc = " chars."]
     pub fn cirbuf_get_buf_head(
         cbuf: *mut cirbuf,
         c: *mut ::std::os::raw::c_char,
@@ -35587,9 +35682,9 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Copy a maximum of 'size' characters from the tail of the circular
-    /// buffer to a flat one pointed by 'c'. Return the number of copied
-    /// chars.
+    #[doc = " Copy a maximum of \'size\' characters from the tail of the circular"]
+    #[doc = " buffer to a flat one pointed by \'c\'. Return the number of copied"]
+    #[doc = " chars."]
     pub fn cirbuf_get_buf_tail(
         cbuf: *mut cirbuf,
         c: *mut ::std::os::raw::c_char,
@@ -35597,11 +35692,11 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set the start of the data to the index 0 of the internal buffer.
+    #[doc = " Set the start of the data to the index 0 of the internal buffer."]
     pub fn cirbuf_align_left(cbuf: *mut cirbuf) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Set the end of the data to the last index of the internal buffer.
+    #[doc = " Set the end of the data to the last index of the internal buffer."]
     pub fn cirbuf_align_right(cbuf: *mut cirbuf) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -35670,14 +35765,14 @@ impl Default for cmdline_vt100 {
     }
 }
 extern "C" {
-    /// Init
+    #[doc = " Init"]
     pub fn vt100_init(vt: *mut cmdline_vt100);
 }
 extern "C" {
-    /// Input a new character.
-    /// Return -1 if the character is not part of a control sequence
-    /// Return -2 if c is not the last char of a control sequence
-    /// Else return the index in vt100_commands[]
+    #[doc = " Input a new character."]
+    #[doc = " Return -1 if the character is not part of a control sequence"]
+    #[doc = " Return -2 if c is not the last char of a control sequence"]
+    #[doc = " Else return the index in vt100_commands[]"]
     pub fn vt100_parser(vt: *mut cmdline_vt100, c: ::std::os::raw::c_char)
         -> ::std::os::raw::c_int;
 }
@@ -35916,14 +36011,14 @@ impl Default for rdline {
     }
 }
 extern "C" {
-    /// Init fields for a struct rdline. Call this only once at the beginning
-    /// of your program.
-    /// \param rdl A pointer to an uninitialized struct rdline
-    /// \param write_char The function used by the function to write a character
-    /// \param validate A pointer to the function to execute when the
-    ///                 user validates the buffer.
-    /// \param complete A pointer to the function to execute when the
-    ///                 user completes the buffer.
+    #[doc = " Init fields for a struct rdline. Call this only once at the beginning"]
+    #[doc = " of your program."]
+    #[doc = " \\param rdl A pointer to an uninitialized struct rdline"]
+    #[doc = " \\param write_char The function used by the function to write a character"]
+    #[doc = " \\param validate A pointer to the function to execute when the"]
+    #[doc = "                 user validates the buffer."]
+    #[doc = " \\param complete A pointer to the function to execute when the"]
+    #[doc = "                 user completes the buffer."]
     pub fn rdline_init(
         rdl: *mut rdline,
         write_char: rdline_write_char_t,
@@ -35932,79 +36027,79 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Init the current buffer, and display a prompt.
-    /// \param rdl A pointer to a struct rdline
-    /// \param prompt A string containing the prompt
+    #[doc = " Init the current buffer, and display a prompt."]
+    #[doc = " \\param rdl A pointer to a struct rdline"]
+    #[doc = " \\param prompt A string containing the prompt"]
     pub fn rdline_newline(rdl: *mut rdline, prompt: *const ::std::os::raw::c_char);
 }
 extern "C" {
-    /// Call it and all received chars will be ignored.
-    /// \param rdl A pointer to a struct rdline
+    #[doc = " Call it and all received chars will be ignored."]
+    #[doc = " \\param rdl A pointer to a struct rdline"]
     pub fn rdline_stop(rdl: *mut rdline);
 }
 extern "C" {
-    /// Same than rdline_stop() except that next calls to rdline_char_in()
-    /// will return RDLINE_RES_EXITED.
-    /// \param rdl A pointer to a struct rdline
+    #[doc = " Same than rdline_stop() except that next calls to rdline_char_in()"]
+    #[doc = " will return RDLINE_RES_EXITED."]
+    #[doc = " \\param rdl A pointer to a struct rdline"]
     pub fn rdline_quit(rdl: *mut rdline);
 }
 extern "C" {
-    /// Restart after a call to rdline_stop() or rdline_quit()
-    /// \param rdl A pointer to a struct rdline
+    #[doc = " Restart after a call to rdline_stop() or rdline_quit()"]
+    #[doc = " \\param rdl A pointer to a struct rdline"]
     pub fn rdline_restart(rdl: *mut rdline);
 }
 extern "C" {
-    /// Redisplay the current buffer
-    /// \param rdl A pointer to a struct rdline
+    #[doc = " Redisplay the current buffer"]
+    #[doc = " \\param rdl A pointer to a struct rdline"]
     pub fn rdline_redisplay(rdl: *mut rdline);
 }
 extern "C" {
-    /// Reset the current buffer and setup for a new line.
-    ///  \param rdl A pointer to a struct rdline
+    #[doc = " Reset the current buffer and setup for a new line."]
+    #[doc = "  \\param rdl A pointer to a struct rdline"]
     pub fn rdline_reset(rdl: *mut rdline);
 }
 extern "C" {
-    /// append a char to the readline buffer.
-    /// Return RDLINE_RES_VALIDATE when the line has been validated.
-    /// Return RDLINE_RES_COMPLETE when the user asked to complete the buffer.
-    /// Return RDLINE_RES_NOT_RUNNING if it is not running.
-    /// Return RDLINE_RES_EOF if EOF (ctrl-d on an empty line).
-    /// Else return RDLINE_RES_SUCCESS.
-    /// XXX error case when the buffer is full ?
-    ///
-    /// \param rdl A pointer to a struct rdline
-    /// \param c The character to append
+    #[doc = " append a char to the readline buffer."]
+    #[doc = " Return RDLINE_RES_VALIDATE when the line has been validated."]
+    #[doc = " Return RDLINE_RES_COMPLETE when the user asked to complete the buffer."]
+    #[doc = " Return RDLINE_RES_NOT_RUNNING if it is not running."]
+    #[doc = " Return RDLINE_RES_EOF if EOF (ctrl-d on an empty line)."]
+    #[doc = " Else return RDLINE_RES_SUCCESS."]
+    #[doc = " XXX error case when the buffer is full ?"]
+    #[doc = ""]
+    #[doc = " \\param rdl A pointer to a struct rdline"]
+    #[doc = " \\param c The character to append"]
     pub fn rdline_char_in(rdl: *mut rdline, c: ::std::os::raw::c_char) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Return the current buffer, terminated by '\0'.
-    /// \param rdl A pointer to a struct rdline
+    #[doc = " Return the current buffer, terminated by \'\\0\'."]
+    #[doc = " \\param rdl A pointer to a struct rdline"]
     pub fn rdline_get_buffer(rdl: *mut rdline) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
-    /// Add the buffer to history.
-    /// return < 0 on error.
-    /// \param rdl A pointer to a struct rdline
-    /// \param buf A buffer that is terminated by '\0'
+    #[doc = " Add the buffer to history."]
+    #[doc = " return < 0 on error."]
+    #[doc = " \\param rdl A pointer to a struct rdline"]
+    #[doc = " \\param buf A buffer that is terminated by \'\\0\'"]
     pub fn rdline_add_history(
         rdl: *mut rdline,
         buf: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// Clear current history
-    /// \param rdl A pointer to a struct rdline
+    #[doc = " Clear current history"]
+    #[doc = " \\param rdl A pointer to a struct rdline"]
     pub fn rdline_clear_history(rdl: *mut rdline);
 }
 extern "C" {
-    /// Get the i-th history item
+    #[doc = " Get the i-th history item"]
     pub fn rdline_get_history_item(
         rdl: *mut rdline,
         i: ::std::os::raw::c_uint,
     ) -> *mut ::std::os::raw::c_char;
 }
-/// Stores a pointer to the ops struct, and the offset: the place to
-/// write the parsed result in the destination structure.
+#[doc = " Stores a pointer to the ops struct, and the offset: the place to"]
+#[doc = " write the parsed result in the destination structure."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct cmdline_token_hdr {
@@ -36050,27 +36145,27 @@ impl Default for cmdline_token_hdr {
     }
 }
 pub type cmdline_parse_token_hdr_t = cmdline_token_hdr;
-/// A token is defined by this structure.
-///
-/// parse() takes the token as first argument, then the source buffer
-/// starting at the token we want to parse. The 3rd arg is a pointer
-/// where we store the parsed data (as binary). It returns the number of
-/// parsed chars on success and a negative value on error.
-///
-/// complete_get_nb() returns the number of possible values for this
-/// token if completion is possible. If it is NULL or if it returns 0,
-/// no completion is possible.
-///
-/// complete_get_elt() copy in dstbuf (the size is specified in the
-/// parameter) the i-th possible completion for this token.  returns 0
-/// on success or and a negative value on error.
-///
-/// get_help() fills the dstbuf with the help for the token. It returns
-/// -1 on error and 0 on success.
+#[doc = " A token is defined by this structure."]
+#[doc = ""]
+#[doc = " parse() takes the token as first argument, then the source buffer"]
+#[doc = " starting at the token we want to parse. The 3rd arg is a pointer"]
+#[doc = " where we store the parsed data (as binary). It returns the number of"]
+#[doc = " parsed chars on success and a negative value on error."]
+#[doc = ""]
+#[doc = " complete_get_nb() returns the number of possible values for this"]
+#[doc = " token if completion is possible. If it is NULL or if it returns 0,"]
+#[doc = " no completion is possible."]
+#[doc = ""]
+#[doc = " complete_get_elt() copy in dstbuf (the size is specified in the"]
+#[doc = " parameter) the i-th possible completion for this token.  returns 0"]
+#[doc = " on success or and a negative value on error."]
+#[doc = ""]
+#[doc = " get_help() fills the dstbuf with the help for the token. It returns"]
+#[doc = " -1 on error and 0 on success."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct cmdline_token_ops {
-    /// parse(token ptr, buf, res pts, buf len)
+    #[doc = " parse(token ptr, buf, res pts, buf len)"]
     pub parse: ::std::option::Option<
         unsafe extern "C" fn(
             arg1: *mut cmdline_parse_token_hdr_t,
@@ -36079,11 +36174,11 @@ pub struct cmdline_token_ops {
             arg4: ::std::os::raw::c_uint,
         ) -> ::std::os::raw::c_int,
     >,
-    /// return the num of possible choices for this token
+    #[doc = " return the num of possible choices for this token"]
     pub complete_get_nb: ::std::option::Option<
         unsafe extern "C" fn(arg1: *mut cmdline_parse_token_hdr_t) -> ::std::os::raw::c_int,
     >,
-    /// return the elt x for this token (token, idx, dstbuf, size)
+    #[doc = " return the elt x for this token (token, idx, dstbuf, size)"]
     pub complete_get_elt: ::std::option::Option<
         unsafe extern "C" fn(
             arg1: *mut cmdline_parse_token_hdr_t,
@@ -36092,7 +36187,7 @@ pub struct cmdline_token_ops {
             arg4: ::std::os::raw::c_uint,
         ) -> ::std::os::raw::c_int,
     >,
-    /// get help for this token (token, dstbuf, size)
+    #[doc = " get help for this token (token, dstbuf, size)"]
     pub get_help: ::std::option::Option<
         unsafe extern "C" fn(
             arg1: *mut cmdline_parse_token_hdr_t,
@@ -36163,60 +36258,60 @@ impl Default for cmdline_token_ops {
         unsafe { ::std::mem::zeroed() }
     }
 }
-/// Store a instruction, which is a pointer to a callback function and
-/// its parameter that is called when the instruction is parsed, a help
-/// string, and a list of token composing this instruction.
-///
-/// When no tokens are defined (tokens[0] == NULL), they are retrieved
-/// dynamically by calling f() as follows:
-///
-/// @code
-///
-/// f((struct cmdline_token_hdr **)&token_p,
-///   NULL,
-///   (struct cmdline_token_hdr **)&inst->tokens[num]);
-///
-/// @endcode
-///
-/// The address of the resulting token is expected at the location pointed by
-/// the first argument. Can be set to NULL to end the list.
-///
-/// The cmdline argument (struct cmdline *) is always NULL.
-///
-/// The last argument points to the inst->tokens[] entry to retrieve, which
-/// is not necessarily inside allocated memory and should neither be read nor
-/// written. Its sole purpose is to deduce the token entry index of interest
-/// as described in the example below.
-///
-/// Note about constraints:
-///
-/// - Only the address of these tokens is dynamic, their storage should be
-///   static like normal tokens.
-/// - Dynamic token lists that need to maintain an internal context (e.g. in
-///   order to determine the next token) must store it statically also. This
-///   context must be reinitialized when the first token is requested, that
-///   is, when &inst->tokens[0] is provided as the third argument.
-/// - Dynamic token lists must be NULL-terminated to generate usable
-///   commands.
-///
-/// @code
-///
-/// // Assuming first and third arguments are respectively named "token_p"
-/// // and "token":
-///
-/// int index = token - inst->tokens;
-///
-/// if (!index) {
-///     [...] // Clean up internal context if any.
-/// }
-/// [...] // Then set up dyn_token according to index.
-///
-/// if (no_more_tokens)
-///     *token_p = NULL;
-/// else
-///     *token_p = &dyn_token;
-///
-/// @endcode
+#[doc = " Store a instruction, which is a pointer to a callback function and"]
+#[doc = " its parameter that is called when the instruction is parsed, a help"]
+#[doc = " string, and a list of token composing this instruction."]
+#[doc = ""]
+#[doc = " When no tokens are defined (tokens[0] == NULL), they are retrieved"]
+#[doc = " dynamically by calling f() as follows:"]
+#[doc = ""]
+#[doc = " @code"]
+#[doc = ""]
+#[doc = " f((struct cmdline_token_hdr **)&token_p,"]
+#[doc = "   NULL,"]
+#[doc = "   (struct cmdline_token_hdr **)&inst->tokens[num]);"]
+#[doc = ""]
+#[doc = " @endcode"]
+#[doc = ""]
+#[doc = " The address of the resulting token is expected at the location pointed by"]
+#[doc = " the first argument. Can be set to NULL to end the list."]
+#[doc = ""]
+#[doc = " The cmdline argument (struct cmdline *) is always NULL."]
+#[doc = ""]
+#[doc = " The last argument points to the inst->tokens[] entry to retrieve, which"]
+#[doc = " is not necessarily inside allocated memory and should neither be read nor"]
+#[doc = " written. Its sole purpose is to deduce the token entry index of interest"]
+#[doc = " as described in the example below."]
+#[doc = ""]
+#[doc = " Note about constraints:"]
+#[doc = ""]
+#[doc = " - Only the address of these tokens is dynamic, their storage should be"]
+#[doc = "   static like normal tokens."]
+#[doc = " - Dynamic token lists that need to maintain an internal context (e.g. in"]
+#[doc = "   order to determine the next token) must store it statically also. This"]
+#[doc = "   context must be reinitialized when the first token is requested, that"]
+#[doc = "   is, when &inst->tokens[0] is provided as the third argument."]
+#[doc = " - Dynamic token lists must be NULL-terminated to generate usable"]
+#[doc = "   commands."]
+#[doc = ""]
+#[doc = " @code"]
+#[doc = ""]
+#[doc = " // Assuming first and third arguments are respectively named \"token_p\""]
+#[doc = " // and \"token\":"]
+#[doc = ""]
+#[doc = " int index = token - inst->tokens;"]
+#[doc = ""]
+#[doc = " if (!index) {"]
+#[doc = "     [...] // Clean up internal context if any."]
+#[doc = " }"]
+#[doc = " [...] // Then set up dyn_token according to index."]
+#[doc = ""]
+#[doc = " if (no_more_tokens)"]
+#[doc = "     *token_p = NULL;"]
+#[doc = " else"]
+#[doc = "     *token_p = &dyn_token;"]
+#[doc = ""]
+#[doc = " @endcode"]
 #[repr(C)]
 #[derive(Debug)]
 pub struct cmdline_inst {
@@ -36250,40 +36345,40 @@ impl Default for cmdline_inst {
     }
 }
 pub type cmdline_parse_inst_t = cmdline_inst;
-/// A context is identified by its name, and contains a list of
-/// instruction
-///
+#[doc = " A context is identified by its name, and contains a list of"]
+#[doc = " instruction"]
+#[doc = ""]
 pub type cmdline_parse_ctx_t = *mut cmdline_parse_inst_t;
 extern "C" {
-    /// Try to parse a buffer according to the specified context. The
-    /// argument buf must ends with "\n\0". The function returns
-    /// CMDLINE_PARSE_AMBIGUOUS, CMDLINE_PARSE_NOMATCH or
-    /// CMDLINE_PARSE_BAD_ARGS on error. Else it calls the associated
-    /// function (defined in the context) and returns 0
-    /// (CMDLINE_PARSE_SUCCESS).
+    #[doc = " Try to parse a buffer according to the specified context. The"]
+    #[doc = " argument buf must ends with \"\\n\\0\". The function returns"]
+    #[doc = " CMDLINE_PARSE_AMBIGUOUS, CMDLINE_PARSE_NOMATCH or"]
+    #[doc = " CMDLINE_PARSE_BAD_ARGS on error. Else it calls the associated"]
+    #[doc = " function (defined in the context) and returns 0"]
+    #[doc = " (CMDLINE_PARSE_SUCCESS)."]
     pub fn cmdline_parse(
         cl: *mut cmdline,
         buf: *const ::std::os::raw::c_char,
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// complete() must be called with *state==0 (try to complete) or
-    /// with *state==-1 (just display choices), then called without
-    /// modifying *state until it returns CMDLINE_PARSE_COMPLETED_BUFFER or
-    /// CMDLINE_PARSE_COMPLETED_BUFFER.
-    ///
-    /// It returns < 0 on error.
-    ///
-    /// Else it returns:
-    ///   - CMDLINE_PARSE_COMPLETED_BUFFER on completion (one possible
-    ///     choice). In this case, the chars are appended in dst buffer.
-    ///   - CMDLINE_PARSE_COMPLETE_AGAIN if there is several possible
-    ///     choices. In this case, you must call the function again,
-    ///     keeping the value of state intact.
-    ///   - CMDLINE_PARSE_COMPLETED_BUFFER when the iteration is
-    ///     finished. The dst is not valid for this last call.
-    ///
-    /// The returned dst buf ends with \0.
+    #[doc = " complete() must be called with *state==0 (try to complete) or"]
+    #[doc = " with *state==-1 (just display choices), then called without"]
+    #[doc = " modifying *state until it returns CMDLINE_PARSE_COMPLETED_BUFFER or"]
+    #[doc = " CMDLINE_PARSE_COMPLETED_BUFFER."]
+    #[doc = ""]
+    #[doc = " It returns < 0 on error."]
+    #[doc = ""]
+    #[doc = " Else it returns:"]
+    #[doc = "   - CMDLINE_PARSE_COMPLETED_BUFFER on completion (one possible"]
+    #[doc = "     choice). In this case, the chars are appended in dst buffer."]
+    #[doc = "   - CMDLINE_PARSE_COMPLETE_AGAIN if there is several possible"]
+    #[doc = "     choices. In this case, you must call the function again,"]
+    #[doc = "     keeping the value of state intact."]
+    #[doc = "   - CMDLINE_PARSE_COMPLETED_BUFFER when the iteration is"]
+    #[doc = "     finished. The dst is not valid for this last call."]
+    #[doc = ""]
+    #[doc = " The returned dst buf ends with \\0."]
     pub fn cmdline_complete(
         cl: *mut cmdline,
         buf: *const ::std::os::raw::c_char,
@@ -37134,16 +37229,16 @@ extern "C" {
         -> ::std::os::raw::c_int;
 }
 extern "C" {
-    /// This function is nonblocking equivalent of ``cmdline_interact()``. It polls
-    /// *cl* for one character and interpret it. If return value is *RDLINE_EXITED*
-    /// it mean that ``cmdline_quit()`` was invoked.
-    ///
-    /// @param cl
-    ///   The command line object.
-    ///
-    /// @return
-    ///   On success return object status - one of *enum rdline_status*.
-    ///   On error return negative value.
+    #[doc = " This function is nonblocking equivalent of ``cmdline_interact()``. It polls"]
+    #[doc = " *cl* for one character and interpret it. If return value is *RDLINE_EXITED*"]
+    #[doc = " it mean that ``cmdline_quit()`` was invoked."]
+    #[doc = ""]
+    #[doc = " @param cl"]
+    #[doc = "   The command line object."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   On success return object status - one of *enum rdline_status*."]
+    #[doc = "   On error return negative value."]
     pub fn cmdline_poll(cl: *mut cmdline) -> ::std::os::raw::c_int;
 }
 extern "C" {
@@ -37240,7 +37335,7 @@ impl Default for __va_list_tag {
         unsafe { ::std::mem::zeroed() }
     }
 }
-///< class handle.
+#[doc = "< class handle."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct rte_class {
