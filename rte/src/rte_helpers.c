@@ -6,6 +6,7 @@
 #include <rte_errno.h>
 #include <rte_spinlock.h>
 #include <rte_cycles.h>
+#include <rte_bitmap.h>
 #include <rte_ethdev.h>
 
 unsigned
@@ -94,6 +95,59 @@ void _rte_spinlock_recursive_unlock_tm(rte_spinlock_recursive_t *slr)
 int _rte_spinlock_recursive_trylock_tm(rte_spinlock_recursive_t *slr)
 {
     return rte_spinlock_recursive_trylock_tm(slr);
+}
+
+uint32_t
+_rte_bitmap_get_memory_footprint(uint32_t n_bits)
+{
+    return rte_bitmap_get_memory_footprint(n_bits);
+}
+
+struct rte_bitmap *
+_rte_bitmap_init(uint32_t n_bits, uint8_t *mem, uint32_t mem_size)
+{
+    return rte_bitmap_init(n_bits, mem, mem_size);
+}
+
+int _rte_bitmap_free(struct rte_bitmap *bmp)
+{
+    return rte_bitmap_free(bmp);
+}
+
+void _rte_bitmap_reset(struct rte_bitmap *bmp)
+{
+    rte_bitmap_reset(bmp);
+}
+
+void _rte_bitmap_prefetch0(struct rte_bitmap *bmp, uint32_t pos)
+{
+    rte_bitmap_prefetch0(bmp, pos);
+}
+
+uint64_t
+_rte_bitmap_get(struct rte_bitmap *bmp, uint32_t pos)
+{
+    return rte_bitmap_get(bmp, pos);
+}
+
+void _rte_bitmap_set(struct rte_bitmap *bmp, uint32_t pos)
+{
+    rte_bitmap_set(bmp, pos);
+}
+
+void _rte_bitmap_set_slab(struct rte_bitmap *bmp, uint32_t pos, uint64_t slab)
+{
+    rte_bitmap_set_slab(bmp, pos, slab);
+}
+
+void _rte_bitmap_clear(struct rte_bitmap *bmp, uint32_t pos)
+{
+    rte_bitmap_clear(bmp, pos);
+}
+
+int _rte_bitmap_scan(struct rte_bitmap *bmp, uint32_t *pos, uint64_t *slab)
+{
+    return rte_bitmap_scan(bmp, pos, slab);
 }
 
 uint16_t

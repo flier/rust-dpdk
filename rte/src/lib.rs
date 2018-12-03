@@ -24,7 +24,6 @@ pub mod errors;
 pub mod macros;
 #[macro_use]
 mod common;
-
 mod utils;
 
 pub mod mempool;

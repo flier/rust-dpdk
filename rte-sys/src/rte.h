@@ -3,8 +3,10 @@
 
 // Common Components
 #include <rte_atomic.h>
+#include <rte_bitmap.h>
 #include <rte_common.h>
 #include <rte_cycles.h>
+#include <rte_dev.h>
 #include <rte_errno.h>
 #include <rte_keepalive.h>
 #include <rte_launch.h>

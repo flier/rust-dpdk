@@ -1,3 +1,4 @@
+pub mod bitmap;
 mod config;
 pub mod eal;
 pub mod keepalive;
