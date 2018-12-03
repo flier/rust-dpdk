@@ -24,9 +24,9 @@ pub fn build_dpdk(rte_sdk: &Path, rte_target: &str) {
         .env(
             "EXTRA_CFLAGS",
             if debug_mode {
-                "-fPIC -O0 -g -ggdb"
+                "-fPIC -fkeep-inline-functions -O0 -g -ggdb"
             } else {
-                "-fPIC -O"
+                "-fPIC -fkeep-inline-functions -O"
             },
         ).current_dir(rte_sdk)
         .status()

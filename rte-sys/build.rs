@@ -23,6 +23,7 @@ fn gen_rte_binding(rte_sdk_dir: &Path, dest_path: &Path) {
     bindgen::Builder::default()
         .header(rte_header)
         .generate_comments(true)
+        .generate_inline_functions(true)
         .derive_copy(true)
         .derive_debug(true)
         .derive_default(true)

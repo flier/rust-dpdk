@@ -700,6 +700,38 @@ pub const RTE_PRIORITY_LOG: u32 = 101;
 pub const RTE_PRIORITY_BUS: u32 = 110;
 pub const RTE_PRIORITY_CLASS: u32 = 120;
 pub const RTE_PRIORITY_LAST: u32 = 65535;
+pub const _MM_HINT_ET0: u32 = 7;
+pub const _MM_HINT_ET1: u32 = 6;
+pub const _MM_HINT_T0: u32 = 3;
+pub const _MM_HINT_T1: u32 = 2;
+pub const _MM_HINT_T2: u32 = 1;
+pub const _MM_HINT_NTA: u32 = 0;
+pub const _MM_EXCEPT_INVALID: u32 = 1;
+pub const _MM_EXCEPT_DENORM: u32 = 2;
+pub const _MM_EXCEPT_DIV_ZERO: u32 = 4;
+pub const _MM_EXCEPT_OVERFLOW: u32 = 8;
+pub const _MM_EXCEPT_UNDERFLOW: u32 = 16;
+pub const _MM_EXCEPT_INEXACT: u32 = 32;
+pub const _MM_EXCEPT_MASK: u32 = 63;
+pub const _MM_MASK_INVALID: u32 = 128;
+pub const _MM_MASK_DENORM: u32 = 256;
+pub const _MM_MASK_DIV_ZERO: u32 = 512;
+pub const _MM_MASK_OVERFLOW: u32 = 1024;
+pub const _MM_MASK_UNDERFLOW: u32 = 2048;
+pub const _MM_MASK_INEXACT: u32 = 4096;
+pub const _MM_MASK_MASK: u32 = 8064;
+pub const _MM_ROUND_NEAREST: u32 = 0;
+pub const _MM_ROUND_DOWN: u32 = 8192;
+pub const _MM_ROUND_UP: u32 = 16384;
+pub const _MM_ROUND_TOWARD_ZERO: u32 = 24576;
+pub const _MM_ROUND_MASK: u32 = 24576;
+pub const _MM_FLUSH_ZERO_MASK: u32 = 32768;
+pub const _MM_FLUSH_ZERO_ON: u32 = 32768;
+pub const _MM_FLUSH_ZERO_OFF: u32 = 0;
+pub const _MM_DENORMALS_ZERO_ON: u32 = 64;
+pub const _MM_DENORMALS_ZERO_OFF: u32 = 0;
+pub const _MM_DENORMALS_ZERO_MASK: u32 = 64;
+pub const MPLOCKED: &'static [u8; 8usize] = b"lock ; \0";
 pub const _STRING_H: u32 = 1;
 pub const _STRINGS_H: u32 = 1;
 pub const _STDIO_H: u32 = 1;
@@ -777,12 +809,6 @@ pub const TMP_MAX: u32 = 238328;
 pub const FILENAME_MAX: u32 = 4096;
 pub const L_ctermid: u32 = 9;
 pub const FOPEN_MAX: u32 = 16;
-pub const RTE_VER_PREFIX: &'static [u8; 5usize] = b"DPDK\0";
-pub const RTE_VER_YEAR: u32 = 18;
-pub const RTE_VER_MONTH: u32 = 11;
-pub const RTE_VER_MINOR: u32 = 0;
-pub const RTE_VER_SUFFIX: &'static [u8; 1usize] = b"\0";
-pub const RTE_VER_RELEASE: u32 = 16;
 pub const RTE_LOGTYPE_EAL: u32 = 0;
 pub const RTE_LOGTYPE_MALLOC: u32 = 1;
 pub const RTE_LOGTYPE_RING: u32 = 2;
@@ -828,37 +854,55 @@ pub const RTE_CACHE_LINE_MIN_SIZE: u32 = 64;
 pub const RTE_MEMSEG_FLAG_DO_NOT_FREE: u32 = 1;
 pub const RTE_MEM_EVENT_CALLBACK_NAME_LEN: u32 = 64;
 pub const RTE_MEM_ALLOC_VALIDATOR_NAME_LEN: u32 = 64;
-pub const _MM_HINT_ET0: u32 = 7;
-pub const _MM_HINT_ET1: u32 = 6;
-pub const _MM_HINT_T0: u32 = 3;
-pub const _MM_HINT_T1: u32 = 2;
-pub const _MM_HINT_T2: u32 = 1;
-pub const _MM_HINT_NTA: u32 = 0;
-pub const _MM_EXCEPT_INVALID: u32 = 1;
-pub const _MM_EXCEPT_DENORM: u32 = 2;
-pub const _MM_EXCEPT_DIV_ZERO: u32 = 4;
-pub const _MM_EXCEPT_OVERFLOW: u32 = 8;
-pub const _MM_EXCEPT_UNDERFLOW: u32 = 16;
-pub const _MM_EXCEPT_INEXACT: u32 = 32;
-pub const _MM_EXCEPT_MASK: u32 = 63;
-pub const _MM_MASK_INVALID: u32 = 128;
-pub const _MM_MASK_DENORM: u32 = 256;
-pub const _MM_MASK_DIV_ZERO: u32 = 512;
-pub const _MM_MASK_OVERFLOW: u32 = 1024;
-pub const _MM_MASK_UNDERFLOW: u32 = 2048;
-pub const _MM_MASK_INEXACT: u32 = 4096;
-pub const _MM_MASK_MASK: u32 = 8064;
-pub const _MM_ROUND_NEAREST: u32 = 0;
-pub const _MM_ROUND_DOWN: u32 = 8192;
-pub const _MM_ROUND_UP: u32 = 16384;
-pub const _MM_ROUND_TOWARD_ZERO: u32 = 24576;
-pub const _MM_ROUND_MASK: u32 = 24576;
-pub const _MM_FLUSH_ZERO_MASK: u32 = 32768;
-pub const _MM_FLUSH_ZERO_ON: u32 = 32768;
-pub const _MM_FLUSH_ZERO_OFF: u32 = 0;
-pub const _MM_DENORMALS_ZERO_ON: u32 = 64;
-pub const _MM_DENORMALS_ZERO_OFF: u32 = 0;
-pub const _MM_DENORMALS_ZERO_MASK: u32 = 64;
+pub const RTE_BITMAP_SLAB_BIT_SIZE: u32 = 64;
+pub const RTE_BITMAP_SLAB_BIT_SIZE_LOG2: u32 = 6;
+pub const RTE_BITMAP_SLAB_BIT_MASK: u32 = 63;
+pub const RTE_BITMAP_CL_BIT_SIZE: u32 = 512;
+pub const RTE_BITMAP_CL_BIT_SIZE_LOG2: u32 = 9;
+pub const RTE_BITMAP_CL_BIT_MASK: u32 = 511;
+pub const RTE_BITMAP_CL_SLAB_SIZE: u32 = 8;
+pub const RTE_BITMAP_CL_SLAB_SIZE_LOG2: u32 = 3;
+pub const RTE_BITMAP_CL_SLAB_MASK: u32 = 7;
+pub const MS_PER_S: u32 = 1000;
+pub const US_PER_S: u32 = 1000000;
+pub const NS_PER_S: u32 = 1000000000;
+pub const RTE_DEV_NAME_MAX_LEN: u32 = 64;
+pub const _PTHREAD_H: u32 = 1;
+pub const _SCHED_H: u32 = 1;
+pub const _BITS_SCHED_H: u32 = 1;
+pub const SCHED_OTHER: u32 = 0;
+pub const SCHED_FIFO: u32 = 1;
+pub const SCHED_RR: u32 = 2;
+pub const _BITS_CPU_SET_H: u32 = 1;
+pub const __CPU_SETSIZE: u32 = 1024;
+pub const _TIME_H: u32 = 1;
+pub const _BITS_TIME_H: u32 = 1;
+pub const CLOCK_REALTIME: u32 = 0;
+pub const CLOCK_MONOTONIC: u32 = 1;
+pub const CLOCK_PROCESS_CPUTIME_ID: u32 = 2;
+pub const CLOCK_THREAD_CPUTIME_ID: u32 = 3;
+pub const CLOCK_MONOTONIC_RAW: u32 = 4;
+pub const CLOCK_REALTIME_COARSE: u32 = 5;
+pub const CLOCK_MONOTONIC_COARSE: u32 = 6;
+pub const CLOCK_BOOTTIME: u32 = 7;
+pub const CLOCK_REALTIME_ALARM: u32 = 8;
+pub const CLOCK_BOOTTIME_ALARM: u32 = 9;
+pub const CLOCK_TAI: u32 = 11;
+pub const TIMER_ABSTIME: u32 = 1;
+pub const __struct_tm_defined: u32 = 1;
+pub const __itimerspec_defined: u32 = 1;
+pub const TIME_UTC: u32 = 1;
+pub const _BITS_SETJMP_H: u32 = 1;
+pub const PTHREAD_ONCE_INIT: u32 = 0;
+pub const PTHREAD_BARRIER_SERIAL_THREAD: i32 = -1;
+pub const __ELASTERROR: u32 = 1000;
+pub const RTE_KEEPALIVE_MAXCORES: u32 = 128;
+pub const RTE_MAGIC: u32 = 19820526;
+pub const RTE_MAX_THREAD_NAME_LEN: u32 = 16;
+pub const RTE_MP_MAX_FD_NUM: u32 = 8;
+pub const RTE_MP_MAX_NAME_LEN: u32 = 64;
+pub const RTE_MP_MAX_PARAM_LEN: u32 = 256;
+pub const LCORE_ID_ANY: u32 = 4294967295;
 pub const _MM_FROUND_TO_NEAREST_INT: u32 = 0;
 pub const _MM_FROUND_TO_NEG_INF: u32 = 1;
 pub const _MM_FROUND_TO_POS_INF: u32 = 2;
@@ -928,47 +972,6 @@ pub const _XABORT_CAPACITY: u32 = 8;
 pub const _XABORT_DEBUG: u32 = 16;
 pub const _XABORT_NESTED: u32 = 32;
 pub const ALIGNMENT_MASK: u32 = 31;
-pub const _PTHREAD_H: u32 = 1;
-pub const _SCHED_H: u32 = 1;
-pub const _BITS_SCHED_H: u32 = 1;
-pub const SCHED_OTHER: u32 = 0;
-pub const SCHED_FIFO: u32 = 1;
-pub const SCHED_RR: u32 = 2;
-pub const _BITS_CPU_SET_H: u32 = 1;
-pub const __CPU_SETSIZE: u32 = 1024;
-pub const _TIME_H: u32 = 1;
-pub const _BITS_TIME_H: u32 = 1;
-pub const CLOCK_REALTIME: u32 = 0;
-pub const CLOCK_MONOTONIC: u32 = 1;
-pub const CLOCK_PROCESS_CPUTIME_ID: u32 = 2;
-pub const CLOCK_THREAD_CPUTIME_ID: u32 = 3;
-pub const CLOCK_MONOTONIC_RAW: u32 = 4;
-pub const CLOCK_REALTIME_COARSE: u32 = 5;
-pub const CLOCK_MONOTONIC_COARSE: u32 = 6;
-pub const CLOCK_BOOTTIME: u32 = 7;
-pub const CLOCK_REALTIME_ALARM: u32 = 8;
-pub const CLOCK_BOOTTIME_ALARM: u32 = 9;
-pub const CLOCK_TAI: u32 = 11;
-pub const TIMER_ABSTIME: u32 = 1;
-pub const __struct_tm_defined: u32 = 1;
-pub const __itimerspec_defined: u32 = 1;
-pub const TIME_UTC: u32 = 1;
-pub const _BITS_SETJMP_H: u32 = 1;
-pub const PTHREAD_ONCE_INIT: u32 = 0;
-pub const PTHREAD_BARRIER_SERIAL_THREAD: i32 = -1;
-pub const __ELASTERROR: u32 = 1000;
-pub const RTE_KEEPALIVE_MAXCORES: u32 = 128;
-pub const MPLOCKED: &'static [u8; 8usize] = b"lock ; \0";
-pub const MS_PER_S: u32 = 1000;
-pub const US_PER_S: u32 = 1000000;
-pub const NS_PER_S: u32 = 1000000000;
-pub const RTE_DEV_NAME_MAX_LEN: u32 = 64;
-pub const RTE_MAGIC: u32 = 19820526;
-pub const RTE_MAX_THREAD_NAME_LEN: u32 = 16;
-pub const RTE_MP_MAX_FD_NUM: u32 = 8;
-pub const RTE_MP_MAX_NAME_LEN: u32 = 64;
-pub const RTE_MP_MAX_PARAM_LEN: u32 = 256;
-pub const LCORE_ID_ANY: u32 = 4294967295;
 pub const _RTE_RTM_H_: u32 = 1;
 pub const RTE_XBEGIN_STARTED: i32 = -1;
 pub const RTE_XABORT_EXPLICIT: u32 = 1;
@@ -979,6 +982,12 @@ pub const RTE_XABORT_DEBUG: u32 = 16;
 pub const RTE_XABORT_NESTED: u32 = 32;
 pub const RTE_RTM_MAX_RETRIES: u32 = 20;
 pub const RTE_XABORT_LOCK_BUSY: u32 = 255;
+pub const RTE_VER_PREFIX: &'static [u8; 5usize] = b"DPDK\0";
+pub const RTE_VER_YEAR: u32 = 18;
+pub const RTE_VER_MONTH: u32 = 11;
+pub const RTE_VER_MINOR: u32 = 0;
+pub const RTE_VER_SUFFIX: &'static [u8; 1usize] = b"\0";
+pub const RTE_VER_RELEASE: u32 = 16;
 pub const RTE_MEMZONE_2MB: u32 = 1;
 pub const RTE_MEMZONE_1GB: u32 = 2;
 pub const RTE_MEMZONE_16MB: u32 = 256;
@@ -4547,6 +4556,136 @@ extern "C" {
     #[doc = "     to the function."]
     pub fn rte_exit(exit_code: ::std::os::raw::c_int, format: *const ::std::os::raw::c_char, ...);
 }
+pub type __m64 = [::std::os::raw::c_longlong; 1usize];
+pub type __v1di = [::std::os::raw::c_longlong; 1usize];
+pub type __v2si = [::std::os::raw::c_int; 2usize];
+pub type __v4hi = [::std::os::raw::c_short; 4usize];
+pub type __v8qi = [::std::os::raw::c_char; 8usize];
+pub type __v4si = [::std::os::raw::c_int; 4usize];
+pub type __v4sf = [f32; 4usize];
+pub type __m128 = [f32; 4usize];
+pub type __v4su = [::std::os::raw::c_uint; 4usize];
+extern "C" {
+    pub fn _mm_sfence();
+}
+extern "C" {
+    pub fn _mm_getcsr() -> ::std::os::raw::c_uint;
+}
+extern "C" {
+    pub fn _mm_setcsr(__i: ::std::os::raw::c_uint);
+}
+pub type __m128d = [f64; 2usize];
+pub type __m128i = [::std::os::raw::c_longlong; 2usize];
+pub type __v2df = [f64; 2usize];
+pub type __v2di = [::std::os::raw::c_longlong; 2usize];
+pub type __v8hi = [::std::os::raw::c_short; 8usize];
+pub type __v16qi = [::std::os::raw::c_char; 16usize];
+pub type __v2du = [::std::os::raw::c_ulonglong; 2usize];
+pub type __v8hu = [::std::os::raw::c_ushort; 8usize];
+pub type __v16qu = [::std::os::raw::c_uchar; 16usize];
+pub type __v16qs = [::std::os::raw::c_schar; 16usize];
+extern "C" {
+    pub fn _mm_clflush(__p: *const ::std::os::raw::c_void);
+}
+extern "C" {
+    pub fn _mm_lfence();
+}
+extern "C" {
+    pub fn _mm_mfence();
+}
+extern "C" {
+    pub fn _mm_pause();
+}
+#[doc = " The atomic counter structure."]
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone, PartialEq)]
+pub struct rte_atomic16_t {
+    #[doc = "< An internal counter value."]
+    pub cnt: i16,
+}
+#[test]
+fn bindgen_test_layout_rte_atomic16_t() {
+    assert_eq!(
+        ::std::mem::size_of::<rte_atomic16_t>(),
+        2usize,
+        concat!("Size of: ", stringify!(rte_atomic16_t))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<rte_atomic16_t>(),
+        2usize,
+        concat!("Alignment of ", stringify!(rte_atomic16_t))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_atomic16_t>())).cnt as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_atomic16_t),
+            "::",
+            stringify!(cnt)
+        )
+    );
+}
+#[doc = " The atomic counter structure."]
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone, PartialEq)]
+pub struct rte_atomic32_t {
+    #[doc = "< An internal counter value."]
+    pub cnt: i32,
+}
+#[test]
+fn bindgen_test_layout_rte_atomic32_t() {
+    assert_eq!(
+        ::std::mem::size_of::<rte_atomic32_t>(),
+        4usize,
+        concat!("Size of: ", stringify!(rte_atomic32_t))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<rte_atomic32_t>(),
+        4usize,
+        concat!("Alignment of ", stringify!(rte_atomic32_t))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_atomic32_t>())).cnt as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_atomic32_t),
+            "::",
+            stringify!(cnt)
+        )
+    );
+}
+#[doc = " The atomic counter structure."]
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone, PartialEq)]
+pub struct rte_atomic64_t {
+    #[doc = "< Internal counter value."]
+    pub cnt: i64,
+}
+#[test]
+fn bindgen_test_layout_rte_atomic64_t() {
+    assert_eq!(
+        ::std::mem::size_of::<rte_atomic64_t>(),
+        8usize,
+        concat!("Size of: ", stringify!(rte_atomic64_t))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<rte_atomic64_t>(),
+        8usize,
+        concat!("Alignment of ", stringify!(rte_atomic64_t))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_atomic64_t>())).cnt as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_atomic64_t),
+            "::",
+            stringify!(cnt)
+        )
+    );
+}
 extern "C" {
     pub fn memcpy(
         __dest: *mut ::std::os::raw::c_void,
@@ -6303,6 +6442,23 @@ extern "C" {
         ap: *mut __va_list_tag,
     ) -> ::std::os::raw::c_int;
 }
+extern "C" {
+    #[doc = " Dump the stack of the calling core to the console."]
+    pub fn rte_dump_stack();
+}
+extern "C" {
+    #[doc = " Dump the registers of the calling core to the console."]
+    #[doc = ""]
+    #[doc = " Note: Not implemented in a userapp environment; use gdb instead."]
+    pub fn rte_dump_registers();
+}
+extern "C" {
+    pub fn __rte_panic(
+        funcname: *const ::std::os::raw::c_char,
+        format: *const ::std::os::raw::c_char,
+        ...
+    );
+}
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct max_align_t {
@@ -7091,1244 +7247,882 @@ extern "C" {
         socket_id: ::std::os::raw::c_int,
     ) -> ::std::os::raw::c_int;
 }
-#[doc = "  Structure to hold heap statistics obtained from rte_malloc_get_socket_stats function."]
+#[doc = " Bitmap data structure"]
 #[repr(C)]
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
-pub struct rte_malloc_socket_stats {
-    #[doc = "< Total bytes on heap"]
-    pub heap_totalsz_bytes: usize,
-    #[doc = "< Total free bytes on heap"]
-    pub heap_freesz_bytes: usize,
-    #[doc = "< Size in bytes of largest free block"]
-    pub greatest_free_size: usize,
-    #[doc = "< Number of free elements on heap"]
-    pub free_count: ::std::os::raw::c_uint,
-    #[doc = "< Number of allocated elements on heap"]
-    pub alloc_count: ::std::os::raw::c_uint,
-    #[doc = "< Total allocated bytes on heap"]
-    pub heap_allocsz_bytes: usize,
+#[derive(Debug)]
+pub struct rte_bitmap {
+    #[doc = "< Bitmap array1"]
+    pub array1: *mut u64,
+    #[doc = "< Bitmap array2"]
+    pub array2: *mut u64,
+    #[doc = "< Number of 64-bit slabs in array1 that are actually used"]
+    pub array1_size: u32,
+    #[doc = "< Number of 64-bit slabs in array2"]
+    pub array2_size: u32,
+    #[doc = "< Bitmap scan: Index of current array1 slab"]
+    pub index1: u32,
+    #[doc = "< Bitmap scan: Offset of current bit within current array1 slab"]
+    pub offset1: u32,
+    #[doc = "< Bitmap scan: Index of current array2 slab"]
+    pub index2: u32,
+    #[doc = "< Bitmap scan: Go/stop condition for current array2 cache line"]
+    pub go2: u32,
+    pub memory: __IncompleteArrayField<u8>,
 }
 #[test]
-fn bindgen_test_layout_rte_malloc_socket_stats() {
+fn bindgen_test_layout_rte_bitmap() {
     assert_eq!(
-        ::std::mem::size_of::<rte_malloc_socket_stats>(),
+        ::std::mem::size_of::<rte_bitmap>(),
         40usize,
-        concat!("Size of: ", stringify!(rte_malloc_socket_stats))
+        concat!("Size of: ", stringify!(rte_bitmap))
     );
     assert_eq!(
-        ::std::mem::align_of::<rte_malloc_socket_stats>(),
+        ::std::mem::align_of::<rte_bitmap>(),
         8usize,
-        concat!("Alignment of ", stringify!(rte_malloc_socket_stats))
+        concat!("Alignment of ", stringify!(rte_bitmap))
+    );
+}
+impl Default for rte_bitmap {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
+pub mod timer_source {
+    pub type Type = u32;
+    pub const EAL_TIMER_TSC: Type = 0;
+    pub const EAL_TIMER_HPET: Type = 1;
+}
+extern "C" {
+    #[link_name = "\u{1}eal_timer_source"]
+    pub static mut eal_timer_source: timer_source::Type;
+}
+extern "C" {
+    #[doc = " Get the measured frequency of the RDTSC counter"]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   The TSC frequency for this lcore"]
+    pub fn rte_get_tsc_hz() -> u64;
+}
+extern "C" {
+    #[link_name = "\u{1}rte_delay_us"]
+    pub static mut rte_delay_us:
+        ::std::option::Option<unsafe extern "C" fn(us: ::std::os::raw::c_uint)>;
+}
+extern "C" {
+    #[doc = " Blocking delay function."]
+    #[doc = ""]
+    #[doc = " @param us"]
+    #[doc = "   Number of microseconds to wait."]
+    pub fn rte_delay_us_block(us: ::std::os::raw::c_uint);
+}
+extern "C" {
+    #[doc = " Delay function that uses system sleep."]
+    #[doc = " Does not block the CPU core."]
+    #[doc = ""]
+    #[doc = " @param us"]
+    #[doc = "   Number of microseconds to wait."]
+    pub fn rte_delay_us_sleep(us: ::std::os::raw::c_uint);
+}
+extern "C" {
+    #[doc = " Replace rte_delay_us with user defined function."]
+    #[doc = ""]
+    #[doc = " @param userfunc"]
+    #[doc = "   User function which replaces rte_delay_us. rte_delay_us_block restores"]
+    #[doc = "   buildin block delay function."]
+    pub fn rte_delay_us_callback_register(
+        userfunc: ::std::option::Option<unsafe extern "C" fn(arg1: ::std::os::raw::c_uint)>,
+    );
+}
+extern "C" {
+    #[link_name = "\u{1}rte_cycles_vmware_tsc_map"]
+    pub static mut rte_cycles_vmware_tsc_map: ::std::os::raw::c_int;
+}
+pub mod rte_dev_event_type {
+    #[doc = " The device event type."]
+    pub type Type = u32;
+    #[doc = "< device being added"]
+    pub const RTE_DEV_EVENT_ADD: Type = 0;
+    #[doc = "< device being removed"]
+    pub const RTE_DEV_EVENT_REMOVE: Type = 1;
+    #[doc = "< max value of this enum"]
+    pub const RTE_DEV_EVENT_MAX: Type = 2;
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct rte_dev_event {
+    #[doc = "< device event type"]
+    pub type_: rte_dev_event_type::Type,
+    #[doc = "< subsystem id"]
+    pub subsystem: ::std::os::raw::c_int,
+    #[doc = "< device name"]
+    pub devname: *mut ::std::os::raw::c_char,
+}
+#[test]
+fn bindgen_test_layout_rte_dev_event() {
+    assert_eq!(
+        ::std::mem::size_of::<rte_dev_event>(),
+        16usize,
+        concat!("Size of: ", stringify!(rte_dev_event))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<rte_dev_event>(),
+        8usize,
+        concat!("Alignment of ", stringify!(rte_dev_event))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_dev_event>())).type_ as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_dev_event),
+            "::",
+            stringify!(type_)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_dev_event>())).subsystem as *const _ as usize },
+        4usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_dev_event),
+            "::",
+            stringify!(subsystem)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_dev_event>())).devname as *const _ as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_dev_event),
+            "::",
+            stringify!(devname)
+        )
+    );
+}
+impl Default for rte_dev_event {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
+pub type rte_dev_event_cb_fn = ::std::option::Option<
+    unsafe extern "C" fn(
+        device_name: *const ::std::os::raw::c_char,
+        event: rte_dev_event_type::Type,
+        cb_arg: *mut ::std::os::raw::c_void,
+    ),
+>;
+pub mod rte_kernel_driver {
+    #[doc = " Device driver."]
+    pub type Type = u32;
+    pub const RTE_KDRV_UNKNOWN: Type = 0;
+    pub const RTE_KDRV_IGB_UIO: Type = 1;
+    pub const RTE_KDRV_VFIO: Type = 2;
+    pub const RTE_KDRV_UIO_GENERIC: Type = 3;
+    pub const RTE_KDRV_NIC_UIO: Type = 4;
+    pub const RTE_KDRV_NONE: Type = 5;
+}
+pub mod rte_dev_policy {
+    #[doc = " Device policies."]
+    pub type Type = u32;
+    pub const RTE_DEV_WHITELISTED: Type = 0;
+    pub const RTE_DEV_BLACKLISTED: Type = 1;
+}
+#[doc = " A generic memory resource representation."]
+#[repr(C)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct rte_mem_resource {
+    #[doc = "< Physical address, 0 if not resource."]
+    pub phys_addr: u64,
+    #[doc = "< Length of the resource."]
+    pub len: u64,
+    #[doc = "< Virtual address, NULL when not mapped."]
+    pub addr: *mut ::std::os::raw::c_void,
+}
+#[test]
+fn bindgen_test_layout_rte_mem_resource() {
+    assert_eq!(
+        ::std::mem::size_of::<rte_mem_resource>(),
+        24usize,
+        concat!("Size of: ", stringify!(rte_mem_resource))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<rte_mem_resource>(),
+        8usize,
+        concat!("Alignment of ", stringify!(rte_mem_resource))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_mem_resource>())).phys_addr as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_mem_resource),
+            "::",
+            stringify!(phys_addr)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_mem_resource>())).len as *const _ as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_mem_resource),
+            "::",
+            stringify!(len)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_mem_resource>())).addr as *const _ as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_mem_resource),
+            "::",
+            stringify!(addr)
+        )
+    );
+}
+impl Default for rte_mem_resource {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
+#[doc = " A structure describing a device driver."]
+#[repr(C)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct rte_driver {
+    #[doc = "< Next in list."]
+    pub next: rte_driver__bindgen_ty_1,
+    #[doc = "< Driver name."]
+    pub name: *const ::std::os::raw::c_char,
+    #[doc = "< Driver alias."]
+    pub alias: *const ::std::os::raw::c_char,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct rte_driver__bindgen_ty_1 {
+    pub tqe_next: *mut rte_driver,
+    pub tqe_prev: *mut *mut rte_driver,
+}
+#[test]
+fn bindgen_test_layout_rte_driver__bindgen_ty_1() {
+    assert_eq!(
+        ::std::mem::size_of::<rte_driver__bindgen_ty_1>(),
+        16usize,
+        concat!("Size of: ", stringify!(rte_driver__bindgen_ty_1))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<rte_driver__bindgen_ty_1>(),
+        8usize,
+        concat!("Alignment of ", stringify!(rte_driver__bindgen_ty_1))
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<rte_malloc_socket_stats>())).heap_totalsz_bytes as *const _
-                as usize
+            &(*(::std::ptr::null::<rte_driver__bindgen_ty_1>())).tqe_next as *const _ as usize
         },
         0usize,
         concat!(
             "Offset of field: ",
-            stringify!(rte_malloc_socket_stats),
+            stringify!(rte_driver__bindgen_ty_1),
             "::",
-            stringify!(heap_totalsz_bytes)
+            stringify!(tqe_next)
         )
     );
     assert_eq!(
         unsafe {
-            &(*(::std::ptr::null::<rte_malloc_socket_stats>())).heap_freesz_bytes as *const _
-                as usize
+            &(*(::std::ptr::null::<rte_driver__bindgen_ty_1>())).tqe_prev as *const _ as usize
         },
         8usize,
         concat!(
             "Offset of field: ",
-            stringify!(rte_malloc_socket_stats),
+            stringify!(rte_driver__bindgen_ty_1),
             "::",
-            stringify!(heap_freesz_bytes)
+            stringify!(tqe_prev)
+        )
+    );
+}
+impl Default for rte_driver__bindgen_ty_1 {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
+#[test]
+fn bindgen_test_layout_rte_driver() {
+    assert_eq!(
+        ::std::mem::size_of::<rte_driver>(),
+        32usize,
+        concat!("Size of: ", stringify!(rte_driver))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<rte_driver>(),
+        8usize,
+        concat!("Alignment of ", stringify!(rte_driver))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_driver>())).next as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_driver),
+            "::",
+            stringify!(next)
         )
     );
     assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<rte_malloc_socket_stats>())).greatest_free_size as *const _
-                as usize
-        },
+        unsafe { &(*(::std::ptr::null::<rte_driver>())).name as *const _ as usize },
         16usize,
         concat!(
             "Offset of field: ",
-            stringify!(rte_malloc_socket_stats),
+            stringify!(rte_driver),
             "::",
-            stringify!(greatest_free_size)
+            stringify!(name)
         )
     );
     assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<rte_malloc_socket_stats>())).free_count as *const _ as usize
-        },
+        unsafe { &(*(::std::ptr::null::<rte_driver>())).alias as *const _ as usize },
         24usize,
         concat!(
             "Offset of field: ",
-            stringify!(rte_malloc_socket_stats),
+            stringify!(rte_driver),
             "::",
-            stringify!(free_count)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<rte_malloc_socket_stats>())).alloc_count as *const _ as usize
-        },
-        28usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_malloc_socket_stats),
-            "::",
-            stringify!(alloc_count)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<rte_malloc_socket_stats>())).heap_allocsz_bytes as *const _
-                as usize
-        },
-        32usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_malloc_socket_stats),
-            "::",
-            stringify!(heap_allocsz_bytes)
+            stringify!(alias)
         )
     );
 }
-extern "C" {
-    #[doc = " This function allocates memory from the huge-page area of memory. The memory"]
-    #[doc = " is not cleared. In NUMA systems, the memory allocated resides on the same"]
-    #[doc = " NUMA socket as the core that calls this function."]
-    #[doc = ""]
-    #[doc = " @param type"]
-    #[doc = "   A string identifying the type of allocated objects (useful for debug"]
-    #[doc = "   purposes, such as identifying the cause of a memory leak). Can be NULL."]
-    #[doc = " @param size"]
-    #[doc = "   Size (in bytes) to be allocated."]
-    #[doc = " @param align"]
-    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
-    #[doc = "   variable (in the same manner as malloc())."]
-    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
-    #[doc = "   this case, it must be a power of two. (Minimum alignment is the"]
-    #[doc = "   cacheline size, i.e. 64-bytes)"]
-    #[doc = " @return"]
-    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
-    #[doc = "     align is not a power of two)."]
-    #[doc = "   - Otherwise, the pointer to the allocated object."]
-    pub fn rte_malloc(
-        type_: *const ::std::os::raw::c_char,
-        size: usize,
-        align: ::std::os::raw::c_uint,
-    ) -> *mut ::std::os::raw::c_void;
+impl Default for rte_driver {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
 }
-extern "C" {
-    #[doc = " Allocate zero\'ed memory from the heap."]
-    #[doc = ""]
-    #[doc = " Equivalent to rte_malloc() except that the memory zone is"]
-    #[doc = " initialised with zeros. In NUMA systems, the memory allocated resides on the"]
-    #[doc = " same NUMA socket as the core that calls this function."]
-    #[doc = ""]
-    #[doc = " @param type"]
-    #[doc = "   A string identifying the type of allocated objects (useful for debug"]
-    #[doc = "   purposes, such as identifying the cause of a memory leak). Can be NULL."]
-    #[doc = " @param size"]
-    #[doc = "   Size (in bytes) to be allocated."]
-    #[doc = " @param align"]
-    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
-    #[doc = "   variable (in the same manner as malloc())."]
-    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
-    #[doc = "   this case, it must obviously be a power of two. (Minimum alignment is the"]
-    #[doc = "   cacheline size, i.e. 64-bytes)"]
-    #[doc = " @return"]
-    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
-    #[doc = "     align is not a power of two)."]
-    #[doc = "   - Otherwise, the pointer to the allocated object."]
-    pub fn rte_zmalloc(
-        type_: *const ::std::os::raw::c_char,
-        size: usize,
-        align: ::std::os::raw::c_uint,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    #[doc = " Replacement function for calloc(), using huge-page memory. Memory area is"]
-    #[doc = " initialised with zeros. In NUMA systems, the memory allocated resides on the"]
-    #[doc = " same NUMA socket as the core that calls this function."]
-    #[doc = ""]
-    #[doc = " @param type"]
-    #[doc = "   A string identifying the type of allocated objects (useful for debug"]
-    #[doc = "   purposes, such as identifying the cause of a memory leak). Can be NULL."]
-    #[doc = " @param num"]
-    #[doc = "   Number of elements to be allocated."]
-    #[doc = " @param size"]
-    #[doc = "   Size (in bytes) of a single element."]
-    #[doc = " @param align"]
-    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
-    #[doc = "   variable (in the same manner as malloc())."]
-    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
-    #[doc = "   this case, it must obviously be a power of two. (Minimum alignment is the"]
-    #[doc = "   cacheline size, i.e. 64-bytes)"]
-    #[doc = " @return"]
-    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
-    #[doc = "     align is not a power of two)."]
-    #[doc = "   - Otherwise, the pointer to the allocated object."]
-    pub fn rte_calloc(
-        type_: *const ::std::os::raw::c_char,
-        num: usize,
-        size: usize,
-        align: ::std::os::raw::c_uint,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    #[doc = " Replacement function for realloc(), using huge-page memory. Reserved area"]
-    #[doc = " memory is resized, preserving contents. In NUMA systems, the new area"]
-    #[doc = " resides on the same NUMA socket as the old area."]
-    #[doc = ""]
-    #[doc = " @param ptr"]
-    #[doc = "   Pointer to already allocated memory"]
-    #[doc = " @param size"]
-    #[doc = "   Size (in bytes) of new area. If this is 0, memory is freed."]
-    #[doc = " @param align"]
-    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
-    #[doc = "   variable (in the same manner as malloc())."]
-    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
-    #[doc = "   this case, it must obviously be a power of two. (Minimum alignment is the"]
-    #[doc = "   cacheline size, i.e. 64-bytes)"]
-    #[doc = " @return"]
-    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
-    #[doc = "     align is not a power of two)."]
-    #[doc = "   - Otherwise, the pointer to the reallocated memory."]
-    pub fn rte_realloc(
-        ptr: *mut ::std::os::raw::c_void,
-        size: usize,
-        align: ::std::os::raw::c_uint,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    #[doc = " This function allocates memory from the huge-page area of memory. The memory"]
-    #[doc = " is not cleared."]
-    #[doc = ""]
-    #[doc = " @param type"]
-    #[doc = "   A string identifying the type of allocated objects (useful for debug"]
-    #[doc = "   purposes, such as identifying the cause of a memory leak). Can be NULL."]
-    #[doc = " @param size"]
-    #[doc = "   Size (in bytes) to be allocated."]
-    #[doc = " @param align"]
-    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
-    #[doc = "   variable (in the same manner as malloc())."]
-    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
-    #[doc = "   this case, it must be a power of two. (Minimum alignment is the"]
-    #[doc = "   cacheline size, i.e. 64-bytes)"]
-    #[doc = " @param socket"]
-    #[doc = "   NUMA socket to allocate memory on. If SOCKET_ID_ANY is used, this function"]
-    #[doc = "   will behave the same as rte_malloc()."]
-    #[doc = " @return"]
-    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
-    #[doc = "     align is not a power of two)."]
-    #[doc = "   - Otherwise, the pointer to the allocated object."]
-    pub fn rte_malloc_socket(
-        type_: *const ::std::os::raw::c_char,
-        size: usize,
-        align: ::std::os::raw::c_uint,
-        socket: ::std::os::raw::c_int,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    #[doc = " Allocate zero\'ed memory from the heap."]
-    #[doc = ""]
-    #[doc = " Equivalent to rte_malloc() except that the memory zone is"]
-    #[doc = " initialised with zeros."]
-    #[doc = ""]
-    #[doc = " @param type"]
-    #[doc = "   A string identifying the type of allocated objects (useful for debug"]
-    #[doc = "   purposes, such as identifying the cause of a memory leak). Can be NULL."]
-    #[doc = " @param size"]
-    #[doc = "   Size (in bytes) to be allocated."]
-    #[doc = " @param align"]
-    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
-    #[doc = "   variable (in the same manner as malloc())."]
-    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
-    #[doc = "   this case, it must obviously be a power of two. (Minimum alignment is the"]
-    #[doc = "   cacheline size, i.e. 64-bytes)"]
-    #[doc = " @param socket"]
-    #[doc = "   NUMA socket to allocate memory on. If SOCKET_ID_ANY is used, this function"]
-    #[doc = "   will behave the same as rte_zmalloc()."]
-    #[doc = " @return"]
-    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
-    #[doc = "     align is not a power of two)."]
-    #[doc = "   - Otherwise, the pointer to the allocated object."]
-    pub fn rte_zmalloc_socket(
-        type_: *const ::std::os::raw::c_char,
-        size: usize,
-        align: ::std::os::raw::c_uint,
-        socket: ::std::os::raw::c_int,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    #[doc = " Replacement function for calloc(), using huge-page memory. Memory area is"]
-    #[doc = " initialised with zeros."]
-    #[doc = ""]
-    #[doc = " @param type"]
-    #[doc = "   A string identifying the type of allocated objects (useful for debug"]
-    #[doc = "   purposes, such as identifying the cause of a memory leak). Can be NULL."]
-    #[doc = " @param num"]
-    #[doc = "   Number of elements to be allocated."]
-    #[doc = " @param size"]
-    #[doc = "   Size (in bytes) of a single element."]
-    #[doc = " @param align"]
-    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
-    #[doc = "   variable (in the same manner as malloc())."]
-    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
-    #[doc = "   this case, it must obviously be a power of two. (Minimum alignment is the"]
-    #[doc = "   cacheline size, i.e. 64-bytes)"]
-    #[doc = " @param socket"]
-    #[doc = "   NUMA socket to allocate memory on. If SOCKET_ID_ANY is used, this function"]
-    #[doc = "   will behave the same as rte_calloc()."]
-    #[doc = " @return"]
-    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
-    #[doc = "     align is not a power of two)."]
-    #[doc = "   - Otherwise, the pointer to the allocated object."]
-    pub fn rte_calloc_socket(
-        type_: *const ::std::os::raw::c_char,
-        num: usize,
-        size: usize,
-        align: ::std::os::raw::c_uint,
-        socket: ::std::os::raw::c_int,
-    ) -> *mut ::std::os::raw::c_void;
-}
-extern "C" {
-    #[doc = " Frees the memory space pointed to by the provided pointer."]
-    #[doc = ""]
-    #[doc = " This pointer must have been returned by a previous call to"]
-    #[doc = " rte_malloc(), rte_zmalloc(), rte_calloc() or rte_realloc(). The behaviour of"]
-    #[doc = " rte_free() is undefined if the pointer does not match this requirement."]
-    #[doc = ""]
-    #[doc = " If the pointer is NULL, the function does nothing."]
-    #[doc = ""]
-    #[doc = " @param ptr"]
-    #[doc = "   The pointer to memory to be freed."]
-    pub fn rte_free(ptr: *mut ::std::os::raw::c_void);
-}
-extern "C" {
-    #[doc = " If malloc debug is enabled, check a memory block for header"]
-    #[doc = " and trailer markers to indicate that all is well with the block."]
-    #[doc = " If size is non-null, also return the size of the block."]
-    #[doc = ""]
-    #[doc = " @param ptr"]
-    #[doc = "   pointer to the start of a data block, must have been returned"]
-    #[doc = "   by a previous call to rte_malloc(), rte_zmalloc(), rte_calloc()"]
-    #[doc = "   or rte_realloc()"]
-    #[doc = " @param size"]
-    #[doc = "   if non-null, and memory block pointer is valid, returns the size"]
-    #[doc = "   of the memory block"]
-    #[doc = " @return"]
-    #[doc = "   -1 on error, invalid pointer passed or header and trailer markers"]
-    #[doc = "   are missing or corrupted"]
-    #[doc = "   0 on success"]
-    pub fn rte_malloc_validate(
-        ptr: *const ::std::os::raw::c_void,
-        size: *mut usize,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Get heap statistics for the specified heap."]
-    #[doc = ""]
-    #[doc = " @param socket"]
-    #[doc = "   An unsigned integer specifying the socket to get heap statistics for"]
-    #[doc = " @param socket_stats"]
-    #[doc = "   A structure which provides memory to store statistics"]
-    #[doc = " @return"]
-    #[doc = "   Null on error"]
-    #[doc = "   Pointer to structure storing statistics on success"]
-    pub fn rte_malloc_get_socket_stats(
-        socket: ::std::os::raw::c_int,
-        socket_stats: *mut rte_malloc_socket_stats,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Add memory chunk to a heap with specified name."]
-    #[doc = ""]
-    #[doc = " @note Multiple memory chunks can be added to the same heap"]
-    #[doc = ""]
-    #[doc = " @note Before accessing this memory in other processes, it needs to be"]
-    #[doc = "   attached in each of those processes by calling"]
-    #[doc = "   ``rte_malloc_heap_memory_attach`` in each other process."]
-    #[doc = ""]
-    #[doc = " @note Memory must be previously allocated for DPDK to be able to use it as a"]
-    #[doc = "   malloc heap. Failing to do so will result in undefined behavior, up to and"]
-    #[doc = "   including segmentation faults."]
-    #[doc = ""]
-    #[doc = " @note Calling this function will erase any contents already present at the"]
-    #[doc = "   supplied memory address."]
-    #[doc = ""]
-    #[doc = " @param heap_name"]
-    #[doc = "   Name of the heap to add memory chunk to"]
-    #[doc = " @param va_addr"]
-    #[doc = "   Start of virtual area to add to the heap"]
-    #[doc = " @param len"]
-    #[doc = "   Length of virtual area to add to the heap"]
-    #[doc = " @param iova_addrs"]
-    #[doc = "   Array of page IOVA addresses corresponding to each page in this memory"]
-    #[doc = "   area. Can be NULL, in which case page IOVA addresses will be set to"]
-    #[doc = "   RTE_BAD_IOVA."]
-    #[doc = " @param n_pages"]
-    #[doc = "   Number of elements in the iova_addrs array. Ignored if  ``iova_addrs``"]
-    #[doc = "   is NULL."]
-    #[doc = " @param page_sz"]
-    #[doc = "   Page size of the underlying memory"]
-    #[doc = ""]
-    #[doc = " @return"]
-    #[doc = "   - 0 on success"]
-    #[doc = "   - -1 in case of error, with rte_errno set to one of the following:"]
-    #[doc = "     EINVAL - one of the parameters was invalid"]
-    #[doc = "     EPERM  - attempted to add memory to a reserved heap"]
-    #[doc = "     ENOSPC - no more space in internal config to store a new memory chunk"]
-    pub fn rte_malloc_heap_memory_add(
-        heap_name: *const ::std::os::raw::c_char,
-        va_addr: *mut ::std::os::raw::c_void,
-        len: usize,
-        iova_addrs: *mut rte_iova_t,
-        n_pages: ::std::os::raw::c_uint,
-        page_sz: usize,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Remove memory chunk from heap with specified name."]
-    #[doc = ""]
-    #[doc = " @note Memory chunk being removed must be the same as one that was added;"]
-    #[doc = "   partially removing memory chunks is not supported"]
-    #[doc = ""]
-    #[doc = " @note Memory area must not contain any allocated elements to allow its"]
-    #[doc = "   removal from the heap"]
-    #[doc = ""]
-    #[doc = " @note All other processes must detach from the memory chunk prior to it being"]
-    #[doc = "   removed from the heap."]
-    #[doc = ""]
-    #[doc = " @param heap_name"]
-    #[doc = "   Name of the heap to remove memory from"]
-    #[doc = " @param va_addr"]
-    #[doc = "   Virtual address to remove from the heap"]
-    #[doc = " @param len"]
-    #[doc = "   Length of virtual area to remove from the heap"]
-    #[doc = ""]
-    #[doc = " @return"]
-    #[doc = "   - 0 on success"]
-    #[doc = "   - -1 in case of error, with rte_errno set to one of the following:"]
-    #[doc = "     EINVAL - one of the parameters was invalid"]
-    #[doc = "     EPERM  - attempted to remove memory from a reserved heap"]
-    #[doc = "     ENOENT - heap or memory chunk was not found"]
-    #[doc = "     EBUSY  - memory chunk still contains data"]
-    pub fn rte_malloc_heap_memory_remove(
-        heap_name: *const ::std::os::raw::c_char,
-        va_addr: *mut ::std::os::raw::c_void,
-        len: usize,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Attach to an already existing chunk of external memory in another process."]
-    #[doc = ""]
-    #[doc = " @note This function must be called before any attempt is made to use an"]
-    #[doc = "   already existing external memory chunk. This function does *not* need to"]
-    #[doc = "   be called if a call to ``rte_malloc_heap_memory_add`` was made in the"]
-    #[doc = "   current process."]
-    #[doc = ""]
-    #[doc = " @param heap_name"]
-    #[doc = "   Heap name to which this chunk of memory belongs"]
-    #[doc = " @param va_addr"]
-    #[doc = "   Start address of memory chunk to attach to"]
-    #[doc = " @param len"]
-    #[doc = "   Length of memory chunk to attach to"]
-    #[doc = " @return"]
-    #[doc = "   0 on successful attach"]
-    #[doc = "   -1 on unsuccessful attach, with rte_errno set to indicate cause for error:"]
-    #[doc = "     EINVAL - one of the parameters was invalid"]
-    #[doc = "     EPERM  - attempted to attach memory to a reserved heap"]
-    #[doc = "     ENOENT - heap or memory chunk was not found"]
-    pub fn rte_malloc_heap_memory_attach(
-        heap_name: *const ::std::os::raw::c_char,
-        va_addr: *mut ::std::os::raw::c_void,
-        len: usize,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Detach from a chunk of external memory in secondary process."]
-    #[doc = ""]
-    #[doc = " @note This function must be called in before any attempt is made to remove"]
-    #[doc = "   external memory from the heap in another process. This function does *not*"]
-    #[doc = "   need to be called if a call to ``rte_malloc_heap_memory_remove`` will be"]
-    #[doc = "   called in current process."]
-    #[doc = ""]
-    #[doc = " @param heap_name"]
-    #[doc = "   Heap name to which this chunk of memory belongs"]
-    #[doc = " @param va_addr"]
-    #[doc = "   Start address of memory chunk to attach to"]
-    #[doc = " @param len"]
-    #[doc = "   Length of memory chunk to attach to"]
-    #[doc = " @return"]
-    #[doc = "   0 on successful detach"]
-    #[doc = "   -1 on unsuccessful detach, with rte_errno set to indicate cause for error:"]
-    #[doc = "     EINVAL - one of the parameters was invalid"]
-    #[doc = "     EPERM  - attempted to detach memory from a reserved heap"]
-    #[doc = "     ENOENT - heap or memory chunk was not found"]
-    pub fn rte_malloc_heap_memory_detach(
-        heap_name: *const ::std::os::raw::c_char,
-        va_addr: *mut ::std::os::raw::c_void,
-        len: usize,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Creates a new empty malloc heap with a specified name."]
-    #[doc = ""]
-    #[doc = " @note Heaps created via this call will automatically get assigned a unique"]
-    #[doc = "   socket ID, which can be found using ``rte_malloc_heap_get_socket()``"]
-    #[doc = ""]
-    #[doc = " @param heap_name"]
-    #[doc = "   Name of the heap to create."]
-    #[doc = ""]
-    #[doc = " @return"]
-    #[doc = "   - 0 on successful creation"]
-    #[doc = "   - -1 in case of error, with rte_errno set to one of the following:"]
-    #[doc = "     EINVAL - ``heap_name`` was NULL, empty or too long"]
-    #[doc = "     EEXIST - heap by name of ``heap_name`` already exists"]
-    #[doc = "     ENOSPC - no more space in internal config to store a new heap"]
-    pub fn rte_malloc_heap_create(
-        heap_name: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Destroys a previously created malloc heap with specified name."]
-    #[doc = ""]
-    #[doc = " @note This function will return a failure result if not all memory allocated"]
-    #[doc = "   from the heap has been freed back to the heap"]
-    #[doc = ""]
-    #[doc = " @note This function will return a failure result if not all memory segments"]
-    #[doc = "   were removed from the heap prior to its destruction"]
-    #[doc = ""]
-    #[doc = " @param heap_name"]
-    #[doc = "   Name of the heap to create."]
-    #[doc = ""]
-    #[doc = " @return"]
-    #[doc = "   - 0 on success"]
-    #[doc = "   - -1 in case of error, with rte_errno set to one of the following:"]
-    #[doc = "     EINVAL - ``heap_name`` was NULL, empty or too long"]
-    #[doc = "     ENOENT - heap by the name of ``heap_name`` was not found"]
-    #[doc = "     EPERM  - attempting to destroy reserved heap"]
-    #[doc = "     EBUSY  - heap still contains data"]
-    pub fn rte_malloc_heap_destroy(
-        heap_name: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Find socket ID corresponding to a named heap."]
-    #[doc = ""]
-    #[doc = " @param name"]
-    #[doc = "   Heap name to find socket ID for"]
-    #[doc = " @return"]
-    #[doc = "   Socket ID in case of success (a non-negative number)"]
-    #[doc = "   -1 in case of error, with rte_errno set to one of the following:"]
-    #[doc = "     EINVAL - ``name`` was NULL"]
-    #[doc = "     ENOENT - heap identified by the name ``name`` was not found"]
-    pub fn rte_malloc_heap_get_socket(name: *const ::std::os::raw::c_char)
-        -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Check if a given socket ID refers to externally allocated memory."]
-    #[doc = ""]
-    #[doc = " @note Passing SOCKET_ID_ANY will return 0."]
-    #[doc = ""]
-    #[doc = " @param socket_id"]
-    #[doc = "   Socket ID to check"]
-    #[doc = " @return"]
-    #[doc = "   1 if socket ID refers to externally allocated memory"]
-    #[doc = "   0 if socket ID refers to internal DPDK memory"]
-    #[doc = "   -1 if socket ID is invalid"]
-    pub fn rte_malloc_heap_socket_is_external(
-        socket_id: ::std::os::raw::c_int,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Dump statistics."]
-    #[doc = ""]
-    #[doc = " Dump for the specified type to a file. If the type argument is"]
-    #[doc = " NULL, all memory types will be dumped."]
-    #[doc = ""]
-    #[doc = " @param f"]
-    #[doc = "   A pointer to a file for output"]
-    #[doc = " @param type"]
-    #[doc = "   A string identifying the type of objects to dump, or NULL"]
-    #[doc = "   to dump all objects."]
-    pub fn rte_malloc_dump_stats(f: *mut FILE, type_: *const ::std::os::raw::c_char);
-}
-extern "C" {
-    #[doc = " Dump contents of all malloc heaps to a file."]
-    #[doc = ""]
-    #[doc = " @param f"]
-    #[doc = "   A pointer to a file for output"]
-    pub fn rte_malloc_dump_heaps(f: *mut FILE);
-}
-extern "C" {
-    #[doc = " Set the maximum amount of allocated memory for this type."]
-    #[doc = ""]
-    #[doc = " This is not yet implemented"]
-    #[doc = ""]
-    #[doc = " @param type"]
-    #[doc = "   A string identifying the type of allocated objects."]
-    #[doc = " @param max"]
-    #[doc = "   The maximum amount of allocated bytes for this type."]
-    #[doc = " @return"]
-    #[doc = "   - 0: Success."]
-    #[doc = "   - (-1): Error."]
-    pub fn rte_malloc_set_limit(
-        type_: *const ::std::os::raw::c_char,
-        max: usize,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Return the IO address of a virtual address obtained through"]
-    #[doc = " rte_malloc"]
-    #[doc = ""]
-    #[doc = " @param addr"]
-    #[doc = "   Address obtained from a previous rte_malloc call"]
-    #[doc = " @return"]
-    #[doc = "   RTE_BAD_IOVA on error"]
-    #[doc = "   otherwise return an address suitable for IO"]
-    pub fn rte_malloc_virt2iova(addr: *const ::std::os::raw::c_void) -> rte_iova_t;
-}
-#[doc = " 64 bits vector size to use with unsigned 8 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v64u8_t){ a0, a1, a2, a3, a4, a5, a6, a7 }"]
-pub type rte_v64u8_t = [u8; 8usize];
-#[doc = " 64 bits vector size to use with unsigned 16 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v64u16_t){ a0, a1, a2, a3 }"]
-pub type rte_v64u16_t = [u16; 4usize];
-#[doc = " 64 bits vector size to use with unsigned 32 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v64u32_t){ a0, a1 }"]
-pub type rte_v64u32_t = [u32; 2usize];
-#[doc = " 128 bits vector size to use with unsigned 8 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v128u8_t){ a00, a01, a02, a03, a04, a05, a06, a07,"]
-#[doc = "                     a08, a09, a10, a11, a12, a13, a14, a15 }"]
-pub type rte_v128u8_t = [u8; 16usize];
-#[doc = " 128 bits vector size to use with unsigned 16 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v128u16_t){ a0, a1, a2, a3, a4, a5, a6, a7 }"]
-pub type rte_v128u16_t = [u16; 8usize];
-#[doc = " 128 bits vector size to use with unsigned 32 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v128u32_t){ a0, a1, a2, a3, a4 }"]
-pub type rte_v128u32_t = [u32; 4usize];
-#[doc = " 128 bits vector size to use with unsigned 64 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v128u64_t){ a0, a1 }"]
-pub type rte_v128u64_t = [u64; 2usize];
-#[doc = " 256 bits vector size to use with unsigned 8 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v256u8_t){ a00, a01, a02, a03, a04, a05, a06, a07,"]
-#[doc = "                     a08, a09, a10, a11, a12, a13, a14, a15,"]
-#[doc = "                     a16, a17, a18, a19, a20, a21, a22, a23,"]
-#[doc = "                     a24, a25, a26, a27, a28, a29, a30, a31 }"]
-pub type rte_v256u8_t = [u8; 32usize];
-#[doc = " 256 bits vector size to use with unsigned 16 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v256u16_t){ a00, a01, a02, a03, a04, a05, a06, a07,"]
-#[doc = "                      a08, a09, a10, a11, a12, a13, a14, a15 }"]
-pub type rte_v256u16_t = [u16; 16usize];
-#[doc = " 256 bits vector size to use with unsigned 32 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v256u32_t){ a0, a1, a2, a3, a4, a5, a6, a7 }"]
-pub type rte_v256u32_t = [u32; 8usize];
-#[doc = " 256 bits vector size to use with unsigned 64 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v256u64_t){ a0, a1, a2, a3 }"]
-pub type rte_v256u64_t = [u64; 4usize];
-#[doc = " 64 bits vector size to use with 8 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v64s8_t){ a0, a1, a2, a3, a4, a5, a6, a7 }"]
-pub type rte_v64s8_t = [i8; 8usize];
-#[doc = " 64 bits vector size to use with 16 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v64s16_t){ a0, a1, a2, a3 }"]
-pub type rte_v64s16_t = [i16; 4usize];
-#[doc = " 64 bits vector size to use with 32 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v64s32_t){ a0, a1 }"]
-pub type rte_v64s32_t = [i32; 2usize];
-#[doc = " 128 bits vector size to use with 8 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v128s8_t){ a00, a01, a02, a03, a04, a05, a06, a07,"]
-#[doc = "                     a08, a09, a10, a11, a12, a13, a14, a15 }"]
-pub type rte_v128s8_t = [i8; 16usize];
-#[doc = " 128 bits vector size to use with 16 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v128s16_t){ a0, a1, a2, a3, a4, a5, a6, a7 }"]
-pub type rte_v128s16_t = [i16; 8usize];
-#[doc = " 128 bits vector size to use with 32 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v128s32_t){ a0, a1, a2, a3 }"]
-pub type rte_v128s32_t = [i32; 4usize];
-#[doc = " 128 bits vector size to use with 64 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v128s64_t){ a1, a2 }"]
-pub type rte_v128s64_t = [i64; 2usize];
-#[doc = " 256 bits vector size to use with 8 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v256s8_t){ a00, a01, a02, a03, a04, a05, a06, a07,"]
-#[doc = "                     a08, a09, a10, a11, a12, a13, a14, a15,"]
-#[doc = "                     a16, a17, a18, a19, a20, a21, a22, a23,"]
-#[doc = "                     a24, a25, a26, a27, a28, a29, a30, a31 }"]
-pub type rte_v256s8_t = [i8; 32usize];
-#[doc = " 256 bits vector size to use with 16 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v256s16_t){ a00, a01, a02, a03, a04, a05, a06, a07,"]
-#[doc = "                      a08, a09, a10, a11, a12, a13, a14, a15 }"]
-pub type rte_v256s16_t = [i16; 16usize];
-#[doc = " 256 bits vector size to use with 32 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v256s32_t){ a0, a1, a2, a3, a4, a5, a6, a7 }"]
-pub type rte_v256s32_t = [i32; 8usize];
-#[doc = " 256 bits vector size to use with 64 bits elements."]
-#[doc = ""]
-#[doc = " a = (rte_v256s64_t){ a0, a1, a2, a3 }"]
-pub type rte_v256s64_t = [i64; 4usize];
-pub type __m64 = [::std::os::raw::c_longlong; 1usize];
-pub type __v1di = [::std::os::raw::c_longlong; 1usize];
-pub type __v2si = [::std::os::raw::c_int; 2usize];
-pub type __v4hi = [::std::os::raw::c_short; 4usize];
-pub type __v8qi = [::std::os::raw::c_char; 8usize];
-pub type __v4si = [::std::os::raw::c_int; 4usize];
-pub type __v4sf = [f32; 4usize];
-pub type __m128 = [f32; 4usize];
-pub type __v4su = [::std::os::raw::c_uint; 4usize];
-extern "C" {
-    pub fn _mm_sfence();
-}
-extern "C" {
-    pub fn _mm_getcsr() -> ::std::os::raw::c_uint;
-}
-extern "C" {
-    pub fn _mm_setcsr(__i: ::std::os::raw::c_uint);
-}
-pub type __m128d = [f64; 2usize];
-pub type __m128i = [::std::os::raw::c_longlong; 2usize];
-pub type __v2df = [f64; 2usize];
-pub type __v2di = [::std::os::raw::c_longlong; 2usize];
-pub type __v8hi = [::std::os::raw::c_short; 8usize];
-pub type __v16qi = [::std::os::raw::c_char; 16usize];
-pub type __v2du = [::std::os::raw::c_ulonglong; 2usize];
-pub type __v8hu = [::std::os::raw::c_ushort; 8usize];
-pub type __v16qu = [::std::os::raw::c_uchar; 16usize];
-pub type __v16qs = [::std::os::raw::c_schar; 16usize];
-extern "C" {
-    pub fn _mm_clflush(__p: *const ::std::os::raw::c_void);
-}
-extern "C" {
-    pub fn _mm_lfence();
-}
-extern "C" {
-    pub fn _mm_mfence();
-}
-extern "C" {
-    pub fn _mm_pause();
-}
-pub type __v4df = [f64; 4usize];
-pub type __v8sf = [f32; 8usize];
-pub type __v4di = [::std::os::raw::c_longlong; 4usize];
-pub type __v8si = [::std::os::raw::c_int; 8usize];
-pub type __v16hi = [::std::os::raw::c_short; 16usize];
-pub type __v32qi = [::std::os::raw::c_char; 32usize];
-pub type __v4du = [::std::os::raw::c_ulonglong; 4usize];
-pub type __v8su = [::std::os::raw::c_uint; 8usize];
-pub type __v16hu = [::std::os::raw::c_ushort; 16usize];
-pub type __v32qu = [::std::os::raw::c_uchar; 32usize];
-pub type __v32qs = [::std::os::raw::c_schar; 32usize];
-pub type __m256 = [f32; 8usize];
-pub type __m256d = [f64; 4usize];
-pub type __m256i = [::std::os::raw::c_longlong; 4usize];
-pub type __v64qi = [::std::os::raw::c_char; 64usize];
-pub type __v32hi = [::std::os::raw::c_short; 32usize];
-pub type __v8df = [f64; 8usize];
-pub type __v16sf = [f32; 16usize];
-pub type __v8di = [::std::os::raw::c_longlong; 8usize];
-pub type __v16si = [::std::os::raw::c_int; 16usize];
-pub type __v64qu = [::std::os::raw::c_uchar; 64usize];
-pub type __v32hu = [::std::os::raw::c_ushort; 32usize];
-pub type __v8du = [::std::os::raw::c_ulonglong; 8usize];
-pub type __v16su = [::std::os::raw::c_uint; 16usize];
-pub type __m512 = [f32; 16usize];
-pub type __m512d = [f64; 8usize];
-pub type __m512i = [::std::os::raw::c_longlong; 8usize];
-pub type __mmask8 = ::std::os::raw::c_uchar;
-pub type __mmask16 = ::std::os::raw::c_ushort;
-pub mod _MM_CMPINT_ENUM {
-    pub type Type = u32;
-    pub const _MM_CMPINT_EQ: Type = 0;
-    pub const _MM_CMPINT_LT: Type = 1;
-    pub const _MM_CMPINT_LE: Type = 2;
-    pub const _MM_CMPINT_UNUSED: Type = 3;
-    pub const _MM_CMPINT_NE: Type = 4;
-    pub const _MM_CMPINT_NLT: Type = 5;
-    pub const _MM_CMPINT_NLE: Type = 6;
-}
-pub mod _MM_PERM_ENUM {
-    pub type Type = u32;
-    pub const _MM_PERM_AAAA: Type = 0;
-    pub const _MM_PERM_AAAB: Type = 1;
-    pub const _MM_PERM_AAAC: Type = 2;
-    pub const _MM_PERM_AAAD: Type = 3;
-    pub const _MM_PERM_AABA: Type = 4;
-    pub const _MM_PERM_AABB: Type = 5;
-    pub const _MM_PERM_AABC: Type = 6;
-    pub const _MM_PERM_AABD: Type = 7;
-    pub const _MM_PERM_AACA: Type = 8;
-    pub const _MM_PERM_AACB: Type = 9;
-    pub const _MM_PERM_AACC: Type = 10;
-    pub const _MM_PERM_AACD: Type = 11;
-    pub const _MM_PERM_AADA: Type = 12;
-    pub const _MM_PERM_AADB: Type = 13;
-    pub const _MM_PERM_AADC: Type = 14;
-    pub const _MM_PERM_AADD: Type = 15;
-    pub const _MM_PERM_ABAA: Type = 16;
-    pub const _MM_PERM_ABAB: Type = 17;
-    pub const _MM_PERM_ABAC: Type = 18;
-    pub const _MM_PERM_ABAD: Type = 19;
-    pub const _MM_PERM_ABBA: Type = 20;
-    pub const _MM_PERM_ABBB: Type = 21;
-    pub const _MM_PERM_ABBC: Type = 22;
-    pub const _MM_PERM_ABBD: Type = 23;
-    pub const _MM_PERM_ABCA: Type = 24;
-    pub const _MM_PERM_ABCB: Type = 25;
-    pub const _MM_PERM_ABCC: Type = 26;
-    pub const _MM_PERM_ABCD: Type = 27;
-    pub const _MM_PERM_ABDA: Type = 28;
-    pub const _MM_PERM_ABDB: Type = 29;
-    pub const _MM_PERM_ABDC: Type = 30;
-    pub const _MM_PERM_ABDD: Type = 31;
-    pub const _MM_PERM_ACAA: Type = 32;
-    pub const _MM_PERM_ACAB: Type = 33;
-    pub const _MM_PERM_ACAC: Type = 34;
-    pub const _MM_PERM_ACAD: Type = 35;
-    pub const _MM_PERM_ACBA: Type = 36;
-    pub const _MM_PERM_ACBB: Type = 37;
-    pub const _MM_PERM_ACBC: Type = 38;
-    pub const _MM_PERM_ACBD: Type = 39;
-    pub const _MM_PERM_ACCA: Type = 40;
-    pub const _MM_PERM_ACCB: Type = 41;
-    pub const _MM_PERM_ACCC: Type = 42;
-    pub const _MM_PERM_ACCD: Type = 43;
-    pub const _MM_PERM_ACDA: Type = 44;
-    pub const _MM_PERM_ACDB: Type = 45;
-    pub const _MM_PERM_ACDC: Type = 46;
-    pub const _MM_PERM_ACDD: Type = 47;
-    pub const _MM_PERM_ADAA: Type = 48;
-    pub const _MM_PERM_ADAB: Type = 49;
-    pub const _MM_PERM_ADAC: Type = 50;
-    pub const _MM_PERM_ADAD: Type = 51;
-    pub const _MM_PERM_ADBA: Type = 52;
-    pub const _MM_PERM_ADBB: Type = 53;
-    pub const _MM_PERM_ADBC: Type = 54;
-    pub const _MM_PERM_ADBD: Type = 55;
-    pub const _MM_PERM_ADCA: Type = 56;
-    pub const _MM_PERM_ADCB: Type = 57;
-    pub const _MM_PERM_ADCC: Type = 58;
-    pub const _MM_PERM_ADCD: Type = 59;
-    pub const _MM_PERM_ADDA: Type = 60;
-    pub const _MM_PERM_ADDB: Type = 61;
-    pub const _MM_PERM_ADDC: Type = 62;
-    pub const _MM_PERM_ADDD: Type = 63;
-    pub const _MM_PERM_BAAA: Type = 64;
-    pub const _MM_PERM_BAAB: Type = 65;
-    pub const _MM_PERM_BAAC: Type = 66;
-    pub const _MM_PERM_BAAD: Type = 67;
-    pub const _MM_PERM_BABA: Type = 68;
-    pub const _MM_PERM_BABB: Type = 69;
-    pub const _MM_PERM_BABC: Type = 70;
-    pub const _MM_PERM_BABD: Type = 71;
-    pub const _MM_PERM_BACA: Type = 72;
-    pub const _MM_PERM_BACB: Type = 73;
-    pub const _MM_PERM_BACC: Type = 74;
-    pub const _MM_PERM_BACD: Type = 75;
-    pub const _MM_PERM_BADA: Type = 76;
-    pub const _MM_PERM_BADB: Type = 77;
-    pub const _MM_PERM_BADC: Type = 78;
-    pub const _MM_PERM_BADD: Type = 79;
-    pub const _MM_PERM_BBAA: Type = 80;
-    pub const _MM_PERM_BBAB: Type = 81;
-    pub const _MM_PERM_BBAC: Type = 82;
-    pub const _MM_PERM_BBAD: Type = 83;
-    pub const _MM_PERM_BBBA: Type = 84;
-    pub const _MM_PERM_BBBB: Type = 85;
-    pub const _MM_PERM_BBBC: Type = 86;
-    pub const _MM_PERM_BBBD: Type = 87;
-    pub const _MM_PERM_BBCA: Type = 88;
-    pub const _MM_PERM_BBCB: Type = 89;
-    pub const _MM_PERM_BBCC: Type = 90;
-    pub const _MM_PERM_BBCD: Type = 91;
-    pub const _MM_PERM_BBDA: Type = 92;
-    pub const _MM_PERM_BBDB: Type = 93;
-    pub const _MM_PERM_BBDC: Type = 94;
-    pub const _MM_PERM_BBDD: Type = 95;
-    pub const _MM_PERM_BCAA: Type = 96;
-    pub const _MM_PERM_BCAB: Type = 97;
-    pub const _MM_PERM_BCAC: Type = 98;
-    pub const _MM_PERM_BCAD: Type = 99;
-    pub const _MM_PERM_BCBA: Type = 100;
-    pub const _MM_PERM_BCBB: Type = 101;
-    pub const _MM_PERM_BCBC: Type = 102;
-    pub const _MM_PERM_BCBD: Type = 103;
-    pub const _MM_PERM_BCCA: Type = 104;
-    pub const _MM_PERM_BCCB: Type = 105;
-    pub const _MM_PERM_BCCC: Type = 106;
-    pub const _MM_PERM_BCCD: Type = 107;
-    pub const _MM_PERM_BCDA: Type = 108;
-    pub const _MM_PERM_BCDB: Type = 109;
-    pub const _MM_PERM_BCDC: Type = 110;
-    pub const _MM_PERM_BCDD: Type = 111;
-    pub const _MM_PERM_BDAA: Type = 112;
-    pub const _MM_PERM_BDAB: Type = 113;
-    pub const _MM_PERM_BDAC: Type = 114;
-    pub const _MM_PERM_BDAD: Type = 115;
-    pub const _MM_PERM_BDBA: Type = 116;
-    pub const _MM_PERM_BDBB: Type = 117;
-    pub const _MM_PERM_BDBC: Type = 118;
-    pub const _MM_PERM_BDBD: Type = 119;
-    pub const _MM_PERM_BDCA: Type = 120;
-    pub const _MM_PERM_BDCB: Type = 121;
-    pub const _MM_PERM_BDCC: Type = 122;
-    pub const _MM_PERM_BDCD: Type = 123;
-    pub const _MM_PERM_BDDA: Type = 124;
-    pub const _MM_PERM_BDDB: Type = 125;
-    pub const _MM_PERM_BDDC: Type = 126;
-    pub const _MM_PERM_BDDD: Type = 127;
-    pub const _MM_PERM_CAAA: Type = 128;
-    pub const _MM_PERM_CAAB: Type = 129;
-    pub const _MM_PERM_CAAC: Type = 130;
-    pub const _MM_PERM_CAAD: Type = 131;
-    pub const _MM_PERM_CABA: Type = 132;
-    pub const _MM_PERM_CABB: Type = 133;
-    pub const _MM_PERM_CABC: Type = 134;
-    pub const _MM_PERM_CABD: Type = 135;
-    pub const _MM_PERM_CACA: Type = 136;
-    pub const _MM_PERM_CACB: Type = 137;
-    pub const _MM_PERM_CACC: Type = 138;
-    pub const _MM_PERM_CACD: Type = 139;
-    pub const _MM_PERM_CADA: Type = 140;
-    pub const _MM_PERM_CADB: Type = 141;
-    pub const _MM_PERM_CADC: Type = 142;
-    pub const _MM_PERM_CADD: Type = 143;
-    pub const _MM_PERM_CBAA: Type = 144;
-    pub const _MM_PERM_CBAB: Type = 145;
-    pub const _MM_PERM_CBAC: Type = 146;
-    pub const _MM_PERM_CBAD: Type = 147;
-    pub const _MM_PERM_CBBA: Type = 148;
-    pub const _MM_PERM_CBBB: Type = 149;
-    pub const _MM_PERM_CBBC: Type = 150;
-    pub const _MM_PERM_CBBD: Type = 151;
-    pub const _MM_PERM_CBCA: Type = 152;
-    pub const _MM_PERM_CBCB: Type = 153;
-    pub const _MM_PERM_CBCC: Type = 154;
-    pub const _MM_PERM_CBCD: Type = 155;
-    pub const _MM_PERM_CBDA: Type = 156;
-    pub const _MM_PERM_CBDB: Type = 157;
-    pub const _MM_PERM_CBDC: Type = 158;
-    pub const _MM_PERM_CBDD: Type = 159;
-    pub const _MM_PERM_CCAA: Type = 160;
-    pub const _MM_PERM_CCAB: Type = 161;
-    pub const _MM_PERM_CCAC: Type = 162;
-    pub const _MM_PERM_CCAD: Type = 163;
-    pub const _MM_PERM_CCBA: Type = 164;
-    pub const _MM_PERM_CCBB: Type = 165;
-    pub const _MM_PERM_CCBC: Type = 166;
-    pub const _MM_PERM_CCBD: Type = 167;
-    pub const _MM_PERM_CCCA: Type = 168;
-    pub const _MM_PERM_CCCB: Type = 169;
-    pub const _MM_PERM_CCCC: Type = 170;
-    pub const _MM_PERM_CCCD: Type = 171;
-    pub const _MM_PERM_CCDA: Type = 172;
-    pub const _MM_PERM_CCDB: Type = 173;
-    pub const _MM_PERM_CCDC: Type = 174;
-    pub const _MM_PERM_CCDD: Type = 175;
-    pub const _MM_PERM_CDAA: Type = 176;
-    pub const _MM_PERM_CDAB: Type = 177;
-    pub const _MM_PERM_CDAC: Type = 178;
-    pub const _MM_PERM_CDAD: Type = 179;
-    pub const _MM_PERM_CDBA: Type = 180;
-    pub const _MM_PERM_CDBB: Type = 181;
-    pub const _MM_PERM_CDBC: Type = 182;
-    pub const _MM_PERM_CDBD: Type = 183;
-    pub const _MM_PERM_CDCA: Type = 184;
-    pub const _MM_PERM_CDCB: Type = 185;
-    pub const _MM_PERM_CDCC: Type = 186;
-    pub const _MM_PERM_CDCD: Type = 187;
-    pub const _MM_PERM_CDDA: Type = 188;
-    pub const _MM_PERM_CDDB: Type = 189;
-    pub const _MM_PERM_CDDC: Type = 190;
-    pub const _MM_PERM_CDDD: Type = 191;
-    pub const _MM_PERM_DAAA: Type = 192;
-    pub const _MM_PERM_DAAB: Type = 193;
-    pub const _MM_PERM_DAAC: Type = 194;
-    pub const _MM_PERM_DAAD: Type = 195;
-    pub const _MM_PERM_DABA: Type = 196;
-    pub const _MM_PERM_DABB: Type = 197;
-    pub const _MM_PERM_DABC: Type = 198;
-    pub const _MM_PERM_DABD: Type = 199;
-    pub const _MM_PERM_DACA: Type = 200;
-    pub const _MM_PERM_DACB: Type = 201;
-    pub const _MM_PERM_DACC: Type = 202;
-    pub const _MM_PERM_DACD: Type = 203;
-    pub const _MM_PERM_DADA: Type = 204;
-    pub const _MM_PERM_DADB: Type = 205;
-    pub const _MM_PERM_DADC: Type = 206;
-    pub const _MM_PERM_DADD: Type = 207;
-    pub const _MM_PERM_DBAA: Type = 208;
-    pub const _MM_PERM_DBAB: Type = 209;
-    pub const _MM_PERM_DBAC: Type = 210;
-    pub const _MM_PERM_DBAD: Type = 211;
-    pub const _MM_PERM_DBBA: Type = 212;
-    pub const _MM_PERM_DBBB: Type = 213;
-    pub const _MM_PERM_DBBC: Type = 214;
-    pub const _MM_PERM_DBBD: Type = 215;
-    pub const _MM_PERM_DBCA: Type = 216;
-    pub const _MM_PERM_DBCB: Type = 217;
-    pub const _MM_PERM_DBCC: Type = 218;
-    pub const _MM_PERM_DBCD: Type = 219;
-    pub const _MM_PERM_DBDA: Type = 220;
-    pub const _MM_PERM_DBDB: Type = 221;
-    pub const _MM_PERM_DBDC: Type = 222;
-    pub const _MM_PERM_DBDD: Type = 223;
-    pub const _MM_PERM_DCAA: Type = 224;
-    pub const _MM_PERM_DCAB: Type = 225;
-    pub const _MM_PERM_DCAC: Type = 226;
-    pub const _MM_PERM_DCAD: Type = 227;
-    pub const _MM_PERM_DCBA: Type = 228;
-    pub const _MM_PERM_DCBB: Type = 229;
-    pub const _MM_PERM_DCBC: Type = 230;
-    pub const _MM_PERM_DCBD: Type = 231;
-    pub const _MM_PERM_DCCA: Type = 232;
-    pub const _MM_PERM_DCCB: Type = 233;
-    pub const _MM_PERM_DCCC: Type = 234;
-    pub const _MM_PERM_DCCD: Type = 235;
-    pub const _MM_PERM_DCDA: Type = 236;
-    pub const _MM_PERM_DCDB: Type = 237;
-    pub const _MM_PERM_DCDC: Type = 238;
-    pub const _MM_PERM_DCDD: Type = 239;
-    pub const _MM_PERM_DDAA: Type = 240;
-    pub const _MM_PERM_DDAB: Type = 241;
-    pub const _MM_PERM_DDAC: Type = 242;
-    pub const _MM_PERM_DDAD: Type = 243;
-    pub const _MM_PERM_DDBA: Type = 244;
-    pub const _MM_PERM_DDBB: Type = 245;
-    pub const _MM_PERM_DDBC: Type = 246;
-    pub const _MM_PERM_DDBD: Type = 247;
-    pub const _MM_PERM_DDCA: Type = 248;
-    pub const _MM_PERM_DDCB: Type = 249;
-    pub const _MM_PERM_DDCC: Type = 250;
-    pub const _MM_PERM_DDCD: Type = 251;
-    pub const _MM_PERM_DDDA: Type = 252;
-    pub const _MM_PERM_DDDB: Type = 253;
-    pub const _MM_PERM_DDDC: Type = 254;
-    pub const _MM_PERM_DDDD: Type = 255;
-}
-pub mod _MM_MANTISSA_NORM_ENUM {
-    pub type Type = u32;
-    pub const _MM_MANT_NORM_1_2: Type = 0;
-    pub const _MM_MANT_NORM_p5_2: Type = 1;
-    pub const _MM_MANT_NORM_p5_1: Type = 2;
-    pub const _MM_MANT_NORM_p75_1p5: Type = 3;
-}
-pub mod _MM_MANTISSA_SIGN_ENUM {
-    pub type Type = u32;
-    pub const _MM_MANT_SIGN_src: Type = 0;
-    pub const _MM_MANT_SIGN_zero: Type = 1;
-    pub const _MM_MANT_SIGN_nan: Type = 2;
-}
-pub type __mmask32 = ::std::os::raw::c_uint;
-pub type __mmask64 = ::std::os::raw::c_ulonglong;
-pub type xmm_t = __m128i;
+#[doc = " A structure describing a generic device."]
 #[repr(C)]
-#[derive(Copy, Clone)]
-pub union rte_xmm {
-    pub x: xmm_t,
-    pub u8: [u8; 16usize],
-    pub u16: [u16; 8usize],
-    pub u32: [u32; 4usize],
-    pub u64: [u64; 2usize],
-    pub pd: [f64; 2usize],
-    _bindgen_union_align: [u8; 16usize],
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct rte_device {
+    #[doc = "< Next device"]
+    pub next: rte_device__bindgen_ty_1,
+    #[doc = "< Device name"]
+    pub name: *const ::std::os::raw::c_char,
+    #[doc = "< Driver assigned after probing"]
+    pub driver: *const rte_driver,
+    #[doc = "< Bus handle assigned on scan"]
+    pub bus: *const rte_bus,
+    #[doc = "< NUMA node connection"]
+    pub numa_node: ::std::os::raw::c_int,
+    #[doc = "< Arguments for latest probing"]
+    pub devargs: *mut rte_devargs,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct rte_device__bindgen_ty_1 {
+    pub tqe_next: *mut rte_device,
+    pub tqe_prev: *mut *mut rte_device,
 }
 #[test]
-fn bindgen_test_layout_rte_xmm() {
+fn bindgen_test_layout_rte_device__bindgen_ty_1() {
     assert_eq!(
-        ::std::mem::size_of::<rte_xmm>(),
+        ::std::mem::size_of::<rte_device__bindgen_ty_1>(),
         16usize,
-        concat!("Size of: ", stringify!(rte_xmm))
+        concat!("Size of: ", stringify!(rte_device__bindgen_ty_1))
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_xmm>())).x as *const _ as usize },
+        ::std::mem::align_of::<rte_device__bindgen_ty_1>(),
+        8usize,
+        concat!("Alignment of ", stringify!(rte_device__bindgen_ty_1))
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<rte_device__bindgen_ty_1>())).tqe_next as *const _ as usize
+        },
         0usize,
         concat!(
             "Offset of field: ",
-            stringify!(rte_xmm),
+            stringify!(rte_device__bindgen_ty_1),
             "::",
-            stringify!(x)
+            stringify!(tqe_next)
         )
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_xmm>())).u8 as *const _ as usize },
-        0usize,
+        unsafe {
+            &(*(::std::ptr::null::<rte_device__bindgen_ty_1>())).tqe_prev as *const _ as usize
+        },
+        8usize,
         concat!(
             "Offset of field: ",
-            stringify!(rte_xmm),
+            stringify!(rte_device__bindgen_ty_1),
             "::",
-            stringify!(u8)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_xmm>())).u16 as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_xmm),
-            "::",
-            stringify!(u16)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_xmm>())).u32 as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_xmm),
-            "::",
-            stringify!(u32)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_xmm>())).u64 as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_xmm),
-            "::",
-            stringify!(u64)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_xmm>())).pd as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_xmm),
-            "::",
-            stringify!(pd)
+            stringify!(tqe_prev)
         )
     );
 }
-impl Default for rte_xmm {
+impl Default for rte_device__bindgen_ty_1 {
     fn default() -> Self {
         unsafe { ::std::mem::zeroed() }
     }
-}
-pub type rte_xmm_t = rte_xmm;
-pub type ymm_t = __m256i;
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union rte_ymm {
-    pub y: ymm_t,
-    pub x: [xmm_t; 2usize],
-    pub u8: [u8; 32usize],
-    pub u16: [u16; 16usize],
-    pub u32: [u32; 8usize],
-    pub u64: [u64; 4usize],
-    pub pd: [f64; 4usize],
-    _bindgen_union_align: [u8; 32usize],
 }
 #[test]
-fn bindgen_test_layout_rte_ymm() {
+fn bindgen_test_layout_rte_device() {
     assert_eq!(
-        ::std::mem::size_of::<rte_ymm>(),
+        ::std::mem::size_of::<rte_device>(),
+        56usize,
+        concat!("Size of: ", stringify!(rte_device))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<rte_device>(),
+        8usize,
+        concat!("Alignment of ", stringify!(rte_device))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_device>())).next as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_device),
+            "::",
+            stringify!(next)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_device>())).name as *const _ as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_device),
+            "::",
+            stringify!(name)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_device>())).driver as *const _ as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_device),
+            "::",
+            stringify!(driver)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_device>())).bus as *const _ as usize },
         32usize,
-        concat!("Size of: ", stringify!(rte_ymm))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_ymm>())).y as *const _ as usize },
-        0usize,
         concat!(
             "Offset of field: ",
-            stringify!(rte_ymm),
+            stringify!(rte_device),
             "::",
-            stringify!(y)
+            stringify!(bus)
         )
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_ymm>())).x as *const _ as usize },
-        0usize,
+        unsafe { &(*(::std::ptr::null::<rte_device>())).numa_node as *const _ as usize },
+        40usize,
         concat!(
             "Offset of field: ",
-            stringify!(rte_ymm),
+            stringify!(rte_device),
             "::",
-            stringify!(x)
+            stringify!(numa_node)
         )
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_ymm>())).u8 as *const _ as usize },
-        0usize,
+        unsafe { &(*(::std::ptr::null::<rte_device>())).devargs as *const _ as usize },
+        48usize,
         concat!(
             "Offset of field: ",
-            stringify!(rte_ymm),
+            stringify!(rte_device),
             "::",
-            stringify!(u8)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_ymm>())).u16 as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_ymm),
-            "::",
-            stringify!(u16)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_ymm>())).u32 as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_ymm),
-            "::",
-            stringify!(u32)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_ymm>())).u64 as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_ymm),
-            "::",
-            stringify!(u64)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_ymm>())).pd as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_ymm),
-            "::",
-            stringify!(pd)
+            stringify!(devargs)
         )
     );
 }
-impl Default for rte_ymm {
+impl Default for rte_device {
     fn default() -> Self {
         unsafe { ::std::mem::zeroed() }
     }
 }
-pub type rte_ymm_t = rte_ymm;
+extern "C" {
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Query status of a device."]
+    #[doc = ""]
+    #[doc = " @param dev"]
+    #[doc = "   Generic device pointer."]
+    #[doc = " @return"]
+    #[doc = "   (int)true if already probed successfully, 0 otherwise."]
+    pub fn rte_dev_is_probed(dev: *const rte_device) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Hotplug add a given device to a specific bus."]
+    #[doc = ""]
+    #[doc = " In multi-process, it will request other processes to add the same device."]
+    #[doc = " A failure, in any process, will rollback the action"]
+    #[doc = ""]
+    #[doc = " @param busname"]
+    #[doc = "   The bus name the device is added to."]
+    #[doc = " @param devname"]
+    #[doc = "   The device name. Based on this device name, eal will identify a driver"]
+    #[doc = "   capable of handling it and pass it to the driver probing function."]
+    #[doc = " @param drvargs"]
+    #[doc = "   Device arguments to be passed to the driver."]
+    #[doc = " @return"]
+    #[doc = "   0 on success, negative on error."]
+    pub fn rte_eal_hotplug_add(
+        busname: *const ::std::os::raw::c_char,
+        devname: *const ::std::os::raw::c_char,
+        drvargs: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Add matching devices."]
+    #[doc = ""]
+    #[doc = " In multi-process, it will request other processes to add the same device."]
+    #[doc = " A failure, in any process, will rollback the action"]
+    #[doc = ""]
+    #[doc = " @param devargs"]
+    #[doc = "   Device arguments including bus, class and driver properties."]
+    #[doc = " @return"]
+    #[doc = "   0 on success, negative on error."]
+    pub fn rte_dev_probe(devargs: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Hotplug remove a given device from a specific bus."]
+    #[doc = ""]
+    #[doc = " In multi-process, it will request other processes to remove the same device."]
+    #[doc = " A failure, in any process, will rollback the action"]
+    #[doc = ""]
+    #[doc = " @param busname"]
+    #[doc = "   The bus name the device is removed from."]
+    #[doc = " @param devname"]
+    #[doc = "   The device name being removed."]
+    #[doc = " @return"]
+    #[doc = "   0 on success, negative on error."]
+    pub fn rte_eal_hotplug_remove(
+        busname: *const ::std::os::raw::c_char,
+        devname: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Remove one device."]
+    #[doc = ""]
+    #[doc = " In multi-process, it will request other processes to remove the same device."]
+    #[doc = " A failure, in any process, will rollback the action"]
+    #[doc = ""]
+    #[doc = " @param dev"]
+    #[doc = "   Data structure of the device to remove."]
+    #[doc = " @return"]
+    #[doc = "   0 on success, negative on error."]
+    pub fn rte_dev_remove(dev: *mut rte_device) -> ::std::os::raw::c_int;
+}
+#[doc = " Device comparison function."]
+#[doc = ""]
+#[doc = " This type of function is used to compare an rte_device with arbitrary"]
+#[doc = " data."]
+#[doc = ""]
+#[doc = " @param dev"]
+#[doc = "   Device handle."]
+#[doc = ""]
+#[doc = " @param data"]
+#[doc = "   Data to compare against. The type of this parameter is determined by"]
+#[doc = "   the kind of comparison performed by the function."]
+#[doc = ""]
+#[doc = " @return"]
+#[doc = "   0 if the device matches the data."]
+#[doc = "   !0 if the device does not match."]
+#[doc = "   <0 if ordering is possible and the device is lower than the data."]
+#[doc = "   >0 if ordering is possible and the device is greater than the data."]
+pub type rte_dev_cmp_t = ::std::option::Option<
+    unsafe extern "C" fn(dev: *const rte_device, data: *const ::std::os::raw::c_void)
+        -> ::std::os::raw::c_int,
+>;
+#[doc = " Iteration context."]
+#[doc = ""]
+#[doc = " This context carries over the current iteration state."]
+#[repr(C)]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct rte_dev_iterator {
+    #[doc = "< device string."]
+    pub dev_str: *const ::std::os::raw::c_char,
+    #[doc = "< bus-related part of device string."]
+    pub bus_str: *const ::std::os::raw::c_char,
+    #[doc = "< class-related part of device string."]
+    pub cls_str: *const ::std::os::raw::c_char,
+    #[doc = "< bus handle."]
+    pub bus: *mut rte_bus,
+    #[doc = "< class handle."]
+    pub cls: *mut rte_class,
+    #[doc = "< current position."]
+    pub device: *mut rte_device,
+    #[doc = "< additional specialized context."]
+    pub class_device: *mut ::std::os::raw::c_void,
+}
+#[test]
+fn bindgen_test_layout_rte_dev_iterator() {
+    assert_eq!(
+        ::std::mem::size_of::<rte_dev_iterator>(),
+        56usize,
+        concat!("Size of: ", stringify!(rte_dev_iterator))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<rte_dev_iterator>(),
+        8usize,
+        concat!("Alignment of ", stringify!(rte_dev_iterator))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_dev_iterator>())).dev_str as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_dev_iterator),
+            "::",
+            stringify!(dev_str)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_dev_iterator>())).bus_str as *const _ as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_dev_iterator),
+            "::",
+            stringify!(bus_str)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_dev_iterator>())).cls_str as *const _ as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_dev_iterator),
+            "::",
+            stringify!(cls_str)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_dev_iterator>())).bus as *const _ as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_dev_iterator),
+            "::",
+            stringify!(bus)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_dev_iterator>())).cls as *const _ as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_dev_iterator),
+            "::",
+            stringify!(cls)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_dev_iterator>())).device as *const _ as usize },
+        40usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_dev_iterator),
+            "::",
+            stringify!(device)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_dev_iterator>())).class_device as *const _ as usize },
+        48usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_dev_iterator),
+            "::",
+            stringify!(class_device)
+        )
+    );
+}
+impl Default for rte_dev_iterator {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
+#[doc = " Device iteration function."]
+#[doc = ""]
+#[doc = " Find the next device matching properties passed in parameters."]
+#[doc = " The function takes an additional ``start`` parameter, that is"]
+#[doc = " used as starting context when relevant."]
+#[doc = ""]
+#[doc = " The function returns the current element in the iteration."]
+#[doc = " This return value will potentially be used as a start parameter"]
+#[doc = " in subsequent calls to the function."]
+#[doc = ""]
+#[doc = " The additional iterator parameter is only there if a specific"]
+#[doc = " implementation needs additional context. It must not be modified by"]
+#[doc = " the iteration function itself."]
+#[doc = ""]
+#[doc = " @param start"]
+#[doc = "   Starting iteration context."]
+#[doc = ""]
+#[doc = " @param devstr"]
+#[doc = "   Device description string."]
+#[doc = ""]
+#[doc = " @param it"]
+#[doc = "   Device iterator."]
+#[doc = ""]
+#[doc = " @return"]
+#[doc = "   The address of the current element matching the device description"]
+#[doc = "   string."]
+pub type rte_dev_iterate_t = ::std::option::Option<
+    unsafe extern "C" fn(
+        start: *const ::std::os::raw::c_void,
+        devstr: *const ::std::os::raw::c_char,
+        it: *const rte_dev_iterator,
+    ) -> *mut ::std::os::raw::c_void,
+>;
+extern "C" {
+    #[doc = " Initializes a device iterator."]
+    #[doc = ""]
+    #[doc = " This iterator allows accessing a list of devices matching a criteria."]
+    #[doc = " The device matching is made among all buses and classes currently registered,"]
+    #[doc = " filtered by the device description given as parameter."]
+    #[doc = ""]
+    #[doc = " This function will not allocate any memory. It is safe to stop the"]
+    #[doc = " iteration at any moment and let the iterator go out of context."]
+    #[doc = ""]
+    #[doc = " @param it"]
+    #[doc = "   Device iterator handle."]
+    #[doc = ""]
+    #[doc = " @param str"]
+    #[doc = "   Device description string."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   0 on successful initialization."]
+    #[doc = "   <0 on error."]
+    pub fn rte_dev_iterator_init(
+        it: *mut rte_dev_iterator,
+        str: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Iterates on a device iterator."]
+    #[doc = ""]
+    #[doc = " Generates a new rte_device handle corresponding to the next element"]
+    #[doc = " in the list described in comprehension by the iterator."]
+    #[doc = ""]
+    #[doc = " The next object is returned, and the iterator is updated."]
+    #[doc = ""]
+    #[doc = " @param it"]
+    #[doc = "   Device iterator handle."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   An rte_device handle if found."]
+    #[doc = "   NULL if an error occurred (rte_errno is set)."]
+    #[doc = "   NULL if no device could be found (rte_errno is not set)."]
+    pub fn rte_dev_iterator_next(it: *mut rte_dev_iterator) -> *mut rte_device;
+}
+extern "C" {
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " It registers the callback for the specific device."]
+    #[doc = " Multiple callbacks cal be registered at the same time."]
+    #[doc = ""]
+    #[doc = " @param device_name"]
+    #[doc = "  The device name, that is the param name of the struct rte_device,"]
+    #[doc = "  null value means for all devices."]
+    #[doc = " @param cb_fn"]
+    #[doc = "  callback address."]
+    #[doc = " @param cb_arg"]
+    #[doc = "  address of parameter for callback."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - On success, zero."]
+    #[doc = "  - On failure, a negative value."]
+    pub fn rte_dev_event_callback_register(
+        device_name: *const ::std::os::raw::c_char,
+        cb_fn: rte_dev_event_cb_fn,
+        cb_arg: *mut ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " It unregisters the callback according to the specified device."]
+    #[doc = ""]
+    #[doc = " @param device_name"]
+    #[doc = "  The device name, that is the param name of the struct rte_device,"]
+    #[doc = "  null value means for all devices and their callbacks."]
+    #[doc = " @param cb_fn"]
+    #[doc = "  callback address."]
+    #[doc = " @param cb_arg"]
+    #[doc = "  address of parameter for callback, (void *)-1 means to remove all"]
+    #[doc = "  registered which has the same callback address."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "  - On success, return the number of callback entities removed."]
+    #[doc = "  - On failure, a negative value."]
+    pub fn rte_dev_event_callback_unregister(
+        device_name: *const ::std::os::raw::c_char,
+        cb_fn: rte_dev_event_cb_fn,
+        cb_arg: *mut ::std::os::raw::c_void,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Executes all the user application registered callbacks for"]
+    #[doc = " the specific device."]
+    #[doc = ""]
+    #[doc = " @param device_name"]
+    #[doc = "  The device name."]
+    #[doc = " @param event"]
+    #[doc = "  the device event type."]
+    pub fn rte_dev_event_callback_process(
+        device_name: *const ::std::os::raw::c_char,
+        event: rte_dev_event_type::Type,
+    );
+}
+extern "C" {
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Start the device event monitoring."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - On success, zero."]
+    #[doc = "   - On failure, a negative value."]
+    pub fn rte_dev_event_monitor_start() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Stop the device event monitoring."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - On success, zero."]
+    #[doc = "   - On failure, a negative value."]
+    pub fn rte_dev_event_monitor_stop() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Enable hotplug handling for devices."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - On success, zero."]
+    #[doc = "   - On failure, a negative value."]
+    pub fn rte_dev_hotplug_handle_enable() -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " @warning"]
+    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
+    #[doc = ""]
+    #[doc = " Disable hotplug handling for devices."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - On success, zero."]
+    #[doc = "   - On failure, a negative value."]
+    pub fn rte_dev_hotplug_handle_disable() -> ::std::os::raw::c_int;
+}
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct sched_param {
@@ -9855,949 +9649,6 @@ extern "C" {
     #[doc = " that all slave lcores are in a WAIT state."]
     pub fn rte_eal_mp_wait_lcore();
 }
-#[doc = " The atomic counter structure."]
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
-pub struct rte_atomic16_t {
-    #[doc = "< An internal counter value."]
-    pub cnt: i16,
-}
-#[test]
-fn bindgen_test_layout_rte_atomic16_t() {
-    assert_eq!(
-        ::std::mem::size_of::<rte_atomic16_t>(),
-        2usize,
-        concat!("Size of: ", stringify!(rte_atomic16_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<rte_atomic16_t>(),
-        2usize,
-        concat!("Alignment of ", stringify!(rte_atomic16_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_atomic16_t>())).cnt as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_atomic16_t),
-            "::",
-            stringify!(cnt)
-        )
-    );
-}
-#[doc = " The atomic counter structure."]
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
-pub struct rte_atomic32_t {
-    #[doc = "< An internal counter value."]
-    pub cnt: i32,
-}
-#[test]
-fn bindgen_test_layout_rte_atomic32_t() {
-    assert_eq!(
-        ::std::mem::size_of::<rte_atomic32_t>(),
-        4usize,
-        concat!("Size of: ", stringify!(rte_atomic32_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<rte_atomic32_t>(),
-        4usize,
-        concat!("Alignment of ", stringify!(rte_atomic32_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_atomic32_t>())).cnt as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_atomic32_t),
-            "::",
-            stringify!(cnt)
-        )
-    );
-}
-#[doc = " The atomic counter structure."]
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
-pub struct rte_atomic64_t {
-    #[doc = "< Internal counter value."]
-    pub cnt: i64,
-}
-#[test]
-fn bindgen_test_layout_rte_atomic64_t() {
-    assert_eq!(
-        ::std::mem::size_of::<rte_atomic64_t>(),
-        8usize,
-        concat!("Size of: ", stringify!(rte_atomic64_t))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<rte_atomic64_t>(),
-        8usize,
-        concat!("Alignment of ", stringify!(rte_atomic64_t))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_atomic64_t>())).cnt as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_atomic64_t),
-            "::",
-            stringify!(cnt)
-        )
-    );
-}
-extern "C" {
-    #[doc = " Dump the stack of the calling core to the console."]
-    pub fn rte_dump_stack();
-}
-extern "C" {
-    #[doc = " Dump the registers of the calling core to the console."]
-    #[doc = ""]
-    #[doc = " Note: Not implemented in a userapp environment; use gdb instead."]
-    pub fn rte_dump_registers();
-}
-extern "C" {
-    pub fn __rte_panic(
-        funcname: *const ::std::os::raw::c_char,
-        format: *const ::std::os::raw::c_char,
-        ...
-    );
-}
-pub mod timer_source {
-    pub type Type = u32;
-    pub const EAL_TIMER_TSC: Type = 0;
-    pub const EAL_TIMER_HPET: Type = 1;
-}
-extern "C" {
-    #[link_name = "\u{1}eal_timer_source"]
-    pub static mut eal_timer_source: timer_source::Type;
-}
-extern "C" {
-    #[doc = " Get the measured frequency of the RDTSC counter"]
-    #[doc = ""]
-    #[doc = " @return"]
-    #[doc = "   The TSC frequency for this lcore"]
-    pub fn rte_get_tsc_hz() -> u64;
-}
-extern "C" {
-    #[link_name = "\u{1}rte_delay_us"]
-    pub static mut rte_delay_us:
-        ::std::option::Option<unsafe extern "C" fn(us: ::std::os::raw::c_uint)>;
-}
-extern "C" {
-    #[doc = " Blocking delay function."]
-    #[doc = ""]
-    #[doc = " @param us"]
-    #[doc = "   Number of microseconds to wait."]
-    pub fn rte_delay_us_block(us: ::std::os::raw::c_uint);
-}
-extern "C" {
-    #[doc = " Delay function that uses system sleep."]
-    #[doc = " Does not block the CPU core."]
-    #[doc = ""]
-    #[doc = " @param us"]
-    #[doc = "   Number of microseconds to wait."]
-    pub fn rte_delay_us_sleep(us: ::std::os::raw::c_uint);
-}
-extern "C" {
-    #[doc = " Replace rte_delay_us with user defined function."]
-    #[doc = ""]
-    #[doc = " @param userfunc"]
-    #[doc = "   User function which replaces rte_delay_us. rte_delay_us_block restores"]
-    #[doc = "   buildin block delay function."]
-    pub fn rte_delay_us_callback_register(
-        userfunc: ::std::option::Option<unsafe extern "C" fn(arg1: ::std::os::raw::c_uint)>,
-    );
-}
-extern "C" {
-    #[link_name = "\u{1}rte_cycles_vmware_tsc_map"]
-    pub static mut rte_cycles_vmware_tsc_map: ::std::os::raw::c_int;
-}
-pub mod rte_dev_event_type {
-    #[doc = " The device event type."]
-    pub type Type = u32;
-    #[doc = "< device being added"]
-    pub const RTE_DEV_EVENT_ADD: Type = 0;
-    #[doc = "< device being removed"]
-    pub const RTE_DEV_EVENT_REMOVE: Type = 1;
-    #[doc = "< max value of this enum"]
-    pub const RTE_DEV_EVENT_MAX: Type = 2;
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct rte_dev_event {
-    #[doc = "< device event type"]
-    pub type_: rte_dev_event_type::Type,
-    #[doc = "< subsystem id"]
-    pub subsystem: ::std::os::raw::c_int,
-    #[doc = "< device name"]
-    pub devname: *mut ::std::os::raw::c_char,
-}
-#[test]
-fn bindgen_test_layout_rte_dev_event() {
-    assert_eq!(
-        ::std::mem::size_of::<rte_dev_event>(),
-        16usize,
-        concat!("Size of: ", stringify!(rte_dev_event))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<rte_dev_event>(),
-        8usize,
-        concat!("Alignment of ", stringify!(rte_dev_event))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_dev_event>())).type_ as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_dev_event),
-            "::",
-            stringify!(type_)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_dev_event>())).subsystem as *const _ as usize },
-        4usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_dev_event),
-            "::",
-            stringify!(subsystem)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_dev_event>())).devname as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_dev_event),
-            "::",
-            stringify!(devname)
-        )
-    );
-}
-impl Default for rte_dev_event {
-    fn default() -> Self {
-        unsafe { ::std::mem::zeroed() }
-    }
-}
-pub type rte_dev_event_cb_fn = ::std::option::Option<
-    unsafe extern "C" fn(
-        device_name: *const ::std::os::raw::c_char,
-        event: rte_dev_event_type::Type,
-        cb_arg: *mut ::std::os::raw::c_void,
-    ),
->;
-pub mod rte_kernel_driver {
-    #[doc = " Device driver."]
-    pub type Type = u32;
-    pub const RTE_KDRV_UNKNOWN: Type = 0;
-    pub const RTE_KDRV_IGB_UIO: Type = 1;
-    pub const RTE_KDRV_VFIO: Type = 2;
-    pub const RTE_KDRV_UIO_GENERIC: Type = 3;
-    pub const RTE_KDRV_NIC_UIO: Type = 4;
-    pub const RTE_KDRV_NONE: Type = 5;
-}
-pub mod rte_dev_policy {
-    #[doc = " Device policies."]
-    pub type Type = u32;
-    pub const RTE_DEV_WHITELISTED: Type = 0;
-    pub const RTE_DEV_BLACKLISTED: Type = 1;
-}
-#[doc = " A generic memory resource representation."]
-#[repr(C)]
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct rte_mem_resource {
-    #[doc = "< Physical address, 0 if not resource."]
-    pub phys_addr: u64,
-    #[doc = "< Length of the resource."]
-    pub len: u64,
-    #[doc = "< Virtual address, NULL when not mapped."]
-    pub addr: *mut ::std::os::raw::c_void,
-}
-#[test]
-fn bindgen_test_layout_rte_mem_resource() {
-    assert_eq!(
-        ::std::mem::size_of::<rte_mem_resource>(),
-        24usize,
-        concat!("Size of: ", stringify!(rte_mem_resource))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<rte_mem_resource>(),
-        8usize,
-        concat!("Alignment of ", stringify!(rte_mem_resource))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_mem_resource>())).phys_addr as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_mem_resource),
-            "::",
-            stringify!(phys_addr)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_mem_resource>())).len as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_mem_resource),
-            "::",
-            stringify!(len)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_mem_resource>())).addr as *const _ as usize },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_mem_resource),
-            "::",
-            stringify!(addr)
-        )
-    );
-}
-impl Default for rte_mem_resource {
-    fn default() -> Self {
-        unsafe { ::std::mem::zeroed() }
-    }
-}
-#[doc = " A structure describing a device driver."]
-#[repr(C)]
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct rte_driver {
-    #[doc = "< Next in list."]
-    pub next: rte_driver__bindgen_ty_1,
-    #[doc = "< Driver name."]
-    pub name: *const ::std::os::raw::c_char,
-    #[doc = "< Driver alias."]
-    pub alias: *const ::std::os::raw::c_char,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct rte_driver__bindgen_ty_1 {
-    pub tqe_next: *mut rte_driver,
-    pub tqe_prev: *mut *mut rte_driver,
-}
-#[test]
-fn bindgen_test_layout_rte_driver__bindgen_ty_1() {
-    assert_eq!(
-        ::std::mem::size_of::<rte_driver__bindgen_ty_1>(),
-        16usize,
-        concat!("Size of: ", stringify!(rte_driver__bindgen_ty_1))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<rte_driver__bindgen_ty_1>(),
-        8usize,
-        concat!("Alignment of ", stringify!(rte_driver__bindgen_ty_1))
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<rte_driver__bindgen_ty_1>())).tqe_next as *const _ as usize
-        },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_driver__bindgen_ty_1),
-            "::",
-            stringify!(tqe_next)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<rte_driver__bindgen_ty_1>())).tqe_prev as *const _ as usize
-        },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_driver__bindgen_ty_1),
-            "::",
-            stringify!(tqe_prev)
-        )
-    );
-}
-impl Default for rte_driver__bindgen_ty_1 {
-    fn default() -> Self {
-        unsafe { ::std::mem::zeroed() }
-    }
-}
-#[test]
-fn bindgen_test_layout_rte_driver() {
-    assert_eq!(
-        ::std::mem::size_of::<rte_driver>(),
-        32usize,
-        concat!("Size of: ", stringify!(rte_driver))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<rte_driver>(),
-        8usize,
-        concat!("Alignment of ", stringify!(rte_driver))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_driver>())).next as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_driver),
-            "::",
-            stringify!(next)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_driver>())).name as *const _ as usize },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_driver),
-            "::",
-            stringify!(name)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_driver>())).alias as *const _ as usize },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_driver),
-            "::",
-            stringify!(alias)
-        )
-    );
-}
-impl Default for rte_driver {
-    fn default() -> Self {
-        unsafe { ::std::mem::zeroed() }
-    }
-}
-#[doc = " A structure describing a generic device."]
-#[repr(C)]
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct rte_device {
-    #[doc = "< Next device"]
-    pub next: rte_device__bindgen_ty_1,
-    #[doc = "< Device name"]
-    pub name: *const ::std::os::raw::c_char,
-    #[doc = "< Driver assigned after probing"]
-    pub driver: *const rte_driver,
-    #[doc = "< Bus handle assigned on scan"]
-    pub bus: *const rte_bus,
-    #[doc = "< NUMA node connection"]
-    pub numa_node: ::std::os::raw::c_int,
-    #[doc = "< Arguments for latest probing"]
-    pub devargs: *mut rte_devargs,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct rte_device__bindgen_ty_1 {
-    pub tqe_next: *mut rte_device,
-    pub tqe_prev: *mut *mut rte_device,
-}
-#[test]
-fn bindgen_test_layout_rte_device__bindgen_ty_1() {
-    assert_eq!(
-        ::std::mem::size_of::<rte_device__bindgen_ty_1>(),
-        16usize,
-        concat!("Size of: ", stringify!(rte_device__bindgen_ty_1))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<rte_device__bindgen_ty_1>(),
-        8usize,
-        concat!("Alignment of ", stringify!(rte_device__bindgen_ty_1))
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<rte_device__bindgen_ty_1>())).tqe_next as *const _ as usize
-        },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_device__bindgen_ty_1),
-            "::",
-            stringify!(tqe_next)
-        )
-    );
-    assert_eq!(
-        unsafe {
-            &(*(::std::ptr::null::<rte_device__bindgen_ty_1>())).tqe_prev as *const _ as usize
-        },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_device__bindgen_ty_1),
-            "::",
-            stringify!(tqe_prev)
-        )
-    );
-}
-impl Default for rte_device__bindgen_ty_1 {
-    fn default() -> Self {
-        unsafe { ::std::mem::zeroed() }
-    }
-}
-#[test]
-fn bindgen_test_layout_rte_device() {
-    assert_eq!(
-        ::std::mem::size_of::<rte_device>(),
-        56usize,
-        concat!("Size of: ", stringify!(rte_device))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<rte_device>(),
-        8usize,
-        concat!("Alignment of ", stringify!(rte_device))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_device>())).next as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_device),
-            "::",
-            stringify!(next)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_device>())).name as *const _ as usize },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_device),
-            "::",
-            stringify!(name)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_device>())).driver as *const _ as usize },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_device),
-            "::",
-            stringify!(driver)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_device>())).bus as *const _ as usize },
-        32usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_device),
-            "::",
-            stringify!(bus)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_device>())).numa_node as *const _ as usize },
-        40usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_device),
-            "::",
-            stringify!(numa_node)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_device>())).devargs as *const _ as usize },
-        48usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_device),
-            "::",
-            stringify!(devargs)
-        )
-    );
-}
-impl Default for rte_device {
-    fn default() -> Self {
-        unsafe { ::std::mem::zeroed() }
-    }
-}
-extern "C" {
-    #[doc = " @warning"]
-    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
-    #[doc = ""]
-    #[doc = " Query status of a device."]
-    #[doc = ""]
-    #[doc = " @param dev"]
-    #[doc = "   Generic device pointer."]
-    #[doc = " @return"]
-    #[doc = "   (int)true if already probed successfully, 0 otherwise."]
-    pub fn rte_dev_is_probed(dev: *const rte_device) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Hotplug add a given device to a specific bus."]
-    #[doc = ""]
-    #[doc = " In multi-process, it will request other processes to add the same device."]
-    #[doc = " A failure, in any process, will rollback the action"]
-    #[doc = ""]
-    #[doc = " @param busname"]
-    #[doc = "   The bus name the device is added to."]
-    #[doc = " @param devname"]
-    #[doc = "   The device name. Based on this device name, eal will identify a driver"]
-    #[doc = "   capable of handling it and pass it to the driver probing function."]
-    #[doc = " @param drvargs"]
-    #[doc = "   Device arguments to be passed to the driver."]
-    #[doc = " @return"]
-    #[doc = "   0 on success, negative on error."]
-    pub fn rte_eal_hotplug_add(
-        busname: *const ::std::os::raw::c_char,
-        devname: *const ::std::os::raw::c_char,
-        drvargs: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Add matching devices."]
-    #[doc = ""]
-    #[doc = " In multi-process, it will request other processes to add the same device."]
-    #[doc = " A failure, in any process, will rollback the action"]
-    #[doc = ""]
-    #[doc = " @param devargs"]
-    #[doc = "   Device arguments including bus, class and driver properties."]
-    #[doc = " @return"]
-    #[doc = "   0 on success, negative on error."]
-    pub fn rte_dev_probe(devargs: *const ::std::os::raw::c_char) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Hotplug remove a given device from a specific bus."]
-    #[doc = ""]
-    #[doc = " In multi-process, it will request other processes to remove the same device."]
-    #[doc = " A failure, in any process, will rollback the action"]
-    #[doc = ""]
-    #[doc = " @param busname"]
-    #[doc = "   The bus name the device is removed from."]
-    #[doc = " @param devname"]
-    #[doc = "   The device name being removed."]
-    #[doc = " @return"]
-    #[doc = "   0 on success, negative on error."]
-    pub fn rte_eal_hotplug_remove(
-        busname: *const ::std::os::raw::c_char,
-        devname: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Remove one device."]
-    #[doc = ""]
-    #[doc = " In multi-process, it will request other processes to remove the same device."]
-    #[doc = " A failure, in any process, will rollback the action"]
-    #[doc = ""]
-    #[doc = " @param dev"]
-    #[doc = "   Data structure of the device to remove."]
-    #[doc = " @return"]
-    #[doc = "   0 on success, negative on error."]
-    pub fn rte_dev_remove(dev: *mut rte_device) -> ::std::os::raw::c_int;
-}
-#[doc = " Device comparison function."]
-#[doc = ""]
-#[doc = " This type of function is used to compare an rte_device with arbitrary"]
-#[doc = " data."]
-#[doc = ""]
-#[doc = " @param dev"]
-#[doc = "   Device handle."]
-#[doc = ""]
-#[doc = " @param data"]
-#[doc = "   Data to compare against. The type of this parameter is determined by"]
-#[doc = "   the kind of comparison performed by the function."]
-#[doc = ""]
-#[doc = " @return"]
-#[doc = "   0 if the device matches the data."]
-#[doc = "   !0 if the device does not match."]
-#[doc = "   <0 if ordering is possible and the device is lower than the data."]
-#[doc = "   >0 if ordering is possible and the device is greater than the data."]
-pub type rte_dev_cmp_t = ::std::option::Option<
-    unsafe extern "C" fn(dev: *const rte_device, data: *const ::std::os::raw::c_void)
-        -> ::std::os::raw::c_int,
->;
-#[doc = " Iteration context."]
-#[doc = ""]
-#[doc = " This context carries over the current iteration state."]
-#[repr(C)]
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct rte_dev_iterator {
-    #[doc = "< device string."]
-    pub dev_str: *const ::std::os::raw::c_char,
-    #[doc = "< bus-related part of device string."]
-    pub bus_str: *const ::std::os::raw::c_char,
-    #[doc = "< class-related part of device string."]
-    pub cls_str: *const ::std::os::raw::c_char,
-    #[doc = "< bus handle."]
-    pub bus: *mut rte_bus,
-    #[doc = "< class handle."]
-    pub cls: *mut rte_class,
-    #[doc = "< current position."]
-    pub device: *mut rte_device,
-    #[doc = "< additional specialized context."]
-    pub class_device: *mut ::std::os::raw::c_void,
-}
-#[test]
-fn bindgen_test_layout_rte_dev_iterator() {
-    assert_eq!(
-        ::std::mem::size_of::<rte_dev_iterator>(),
-        56usize,
-        concat!("Size of: ", stringify!(rte_dev_iterator))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<rte_dev_iterator>(),
-        8usize,
-        concat!("Alignment of ", stringify!(rte_dev_iterator))
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_dev_iterator>())).dev_str as *const _ as usize },
-        0usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_dev_iterator),
-            "::",
-            stringify!(dev_str)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_dev_iterator>())).bus_str as *const _ as usize },
-        8usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_dev_iterator),
-            "::",
-            stringify!(bus_str)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_dev_iterator>())).cls_str as *const _ as usize },
-        16usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_dev_iterator),
-            "::",
-            stringify!(cls_str)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_dev_iterator>())).bus as *const _ as usize },
-        24usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_dev_iterator),
-            "::",
-            stringify!(bus)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_dev_iterator>())).cls as *const _ as usize },
-        32usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_dev_iterator),
-            "::",
-            stringify!(cls)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_dev_iterator>())).device as *const _ as usize },
-        40usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_dev_iterator),
-            "::",
-            stringify!(device)
-        )
-    );
-    assert_eq!(
-        unsafe { &(*(::std::ptr::null::<rte_dev_iterator>())).class_device as *const _ as usize },
-        48usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(rte_dev_iterator),
-            "::",
-            stringify!(class_device)
-        )
-    );
-}
-impl Default for rte_dev_iterator {
-    fn default() -> Self {
-        unsafe { ::std::mem::zeroed() }
-    }
-}
-#[doc = " Device iteration function."]
-#[doc = ""]
-#[doc = " Find the next device matching properties passed in parameters."]
-#[doc = " The function takes an additional ``start`` parameter, that is"]
-#[doc = " used as starting context when relevant."]
-#[doc = ""]
-#[doc = " The function returns the current element in the iteration."]
-#[doc = " This return value will potentially be used as a start parameter"]
-#[doc = " in subsequent calls to the function."]
-#[doc = ""]
-#[doc = " The additional iterator parameter is only there if a specific"]
-#[doc = " implementation needs additional context. It must not be modified by"]
-#[doc = " the iteration function itself."]
-#[doc = ""]
-#[doc = " @param start"]
-#[doc = "   Starting iteration context."]
-#[doc = ""]
-#[doc = " @param devstr"]
-#[doc = "   Device description string."]
-#[doc = ""]
-#[doc = " @param it"]
-#[doc = "   Device iterator."]
-#[doc = ""]
-#[doc = " @return"]
-#[doc = "   The address of the current element matching the device description"]
-#[doc = "   string."]
-pub type rte_dev_iterate_t = ::std::option::Option<
-    unsafe extern "C" fn(
-        start: *const ::std::os::raw::c_void,
-        devstr: *const ::std::os::raw::c_char,
-        it: *const rte_dev_iterator,
-    ) -> *mut ::std::os::raw::c_void,
->;
-extern "C" {
-    #[doc = " Initializes a device iterator."]
-    #[doc = ""]
-    #[doc = " This iterator allows accessing a list of devices matching a criteria."]
-    #[doc = " The device matching is made among all buses and classes currently registered,"]
-    #[doc = " filtered by the device description given as parameter."]
-    #[doc = ""]
-    #[doc = " This function will not allocate any memory. It is safe to stop the"]
-    #[doc = " iteration at any moment and let the iterator go out of context."]
-    #[doc = ""]
-    #[doc = " @param it"]
-    #[doc = "   Device iterator handle."]
-    #[doc = ""]
-    #[doc = " @param str"]
-    #[doc = "   Device description string."]
-    #[doc = ""]
-    #[doc = " @return"]
-    #[doc = "   0 on successful initialization."]
-    #[doc = "   <0 on error."]
-    pub fn rte_dev_iterator_init(
-        it: *mut rte_dev_iterator,
-        str: *const ::std::os::raw::c_char,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " Iterates on a device iterator."]
-    #[doc = ""]
-    #[doc = " Generates a new rte_device handle corresponding to the next element"]
-    #[doc = " in the list described in comprehension by the iterator."]
-    #[doc = ""]
-    #[doc = " The next object is returned, and the iterator is updated."]
-    #[doc = ""]
-    #[doc = " @param it"]
-    #[doc = "   Device iterator handle."]
-    #[doc = ""]
-    #[doc = " @return"]
-    #[doc = "   An rte_device handle if found."]
-    #[doc = "   NULL if an error occurred (rte_errno is set)."]
-    #[doc = "   NULL if no device could be found (rte_errno is not set)."]
-    pub fn rte_dev_iterator_next(it: *mut rte_dev_iterator) -> *mut rte_device;
-}
-extern "C" {
-    #[doc = " @warning"]
-    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
-    #[doc = ""]
-    #[doc = " It registers the callback for the specific device."]
-    #[doc = " Multiple callbacks cal be registered at the same time."]
-    #[doc = ""]
-    #[doc = " @param device_name"]
-    #[doc = "  The device name, that is the param name of the struct rte_device,"]
-    #[doc = "  null value means for all devices."]
-    #[doc = " @param cb_fn"]
-    #[doc = "  callback address."]
-    #[doc = " @param cb_arg"]
-    #[doc = "  address of parameter for callback."]
-    #[doc = ""]
-    #[doc = " @return"]
-    #[doc = "  - On success, zero."]
-    #[doc = "  - On failure, a negative value."]
-    pub fn rte_dev_event_callback_register(
-        device_name: *const ::std::os::raw::c_char,
-        cb_fn: rte_dev_event_cb_fn,
-        cb_arg: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " @warning"]
-    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
-    #[doc = ""]
-    #[doc = " It unregisters the callback according to the specified device."]
-    #[doc = ""]
-    #[doc = " @param device_name"]
-    #[doc = "  The device name, that is the param name of the struct rte_device,"]
-    #[doc = "  null value means for all devices and their callbacks."]
-    #[doc = " @param cb_fn"]
-    #[doc = "  callback address."]
-    #[doc = " @param cb_arg"]
-    #[doc = "  address of parameter for callback, (void *)-1 means to remove all"]
-    #[doc = "  registered which has the same callback address."]
-    #[doc = ""]
-    #[doc = " @return"]
-    #[doc = "  - On success, return the number of callback entities removed."]
-    #[doc = "  - On failure, a negative value."]
-    pub fn rte_dev_event_callback_unregister(
-        device_name: *const ::std::os::raw::c_char,
-        cb_fn: rte_dev_event_cb_fn,
-        cb_arg: *mut ::std::os::raw::c_void,
-    ) -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " @warning"]
-    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
-    #[doc = ""]
-    #[doc = " Executes all the user application registered callbacks for"]
-    #[doc = " the specific device."]
-    #[doc = ""]
-    #[doc = " @param device_name"]
-    #[doc = "  The device name."]
-    #[doc = " @param event"]
-    #[doc = "  the device event type."]
-    pub fn rte_dev_event_callback_process(
-        device_name: *const ::std::os::raw::c_char,
-        event: rte_dev_event_type::Type,
-    );
-}
-extern "C" {
-    #[doc = " @warning"]
-    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
-    #[doc = ""]
-    #[doc = " Start the device event monitoring."]
-    #[doc = ""]
-    #[doc = " @return"]
-    #[doc = "   - On success, zero."]
-    #[doc = "   - On failure, a negative value."]
-    pub fn rte_dev_event_monitor_start() -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " @warning"]
-    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
-    #[doc = ""]
-    #[doc = " Stop the device event monitoring."]
-    #[doc = ""]
-    #[doc = " @return"]
-    #[doc = "   - On success, zero."]
-    #[doc = "   - On failure, a negative value."]
-    pub fn rte_dev_event_monitor_stop() -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " @warning"]
-    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
-    #[doc = ""]
-    #[doc = " Enable hotplug handling for devices."]
-    #[doc = ""]
-    #[doc = " @return"]
-    #[doc = "   - On success, zero."]
-    #[doc = "   - On failure, a negative value."]
-    pub fn rte_dev_hotplug_handle_enable() -> ::std::os::raw::c_int;
-}
-extern "C" {
-    #[doc = " @warning"]
-    #[doc = " @b EXPERIMENTAL: this API may change without prior notice"]
-    #[doc = ""]
-    #[doc = " Disable hotplug handling for devices."]
-    #[doc = ""]
-    #[doc = " @return"]
-    #[doc = "   - On success, zero."]
-    #[doc = "   - On failure, a negative value."]
-    pub fn rte_dev_hotplug_handle_disable() -> ::std::os::raw::c_int;
-}
 #[doc = " Double linked list of buses"]
 #[repr(C)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -12312,6 +11163,1204 @@ extern "C" {
         role: rte_lcore_role_t::Type,
     ) -> ::std::os::raw::c_int;
 }
+#[doc = "  Structure to hold heap statistics obtained from rte_malloc_get_socket_stats function."]
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone, PartialEq)]
+pub struct rte_malloc_socket_stats {
+    #[doc = "< Total bytes on heap"]
+    pub heap_totalsz_bytes: usize,
+    #[doc = "< Total free bytes on heap"]
+    pub heap_freesz_bytes: usize,
+    #[doc = "< Size in bytes of largest free block"]
+    pub greatest_free_size: usize,
+    #[doc = "< Number of free elements on heap"]
+    pub free_count: ::std::os::raw::c_uint,
+    #[doc = "< Number of allocated elements on heap"]
+    pub alloc_count: ::std::os::raw::c_uint,
+    #[doc = "< Total allocated bytes on heap"]
+    pub heap_allocsz_bytes: usize,
+}
+#[test]
+fn bindgen_test_layout_rte_malloc_socket_stats() {
+    assert_eq!(
+        ::std::mem::size_of::<rte_malloc_socket_stats>(),
+        40usize,
+        concat!("Size of: ", stringify!(rte_malloc_socket_stats))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<rte_malloc_socket_stats>(),
+        8usize,
+        concat!("Alignment of ", stringify!(rte_malloc_socket_stats))
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<rte_malloc_socket_stats>())).heap_totalsz_bytes as *const _
+                as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_malloc_socket_stats),
+            "::",
+            stringify!(heap_totalsz_bytes)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<rte_malloc_socket_stats>())).heap_freesz_bytes as *const _
+                as usize
+        },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_malloc_socket_stats),
+            "::",
+            stringify!(heap_freesz_bytes)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<rte_malloc_socket_stats>())).greatest_free_size as *const _
+                as usize
+        },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_malloc_socket_stats),
+            "::",
+            stringify!(greatest_free_size)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<rte_malloc_socket_stats>())).free_count as *const _ as usize
+        },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_malloc_socket_stats),
+            "::",
+            stringify!(free_count)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<rte_malloc_socket_stats>())).alloc_count as *const _ as usize
+        },
+        28usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_malloc_socket_stats),
+            "::",
+            stringify!(alloc_count)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<rte_malloc_socket_stats>())).heap_allocsz_bytes as *const _
+                as usize
+        },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_malloc_socket_stats),
+            "::",
+            stringify!(heap_allocsz_bytes)
+        )
+    );
+}
+extern "C" {
+    #[doc = " This function allocates memory from the huge-page area of memory. The memory"]
+    #[doc = " is not cleared. In NUMA systems, the memory allocated resides on the same"]
+    #[doc = " NUMA socket as the core that calls this function."]
+    #[doc = ""]
+    #[doc = " @param type"]
+    #[doc = "   A string identifying the type of allocated objects (useful for debug"]
+    #[doc = "   purposes, such as identifying the cause of a memory leak). Can be NULL."]
+    #[doc = " @param size"]
+    #[doc = "   Size (in bytes) to be allocated."]
+    #[doc = " @param align"]
+    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
+    #[doc = "   variable (in the same manner as malloc())."]
+    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
+    #[doc = "   this case, it must be a power of two. (Minimum alignment is the"]
+    #[doc = "   cacheline size, i.e. 64-bytes)"]
+    #[doc = " @return"]
+    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
+    #[doc = "     align is not a power of two)."]
+    #[doc = "   - Otherwise, the pointer to the allocated object."]
+    pub fn rte_malloc(
+        type_: *const ::std::os::raw::c_char,
+        size: usize,
+        align: ::std::os::raw::c_uint,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    #[doc = " Allocate zero\'ed memory from the heap."]
+    #[doc = ""]
+    #[doc = " Equivalent to rte_malloc() except that the memory zone is"]
+    #[doc = " initialised with zeros. In NUMA systems, the memory allocated resides on the"]
+    #[doc = " same NUMA socket as the core that calls this function."]
+    #[doc = ""]
+    #[doc = " @param type"]
+    #[doc = "   A string identifying the type of allocated objects (useful for debug"]
+    #[doc = "   purposes, such as identifying the cause of a memory leak). Can be NULL."]
+    #[doc = " @param size"]
+    #[doc = "   Size (in bytes) to be allocated."]
+    #[doc = " @param align"]
+    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
+    #[doc = "   variable (in the same manner as malloc())."]
+    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
+    #[doc = "   this case, it must obviously be a power of two. (Minimum alignment is the"]
+    #[doc = "   cacheline size, i.e. 64-bytes)"]
+    #[doc = " @return"]
+    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
+    #[doc = "     align is not a power of two)."]
+    #[doc = "   - Otherwise, the pointer to the allocated object."]
+    pub fn rte_zmalloc(
+        type_: *const ::std::os::raw::c_char,
+        size: usize,
+        align: ::std::os::raw::c_uint,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    #[doc = " Replacement function for calloc(), using huge-page memory. Memory area is"]
+    #[doc = " initialised with zeros. In NUMA systems, the memory allocated resides on the"]
+    #[doc = " same NUMA socket as the core that calls this function."]
+    #[doc = ""]
+    #[doc = " @param type"]
+    #[doc = "   A string identifying the type of allocated objects (useful for debug"]
+    #[doc = "   purposes, such as identifying the cause of a memory leak). Can be NULL."]
+    #[doc = " @param num"]
+    #[doc = "   Number of elements to be allocated."]
+    #[doc = " @param size"]
+    #[doc = "   Size (in bytes) of a single element."]
+    #[doc = " @param align"]
+    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
+    #[doc = "   variable (in the same manner as malloc())."]
+    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
+    #[doc = "   this case, it must obviously be a power of two. (Minimum alignment is the"]
+    #[doc = "   cacheline size, i.e. 64-bytes)"]
+    #[doc = " @return"]
+    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
+    #[doc = "     align is not a power of two)."]
+    #[doc = "   - Otherwise, the pointer to the allocated object."]
+    pub fn rte_calloc(
+        type_: *const ::std::os::raw::c_char,
+        num: usize,
+        size: usize,
+        align: ::std::os::raw::c_uint,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    #[doc = " Replacement function for realloc(), using huge-page memory. Reserved area"]
+    #[doc = " memory is resized, preserving contents. In NUMA systems, the new area"]
+    #[doc = " resides on the same NUMA socket as the old area."]
+    #[doc = ""]
+    #[doc = " @param ptr"]
+    #[doc = "   Pointer to already allocated memory"]
+    #[doc = " @param size"]
+    #[doc = "   Size (in bytes) of new area. If this is 0, memory is freed."]
+    #[doc = " @param align"]
+    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
+    #[doc = "   variable (in the same manner as malloc())."]
+    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
+    #[doc = "   this case, it must obviously be a power of two. (Minimum alignment is the"]
+    #[doc = "   cacheline size, i.e. 64-bytes)"]
+    #[doc = " @return"]
+    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
+    #[doc = "     align is not a power of two)."]
+    #[doc = "   - Otherwise, the pointer to the reallocated memory."]
+    pub fn rte_realloc(
+        ptr: *mut ::std::os::raw::c_void,
+        size: usize,
+        align: ::std::os::raw::c_uint,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    #[doc = " This function allocates memory from the huge-page area of memory. The memory"]
+    #[doc = " is not cleared."]
+    #[doc = ""]
+    #[doc = " @param type"]
+    #[doc = "   A string identifying the type of allocated objects (useful for debug"]
+    #[doc = "   purposes, such as identifying the cause of a memory leak). Can be NULL."]
+    #[doc = " @param size"]
+    #[doc = "   Size (in bytes) to be allocated."]
+    #[doc = " @param align"]
+    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
+    #[doc = "   variable (in the same manner as malloc())."]
+    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
+    #[doc = "   this case, it must be a power of two. (Minimum alignment is the"]
+    #[doc = "   cacheline size, i.e. 64-bytes)"]
+    #[doc = " @param socket"]
+    #[doc = "   NUMA socket to allocate memory on. If SOCKET_ID_ANY is used, this function"]
+    #[doc = "   will behave the same as rte_malloc()."]
+    #[doc = " @return"]
+    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
+    #[doc = "     align is not a power of two)."]
+    #[doc = "   - Otherwise, the pointer to the allocated object."]
+    pub fn rte_malloc_socket(
+        type_: *const ::std::os::raw::c_char,
+        size: usize,
+        align: ::std::os::raw::c_uint,
+        socket: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    #[doc = " Allocate zero\'ed memory from the heap."]
+    #[doc = ""]
+    #[doc = " Equivalent to rte_malloc() except that the memory zone is"]
+    #[doc = " initialised with zeros."]
+    #[doc = ""]
+    #[doc = " @param type"]
+    #[doc = "   A string identifying the type of allocated objects (useful for debug"]
+    #[doc = "   purposes, such as identifying the cause of a memory leak). Can be NULL."]
+    #[doc = " @param size"]
+    #[doc = "   Size (in bytes) to be allocated."]
+    #[doc = " @param align"]
+    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
+    #[doc = "   variable (in the same manner as malloc())."]
+    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
+    #[doc = "   this case, it must obviously be a power of two. (Minimum alignment is the"]
+    #[doc = "   cacheline size, i.e. 64-bytes)"]
+    #[doc = " @param socket"]
+    #[doc = "   NUMA socket to allocate memory on. If SOCKET_ID_ANY is used, this function"]
+    #[doc = "   will behave the same as rte_zmalloc()."]
+    #[doc = " @return"]
+    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
+    #[doc = "     align is not a power of two)."]
+    #[doc = "   - Otherwise, the pointer to the allocated object."]
+    pub fn rte_zmalloc_socket(
+        type_: *const ::std::os::raw::c_char,
+        size: usize,
+        align: ::std::os::raw::c_uint,
+        socket: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    #[doc = " Replacement function for calloc(), using huge-page memory. Memory area is"]
+    #[doc = " initialised with zeros."]
+    #[doc = ""]
+    #[doc = " @param type"]
+    #[doc = "   A string identifying the type of allocated objects (useful for debug"]
+    #[doc = "   purposes, such as identifying the cause of a memory leak). Can be NULL."]
+    #[doc = " @param num"]
+    #[doc = "   Number of elements to be allocated."]
+    #[doc = " @param size"]
+    #[doc = "   Size (in bytes) of a single element."]
+    #[doc = " @param align"]
+    #[doc = "   If 0, the return is a pointer that is suitably aligned for any kind of"]
+    #[doc = "   variable (in the same manner as malloc())."]
+    #[doc = "   Otherwise, the return is a pointer that is a multiple of *align*. In"]
+    #[doc = "   this case, it must obviously be a power of two. (Minimum alignment is the"]
+    #[doc = "   cacheline size, i.e. 64-bytes)"]
+    #[doc = " @param socket"]
+    #[doc = "   NUMA socket to allocate memory on. If SOCKET_ID_ANY is used, this function"]
+    #[doc = "   will behave the same as rte_calloc()."]
+    #[doc = " @return"]
+    #[doc = "   - NULL on error. Not enough memory, or invalid arguments (size is 0,"]
+    #[doc = "     align is not a power of two)."]
+    #[doc = "   - Otherwise, the pointer to the allocated object."]
+    pub fn rte_calloc_socket(
+        type_: *const ::std::os::raw::c_char,
+        num: usize,
+        size: usize,
+        align: ::std::os::raw::c_uint,
+        socket: ::std::os::raw::c_int,
+    ) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    #[doc = " Frees the memory space pointed to by the provided pointer."]
+    #[doc = ""]
+    #[doc = " This pointer must have been returned by a previous call to"]
+    #[doc = " rte_malloc(), rte_zmalloc(), rte_calloc() or rte_realloc(). The behaviour of"]
+    #[doc = " rte_free() is undefined if the pointer does not match this requirement."]
+    #[doc = ""]
+    #[doc = " If the pointer is NULL, the function does nothing."]
+    #[doc = ""]
+    #[doc = " @param ptr"]
+    #[doc = "   The pointer to memory to be freed."]
+    pub fn rte_free(ptr: *mut ::std::os::raw::c_void);
+}
+extern "C" {
+    #[doc = " If malloc debug is enabled, check a memory block for header"]
+    #[doc = " and trailer markers to indicate that all is well with the block."]
+    #[doc = " If size is non-null, also return the size of the block."]
+    #[doc = ""]
+    #[doc = " @param ptr"]
+    #[doc = "   pointer to the start of a data block, must have been returned"]
+    #[doc = "   by a previous call to rte_malloc(), rte_zmalloc(), rte_calloc()"]
+    #[doc = "   or rte_realloc()"]
+    #[doc = " @param size"]
+    #[doc = "   if non-null, and memory block pointer is valid, returns the size"]
+    #[doc = "   of the memory block"]
+    #[doc = " @return"]
+    #[doc = "   -1 on error, invalid pointer passed or header and trailer markers"]
+    #[doc = "   are missing or corrupted"]
+    #[doc = "   0 on success"]
+    pub fn rte_malloc_validate(
+        ptr: *const ::std::os::raw::c_void,
+        size: *mut usize,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Get heap statistics for the specified heap."]
+    #[doc = ""]
+    #[doc = " @param socket"]
+    #[doc = "   An unsigned integer specifying the socket to get heap statistics for"]
+    #[doc = " @param socket_stats"]
+    #[doc = "   A structure which provides memory to store statistics"]
+    #[doc = " @return"]
+    #[doc = "   Null on error"]
+    #[doc = "   Pointer to structure storing statistics on success"]
+    pub fn rte_malloc_get_socket_stats(
+        socket: ::std::os::raw::c_int,
+        socket_stats: *mut rte_malloc_socket_stats,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Add memory chunk to a heap with specified name."]
+    #[doc = ""]
+    #[doc = " @note Multiple memory chunks can be added to the same heap"]
+    #[doc = ""]
+    #[doc = " @note Before accessing this memory in other processes, it needs to be"]
+    #[doc = "   attached in each of those processes by calling"]
+    #[doc = "   ``rte_malloc_heap_memory_attach`` in each other process."]
+    #[doc = ""]
+    #[doc = " @note Memory must be previously allocated for DPDK to be able to use it as a"]
+    #[doc = "   malloc heap. Failing to do so will result in undefined behavior, up to and"]
+    #[doc = "   including segmentation faults."]
+    #[doc = ""]
+    #[doc = " @note Calling this function will erase any contents already present at the"]
+    #[doc = "   supplied memory address."]
+    #[doc = ""]
+    #[doc = " @param heap_name"]
+    #[doc = "   Name of the heap to add memory chunk to"]
+    #[doc = " @param va_addr"]
+    #[doc = "   Start of virtual area to add to the heap"]
+    #[doc = " @param len"]
+    #[doc = "   Length of virtual area to add to the heap"]
+    #[doc = " @param iova_addrs"]
+    #[doc = "   Array of page IOVA addresses corresponding to each page in this memory"]
+    #[doc = "   area. Can be NULL, in which case page IOVA addresses will be set to"]
+    #[doc = "   RTE_BAD_IOVA."]
+    #[doc = " @param n_pages"]
+    #[doc = "   Number of elements in the iova_addrs array. Ignored if  ``iova_addrs``"]
+    #[doc = "   is NULL."]
+    #[doc = " @param page_sz"]
+    #[doc = "   Page size of the underlying memory"]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0 on success"]
+    #[doc = "   - -1 in case of error, with rte_errno set to one of the following:"]
+    #[doc = "     EINVAL - one of the parameters was invalid"]
+    #[doc = "     EPERM  - attempted to add memory to a reserved heap"]
+    #[doc = "     ENOSPC - no more space in internal config to store a new memory chunk"]
+    pub fn rte_malloc_heap_memory_add(
+        heap_name: *const ::std::os::raw::c_char,
+        va_addr: *mut ::std::os::raw::c_void,
+        len: usize,
+        iova_addrs: *mut rte_iova_t,
+        n_pages: ::std::os::raw::c_uint,
+        page_sz: usize,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Remove memory chunk from heap with specified name."]
+    #[doc = ""]
+    #[doc = " @note Memory chunk being removed must be the same as one that was added;"]
+    #[doc = "   partially removing memory chunks is not supported"]
+    #[doc = ""]
+    #[doc = " @note Memory area must not contain any allocated elements to allow its"]
+    #[doc = "   removal from the heap"]
+    #[doc = ""]
+    #[doc = " @note All other processes must detach from the memory chunk prior to it being"]
+    #[doc = "   removed from the heap."]
+    #[doc = ""]
+    #[doc = " @param heap_name"]
+    #[doc = "   Name of the heap to remove memory from"]
+    #[doc = " @param va_addr"]
+    #[doc = "   Virtual address to remove from the heap"]
+    #[doc = " @param len"]
+    #[doc = "   Length of virtual area to remove from the heap"]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0 on success"]
+    #[doc = "   - -1 in case of error, with rte_errno set to one of the following:"]
+    #[doc = "     EINVAL - one of the parameters was invalid"]
+    #[doc = "     EPERM  - attempted to remove memory from a reserved heap"]
+    #[doc = "     ENOENT - heap or memory chunk was not found"]
+    #[doc = "     EBUSY  - memory chunk still contains data"]
+    pub fn rte_malloc_heap_memory_remove(
+        heap_name: *const ::std::os::raw::c_char,
+        va_addr: *mut ::std::os::raw::c_void,
+        len: usize,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Attach to an already existing chunk of external memory in another process."]
+    #[doc = ""]
+    #[doc = " @note This function must be called before any attempt is made to use an"]
+    #[doc = "   already existing external memory chunk. This function does *not* need to"]
+    #[doc = "   be called if a call to ``rte_malloc_heap_memory_add`` was made in the"]
+    #[doc = "   current process."]
+    #[doc = ""]
+    #[doc = " @param heap_name"]
+    #[doc = "   Heap name to which this chunk of memory belongs"]
+    #[doc = " @param va_addr"]
+    #[doc = "   Start address of memory chunk to attach to"]
+    #[doc = " @param len"]
+    #[doc = "   Length of memory chunk to attach to"]
+    #[doc = " @return"]
+    #[doc = "   0 on successful attach"]
+    #[doc = "   -1 on unsuccessful attach, with rte_errno set to indicate cause for error:"]
+    #[doc = "     EINVAL - one of the parameters was invalid"]
+    #[doc = "     EPERM  - attempted to attach memory to a reserved heap"]
+    #[doc = "     ENOENT - heap or memory chunk was not found"]
+    pub fn rte_malloc_heap_memory_attach(
+        heap_name: *const ::std::os::raw::c_char,
+        va_addr: *mut ::std::os::raw::c_void,
+        len: usize,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Detach from a chunk of external memory in secondary process."]
+    #[doc = ""]
+    #[doc = " @note This function must be called in before any attempt is made to remove"]
+    #[doc = "   external memory from the heap in another process. This function does *not*"]
+    #[doc = "   need to be called if a call to ``rte_malloc_heap_memory_remove`` will be"]
+    #[doc = "   called in current process."]
+    #[doc = ""]
+    #[doc = " @param heap_name"]
+    #[doc = "   Heap name to which this chunk of memory belongs"]
+    #[doc = " @param va_addr"]
+    #[doc = "   Start address of memory chunk to attach to"]
+    #[doc = " @param len"]
+    #[doc = "   Length of memory chunk to attach to"]
+    #[doc = " @return"]
+    #[doc = "   0 on successful detach"]
+    #[doc = "   -1 on unsuccessful detach, with rte_errno set to indicate cause for error:"]
+    #[doc = "     EINVAL - one of the parameters was invalid"]
+    #[doc = "     EPERM  - attempted to detach memory from a reserved heap"]
+    #[doc = "     ENOENT - heap or memory chunk was not found"]
+    pub fn rte_malloc_heap_memory_detach(
+        heap_name: *const ::std::os::raw::c_char,
+        va_addr: *mut ::std::os::raw::c_void,
+        len: usize,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Creates a new empty malloc heap with a specified name."]
+    #[doc = ""]
+    #[doc = " @note Heaps created via this call will automatically get assigned a unique"]
+    #[doc = "   socket ID, which can be found using ``rte_malloc_heap_get_socket()``"]
+    #[doc = ""]
+    #[doc = " @param heap_name"]
+    #[doc = "   Name of the heap to create."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0 on successful creation"]
+    #[doc = "   - -1 in case of error, with rte_errno set to one of the following:"]
+    #[doc = "     EINVAL - ``heap_name`` was NULL, empty or too long"]
+    #[doc = "     EEXIST - heap by name of ``heap_name`` already exists"]
+    #[doc = "     ENOSPC - no more space in internal config to store a new heap"]
+    pub fn rte_malloc_heap_create(
+        heap_name: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Destroys a previously created malloc heap with specified name."]
+    #[doc = ""]
+    #[doc = " @note This function will return a failure result if not all memory allocated"]
+    #[doc = "   from the heap has been freed back to the heap"]
+    #[doc = ""]
+    #[doc = " @note This function will return a failure result if not all memory segments"]
+    #[doc = "   were removed from the heap prior to its destruction"]
+    #[doc = ""]
+    #[doc = " @param heap_name"]
+    #[doc = "   Name of the heap to create."]
+    #[doc = ""]
+    #[doc = " @return"]
+    #[doc = "   - 0 on success"]
+    #[doc = "   - -1 in case of error, with rte_errno set to one of the following:"]
+    #[doc = "     EINVAL - ``heap_name`` was NULL, empty or too long"]
+    #[doc = "     ENOENT - heap by the name of ``heap_name`` was not found"]
+    #[doc = "     EPERM  - attempting to destroy reserved heap"]
+    #[doc = "     EBUSY  - heap still contains data"]
+    pub fn rte_malloc_heap_destroy(
+        heap_name: *const ::std::os::raw::c_char,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Find socket ID corresponding to a named heap."]
+    #[doc = ""]
+    #[doc = " @param name"]
+    #[doc = "   Heap name to find socket ID for"]
+    #[doc = " @return"]
+    #[doc = "   Socket ID in case of success (a non-negative number)"]
+    #[doc = "   -1 in case of error, with rte_errno set to one of the following:"]
+    #[doc = "     EINVAL - ``name`` was NULL"]
+    #[doc = "     ENOENT - heap identified by the name ``name`` was not found"]
+    pub fn rte_malloc_heap_get_socket(name: *const ::std::os::raw::c_char)
+        -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Check if a given socket ID refers to externally allocated memory."]
+    #[doc = ""]
+    #[doc = " @note Passing SOCKET_ID_ANY will return 0."]
+    #[doc = ""]
+    #[doc = " @param socket_id"]
+    #[doc = "   Socket ID to check"]
+    #[doc = " @return"]
+    #[doc = "   1 if socket ID refers to externally allocated memory"]
+    #[doc = "   0 if socket ID refers to internal DPDK memory"]
+    #[doc = "   -1 if socket ID is invalid"]
+    pub fn rte_malloc_heap_socket_is_external(
+        socket_id: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Dump statistics."]
+    #[doc = ""]
+    #[doc = " Dump for the specified type to a file. If the type argument is"]
+    #[doc = " NULL, all memory types will be dumped."]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   A pointer to a file for output"]
+    #[doc = " @param type"]
+    #[doc = "   A string identifying the type of objects to dump, or NULL"]
+    #[doc = "   to dump all objects."]
+    pub fn rte_malloc_dump_stats(f: *mut FILE, type_: *const ::std::os::raw::c_char);
+}
+extern "C" {
+    #[doc = " Dump contents of all malloc heaps to a file."]
+    #[doc = ""]
+    #[doc = " @param f"]
+    #[doc = "   A pointer to a file for output"]
+    pub fn rte_malloc_dump_heaps(f: *mut FILE);
+}
+extern "C" {
+    #[doc = " Set the maximum amount of allocated memory for this type."]
+    #[doc = ""]
+    #[doc = " This is not yet implemented"]
+    #[doc = ""]
+    #[doc = " @param type"]
+    #[doc = "   A string identifying the type of allocated objects."]
+    #[doc = " @param max"]
+    #[doc = "   The maximum amount of allocated bytes for this type."]
+    #[doc = " @return"]
+    #[doc = "   - 0: Success."]
+    #[doc = "   - (-1): Error."]
+    pub fn rte_malloc_set_limit(
+        type_: *const ::std::os::raw::c_char,
+        max: usize,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
+    #[doc = " Return the IO address of a virtual address obtained through"]
+    #[doc = " rte_malloc"]
+    #[doc = ""]
+    #[doc = " @param addr"]
+    #[doc = "   Address obtained from a previous rte_malloc call"]
+    #[doc = " @return"]
+    #[doc = "   RTE_BAD_IOVA on error"]
+    #[doc = "   otherwise return an address suitable for IO"]
+    pub fn rte_malloc_virt2iova(addr: *const ::std::os::raw::c_void) -> rte_iova_t;
+}
+#[doc = " 64 bits vector size to use with unsigned 8 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v64u8_t){ a0, a1, a2, a3, a4, a5, a6, a7 }"]
+pub type rte_v64u8_t = [u8; 8usize];
+#[doc = " 64 bits vector size to use with unsigned 16 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v64u16_t){ a0, a1, a2, a3 }"]
+pub type rte_v64u16_t = [u16; 4usize];
+#[doc = " 64 bits vector size to use with unsigned 32 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v64u32_t){ a0, a1 }"]
+pub type rte_v64u32_t = [u32; 2usize];
+#[doc = " 128 bits vector size to use with unsigned 8 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v128u8_t){ a00, a01, a02, a03, a04, a05, a06, a07,"]
+#[doc = "                     a08, a09, a10, a11, a12, a13, a14, a15 }"]
+pub type rte_v128u8_t = [u8; 16usize];
+#[doc = " 128 bits vector size to use with unsigned 16 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v128u16_t){ a0, a1, a2, a3, a4, a5, a6, a7 }"]
+pub type rte_v128u16_t = [u16; 8usize];
+#[doc = " 128 bits vector size to use with unsigned 32 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v128u32_t){ a0, a1, a2, a3, a4 }"]
+pub type rte_v128u32_t = [u32; 4usize];
+#[doc = " 128 bits vector size to use with unsigned 64 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v128u64_t){ a0, a1 }"]
+pub type rte_v128u64_t = [u64; 2usize];
+#[doc = " 256 bits vector size to use with unsigned 8 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v256u8_t){ a00, a01, a02, a03, a04, a05, a06, a07,"]
+#[doc = "                     a08, a09, a10, a11, a12, a13, a14, a15,"]
+#[doc = "                     a16, a17, a18, a19, a20, a21, a22, a23,"]
+#[doc = "                     a24, a25, a26, a27, a28, a29, a30, a31 }"]
+pub type rte_v256u8_t = [u8; 32usize];
+#[doc = " 256 bits vector size to use with unsigned 16 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v256u16_t){ a00, a01, a02, a03, a04, a05, a06, a07,"]
+#[doc = "                      a08, a09, a10, a11, a12, a13, a14, a15 }"]
+pub type rte_v256u16_t = [u16; 16usize];
+#[doc = " 256 bits vector size to use with unsigned 32 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v256u32_t){ a0, a1, a2, a3, a4, a5, a6, a7 }"]
+pub type rte_v256u32_t = [u32; 8usize];
+#[doc = " 256 bits vector size to use with unsigned 64 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v256u64_t){ a0, a1, a2, a3 }"]
+pub type rte_v256u64_t = [u64; 4usize];
+#[doc = " 64 bits vector size to use with 8 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v64s8_t){ a0, a1, a2, a3, a4, a5, a6, a7 }"]
+pub type rte_v64s8_t = [i8; 8usize];
+#[doc = " 64 bits vector size to use with 16 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v64s16_t){ a0, a1, a2, a3 }"]
+pub type rte_v64s16_t = [i16; 4usize];
+#[doc = " 64 bits vector size to use with 32 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v64s32_t){ a0, a1 }"]
+pub type rte_v64s32_t = [i32; 2usize];
+#[doc = " 128 bits vector size to use with 8 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v128s8_t){ a00, a01, a02, a03, a04, a05, a06, a07,"]
+#[doc = "                     a08, a09, a10, a11, a12, a13, a14, a15 }"]
+pub type rte_v128s8_t = [i8; 16usize];
+#[doc = " 128 bits vector size to use with 16 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v128s16_t){ a0, a1, a2, a3, a4, a5, a6, a7 }"]
+pub type rte_v128s16_t = [i16; 8usize];
+#[doc = " 128 bits vector size to use with 32 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v128s32_t){ a0, a1, a2, a3 }"]
+pub type rte_v128s32_t = [i32; 4usize];
+#[doc = " 128 bits vector size to use with 64 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v128s64_t){ a1, a2 }"]
+pub type rte_v128s64_t = [i64; 2usize];
+#[doc = " 256 bits vector size to use with 8 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v256s8_t){ a00, a01, a02, a03, a04, a05, a06, a07,"]
+#[doc = "                     a08, a09, a10, a11, a12, a13, a14, a15,"]
+#[doc = "                     a16, a17, a18, a19, a20, a21, a22, a23,"]
+#[doc = "                     a24, a25, a26, a27, a28, a29, a30, a31 }"]
+pub type rte_v256s8_t = [i8; 32usize];
+#[doc = " 256 bits vector size to use with 16 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v256s16_t){ a00, a01, a02, a03, a04, a05, a06, a07,"]
+#[doc = "                      a08, a09, a10, a11, a12, a13, a14, a15 }"]
+pub type rte_v256s16_t = [i16; 16usize];
+#[doc = " 256 bits vector size to use with 32 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v256s32_t){ a0, a1, a2, a3, a4, a5, a6, a7 }"]
+pub type rte_v256s32_t = [i32; 8usize];
+#[doc = " 256 bits vector size to use with 64 bits elements."]
+#[doc = ""]
+#[doc = " a = (rte_v256s64_t){ a0, a1, a2, a3 }"]
+pub type rte_v256s64_t = [i64; 4usize];
+pub type __v4df = [f64; 4usize];
+pub type __v8sf = [f32; 8usize];
+pub type __v4di = [::std::os::raw::c_longlong; 4usize];
+pub type __v8si = [::std::os::raw::c_int; 8usize];
+pub type __v16hi = [::std::os::raw::c_short; 16usize];
+pub type __v32qi = [::std::os::raw::c_char; 32usize];
+pub type __v4du = [::std::os::raw::c_ulonglong; 4usize];
+pub type __v8su = [::std::os::raw::c_uint; 8usize];
+pub type __v16hu = [::std::os::raw::c_ushort; 16usize];
+pub type __v32qu = [::std::os::raw::c_uchar; 32usize];
+pub type __v32qs = [::std::os::raw::c_schar; 32usize];
+pub type __m256 = [f32; 8usize];
+pub type __m256d = [f64; 4usize];
+pub type __m256i = [::std::os::raw::c_longlong; 4usize];
+pub type __v64qi = [::std::os::raw::c_char; 64usize];
+pub type __v32hi = [::std::os::raw::c_short; 32usize];
+pub type __v8df = [f64; 8usize];
+pub type __v16sf = [f32; 16usize];
+pub type __v8di = [::std::os::raw::c_longlong; 8usize];
+pub type __v16si = [::std::os::raw::c_int; 16usize];
+pub type __v64qu = [::std::os::raw::c_uchar; 64usize];
+pub type __v32hu = [::std::os::raw::c_ushort; 32usize];
+pub type __v8du = [::std::os::raw::c_ulonglong; 8usize];
+pub type __v16su = [::std::os::raw::c_uint; 16usize];
+pub type __m512 = [f32; 16usize];
+pub type __m512d = [f64; 8usize];
+pub type __m512i = [::std::os::raw::c_longlong; 8usize];
+pub type __mmask8 = ::std::os::raw::c_uchar;
+pub type __mmask16 = ::std::os::raw::c_ushort;
+pub mod _MM_CMPINT_ENUM {
+    pub type Type = u32;
+    pub const _MM_CMPINT_EQ: Type = 0;
+    pub const _MM_CMPINT_LT: Type = 1;
+    pub const _MM_CMPINT_LE: Type = 2;
+    pub const _MM_CMPINT_UNUSED: Type = 3;
+    pub const _MM_CMPINT_NE: Type = 4;
+    pub const _MM_CMPINT_NLT: Type = 5;
+    pub const _MM_CMPINT_NLE: Type = 6;
+}
+pub mod _MM_PERM_ENUM {
+    pub type Type = u32;
+    pub const _MM_PERM_AAAA: Type = 0;
+    pub const _MM_PERM_AAAB: Type = 1;
+    pub const _MM_PERM_AAAC: Type = 2;
+    pub const _MM_PERM_AAAD: Type = 3;
+    pub const _MM_PERM_AABA: Type = 4;
+    pub const _MM_PERM_AABB: Type = 5;
+    pub const _MM_PERM_AABC: Type = 6;
+    pub const _MM_PERM_AABD: Type = 7;
+    pub const _MM_PERM_AACA: Type = 8;
+    pub const _MM_PERM_AACB: Type = 9;
+    pub const _MM_PERM_AACC: Type = 10;
+    pub const _MM_PERM_AACD: Type = 11;
+    pub const _MM_PERM_AADA: Type = 12;
+    pub const _MM_PERM_AADB: Type = 13;
+    pub const _MM_PERM_AADC: Type = 14;
+    pub const _MM_PERM_AADD: Type = 15;
+    pub const _MM_PERM_ABAA: Type = 16;
+    pub const _MM_PERM_ABAB: Type = 17;
+    pub const _MM_PERM_ABAC: Type = 18;
+    pub const _MM_PERM_ABAD: Type = 19;
+    pub const _MM_PERM_ABBA: Type = 20;
+    pub const _MM_PERM_ABBB: Type = 21;
+    pub const _MM_PERM_ABBC: Type = 22;
+    pub const _MM_PERM_ABBD: Type = 23;
+    pub const _MM_PERM_ABCA: Type = 24;
+    pub const _MM_PERM_ABCB: Type = 25;
+    pub const _MM_PERM_ABCC: Type = 26;
+    pub const _MM_PERM_ABCD: Type = 27;
+    pub const _MM_PERM_ABDA: Type = 28;
+    pub const _MM_PERM_ABDB: Type = 29;
+    pub const _MM_PERM_ABDC: Type = 30;
+    pub const _MM_PERM_ABDD: Type = 31;
+    pub const _MM_PERM_ACAA: Type = 32;
+    pub const _MM_PERM_ACAB: Type = 33;
+    pub const _MM_PERM_ACAC: Type = 34;
+    pub const _MM_PERM_ACAD: Type = 35;
+    pub const _MM_PERM_ACBA: Type = 36;
+    pub const _MM_PERM_ACBB: Type = 37;
+    pub const _MM_PERM_ACBC: Type = 38;
+    pub const _MM_PERM_ACBD: Type = 39;
+    pub const _MM_PERM_ACCA: Type = 40;
+    pub const _MM_PERM_ACCB: Type = 41;
+    pub const _MM_PERM_ACCC: Type = 42;
+    pub const _MM_PERM_ACCD: Type = 43;
+    pub const _MM_PERM_ACDA: Type = 44;
+    pub const _MM_PERM_ACDB: Type = 45;
+    pub const _MM_PERM_ACDC: Type = 46;
+    pub const _MM_PERM_ACDD: Type = 47;
+    pub const _MM_PERM_ADAA: Type = 48;
+    pub const _MM_PERM_ADAB: Type = 49;
+    pub const _MM_PERM_ADAC: Type = 50;
+    pub const _MM_PERM_ADAD: Type = 51;
+    pub const _MM_PERM_ADBA: Type = 52;
+    pub const _MM_PERM_ADBB: Type = 53;
+    pub const _MM_PERM_ADBC: Type = 54;
+    pub const _MM_PERM_ADBD: Type = 55;
+    pub const _MM_PERM_ADCA: Type = 56;
+    pub const _MM_PERM_ADCB: Type = 57;
+    pub const _MM_PERM_ADCC: Type = 58;
+    pub const _MM_PERM_ADCD: Type = 59;
+    pub const _MM_PERM_ADDA: Type = 60;
+    pub const _MM_PERM_ADDB: Type = 61;
+    pub const _MM_PERM_ADDC: Type = 62;
+    pub const _MM_PERM_ADDD: Type = 63;
+    pub const _MM_PERM_BAAA: Type = 64;
+    pub const _MM_PERM_BAAB: Type = 65;
+    pub const _MM_PERM_BAAC: Type = 66;
+    pub const _MM_PERM_BAAD: Type = 67;
+    pub const _MM_PERM_BABA: Type = 68;
+    pub const _MM_PERM_BABB: Type = 69;
+    pub const _MM_PERM_BABC: Type = 70;
+    pub const _MM_PERM_BABD: Type = 71;
+    pub const _MM_PERM_BACA: Type = 72;
+    pub const _MM_PERM_BACB: Type = 73;
+    pub const _MM_PERM_BACC: Type = 74;
+    pub const _MM_PERM_BACD: Type = 75;
+    pub const _MM_PERM_BADA: Type = 76;
+    pub const _MM_PERM_BADB: Type = 77;
+    pub const _MM_PERM_BADC: Type = 78;
+    pub const _MM_PERM_BADD: Type = 79;
+    pub const _MM_PERM_BBAA: Type = 80;
+    pub const _MM_PERM_BBAB: Type = 81;
+    pub const _MM_PERM_BBAC: Type = 82;
+    pub const _MM_PERM_BBAD: Type = 83;
+    pub const _MM_PERM_BBBA: Type = 84;
+    pub const _MM_PERM_BBBB: Type = 85;
+    pub const _MM_PERM_BBBC: Type = 86;
+    pub const _MM_PERM_BBBD: Type = 87;
+    pub const _MM_PERM_BBCA: Type = 88;
+    pub const _MM_PERM_BBCB: Type = 89;
+    pub const _MM_PERM_BBCC: Type = 90;
+    pub const _MM_PERM_BBCD: Type = 91;
+    pub const _MM_PERM_BBDA: Type = 92;
+    pub const _MM_PERM_BBDB: Type = 93;
+    pub const _MM_PERM_BBDC: Type = 94;
+    pub const _MM_PERM_BBDD: Type = 95;
+    pub const _MM_PERM_BCAA: Type = 96;
+    pub const _MM_PERM_BCAB: Type = 97;
+    pub const _MM_PERM_BCAC: Type = 98;
+    pub const _MM_PERM_BCAD: Type = 99;
+    pub const _MM_PERM_BCBA: Type = 100;
+    pub const _MM_PERM_BCBB: Type = 101;
+    pub const _MM_PERM_BCBC: Type = 102;
+    pub const _MM_PERM_BCBD: Type = 103;
+    pub const _MM_PERM_BCCA: Type = 104;
+    pub const _MM_PERM_BCCB: Type = 105;
+    pub const _MM_PERM_BCCC: Type = 106;
+    pub const _MM_PERM_BCCD: Type = 107;
+    pub const _MM_PERM_BCDA: Type = 108;
+    pub const _MM_PERM_BCDB: Type = 109;
+    pub const _MM_PERM_BCDC: Type = 110;
+    pub const _MM_PERM_BCDD: Type = 111;
+    pub const _MM_PERM_BDAA: Type = 112;
+    pub const _MM_PERM_BDAB: Type = 113;
+    pub const _MM_PERM_BDAC: Type = 114;
+    pub const _MM_PERM_BDAD: Type = 115;
+    pub const _MM_PERM_BDBA: Type = 116;
+    pub const _MM_PERM_BDBB: Type = 117;
+    pub const _MM_PERM_BDBC: Type = 118;
+    pub const _MM_PERM_BDBD: Type = 119;
+    pub const _MM_PERM_BDCA: Type = 120;
+    pub const _MM_PERM_BDCB: Type = 121;
+    pub const _MM_PERM_BDCC: Type = 122;
+    pub const _MM_PERM_BDCD: Type = 123;
+    pub const _MM_PERM_BDDA: Type = 124;
+    pub const _MM_PERM_BDDB: Type = 125;
+    pub const _MM_PERM_BDDC: Type = 126;
+    pub const _MM_PERM_BDDD: Type = 127;
+    pub const _MM_PERM_CAAA: Type = 128;
+    pub const _MM_PERM_CAAB: Type = 129;
+    pub const _MM_PERM_CAAC: Type = 130;
+    pub const _MM_PERM_CAAD: Type = 131;
+    pub const _MM_PERM_CABA: Type = 132;
+    pub const _MM_PERM_CABB: Type = 133;
+    pub const _MM_PERM_CABC: Type = 134;
+    pub const _MM_PERM_CABD: Type = 135;
+    pub const _MM_PERM_CACA: Type = 136;
+    pub const _MM_PERM_CACB: Type = 137;
+    pub const _MM_PERM_CACC: Type = 138;
+    pub const _MM_PERM_CACD: Type = 139;
+    pub const _MM_PERM_CADA: Type = 140;
+    pub const _MM_PERM_CADB: Type = 141;
+    pub const _MM_PERM_CADC: Type = 142;
+    pub const _MM_PERM_CADD: Type = 143;
+    pub const _MM_PERM_CBAA: Type = 144;
+    pub const _MM_PERM_CBAB: Type = 145;
+    pub const _MM_PERM_CBAC: Type = 146;
+    pub const _MM_PERM_CBAD: Type = 147;
+    pub const _MM_PERM_CBBA: Type = 148;
+    pub const _MM_PERM_CBBB: Type = 149;
+    pub const _MM_PERM_CBBC: Type = 150;
+    pub const _MM_PERM_CBBD: Type = 151;
+    pub const _MM_PERM_CBCA: Type = 152;
+    pub const _MM_PERM_CBCB: Type = 153;
+    pub const _MM_PERM_CBCC: Type = 154;
+    pub const _MM_PERM_CBCD: Type = 155;
+    pub const _MM_PERM_CBDA: Type = 156;
+    pub const _MM_PERM_CBDB: Type = 157;
+    pub const _MM_PERM_CBDC: Type = 158;
+    pub const _MM_PERM_CBDD: Type = 159;
+    pub const _MM_PERM_CCAA: Type = 160;
+    pub const _MM_PERM_CCAB: Type = 161;
+    pub const _MM_PERM_CCAC: Type = 162;
+    pub const _MM_PERM_CCAD: Type = 163;
+    pub const _MM_PERM_CCBA: Type = 164;
+    pub const _MM_PERM_CCBB: Type = 165;
+    pub const _MM_PERM_CCBC: Type = 166;
+    pub const _MM_PERM_CCBD: Type = 167;
+    pub const _MM_PERM_CCCA: Type = 168;
+    pub const _MM_PERM_CCCB: Type = 169;
+    pub const _MM_PERM_CCCC: Type = 170;
+    pub const _MM_PERM_CCCD: Type = 171;
+    pub const _MM_PERM_CCDA: Type = 172;
+    pub const _MM_PERM_CCDB: Type = 173;
+    pub const _MM_PERM_CCDC: Type = 174;
+    pub const _MM_PERM_CCDD: Type = 175;
+    pub const _MM_PERM_CDAA: Type = 176;
+    pub const _MM_PERM_CDAB: Type = 177;
+    pub const _MM_PERM_CDAC: Type = 178;
+    pub const _MM_PERM_CDAD: Type = 179;
+    pub const _MM_PERM_CDBA: Type = 180;
+    pub const _MM_PERM_CDBB: Type = 181;
+    pub const _MM_PERM_CDBC: Type = 182;
+    pub const _MM_PERM_CDBD: Type = 183;
+    pub const _MM_PERM_CDCA: Type = 184;
+    pub const _MM_PERM_CDCB: Type = 185;
+    pub const _MM_PERM_CDCC: Type = 186;
+    pub const _MM_PERM_CDCD: Type = 187;
+    pub const _MM_PERM_CDDA: Type = 188;
+    pub const _MM_PERM_CDDB: Type = 189;
+    pub const _MM_PERM_CDDC: Type = 190;
+    pub const _MM_PERM_CDDD: Type = 191;
+    pub const _MM_PERM_DAAA: Type = 192;
+    pub const _MM_PERM_DAAB: Type = 193;
+    pub const _MM_PERM_DAAC: Type = 194;
+    pub const _MM_PERM_DAAD: Type = 195;
+    pub const _MM_PERM_DABA: Type = 196;
+    pub const _MM_PERM_DABB: Type = 197;
+    pub const _MM_PERM_DABC: Type = 198;
+    pub const _MM_PERM_DABD: Type = 199;
+    pub const _MM_PERM_DACA: Type = 200;
+    pub const _MM_PERM_DACB: Type = 201;
+    pub const _MM_PERM_DACC: Type = 202;
+    pub const _MM_PERM_DACD: Type = 203;
+    pub const _MM_PERM_DADA: Type = 204;
+    pub const _MM_PERM_DADB: Type = 205;
+    pub const _MM_PERM_DADC: Type = 206;
+    pub const _MM_PERM_DADD: Type = 207;
+    pub const _MM_PERM_DBAA: Type = 208;
+    pub const _MM_PERM_DBAB: Type = 209;
+    pub const _MM_PERM_DBAC: Type = 210;
+    pub const _MM_PERM_DBAD: Type = 211;
+    pub const _MM_PERM_DBBA: Type = 212;
+    pub const _MM_PERM_DBBB: Type = 213;
+    pub const _MM_PERM_DBBC: Type = 214;
+    pub const _MM_PERM_DBBD: Type = 215;
+    pub const _MM_PERM_DBCA: Type = 216;
+    pub const _MM_PERM_DBCB: Type = 217;
+    pub const _MM_PERM_DBCC: Type = 218;
+    pub const _MM_PERM_DBCD: Type = 219;
+    pub const _MM_PERM_DBDA: Type = 220;
+    pub const _MM_PERM_DBDB: Type = 221;
+    pub const _MM_PERM_DBDC: Type = 222;
+    pub const _MM_PERM_DBDD: Type = 223;
+    pub const _MM_PERM_DCAA: Type = 224;
+    pub const _MM_PERM_DCAB: Type = 225;
+    pub const _MM_PERM_DCAC: Type = 226;
+    pub const _MM_PERM_DCAD: Type = 227;
+    pub const _MM_PERM_DCBA: Type = 228;
+    pub const _MM_PERM_DCBB: Type = 229;
+    pub const _MM_PERM_DCBC: Type = 230;
+    pub const _MM_PERM_DCBD: Type = 231;
+    pub const _MM_PERM_DCCA: Type = 232;
+    pub const _MM_PERM_DCCB: Type = 233;
+    pub const _MM_PERM_DCCC: Type = 234;
+    pub const _MM_PERM_DCCD: Type = 235;
+    pub const _MM_PERM_DCDA: Type = 236;
+    pub const _MM_PERM_DCDB: Type = 237;
+    pub const _MM_PERM_DCDC: Type = 238;
+    pub const _MM_PERM_DCDD: Type = 239;
+    pub const _MM_PERM_DDAA: Type = 240;
+    pub const _MM_PERM_DDAB: Type = 241;
+    pub const _MM_PERM_DDAC: Type = 242;
+    pub const _MM_PERM_DDAD: Type = 243;
+    pub const _MM_PERM_DDBA: Type = 244;
+    pub const _MM_PERM_DDBB: Type = 245;
+    pub const _MM_PERM_DDBC: Type = 246;
+    pub const _MM_PERM_DDBD: Type = 247;
+    pub const _MM_PERM_DDCA: Type = 248;
+    pub const _MM_PERM_DDCB: Type = 249;
+    pub const _MM_PERM_DDCC: Type = 250;
+    pub const _MM_PERM_DDCD: Type = 251;
+    pub const _MM_PERM_DDDA: Type = 252;
+    pub const _MM_PERM_DDDB: Type = 253;
+    pub const _MM_PERM_DDDC: Type = 254;
+    pub const _MM_PERM_DDDD: Type = 255;
+}
+pub mod _MM_MANTISSA_NORM_ENUM {
+    pub type Type = u32;
+    pub const _MM_MANT_NORM_1_2: Type = 0;
+    pub const _MM_MANT_NORM_p5_2: Type = 1;
+    pub const _MM_MANT_NORM_p5_1: Type = 2;
+    pub const _MM_MANT_NORM_p75_1p5: Type = 3;
+}
+pub mod _MM_MANTISSA_SIGN_ENUM {
+    pub type Type = u32;
+    pub const _MM_MANT_SIGN_src: Type = 0;
+    pub const _MM_MANT_SIGN_zero: Type = 1;
+    pub const _MM_MANT_SIGN_nan: Type = 2;
+}
+pub type __mmask32 = ::std::os::raw::c_uint;
+pub type __mmask64 = ::std::os::raw::c_ulonglong;
+pub type xmm_t = __m128i;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union rte_xmm {
+    pub x: xmm_t,
+    pub u8: [u8; 16usize],
+    pub u16: [u16; 8usize],
+    pub u32: [u32; 4usize],
+    pub u64: [u64; 2usize],
+    pub pd: [f64; 2usize],
+    _bindgen_union_align: [u8; 16usize],
+}
+#[test]
+fn bindgen_test_layout_rte_xmm() {
+    assert_eq!(
+        ::std::mem::size_of::<rte_xmm>(),
+        16usize,
+        concat!("Size of: ", stringify!(rte_xmm))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_xmm>())).x as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_xmm),
+            "::",
+            stringify!(x)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_xmm>())).u8 as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_xmm),
+            "::",
+            stringify!(u8)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_xmm>())).u16 as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_xmm),
+            "::",
+            stringify!(u16)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_xmm>())).u32 as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_xmm),
+            "::",
+            stringify!(u32)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_xmm>())).u64 as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_xmm),
+            "::",
+            stringify!(u64)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_xmm>())).pd as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_xmm),
+            "::",
+            stringify!(pd)
+        )
+    );
+}
+impl Default for rte_xmm {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
+pub type rte_xmm_t = rte_xmm;
+pub type ymm_t = __m256i;
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union rte_ymm {
+    pub y: ymm_t,
+    pub x: [xmm_t; 2usize],
+    pub u8: [u8; 32usize],
+    pub u16: [u16; 16usize],
+    pub u32: [u32; 8usize],
+    pub u64: [u64; 4usize],
+    pub pd: [f64; 4usize],
+    _bindgen_union_align: [u8; 32usize],
+}
+#[test]
+fn bindgen_test_layout_rte_ymm() {
+    assert_eq!(
+        ::std::mem::size_of::<rte_ymm>(),
+        32usize,
+        concat!("Size of: ", stringify!(rte_ymm))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_ymm>())).y as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_ymm),
+            "::",
+            stringify!(y)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_ymm>())).x as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_ymm),
+            "::",
+            stringify!(x)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_ymm>())).u8 as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_ymm),
+            "::",
+            stringify!(u8)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_ymm>())).u16 as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_ymm),
+            "::",
+            stringify!(u16)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_ymm>())).u32 as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_ymm),
+            "::",
+            stringify!(u32)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_ymm>())).u64 as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_ymm),
+            "::",
+            stringify!(u64)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<rte_ymm>())).pd as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(rte_ymm),
+            "::",
+            stringify!(pd)
+        )
+    );
+}
+impl Default for rte_ymm {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
+pub type rte_ymm_t = rte_ymm;
 #[doc = " The rte_spinlock_t type."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
