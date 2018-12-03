@@ -16,7 +16,9 @@ extern crate time;
 extern crate num_derive;
 extern crate num_traits;
 
-extern crate rte_sys as ffi;
+extern crate rte_sys;
+
+pub mod ffi;
 
 #[macro_use]
 pub mod errors;
@@ -46,10 +48,6 @@ pub use self::common::*;
 pub use self::errors::{ErrorKind, Result, RteError};
 pub use self::ethdev::PortId;
 pub use self::ethdev::QueueId;
-
-pub mod raw {
-    pub use ffi::*;
-}
 
 #[cfg(test)]
 mod tests;

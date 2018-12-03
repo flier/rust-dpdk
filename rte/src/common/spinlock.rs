@@ -117,17 +117,17 @@ impl LockImpl for SpinLockImpl {
 
     #[inline]
     fn lock(p: *mut Self::RawLock) {
-        unsafe { _rte_spinlock_lock(p) }
+        unsafe { ffi::rte_spinlock_lock(p) }
     }
 
     #[inline]
     fn unlock(p: *mut Self::RawLock) {
-        unsafe { _rte_spinlock_unlock(p) }
+        unsafe { ffi::rte_spinlock_unlock(p) }
     }
 
     #[inline]
     fn trylock(p: *mut Self::RawLock) -> libc::c_int {
-        unsafe { _rte_spinlock_trylock(p) }
+        unsafe { ffi::rte_spinlock_trylock(p) }
     }
 }
 
@@ -152,22 +152,22 @@ impl LockImpl for TmSpinLockImpl {
 
     #[inline]
     fn lock(p: *mut Self::RawLock) {
-        unsafe { _rte_spinlock_lock_tm(p) }
+        unsafe { ffi::rte_spinlock_lock_tm(p) }
     }
 
     #[inline]
     fn unlock(p: *mut Self::RawLock) {
-        unsafe { _rte_spinlock_unlock_tm(p) }
+        unsafe { ffi::rte_spinlock_unlock_tm(p) }
     }
 
     #[inline]
     fn trylock(p: *mut Self::RawLock) -> libc::c_int {
-        unsafe { _rte_spinlock_trylock_tm(p) }
+        unsafe { ffi::rte_spinlock_trylock_tm(p) }
     }
 }
 
 pub fn tm_supported() -> bool {
-    unsafe { _rte_tm_supported() != 0 }
+    unsafe { ffi::rte_tm_supported() != 0 }
 }
 
 pub enum RecursiveSpinLockImpl {}
@@ -193,17 +193,17 @@ impl LockImpl for RecursiveSpinLockImpl {
 
     #[inline]
     fn lock(p: *mut Self::RawLock) {
-        unsafe { _rte_spinlock_recursive_lock(p) }
+        unsafe { ffi::rte_spinlock_recursive_lock(p) }
     }
 
     #[inline]
     fn unlock(p: *mut Self::RawLock) {
-        unsafe { _rte_spinlock_recursive_unlock(p) }
+        unsafe { ffi::rte_spinlock_recursive_unlock(p) }
     }
 
     #[inline]
     fn trylock(p: *mut Self::RawLock) -> libc::c_int {
-        unsafe { _rte_spinlock_recursive_trylock(p) }
+        unsafe { ffi::rte_spinlock_recursive_trylock(p) }
     }
 }
 
@@ -230,44 +230,16 @@ impl LockImpl for RecursiveTmSpinLockImpl {
 
     #[inline]
     fn lock(p: *mut Self::RawLock) {
-        unsafe { _rte_spinlock_recursive_lock_tm(p) }
+        unsafe { ffi::rte_spinlock_recursive_lock_tm(p) }
     }
 
     #[inline]
     fn unlock(p: *mut Self::RawLock) {
-        unsafe { _rte_spinlock_recursive_unlock_tm(p) }
+        unsafe { ffi::rte_spinlock_recursive_unlock_tm(p) }
     }
 
     #[inline]
     fn trylock(p: *mut Self::RawLock) -> libc::c_int {
-        unsafe { _rte_spinlock_recursive_trylock_tm(p) }
+        unsafe { ffi::rte_spinlock_recursive_trylock_tm(p) }
     }
-}
-
-extern "C" {
-    fn _rte_spinlock_lock(sl: RawSpinLockPtr);
-
-    fn _rte_spinlock_unlock(sl: RawSpinLockPtr);
-
-    fn _rte_spinlock_trylock(sl: RawSpinLockPtr) -> libc::c_int;
-
-    fn _rte_tm_supported() -> libc::c_int;
-
-    fn _rte_spinlock_lock_tm(sl: RawSpinLockPtr);
-
-    fn _rte_spinlock_unlock_tm(sl: RawSpinLockPtr);
-
-    fn _rte_spinlock_trylock_tm(sl: RawSpinLockPtr) -> libc::c_int;
-
-    fn _rte_spinlock_recursive_lock(sl: RawRecursiveSpinLockPtr);
-
-    fn _rte_spinlock_recursive_unlock(sl: RawRecursiveSpinLockPtr);
-
-    fn _rte_spinlock_recursive_trylock(sl: RawRecursiveSpinLockPtr) -> libc::c_int;
-
-    fn _rte_spinlock_recursive_lock_tm(sl: RawRecursiveSpinLockPtr);
-
-    fn _rte_spinlock_recursive_unlock_tm(sl: RawRecursiveSpinLockPtr);
-
-    fn _rte_spinlock_recursive_trylock_tm(sl: RawRecursiveSpinLockPtr) -> libc::c_int;
 }

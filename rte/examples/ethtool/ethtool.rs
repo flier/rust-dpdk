@@ -3,7 +3,7 @@ use std::result;
 use std::sync::Mutex;
 
 use rte::ethdev::EthDevice;
-use rte::raw::RTE_MAX_ETHPORTS;
+use rte::ffi::RTE_MAX_ETHPORTS;
 use rte::*;
 
 pub const MAX_PORTS: u16 = RTE_MAX_ETHPORTS as u16;

@@ -21,9 +21,9 @@ use std::str::FromStr;
 use nix::sys::signal;
 
 use rte::ethdev::EthDevice;
+use rte::ffi::{ETHER_MAX_LEN, RTE_MAX_ETHPORTS, RTE_PKTMBUF_HEADROOM};
 use rte::lcore::RTE_MAX_LCORE;
 use rte::memory::AsMutRef;
-use rte::raw::{ETHER_MAX_LEN, RTE_MAX_ETHPORTS, RTE_PKTMBUF_HEADROOM};
 use rte::*;
 
 const EXIT_FAILURE: i32 = -1;

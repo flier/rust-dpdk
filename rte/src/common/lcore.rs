@@ -123,13 +123,9 @@ impl From<u32> for Role {
     }
 }
 
-extern "C" {
-    pub fn _rte_lcore_id() -> u32;
-}
-
 /// Return the ID of the execution unit we are running on.
 pub fn current() -> Option<Id> {
-    match unsafe { _rte_lcore_id() } {
+    match unsafe { ffi::rte_lcore_id() } {
         ffi::LCORE_ID_ANY => None,
         id @ _ => Some(id.into()),
     }

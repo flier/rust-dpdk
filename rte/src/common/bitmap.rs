@@ -7,28 +7,6 @@ pub type Slab = u64;
 pub type RawBitmap = ffi::rte_bitmap;
 pub type RawBitmapPtr = *mut ffi::rte_bitmap;
 
-extern "C" {
-    pub fn _rte_bitmap_get_memory_footprint(n_bits: u32) -> u32;
-
-    pub fn _rte_bitmap_init(n_bits: u32, mem: *mut u8, mem_size: u32) -> *mut ffi::rte_bitmap;
-
-    pub fn _rte_bitmap_free(bmp: *mut ffi::rte_bitmap) -> i32;
-
-    pub fn _rte_bitmap_reset(bmp: *mut ffi::rte_bitmap);
-
-    pub fn _rte_bitmap_prefetch0(bmp: *mut ffi::rte_bitmap, pos: u32);
-
-    pub fn _rte_bitmap_get(bmp: *mut ffi::rte_bitmap, pos: u32) -> u64;
-
-    pub fn _rte_bitmap_set(bmp: *mut ffi::rte_bitmap, pos: u32);
-
-    pub fn _rte_bitmap_set_slab(bmp: *mut ffi::rte_bitmap, pos: u32, slab: u64);
-
-    pub fn _rte_bitmap_clear(bmp: *mut ffi::rte_bitmap, pos: u32);
-
-    pub fn _rte_bitmap_scan(bmp: *mut ffi::rte_bitmap, pos: *mut u32, slab: *mut u64) -> i32;
-}
-
 ///  RTE Bitmap
 ///
 ///  The bitmap component provides a mechanism to manage large arrays of bits
@@ -57,7 +35,7 @@ pub struct Bitmap(RawBitmapPtr);
 impl Drop for Bitmap {
     fn drop(&mut self) {
         unsafe {
-            _rte_bitmap_free(self.0);
+            ffi::rte_bitmap_free(self.0);
         }
     }
 }
@@ -65,44 +43,44 @@ impl Drop for Bitmap {
 impl Bitmap {
     /// Bitmap memory footprint calculation
     pub fn memory_footprint(bits: u32) -> u32 {
-        unsafe { _rte_bitmap_get_memory_footprint(bits) }
+        unsafe { ffi::rte_bitmap_get_memory_footprint(bits) }
     }
 
     /// Bitmap initialization
     pub fn init(bits: u32, mem: *mut u8, mem_size: u32) -> Result<Self> {
-        unsafe { _rte_bitmap_init(bits, mem, mem_size) }
+        unsafe { ffi::rte_bitmap_init(bits, mem, mem_size) }
             .as_result()
             .map(Bitmap)
     }
 
     /// Bitmap reset
     pub fn reset(&mut self) {
-        unsafe { _rte_bitmap_reset(self.0) }
+        unsafe { ffi::rte_bitmap_reset(self.0) }
     }
 
     /// Bitmap location prefetch into CPU L1 cache
     pub fn prefetch0(&self, pos: Position) {
-        unsafe { _rte_bitmap_prefetch0(self.0, pos) }
+        unsafe { ffi::rte_bitmap_prefetch0(self.0, pos) }
     }
 
     /// Bitmap bit get
     pub fn get(&self, pos: Position) -> bool {
-        unsafe { _rte_bitmap_get(self.0, pos) != 0 }
+        unsafe { ffi::rte_bitmap_get(self.0, pos) != 0 }
     }
 
     /// Bitmap bit set
     pub fn set(&mut self, pos: Position) {
-        unsafe { _rte_bitmap_set(self.0, pos) }
+        unsafe { ffi::rte_bitmap_set(self.0, pos) }
     }
 
     /// Bitmap slab set
     pub fn set_slab(&mut self, pos: Position, slab: Slab) {
-        unsafe { _rte_bitmap_set_slab(self.0, pos, slab) }
+        unsafe { ffi::rte_bitmap_set_slab(self.0, pos, slab) }
     }
 
     /// Bitmap bit clear
     pub fn clear(&mut self, pos: Position) {
-        unsafe { _rte_bitmap_clear(self.0, pos) }
+        unsafe { ffi::rte_bitmap_clear(self.0, pos) }
     }
 
     /// Bitmap scan (with automatic wrap-around)
@@ -110,7 +88,7 @@ impl Bitmap {
         let mut pos = 0;
         let mut slab = 0;
 
-        if unsafe { _rte_bitmap_scan(self.0, &mut pos, &mut slab) } == 0 {
+        if unsafe { ffi::rte_bitmap_scan(self.0, &mut pos, &mut slab) } == 0 {
             None
         } else {
             Some((pos, slab))

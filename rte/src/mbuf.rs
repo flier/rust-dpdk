@@ -1,7 +1,6 @@
 use std::os::unix::io::AsRawFd;
 
 use cfile;
-use libc;
 
 use ffi;
 
@@ -242,33 +241,33 @@ pub trait PktMbuf {
 
 impl PktMbuf for RawMbuf {
     fn free(&mut self) {
-        unsafe { _rte_pktmbuf_free(self) }
+        unsafe { ffi::rte_pktmbuf_free(self) }
     }
 
     fn clone(&mut self) -> *mut Self {
-        unsafe { _rte_pktmbuf_clone(self, self.pool) }
+        unsafe { ffi::rte_pktmbuf_clone(self, self.pool) }
     }
 
     fn prepend(&mut self, len: usize) -> Result<*mut u8> {
-        let p = unsafe { _rte_pktmbuf_prepend(self, len as u16) };
+        let p = unsafe { ffi::rte_pktmbuf_prepend(self, len as u16) };
 
         rte_check!(p, NonNull)
     }
 
     fn append(&mut self, len: usize) -> Result<*mut u8> {
-        let p = unsafe { _rte_pktmbuf_append(self, len as u16) };
+        let p = unsafe { ffi::rte_pktmbuf_append(self, len as u16) };
 
         rte_check!(p, NonNull)
     }
 
     fn consume(&mut self, len: usize) -> Result<*mut u8> {
-        let p = unsafe { _rte_pktmbuf_adj(self, len as u16) };
+        let p = unsafe { ffi::rte_pktmbuf_adj(self, len as u16) };
 
         rte_check!(p, NonNull)
     }
 
     fn trim(&mut self, len: usize) -> Result<()> {
-        rte_check!(unsafe { _rte_pktmbuf_trim(self, len as u16) })
+        rte_check!(unsafe { ffi::rte_pktmbuf_trim(self, len as u16) })
     }
 
     fn is_contiguous(&self) -> bool {
@@ -294,11 +293,13 @@ pub trait PktMbufPool {
 
 impl PktMbufPool for mempool::RawMemoryPool {
     fn alloc(&mut self) -> RawMbufPtr {
-        unsafe { _rte_pktmbuf_alloc(self) }
+        unsafe { ffi::rte_pktmbuf_alloc(self) }
     }
 
     fn alloc_bulk(&mut self, mbufs: &mut [RawMbufPtr]) -> Result<()> {
-        rte_check!(unsafe { _rte_pktmbuf_alloc_bulk(self, mbufs.as_mut_ptr(), mbufs.len() as u32) })
+        rte_check!(unsafe {
+            ffi::rte_pktmbuf_alloc_bulk(self, mbufs.as_mut_ptr(), mbufs.len() as u32)
+        })
     }
 }
 
@@ -327,26 +328,4 @@ pub fn pktmbuf_pool_create(
     };
 
     rte_check!(p, NonNull)
-}
-
-extern "C" {
-    fn _rte_pktmbuf_alloc(mp: mempool::RawMemoryPoolPtr) -> RawMbufPtr;
-
-    fn _rte_pktmbuf_free(m: RawMbufPtr);
-
-    fn _rte_pktmbuf_alloc_bulk(
-        mp: mempool::RawMemoryPoolPtr,
-        mbufs: *mut RawMbufPtr,
-        count: libc::c_uint,
-    ) -> libc::c_int;
-
-    fn _rte_pktmbuf_clone(md: RawMbufPtr, mp: mempool::RawMemoryPoolPtr) -> RawMbufPtr;
-
-    fn _rte_pktmbuf_prepend(m: RawMbufPtr, len: libc::uint16_t) -> *mut libc::c_uchar;
-
-    fn _rte_pktmbuf_append(m: RawMbufPtr, len: libc::uint16_t) -> *mut libc::c_uchar;
-
-    fn _rte_pktmbuf_adj(m: RawMbufPtr, len: libc::uint16_t) -> *mut libc::c_uchar;
-
-    fn _rte_pktmbuf_trim(m: RawMbufPtr, len: libc::uint16_t) -> libc::c_int;
 }

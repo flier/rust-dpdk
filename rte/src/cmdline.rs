@@ -171,12 +171,12 @@ pub type RawTokenOps = ffi::cmdline_token_ops;
 macro_rules! TOKEN_STRING_INITIALIZER {
     ($container:path, $field:ident) => {{
         $crate::cmdline::Token::Str(
-            $crate::raw::cmdline_token_string {
-                hdr: $crate::raw::cmdline_token_hdr {
-                    ops: unsafe { &mut $crate::raw::cmdline_token_string_ops },
+            $crate::ffi::cmdline_token_string {
+                hdr: $crate::ffi::cmdline_token_hdr {
+                    ops: unsafe { &mut $crate::ffi::cmdline_token_string_ops },
                     offset: offset_of!($container, $field) as u32,
                 },
-                string_data: $crate::raw::cmdline_token_string_data {
+                string_data: $crate::ffi::cmdline_token_string_data {
                     str: ::std::ptr::null(),
                 },
             },
@@ -192,12 +192,12 @@ macro_rules! TOKEN_STRING_INITIALIZER {
         }
 
         $crate::cmdline::Token::Str(
-            $crate::raw::cmdline_token_string {
-                hdr: $crate::raw::cmdline_token_hdr {
-                    ops: unsafe { &mut $crate::raw::cmdline_token_string_ops },
+            $crate::ffi::cmdline_token_string {
+                hdr: $crate::ffi::cmdline_token_hdr {
+                    ops: unsafe { &mut $crate::ffi::cmdline_token_string_ops },
                     offset: offset_of!($container, $field) as u32,
                 },
-                string_data: $crate::raw::cmdline_token_string_data {
+                string_data: $crate::ffi::cmdline_token_string_data {
                     str: p as *const i8,
                 },
             },
@@ -209,38 +209,38 @@ macro_rules! TOKEN_STRING_INITIALIZER {
 #[macro_export]
 macro_rules! TOKEN_NUM_INITIALIZER {
     ($container:path, $field:ident, u8) => {
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::cmdline_numtype::UINT8)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::UINT8)
     };
     ($container:path, $field:ident, u16) => {
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::cmdline_numtype::UINT16)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::UINT16)
     };
     ($container:path, $field:ident, u32) => {
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::cmdline_numtype::UINT32)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::UINT32)
     };
     ($container:path, $field:ident, u64) => {
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::cmdline_numtype::UINT64)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::UINT64)
     };
     ($container:path, $field:ident, i8) => {
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::cmdline_numtype::INT8)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::INT8)
     };
     ($container:path, $field:ident, i16) => {
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::cmdline_numtype::INT16)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::INT16)
     };
     ($container:path, $field:ident, i32) => {
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::cmdline_numtype::INT32)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::INT32)
     };
     ($container:path, $field:ident, i64) => {
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::raw::cmdline_numtype::INT64)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::INT64)
     };
 
     ($container:path, $field:ident, $numtype:expr) => {
         $crate::cmdline::Token::Num(
-            $crate::raw::cmdline_token_num {
-                hdr: $crate::raw::cmdline_token_hdr {
-                    ops: unsafe { &mut $crate::raw::cmdline_token_num_ops },
+            $crate::ffi::cmdline_token_num {
+                hdr: $crate::ffi::cmdline_token_hdr {
+                    ops: unsafe { &mut $crate::ffi::cmdline_token_num_ops },
                     offset: offset_of!($container, $field) as u32,
                 },
-                num_data: $crate::raw::cmdline_token_num_data { type_: $numtype },
+                num_data: $crate::ffi::cmdline_token_num_data { type_: $numtype },
             },
             ::std::marker::PhantomData,
         )
@@ -253,18 +253,18 @@ macro_rules! TOKEN_IPADDR_INITIALIZER {
         TOKEN_IPADDR_INITIALIZER!(
             $container,
             $field,
-            $crate::raw::CMDLINE_IPADDR_V4 | $crate::raw::CMDLINE_IPADDR_V6
+            $crate::ffi::CMDLINE_IPADDR_V4 | $crate::ffi::CMDLINE_IPADDR_V6
         )
     };
 
     ($container:path, $field:ident, $flags:expr) => {
         $crate::cmdline::Token::IpAddr(
-            $crate::raw::cmdline_token_ipaddr {
-                hdr: $crate::raw::cmdline_token_hdr {
-                    ops: unsafe { &mut $crate::raw::cmdline_token_ipaddr_ops },
+            $crate::ffi::cmdline_token_ipaddr {
+                hdr: $crate::ffi::cmdline_token_hdr {
+                    ops: unsafe { &mut $crate::ffi::cmdline_token_ipaddr_ops },
                     offset: offset_of!($container, $field) as u32,
                 },
-                ipaddr_data: $crate::raw::cmdline_token_ipaddr_data {
+                ipaddr_data: $crate::ffi::cmdline_token_ipaddr_data {
                     flags: $flags as u8,
                 },
             },
@@ -276,14 +276,14 @@ macro_rules! TOKEN_IPADDR_INITIALIZER {
 #[macro_export]
 macro_rules! TOKEN_IPV4_INITIALIZER {
     ($container:path, $field:ident) => {
-        TOKEN_IPADDR_INITIALIZER!($container, $field, $crate::raw::CMDLINE_IPADDR_V4)
+        TOKEN_IPADDR_INITIALIZER!($container, $field, $crate::ffi::CMDLINE_IPADDR_V4)
     };
 }
 
 #[macro_export]
 macro_rules! TOKEN_IPV6_INITIALIZER {
     ($container:path, $field:ident) => {
-        TOKEN_IPADDR_INITIALIZER!($container, $field, $crate::raw::CMDLINE_IPADDR_V6)
+        TOKEN_IPADDR_INITIALIZER!($container, $field, $crate::ffi::CMDLINE_IPADDR_V6)
     };
 }
 
@@ -293,9 +293,9 @@ macro_rules! TOKEN_IPNET_INITIALIZER {
         TOKEN_IPADDR_INITIALIZER!(
             $container,
             $field,
-            $crate::raw::CMDLINE_IPADDR_V4
-                | $crate::raw::CMDLINE_IPADDR_V6
-                | $crate::raw::CMDLINE_IPADDR_NETWORK
+            $crate::ffi::CMDLINE_IPADDR_V4
+                | $crate::ffi::CMDLINE_IPADDR_V6
+                | $crate::ffi::CMDLINE_IPADDR_NETWORK
         )
     };
 }
@@ -306,7 +306,7 @@ macro_rules! TOKEN_IPV4NET_INITIALIZER {
         TOKEN_IPADDR_INITIALIZER!(
             $container,
             $field,
-            $crate::raw::CMDLINE_IPADDR_V4 | $crate::raw::CMDLINE_IPADDR_NETWORK
+            $crate::ffi::CMDLINE_IPADDR_V4 | $crate::ffi::CMDLINE_IPADDR_NETWORK
         )
     };
 }
@@ -317,7 +317,7 @@ macro_rules! TOKEN_IPV6NET_INITIALIZER {
         TOKEN_IPADDR_INITIALIZER!(
             $container,
             $field,
-            $crate::raw::CMDLINE_IPADDR_V6 | $crate::raw::CMDLINE_IPADDR_NETWORK
+            $crate::ffi::CMDLINE_IPADDR_V6 | $crate::ffi::CMDLINE_IPADDR_NETWORK
         )
     };
 }
@@ -326,9 +326,9 @@ macro_rules! TOKEN_IPV6NET_INITIALIZER {
 macro_rules! TOKEN_ETHERADDR_INITIALIZER {
     ($container:path, $field:ident) => {
         $crate::cmdline::Token::EtherAddr(
-            $crate::raw::cmdline_token_etheraddr {
-                hdr: $crate::raw::cmdline_token_hdr {
-                    ops: unsafe { &mut $crate::raw::cmdline_token_etheraddr_ops },
+            $crate::ffi::cmdline_token_etheraddr {
+                hdr: $crate::ffi::cmdline_token_hdr {
+                    ops: unsafe { &mut $crate::ffi::cmdline_token_etheraddr_ops },
                     offset: offset_of!($container, $field) as u32,
                 },
             },
@@ -341,9 +341,9 @@ macro_rules! TOKEN_ETHERADDR_INITIALIZER {
 macro_rules! TOKEN_PORTLIST_INITIALIZER {
     ($container:path, $field:ident) => {
         $crate::cmdline::Token::PortList(
-            $crate::raw::cmdline_token_portlist {
-                hdr: $crate::raw::cmdline_token_hdr {
-                    ops: unsafe { &mut $crate::raw::cmdline_token_portlist_ops },
+            $crate::ffi::cmdline_token_portlist {
+                hdr: $crate::ffi::cmdline_token_hdr {
+                    ops: unsafe { &mut $crate::ffi::cmdline_token_portlist_ops },
                     offset: offset_of!($container, $field) as u32,
                 },
             },

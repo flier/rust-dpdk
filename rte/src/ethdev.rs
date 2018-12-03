@@ -382,16 +382,17 @@ impl EthDevice for PortId {
 
     fn rx_burst(&self, queue_id: QueueId, rx_pkts: &mut [mbuf::RawMbufPtr]) -> usize {
         unsafe {
-            _rte_eth_rx_burst(*self, queue_id, rx_pkts.as_mut_ptr(), rx_pkts.len() as u16) as usize
+            ffi::rte_eth_rx_burst(*self, queue_id, rx_pkts.as_mut_ptr(), rx_pkts.len() as u16)
+                as usize
         }
     }
 
     fn tx_burst(&self, queue_id: QueueId, rx_pkts: &mut [mbuf::RawMbufPtr]) -> usize {
         unsafe {
             if rx_pkts.is_empty() {
-                _rte_eth_tx_burst(*self, queue_id, ptr::null_mut(), 0) as usize
+                ffi::rte_eth_tx_burst(*self, queue_id, ptr::null_mut(), 0) as usize
             } else {
-                _rte_eth_tx_burst(*self, queue_id, rx_pkts.as_mut_ptr(), rx_pkts.len() as u16)
+                ffi::rte_eth_tx_burst(*self, queue_id, rx_pkts.as_mut_ptr(), rx_pkts.len() as u16)
                     as usize
             }
         }
@@ -687,6 +688,11 @@ impl<'a> From<&'a EthConf> for RawEthConf {
     }
 }
 
+/// Calculate the size of the tx buffer.
+pub fn rte_eth_tx_buffer_size(size: usize) -> usize {
+    mem::size_of::<ffi::rte_eth_dev_tx_buffer>() + mem::size_of::<*mut ffi::rte_mbuf>() * size
+}
+
 pub type RawTxBuffer = ffi::rte_eth_dev_tx_buffer;
 pub type RawTxBufferPtr = *mut ffi::rte_eth_dev_tx_buffer;
 
@@ -712,7 +718,7 @@ pub trait TxBuffer {
 /// Initialize default values for buffered transmitting
 pub fn alloc_buffer(size: usize, socket_id: i32) -> Result<RawTxBufferPtr> {
     unsafe {
-        malloc::zmalloc_socket("tx_buffer", _rte_eth_tx_buffer_size(size), 0, socket_id)
+        malloc::zmalloc_socket("tx_buffer", rte_eth_tx_buffer_size(size), 0, socket_id)
             .ok_or(OsError(libc::ENOMEM))
             .map(|p| p as RawTxBufferPtr)
             .and_then(|p| {
@@ -755,22 +761,4 @@ impl TxBuffer for RawTxBuffer {
                                                     ptr::null_mut())
         }; ok => { self })
     }
-}
-
-extern "C" {
-    fn _rte_eth_rx_burst(
-        port_id: libc::uint16_t,
-        queue_id: libc::uint16_t,
-        rx_pkts: *mut mbuf::RawMbufPtr,
-        nb_pkts: libc::uint16_t,
-    ) -> libc::uint16_t;
-
-    fn _rte_eth_tx_burst(
-        port_id: libc::uint16_t,
-        queue_id: libc::uint16_t,
-        tx_pkts: *mut mbuf::RawMbufPtr,
-        nb_pkts: libc::uint16_t,
-    ) -> libc::uint16_t;
-
-    fn _rte_eth_tx_buffer_size(size: libc::size_t) -> libc::size_t;
 }

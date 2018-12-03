@@ -18,9 +18,9 @@ use std::str::FromStr;
 use nix::sys::signal;
 
 use rte::ethdev::{EthDevice, EthDeviceInfo, TxBuffer};
+use rte::ffi::RTE_MAX_ETHPORTS;
 use rte::lcore::RTE_MAX_LCORE;
 use rte::memory::AsMutRef;
-use rte::raw::RTE_MAX_ETHPORTS;
 use rte::*;
 
 const EXIT_FAILURE: i32 = -1;
@@ -206,7 +206,7 @@ extern "C" {
 
     static mut l2fwd_dst_ports: [libc::uint32_t; RTE_MAX_ETHPORTS as usize];
 
-    static mut l2fwd_tx_buffers: [*mut rte::raw::rte_eth_dev_tx_buffer; RTE_MAX_ETHPORTS as usize];
+    static mut l2fwd_tx_buffers: [*mut rte::ffi::rte_eth_dev_tx_buffer; RTE_MAX_ETHPORTS as usize];
 
     static mut l2fwd_timer_period: libc::int64_t;
 

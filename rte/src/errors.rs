@@ -6,7 +6,7 @@ use std::result;
 use errno::errno;
 use failure::{Error, Fail};
 
-use ffi::rte_strerror;
+use ffi;
 
 pub type Result<T> = result::Result<T, failure::Error>;
 
@@ -104,10 +104,6 @@ impl AsResult for c_int {
     }
 }
 
-extern "C" {
-    fn _rte_errno() -> i32;
-}
-
 macro_rules! rte_check {
     ( $ret:expr ) => {
         rte_check!($ret; ok => {()}; err => {$crate::errors::RteError($ret).into()})
@@ -152,7 +148,7 @@ impl fmt::Display for RteError {
         write!(
             f,
             "RTE error, {} ({})",
-            unsafe { CStr::from_ptr(rte_strerror(self.0)).to_string_lossy() },
+            unsafe { CStr::from_ptr(ffi::rte_strerror(self.0)).to_string_lossy() },
             self.0
         )
     }
@@ -171,7 +167,7 @@ pub enum ErrorKind {
 }
 
 pub fn rte_error() -> Error {
-    RteError(unsafe { _rte_errno() }).into()
+    RteError(unsafe { ffi::rte_errno() }).into()
 }
 
 pub fn os_error() -> Error {

@@ -259,19 +259,13 @@ pub trait VlanExt {
 
 impl VlanExt for mbuf::RawMbuf {
     fn vlan_strip(&mut self) -> Result<()> {
-        rte_check!(unsafe { _rte_vlan_strip(self) })
+        rte_check!(unsafe { ffi::rte_vlan_strip(self) })
     }
 }
 
 /// Insert VLAN tag into mbuf.
 pub fn vlan_insert(m: &mut mbuf::RawMbufPtr) -> Result<()> {
-    rte_check!(unsafe { _rte_vlan_insert(m) })
-}
-
-extern "C" {
-    fn _rte_vlan_strip(m: mbuf::RawMbufPtr) -> libc::c_int;
-
-    fn _rte_vlan_insert(m: *mut mbuf::RawMbufPtr) -> libc::c_int;
+    rte_check!(unsafe { ffi::rte_vlan_insert(m) })
 }
 
 #[cfg(test)]
