@@ -22,5 +22,6 @@ pub mod memzone;
 
 pub use self::config::{config, Config, MemoryConfig};
 pub use self::cycles::*;
+pub use self::lcore::{socket_count, socket_id};
 pub use self::rand::{rand, srand};
 pub use self::version::version;

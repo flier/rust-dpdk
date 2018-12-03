@@ -1,6 +1,6 @@
 use std::os::raw::{c_int, c_uchar, c_uint};
 
-use libc::{size_t, uint16_t};
+use libc::uint16_t;
 
 pub use rte_sys::*;
 

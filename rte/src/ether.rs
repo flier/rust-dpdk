@@ -6,7 +6,6 @@ use std::ptr;
 use std::result;
 use std::str;
 
-use libc;
 use rand::{thread_rng, Rng};
 
 use ffi;

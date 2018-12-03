@@ -34,7 +34,7 @@ fn test_eal() {
     assert_eq!(eal::process_type(), ProcType::Primary);
     assert!(!eal::primary_proc_alive());
     assert!(eal::has_hugepages());
-    assert_eq!(eal::socket_id(), 0);
+    assert_eq!(lcore::socket_id(), 0);
 
     test_config();
 
@@ -247,7 +247,7 @@ fn test_mbuf() {
         CACHE_SIZE,
         PRIV_SIZE,
         mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
-        eal::socket_id(),
+        lcore::socket_id() as i32,
     ).as_mut_ref()
     .unwrap();
 

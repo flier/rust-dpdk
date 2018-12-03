@@ -1,16 +1,19 @@
+use std::ffi::CStr;
 use std::mem;
 use std::os::raw::c_char;
+use std::path::PathBuf;
 use std::ptr;
 
 use ffi::{self, rte_proc_type_t::*};
 
-use errors::Result;
+use errors::{AsResult, Result};
+use utils::AsCString;
 
 pub use common::config;
 pub use launch::{mp_remote_launch, mp_wait_lcore, remote_launch};
 
-#[derive(Clone, Copy, Debug, PartialEq, FromPrimitive, ToPrimitive)]
 #[repr(i32)]
+#[derive(Clone, Copy, Debug, PartialEq, FromPrimitive, ToPrimitive)]
 pub enum ProcType {
     Auto = RTE_PROC_AUTO,
     Primary = RTE_PROC_PRIMARY,
@@ -78,6 +81,11 @@ unsafe fn init_pmd_drivers() {
     // vdrvinitfn_virtio_user_driver();
 }
 
+/// Request iopl privilege for all RPL.
+pub fn iopl_init() -> Result<()> {
+    unsafe { ffi::rte_eal_iopl_init() }.as_result().map(|_| ())
+}
+
 /// Initialize the Environment Abstraction Layer (EAL).
 ///
 /// This function is to be executed on the MASTER lcore only,
@@ -101,22 +109,20 @@ pub fn init(args: &Vec<String>) -> Result<i32> {
     let parsed = if args.is_empty() {
         unsafe { ffi::rte_eal_init(0, ptr::null_mut()) }
     } else {
-        let cargs: Vec<Vec<u8>> = args
-            .iter()
-            .map(|s| {
-                let mut v: Vec<u8> = Vec::from(s.as_bytes());
-                v.push(0);
-                v
-            }).collect();
-
-        let mut cptrs: Vec<*mut c_char> = cargs.iter().map(|s| s.as_ptr() as *mut c_char).collect();
+        let args: Vec<_> = args.iter().map(|s| s.as_cstring()).collect();
+        let mut cptrs: Vec<_> = args.iter().map(|s| s.as_ptr() as *mut c_char).collect();
 
         unsafe { ffi::rte_eal_init(cptrs.len() as i32, cptrs.as_mut_ptr()) }
     };
 
     debug!("EAL parsed {} arguments", parsed);
 
-    rte_check!(parsed; ok => { parsed })
+    parsed.as_result()
+}
+
+/// Clean up the Environment Abstraction Layer (EAL)
+pub fn cleanup() -> Result<()> {
+    unsafe { ffi::rte_eal_cleanup() }.as_result().map(|_| ())
 }
 
 /// Function to terminate the application immediately,
@@ -142,7 +148,21 @@ pub fn has_hugepages() -> bool {
     unsafe { ffi::rte_eal_has_hugepages() != 0 }
 }
 
-/// Return the ID of the physical socket of the logical core we are running on.
-pub fn socket_id() -> i32 {
-    unsafe { ffi::rte_socket_id() as i32 }
+/// Whether EAL is using PCI bus.
+pub fn has_pci() -> bool {
+    unsafe { ffi::rte_eal_has_pci() != 0 }
+}
+
+/// Whether the EAL was asked to create UIO device.
+pub fn create_uio_dev() -> bool {
+    unsafe { ffi::rte_eal_create_uio_dev() != 0 }
+}
+
+/// Get the runtime directory of DPDK
+pub fn runtime_dir() -> PathBuf {
+    PathBuf::from(unsafe {
+        CStr::from_ptr(unsafe { ffi::rte_eal_get_runtime_dir() })
+            .to_string_lossy()
+            .into_owned()
+    })
 }
