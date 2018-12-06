@@ -4,6 +4,7 @@ extern crate pretty_env_logger;
 
 #[cfg(feature = "gen")]
 extern crate bindgen;
+extern crate bindgen_build;
 
 extern crate rte_build;
 
@@ -24,6 +25,7 @@ fn gen_rte_binding(rte_sdk_dir: &Path, dest_path: &Path) {
         .header(rte_header)
         .generate_comments(true)
         .generate_inline_functions(true)
+        .blacklist_function(r#"_.*"#)
         .derive_copy(true)
         .derive_debug(true)
         .derive_default(true)
@@ -33,7 +35,13 @@ fn gen_rte_binding(rte_sdk_dir: &Path, dest_path: &Path) {
             cflags
                 .into_iter()
                 .map(|s| s.to_owned())
-                .chain(gen_cpu_features()),
+                .chain(gen_cpu_features().map(|(name, value)| {
+                    if let Some(value) = value {
+                        format!("-D{}={}", name, value)
+                    } else {
+                        format!("-D{}", name)
+                    }
+                })),
         ).rustfmt_bindings(true)
         .time_phases(true)
         .generate()
@@ -64,7 +72,22 @@ fn main() {
 
     gen_rte_config(&rte_sdk_dir, &OUT_DIR.join("config.rs"));
 
-    gen_rte_binding(&rte_sdk_dir, &OUT_DIR.join("raw.rs"));
+    let binding_file = OUT_DIR.join("raw.rs");
+
+    gen_rte_binding(&rte_sdk_dir, &binding_file);
+
+    let cpu_features = gen_cpu_features().collect::<Vec<_>>();
+
+    bindgen_build::build(binding_file, "rte", |build| {
+        build
+            .flag("-march=native")
+            .include("src")
+            .include(rte_sdk_dir.join("include"));
+
+        for (name, value) in &cpu_features {
+            build.define(name, value.as_ref().map(|s| s.as_str()));
+        }
+    }).unwrap();
 
     gen_cargo_config(
         &rte_sdk_dir,

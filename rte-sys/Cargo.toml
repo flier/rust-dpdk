@@ -22,5 +22,6 @@ pretty_env_logger = "0.2"
 
 rte-build = { version = "18.11", path = "../rte-build" }
 
-bindgen = { version = "0.44", optional = true }
-
+#bindgen = { version = "0.44", optional = true }
+bindgen = { path = "../../rust-bindgen", optional = true }
+bindgen-build = { path = "../../rust-bindgen/bindgen-build" }

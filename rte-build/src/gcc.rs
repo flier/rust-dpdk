@@ -11,8 +11,14 @@ pub fn gcc_rte_config(rte_sdk_dir: &Path) -> cc::Build {
         .flag("-march=native")
         .cargo_metadata(true);
 
-    for flag in gen_cpu_features() {
-        build.flag(&flag);
+    for (name, value) in gen_cpu_features() {
+        let define = if let Some(value) = value {
+            format!("-D{}={}", name, value)
+        } else {
+            format!("-D{}", name)
+        };
+
+        build.flag(&define);
     }
 
     build
