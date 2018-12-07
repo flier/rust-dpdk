@@ -36,20 +36,20 @@ pub enum Token<T> {
 
 impl<T> Token<T> {
     pub fn as_raw(&self) -> RawTokenPtr {
-        match self {
-            &Token::Raw(hdr, _) => hdr,
-            &Token::Str(ref token, _) => &token.hdr,
-            &Token::Num(ref token, _) => &token.hdr,
-            &Token::IpAddr(ref token, _) => &token.hdr,
-            &Token::EtherAddr(ref token, _) => &token.hdr,
-            &Token::PortList(ref token, _) => &token.hdr,
+        match *self {
+            Token::Raw(hdr, _) => hdr,
+            Token::Str(ref token, _) => &token.hdr,
+            Token::Num(ref token, _) => &token.hdr,
+            Token::IpAddr(ref token, _) => &token.hdr,
+            Token::EtherAddr(ref token, _) => &token.hdr,
+            Token::PortList(ref token, _) => &token.hdr,
         }
     }
 }
 
 impl<T> Drop for Token<T> {
     fn drop(&mut self) {
-        if let &mut Token::Str(ref token, _) = self {
+        if let Token::Str(ref token, _) = *self {
             unsafe { libc::free(token.string_data.str as *mut libc::c_void) }
         }
     }
@@ -102,11 +102,11 @@ impl fmt::Display for IpNetAddr {
 
 impl IpNetAddr {
     pub fn as_ipv4(&self) -> &Ipv4Addr {
-        unsafe { mem::transmute(&self.0.addr) }
+        unsafe { &*(&self.0.addr as *const _ as *const std::net::Ipv4Addr) }
     }
 
     pub fn as_ipv6(&self) -> &Ipv6Addr {
-        unsafe { mem::transmute(&self.0.addr) }
+        unsafe { &*(&self.0.addr as *const _ as *const std::net::Ipv6Addr) }
     }
 
     pub fn to_ipaddr(&self) -> IpAddr {
@@ -124,7 +124,7 @@ impl Deref for EtherAddr {
     type Target = ether::EtherAddr;
 
     fn deref(&self) -> &Self::Target {
-        unsafe { mem::transmute(&self.0) }
+        unsafe { &*(&self.0 as *const _ as *const ether::EtherAddr) }
     }
 }
 
@@ -376,7 +376,7 @@ unsafe extern "C" fn _inst_handler_stub<T, D>(
     );
 }
 
-pub type RawInstPtr = *const ffi::cmdline_inst;
+pub type RawInstPtr = *mut ffi::cmdline_inst;
 
 pub struct Inst(RawInstPtr);
 
@@ -413,7 +413,7 @@ pub fn inst<T, D>(
         *inst = ffi::cmdline_inst {
             f: Some(_inst_handler_stub::<T, D>),
             data: Box::into_raw(Box::new(InstHandlerContext { data, handler })) as *mut _,
-            help_str: help_str,
+            help_str,
             tokens: ffi::__IncompleteArrayField::new(),
         };
 
@@ -423,7 +423,7 @@ pub fn inst<T, D>(
                 .map(|ref token| token.as_raw())
                 .collect::<Vec<RawTokenPtr>>()
                 .as_ptr(),
-            mem::transmute(&((*inst).tokens)),
+            &((*inst).tokens) as *const _ as *mut *const _,
             tokens.len(),
         );
 
@@ -459,7 +459,7 @@ impl Drop for Context {
 
 impl Context {
     pub fn open_stdin(&self, prompt: &str) -> Result<StdInCmdLine> {
-        let cl = unsafe { ffi::cmdline_stdin_new(mem::transmute(self.0), try!(to_cptr!(prompt))) };
+        let cl = unsafe { ffi::cmdline_stdin_new(self.0 as *mut *mut _, try!(to_cptr!(prompt))) };
 
         rte_check!(cl, NonNull; ok => { StdInCmdLine(CmdLine::Owned(cl)) })
     }
@@ -467,7 +467,7 @@ impl Context {
     pub fn open_file<P: AsRef<Path>>(&self, prompt: &str, path: P) -> Result<CmdLine> {
         let cl = unsafe {
             ffi::cmdline_file_new(
-                mem::transmute(self.0),
+                self.0 as *mut *mut _,
                 try!(to_cptr!(prompt)),
                 path.as_ref().as_os_str().to_str().unwrap().as_ptr() as *const i8,
             )
@@ -565,7 +565,7 @@ pub enum CmdLine {
 
 impl Drop for CmdLine {
     fn drop(&mut self) {
-        if let &mut CmdLine::Owned(cl) = self {
+        if let CmdLine::Owned(cl) = *self {
             unsafe { ffi::cmdline_free(cl) }
         }
     }
@@ -587,8 +587,8 @@ impl DerefMut for CmdLine {
 
 impl CmdLine {
     pub fn as_raw(&self) -> RawCmdLinePtr {
-        match self {
-            &CmdLine::Owned(cl) | &CmdLine::Borrowed(cl) => cl,
+        match *self {
+            CmdLine::Owned(cl) | CmdLine::Borrowed(cl) => cl,
         }
     }
 
@@ -653,7 +653,7 @@ impl CmdLine {
             ffi::cmdline_complete(
                 self.as_raw(),
                 try!(to_cptr!(buf.to_string())),
-                mem::transmute(state),
+                state as *mut _ as *mut i32,
                 dst.as_mut_ptr() as *mut i8,
                 dst.len() as u32,
             )

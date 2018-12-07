@@ -50,13 +50,13 @@ impl Deref for EtherAddr {
     type Target = [u8; ETHER_ADDR_LEN];
 
     fn deref(&self) -> &Self::Target {
-        return &self.0;
+        &self.0
     }
 }
 
 impl DerefMut for EtherAddr {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        return &mut self.0;
+        &mut self.0
     }
 }
 
@@ -71,7 +71,7 @@ impl EtherAddr {
 
     /// Fast copy an Ethernet address.
     #[inline]
-    pub fn copy(from: &[u8; ETHER_ADDR_LEN], to: &mut [u8; ETHER_ADDR_LEN]) {
+    pub fn copy(from: [u8; ETHER_ADDR_LEN], to: &mut [u8; ETHER_ADDR_LEN]) {
         unsafe { ptr::copy_nonoverlapping(from.as_ptr(), to.as_mut_ptr(), ETHER_ADDR_LEN) }
     }
 

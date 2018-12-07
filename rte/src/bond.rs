@@ -222,8 +222,7 @@ impl BondedDevice for ethdev::PortId {
 
     fn set_mac_addr(&self, mac_addr: &ether::EtherAddr) -> Result<&Self> {
         rte_check!(unsafe {
-            ffi::rte_eth_bond_mac_address_set(*self,
-                                              mem::transmute(mac_addr.octets().as_ptr()))
+            ffi::rte_eth_bond_mac_address_set(*self, mac_addr.octets().as_ptr() as * mut _)
         }; ok => { self })
     }
 

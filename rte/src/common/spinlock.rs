@@ -65,8 +65,8 @@ impl<'a, T: LockImpl> Lock<T> {
 
     /// Test if the lock is taken.
     #[inline]
-    pub fn is_locked(&mut self) -> bool {
-        T::is_locked(&mut self.0) != 0
+    pub fn is_locked(&self) -> bool {
+        T::is_locked(&self.0 as *const _ as *mut _) != 0
     }
 
     /// Take the spinlock.

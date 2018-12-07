@@ -55,7 +55,7 @@ pub trait EthDevice {
     fn mac_addr(&self) -> ether::EtherAddr;
 
     /// Set the default MAC address.
-    fn set_mac_addr(&self, addr: &[u8; ether::ETHER_ADDR_LEN]) -> Result<&Self>;
+    fn set_mac_addr(&self, addr: [u8; ether::ETHER_ADDR_LEN]) -> Result<&Self>;
 
     /// Return the NUMA socket to which an Ethernet device is connected
     fn socket_id(&self) -> SocketId;
@@ -234,9 +234,9 @@ impl EthDevice for PortId {
         }
     }
 
-    fn set_mac_addr(&self, addr: &[u8; ether::ETHER_ADDR_LEN]) -> Result<&Self> {
+    fn set_mac_addr(&self, addr: [u8; ether::ETHER_ADDR_LEN]) -> Result<&Self> {
         rte_check!(unsafe {
-            ffi::rte_eth_dev_default_mac_addr_set(*self, mem::transmute(addr.as_ptr()))
+            ffi::rte_eth_dev_default_mac_addr_set(*self, addr.as_ptr() as * mut _)
         }; ok => { self })
     }
 
@@ -260,7 +260,7 @@ impl EthDevice for PortId {
                                         rx_queue_id,
                                         nb_rx_desc,
                                         self.socket_id() as u32,
-                                        mem::transmute(&rx_conf),
+                                        rx_conf.as_ref().map(|conf| conf as *const _).unwrap_or(ptr::null()),
                                         mb_pool)
         }; ok => { self })
     }
@@ -276,7 +276,7 @@ impl EthDevice for PortId {
                                         tx_queue_id,
                                         nb_tx_desc,
                                         self.socket_id() as u32,
-                                        mem::transmute(&tx_conf))
+                                        tx_conf.as_ref().map(|conf| conf as *const _).unwrap_or(ptr::null()))
         }; ok => { self })
     }
 
@@ -315,28 +315,28 @@ impl EthDevice for PortId {
     }
 
     fn link(&self) -> EthLink {
-        let link = 0u64;
+        let mut link = rte_sys::rte_eth_link::default();
 
-        unsafe { ffi::rte_eth_link_get(*self, mem::transmute(&link)) }
+        unsafe { ffi::rte_eth_link_get(*self, &mut link as *mut _) }
 
         EthLink {
-            speed: (link & 0xFFFFFFFF) as u32,
-            duplex: (link & (1 << 32)) != 0,
-            autoneg: (link & (1 << 33)) != 0,
-            up: (link & (1 << 34)) != 0,
+            speed: link.link_speed,
+            duplex: link.link_duplex() != 0,
+            autoneg: link.link_autoneg() != 0,
+            up: link.link_status() != 0,
         }
     }
 
     fn link_nowait(&self) -> EthLink {
-        let link = 0u64;
+        let mut link = rte_sys::rte_eth_link::default();
 
-        unsafe { ffi::rte_eth_link_get_nowait(*self, mem::transmute(&link)) }
+        unsafe { ffi::rte_eth_link_get_nowait(*self, &mut link as *mut _) }
 
         EthLink {
-            speed: (link & 0xFFFFFFFF) as u32,
-            duplex: (link & (1 << 32)) != 0,
-            autoneg: (link & (1 << 33)) != 0,
-            up: (link & (1 << 34)) != 0,
+            speed: link.link_speed,
+            duplex: link.link_duplex() != 0,
+            autoneg: link.link_autoneg() != 0,
+            up: link.link_status() != 0,
         }
     }
 

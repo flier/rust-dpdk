@@ -22,7 +22,7 @@ pub fn delay_ms(ms: u32) {
 
 #[inline]
 pub fn delay(d: Duration) {
-    delay_us(d.as_secs() as u32 * 1000_000 + d.subsec_nanos() / 1000)
+    delay_us(d.as_secs() as u32 * 1_000_000 + d.subsec_micros())
 }
 
 #[inline]

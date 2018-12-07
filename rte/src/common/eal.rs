@@ -1,4 +1,5 @@
 use std::ffi::CStr;
+use std::fmt;
 use std::mem;
 use std::os::raw::c_char;
 use std::path::PathBuf;
@@ -94,12 +95,8 @@ pub fn iopl_init() -> Result<()> {
 /// The function finishes the initialization process before main() is called.
 /// It puts the SLAVE lcores in the WAIT state.
 ///
-pub fn init(args: &Vec<String>) -> Result<i32> {
-    debug!(
-        "initial EAL with {} args: {:?}",
-        args.len(),
-        args.as_slice()
-    );
+pub fn init<S: fmt::Debug + AsRef<str>>(args: &[S]) -> Result<i32> {
+    debug!("initial EAL with {} args: {:?}", args.len(), args);
 
     // rust doesn't support __attribute__((constructor)), we need to invoke those static initializer
     unsafe {
@@ -161,7 +158,7 @@ pub fn create_uio_dev() -> bool {
 /// Get the runtime directory of DPDK
 pub fn runtime_dir() -> PathBuf {
     PathBuf::from(unsafe {
-        CStr::from_ptr(unsafe { ffi::rte_eal_get_runtime_dir() })
+        CStr::from_ptr(ffi::rte_eal_get_runtime_dir())
             .to_string_lossy()
             .into_owned()
     })

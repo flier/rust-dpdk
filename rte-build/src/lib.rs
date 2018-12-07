@@ -13,8 +13,8 @@ mod cpu;
 mod gcc;
 mod rte;
 
-pub use build::build_dpdk;
-pub use cargo::{gen_cargo_config, OUT_DIR};
-pub use cpu::gen_cpu_features;
-pub use gcc::gcc_rte_config;
-pub use rte::*;
+pub use crate::build::build_dpdk;
+pub use crate::cargo::{gen_cargo_config, OUT_DIR};
+pub use crate::cpu::gen_cpu_features;
+pub use crate::gcc::gcc_rte_config;
+pub use crate::rte::*;

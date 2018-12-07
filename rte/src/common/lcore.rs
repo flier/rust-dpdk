@@ -127,7 +127,7 @@ impl From<u32> for Role {
 pub fn current() -> Option<Id> {
     match unsafe { ffi::rte_lcore_id() } {
         ffi::LCORE_ID_ANY => None,
-        id @ _ => Some(id.into()),
+        id => Some(id.into()),
     }
 }
 

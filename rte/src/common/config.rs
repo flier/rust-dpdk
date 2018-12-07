@@ -42,7 +42,7 @@ impl MemoryConfig {
     pub fn memzones(&self) -> Vec<memzone::MemoryZone> {
         (0..self.memzones.len)
             .map(|idx| unsafe { ffi::rte_fbarray_get(&self.memzones, idx) as *const _ })
-            .map(|zone| memzone::from_raw(zone))
+            .map(memzone::from_raw)
             .collect()
     }
 }
@@ -85,7 +85,9 @@ impl Config {
 
     /// State of cores.
     pub fn lcore_roles(&self) -> &'static [lcore::Role] {
-        unsafe { mem::transmute(&self.lcore_role[..(*self.0).lcore_count as usize]) }
+        unsafe {
+            &*(&self.lcore_role[..self.lcore_count as usize] as *const _ as *const [lcore::Role])
+        }
     }
 
     /// State of core.

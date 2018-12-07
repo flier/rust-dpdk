@@ -19,7 +19,7 @@ pub fn init(max_kni_ifaces: usize) -> Result<()> {
     if unsafe { ffi::rte_kni_init(max_kni_ifaces as u32) } == 0 {
         Ok(())
     } else {
-        Err(rte_error().into())
+        Err(rte_error())
     }
 }
 
@@ -138,18 +138,12 @@ impl KniDevice {
 
     /// Extract the raw pointer from an underlying object.
     pub fn as_raw(&self) -> RawKniDevicePtr {
-        return self.0;
+        self.0
     }
 
     /// Consume the KniDevice, returning the raw pointer from an underlying object.
-    pub fn into_raw(&mut self) -> RawKniDevicePtr {
-        let p = self.0;
-
-        self.0 = ptr::null_mut();
-
-        mem::forget(self);
-
-        p
+    pub fn into_raw(self) -> RawKniDevicePtr {
+        self.0
     }
 
     pub fn release(&mut self) -> Result<()> {
@@ -160,10 +154,6 @@ impl KniDevice {
                 ffi::rte_kni_release(self.0)
             }; ok => {
                 self.0 = ptr::null_mut();
-
-                mem::forget(self);
-
-                ()
             })
         }
     }

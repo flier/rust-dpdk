@@ -27,7 +27,7 @@ impl<T> AsResult for *const T {
         if !self.is_null() {
             Ok(self)
         } else {
-            Err(rte_error().into())
+            Err(rte_error())
         }
     }
 
@@ -55,7 +55,7 @@ impl<T> AsResult for *mut T {
         if !self.is_null() {
             Ok(self)
         } else {
-            Err(rte_error().into())
+            Err(rte_error())
         }
     }
 

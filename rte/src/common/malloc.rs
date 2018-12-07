@@ -135,7 +135,7 @@ pub fn dump_stats<S: AsRawFd>(s: &S, tag: Option<&str>) {
         unsafe {
             ffi::rte_malloc_dump_stats(
                 f.stream() as *mut ffi::FILE,
-                tag.map_or_else(|| ptr::null(), |s| s.as_ptr() as *const i8),
+                tag.map_or_else(ptr::null, |s| s.as_ptr() as *const i8),
             );
         }
     }
