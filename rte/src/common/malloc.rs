@@ -101,13 +101,7 @@ pub fn zmalloc_socket(tag: &'static str, size: usize, align: u32, socket_id: i32
 ///
 /// Memory area is initialised with zeros.
 ///
-pub fn calloc_socket(
-    tag: &'static str,
-    num: usize,
-    size: usize,
-    align: u32,
-    socket_id: i32,
-) -> *mut c_void {
+pub fn calloc_socket(tag: &'static str, num: usize, size: usize, align: u32, socket_id: i32) -> *mut c_void {
     unsafe { ffi::rte_calloc_socket(tag.as_ptr() as *const i8, num, size, align, socket_id) }
 }
 

@@ -12,7 +12,7 @@ pub const MAX_BURST_LENGTH: usize = 32;
 
 pub struct TxQueuePort {
     pub cnt_unsent: usize,
-    pub buf_frames: [mbuf::RawMbufPtr; MAX_BURST_LENGTH],
+    pub buf_frames: [mbuf::RawMBufPtr; MAX_BURST_LENGTH],
 }
 
 pub struct AppPort {

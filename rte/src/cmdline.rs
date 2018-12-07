@@ -197,9 +197,7 @@ macro_rules! TOKEN_STRING_INITIALIZER {
                     ops: unsafe { &mut $crate::ffi::cmdline_token_string_ops },
                     offset: offset_of!($container, $field) as u32,
                 },
-                string_data: $crate::ffi::cmdline_token_string_data {
-                    str: p as *const i8,
-                },
+                string_data: $crate::ffi::cmdline_token_string_data { str: p as *const i8 },
             },
             ::std::marker::PhantomData,
         )
@@ -264,9 +262,7 @@ macro_rules! TOKEN_IPADDR_INITIALIZER {
                     ops: unsafe { &mut $crate::ffi::cmdline_token_ipaddr_ops },
                     offset: offset_of!($container, $field) as u32,
                 },
-                ipaddr_data: $crate::ffi::cmdline_token_ipaddr_data {
-                    flags: $flags as u8,
-                },
+                ipaddr_data: $crate::ffi::cmdline_token_ipaddr_data { flags: $flags as u8 },
             },
             ::std::marker::PhantomData,
         )
@@ -293,9 +289,7 @@ macro_rules! TOKEN_IPNET_INITIALIZER {
         TOKEN_IPADDR_INITIALIZER!(
             $container,
             $field,
-            $crate::ffi::CMDLINE_IPADDR_V4
-                | $crate::ffi::CMDLINE_IPADDR_V6
-                | $crate::ffi::CMDLINE_IPADDR_NETWORK
+            $crate::ffi::CMDLINE_IPADDR_V4 | $crate::ffi::CMDLINE_IPADDR_V6 | $crate::ffi::CMDLINE_IPADDR_NETWORK
         )
     };
 }
@@ -362,18 +356,10 @@ where
     data: Option<&'a D>,
 }
 
-unsafe extern "C" fn _inst_handler_stub<T, D>(
-    inst: *mut c_void,
-    cl: *mut RawCmdLine,
-    ctxt: *mut c_void,
-) {
+unsafe extern "C" fn _inst_handler_stub<T, D>(inst: *mut c_void, cl: *mut RawCmdLine, ctxt: *mut c_void) {
     let ctxt = Box::from_raw(ctxt as *mut InstHandlerContext<T, D>);
 
-    (ctxt.handler)(
-        (inst as *mut T).as_mut().unwrap(),
-        &CmdLine::Borrowed(cl),
-        ctxt.data,
-    );
+    (ctxt.handler)((inst as *mut T).as_mut().unwrap(), &CmdLine::Borrowed(cl), ctxt.data);
 }
 
 pub type RawInstPtr = *mut ffi::cmdline_inst;
@@ -395,19 +381,13 @@ impl Inst {
     }
 }
 
-pub fn inst<T, D>(
-    handler: InstHandler<T, D>,
-    data: Option<&D>,
-    help: &'static str,
-    tokens: &[&Token<T>],
-) -> Inst {
+pub fn inst<T, D>(handler: InstHandler<T, D>, data: Option<&D>, help: &'static str, tokens: &[&Token<T>]) -> Inst {
     unsafe {
         let help_str = libc::calloc(1, help.len() + 1) as *mut c_char;
 
         ptr::copy_nonoverlapping(help.as_ptr(), help_str as *mut u8, help.len());
 
-        let size =
-            mem::size_of::<ffi::cmdline_inst>() + mem::size_of::<RawTokenPtr>() * tokens.len();
+        let size = mem::size_of::<ffi::cmdline_inst>() + mem::size_of::<RawTokenPtr>() * tokens.len();
         let inst = libc::calloc(1, size) as *mut ffi::cmdline_inst;
 
         *inst = ffi::cmdline_inst {
@@ -602,10 +582,7 @@ impl CmdLine {
 
     pub fn println<T: string::ToString>(&self, s: T) -> Result<&Self> {
         unsafe {
-            ffi::cmdline_printf(
-                self.as_raw(),
-                try!(to_cptr!(format!("{}\n", s.to_string()))),
-            );
+            ffi::cmdline_printf(self.as_raw(), try!(to_cptr!(format!("{}\n", s.to_string()))));
         }
 
         Ok(self)

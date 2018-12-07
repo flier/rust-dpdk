@@ -35,12 +35,7 @@ pub trait EthDevice {
     /// This function must be invoked first before any other function in the Ethernet API.
     /// This function can also be re-invoked when a device is in the stopped state.
     ///
-    fn configure(
-        &self,
-        nb_rx_queue: QueueId,
-        nb_tx_queue: QueueId,
-        conf: &EthConf,
-    ) -> Result<&Self>;
+    fn configure(&self, nb_rx_queue: QueueId, nb_tx_queue: QueueId, conf: &EthConf) -> Result<&Self>;
 
     /// Retrieve the contextual information of an Ethernet device.
     fn info(&self) -> RawEthDeviceInfo;
@@ -155,10 +150,10 @@ pub trait EthDevice {
     fn close(&self) -> &Self;
 
     /// Retrieve a burst of input packets from a receive queue of an Ethernet device.
-    fn rx_burst(&self, queue_id: QueueId, rx_pkts: &mut [mbuf::RawMbufPtr]) -> usize;
+    fn rx_burst(&self, queue_id: QueueId, rx_pkts: &mut [mbuf::RawMBufPtr]) -> usize;
 
     /// Send a burst of output packets on a transmit queue of an Ethernet device.
-    fn tx_burst(&self, queue_id: QueueId, rx_pkts: &mut [mbuf::RawMbufPtr]) -> usize;
+    fn tx_burst(&self, queue_id: QueueId, rx_pkts: &mut [mbuf::RawMBufPtr]) -> usize;
 
     /// Read VLAN Offload configuration from an Ethernet device
     fn vlan_offload(&self) -> Result<EthVlanOffloadMode>;
@@ -188,12 +183,7 @@ impl EthDevice for PortId {
         *self
     }
 
-    fn configure(
-        &self,
-        nb_rx_queue: QueueId,
-        nb_tx_queue: QueueId,
-        conf: &EthConf,
-    ) -> Result<&Self> {
+    fn configure(&self, nb_rx_queue: QueueId, nb_tx_queue: QueueId, conf: &EthConf) -> Result<&Self> {
         rte_check!(unsafe {
             ffi::rte_eth_dev_configure(*self,
                                        nb_rx_queue,
@@ -380,20 +370,16 @@ impl EthDevice for PortId {
         self
     }
 
-    fn rx_burst(&self, queue_id: QueueId, rx_pkts: &mut [mbuf::RawMbufPtr]) -> usize {
-        unsafe {
-            ffi::rte_eth_rx_burst(*self, queue_id, rx_pkts.as_mut_ptr(), rx_pkts.len() as u16)
-                as usize
-        }
+    fn rx_burst(&self, queue_id: QueueId, rx_pkts: &mut [mbuf::RawMBufPtr]) -> usize {
+        unsafe { ffi::rte_eth_rx_burst(*self, queue_id, rx_pkts.as_mut_ptr(), rx_pkts.len() as u16) as usize }
     }
 
-    fn tx_burst(&self, queue_id: QueueId, rx_pkts: &mut [mbuf::RawMbufPtr]) -> usize {
+    fn tx_burst(&self, queue_id: QueueId, rx_pkts: &mut [mbuf::RawMBufPtr]) -> usize {
         unsafe {
             if rx_pkts.is_empty() {
                 ffi::rte_eth_tx_burst(*self, queue_id, ptr::null_mut(), 0) as usize
             } else {
-                ffi::rte_eth_tx_burst(*self, queue_id, rx_pkts.as_mut_ptr(), rx_pkts.len() as u16)
-                    as usize
+                ffi::rte_eth_tx_burst(*self, queue_id, rx_pkts.as_mut_ptr(), rx_pkts.len() as u16) as usize
             }
         }
     }
@@ -720,12 +706,8 @@ pub fn alloc_buffer(size: usize, socket_id: i32) -> Result<RawTxBufferPtr> {
     unsafe {
         malloc::zmalloc_socket("tx_buffer", rte_eth_tx_buffer_size(size), 0, socket_id)
             .ok_or(OsError(libc::ENOMEM))
-            .map(|p| p as RawTxBufferPtr)
-            .and_then(|p| {
-                ffi::rte_eth_tx_buffer_init(p, size as u16)
-                    .as_result()
-                    .map(|_| p)
-            })
+            .map(|p| p.as_ptr() as *mut _)
+            .and_then(|p| ffi::rte_eth_tx_buffer_init(p, size as u16).as_result().map(|_| p))
     }
 }
 

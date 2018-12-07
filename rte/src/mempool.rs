@@ -31,15 +31,13 @@ pub type RawMemoryPoolPtr = *mut ffi::rte_mempool;
 pub type MemoryPoolConstructor<T> = fn(pool: RawMemoryPoolPtr, arg: Option<&mut T>);
 
 /// An object constructor callback function for mempool.
-pub type MemoryPoolObjectContructor<T> =
-    fn(pool: RawMemoryPoolPtr, arg: Option<&mut T>, elt: *mut c_void, u32);
+pub type MemoryPoolObjectContructor<T> = fn(pool: RawMemoryPoolPtr, arg: Option<&mut T>, elt: *mut c_void, u32);
 
 /// A mempool walk callback function.
 pub type MemoryPoolWalkCallback<T> = fn(pool: RawMemoryPoolPtr, arg: Option<&mut T>);
 
 /// A mempool object iterator callback function.
-pub type MemoryPoolObjectCallback<T, O> =
-    fn(pool: RawMemoryPoolPtr, arg: Option<&mut T>, obj: *mut O, idx: u32);
+pub type MemoryPoolObjectCallback<T, O> = fn(pool: RawMemoryPoolPtr, arg: Option<&mut T>, obj: *mut O, idx: u32);
 
 /// RTE Mempool.
 ///
@@ -96,11 +94,7 @@ pub trait MemoryPoolDebug: MemoryPool {
     /// This function is used to populate a mempool, or walk through all the elements of a mempool,
     /// or estimate how many elements of the given size could be created in the given memory buffer.
     ///
-    fn walk<T, P>(
-        &mut self,
-        callback: MemoryPoolObjectCallback<T, P>,
-        arg: Option<&mut T>,
-    ) -> usize;
+    fn walk<T, P>(&mut self, callback: MemoryPoolObjectCallback<T, P>, arg: Option<&mut T>) -> usize;
 }
 
 /// Create a new mempool named name in memory.
@@ -214,11 +208,7 @@ impl MemoryPoolDebug for RawMemoryPool {
         }
     }
 
-    fn walk<T, O>(
-        &mut self,
-        callback: MemoryPoolObjectCallback<T, O>,
-        arg: Option<&mut T>,
-    ) -> usize {
+    fn walk<T, O>(&mut self, callback: MemoryPoolObjectCallback<T, O>, arg: Option<&mut T>) -> usize {
         unsafe {
             ffi::rte_mempool_obj_iter(
                 self,
@@ -234,12 +224,7 @@ struct ObjWalkContext<'a, T: 'a, O: 'a> {
     arg: Option<&'a mut T>,
 }
 
-unsafe extern "C" fn _obj_walk_stub<T, O>(
-    mp: *mut ffi::rte_mempool,
-    ctxt: *mut c_void,
-    obj: *mut c_void,
-    idx: u32,
-) {
+unsafe extern "C" fn _obj_walk_stub<T, O>(mp: *mut ffi::rte_mempool, ctxt: *mut c_void, obj: *mut c_void, idx: u32) {
     let ctxt = Box::from_raw(ctxt as *mut ObjWalkContext<T, O>);
 
     (ctxt.callback)(mp, ctxt.arg, obj as *mut _, idx)

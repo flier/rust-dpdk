@@ -10,16 +10,15 @@ use rand::{thread_rng, Rng};
 
 use ffi;
 
-use mbuf;
-
 use errors::Result;
+use mbuf;
+use utils::AsRaw;
 
 pub use ffi::{
-    ETHER_TYPE_IPv4, ETHER_TYPE_IPv6, ETHER_ADDR_FMT_SIZE, ETHER_CRC_LEN, ETHER_GROUP_ADDR,
-    ETHER_HDR_LEN, ETHER_LOCAL_ADMIN_ADDR, ETHER_MAX_JUMBO_FRAME_LEN, ETHER_MAX_LEN,
-    ETHER_MAX_VLAN_FRAME_LEN, ETHER_MAX_VLAN_ID, ETHER_MIN_LEN, ETHER_MIN_MTU, ETHER_MTU,
-    ETHER_TYPE_1588, ETHER_TYPE_ARP, ETHER_TYPE_ETAG, ETHER_TYPE_LEN, ETHER_TYPE_LLDP,
-    ETHER_TYPE_MPLS, ETHER_TYPE_MPLSM, ETHER_TYPE_QINQ, ETHER_TYPE_RARP, ETHER_TYPE_SLOW,
+    ETHER_TYPE_IPv4, ETHER_TYPE_IPv6, ETHER_ADDR_FMT_SIZE, ETHER_CRC_LEN, ETHER_GROUP_ADDR, ETHER_HDR_LEN,
+    ETHER_LOCAL_ADMIN_ADDR, ETHER_MAX_JUMBO_FRAME_LEN, ETHER_MAX_LEN, ETHER_MAX_VLAN_FRAME_LEN, ETHER_MAX_VLAN_ID,
+    ETHER_MIN_LEN, ETHER_MIN_MTU, ETHER_MTU, ETHER_TYPE_1588, ETHER_TYPE_ARP, ETHER_TYPE_ETAG, ETHER_TYPE_LEN,
+    ETHER_TYPE_LLDP, ETHER_TYPE_MPLS, ETHER_TYPE_MPLSM, ETHER_TYPE_QINQ, ETHER_TYPE_RARP, ETHER_TYPE_SLOW,
     ETHER_TYPE_TEB, ETHER_TYPE_VLAN,
 };
 
@@ -256,14 +255,14 @@ pub trait VlanExt {
     fn vlan_strip(&mut self) -> Result<()>;
 }
 
-impl VlanExt for mbuf::RawMbuf {
+impl VlanExt for mbuf::MBuf {
     fn vlan_strip(&mut self) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_vlan_strip(self) })
+        rte_check!(unsafe { ffi::rte_vlan_strip(self.as_raw()) })
     }
 }
 
 /// Insert VLAN tag into mbuf.
-pub fn vlan_insert(m: &mut mbuf::RawMbufPtr) -> Result<()> {
+pub fn vlan_insert(m: &mut mbuf::RawMBufPtr) -> Result<()> {
     rte_check!(unsafe { ffi::rte_vlan_insert(m) })
 }
 

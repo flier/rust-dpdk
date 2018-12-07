@@ -27,7 +27,8 @@ fn test_eal() {
             format!("{:x}", (1 << num_cpus::get()) - 1),
             String::from("--log-level"),
             String::from("8")
-        ]).unwrap(),
+        ])
+        .unwrap(),
         4
     );
 
@@ -55,12 +56,7 @@ fn test_config() {
     assert_eq!(eal_cfg.process_type(), ProcType::Primary);
     assert_eq!(
         eal_cfg.lcore_roles(),
-        &[
-            lcore::Role::Rte,
-            lcore::Role::Rte,
-            lcore::Role::Rte,
-            lcore::Role::Rte
-        ]
+        &[lcore::Role::Rte, lcore::Role::Rte, lcore::Role::Rte, lcore::Role::Rte]
     );
 
     let mem_cfg = eal_cfg.memory_config();
@@ -100,11 +96,7 @@ fn test_launch() {
 
         *data += 1;
 
-        debug!(
-            "lcore {} finished, data={}",
-            lcore::current().unwrap(),
-            *data
-        );
+        debug!("lcore {} finished, data={}", lcore::current().unwrap(), *data);
 
         0
     }
@@ -172,7 +164,8 @@ fn test_mempool() {
         None,
         ffi::SOCKET_ID_ANY,
         MemoryPoolFlags::MEMPOOL_F_SP_PUT | MemoryPoolFlags::MEMPOOL_F_SC_GET,
-    ).as_mut_ref()
+    )
+    .as_mut_ref()
     .unwrap();
 
     assert_eq!(p.name(), "test");
@@ -217,10 +210,7 @@ fn test_mempool() {
 
     let mut pools: Vec<mempool::RawMemoryPoolPtr> = Vec::new();
 
-    fn walk_mempool(
-        pool: mempool::RawMemoryPoolPtr,
-        pools: Option<&mut Vec<mempool::RawMemoryPoolPtr>>,
-    ) {
+    fn walk_mempool(pool: mempool::RawMemoryPoolPtr, pools: Option<&mut Vec<mempool::RawMemoryPoolPtr>>) {
         pools.unwrap().push(pool);
     }
 
@@ -248,7 +238,8 @@ fn test_mbuf() {
         PRIV_SIZE,
         mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
         lcore::socket_id() as i32,
-    ).as_mut_ref()
+    )
+    .as_mut_ref()
     .unwrap();
 
     assert_eq!(p.name(), "mbuf_pool");

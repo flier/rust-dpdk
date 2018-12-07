@@ -123,16 +123,16 @@ pub fn get_global_level() -> Level {
 
 /// Get the log level for a given type.
 pub fn get_level(ty: Type) -> Result<Level> {
-    unsafe { ffi::rte_log_get_level(ty as u32) }
+    let level = unsafe { ffi::rte_log_get_level(ty as u32) };
+
+    level
         .ok_or(InvalidLogType(ty as u32))
-        .map(|level| unsafe { mem::transmute(level) })
+        .map(|_| unsafe { mem::transmute(level) })
 }
 
 /// Set the log level for a given type.
 pub fn set_level(ty: Type, level: Level) -> Result<()> {
-    unsafe { ffi::rte_log_set_level(ty as u32, level as u32) }
-        .ok_or(InvalidLogLevel(level as u32))
-        .map(|_| ())
+    unsafe { ffi::rte_log_set_level(ty as u32, level as u32) }.ok_or(InvalidLogLevel(level as u32))
 }
 
 /// Get the current loglevel for the message being processed.
@@ -162,9 +162,7 @@ pub fn cur_msg_logtype() -> Type {
 pub fn register<S: AsRef<str>>(name: S) -> Result<()> {
     let name = name.as_cstring();
 
-    unsafe { ffi::rte_log_register(name.as_ptr()) }
-        .as_result()
-        .map(|_| ())
+    unsafe { ffi::rte_log_register(name.as_ptr()) }.as_result()
 }
 
 /// Dump log information.
@@ -191,7 +189,5 @@ pub fn dump<S: AsRawFd>(s: &S) -> Result<()> {
 pub fn log(level: Level, ty: Type, msg: &str) -> Result<()> {
     let msg = msg.as_cstring();
 
-    unsafe { ffi::rte_log(level as u32, ty as u32, msg.as_ptr()) }
-        .as_result()
-        .map(|_| ())
+    unsafe { ffi::rte_log(level as u32, ty as u32, msg.as_ptr()) }.as_result()
 }

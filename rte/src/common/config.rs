@@ -85,9 +85,7 @@ impl Config {
 
     /// State of cores.
     pub fn lcore_roles(&self) -> &'static [lcore::Role] {
-        unsafe {
-            &*(&self.lcore_role[..self.lcore_count as usize] as *const _ as *const [lcore::Role])
-        }
+        unsafe { &*(&self.lcore_role[..self.lcore_count as usize] as *const _ as *const [lcore::Role]) }
     }
 
     /// State of core.

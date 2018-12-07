@@ -1,12 +1,10 @@
-#![allow(deprecated, unused)]
-#![cfg_attr(
-    feature = "cargo-clippy",
-    allow(
-        clippy::useless_attribute,
-        clippy::not_unsafe_ptr_arg_deref,
-        clippy::trivially_copy_pass_by_ref,
-        clippy::many_single_char_names,
-    )
+#![allow(
+    deprecated,
+    unused,
+    clippy::useless_attribute,
+    clippy::not_unsafe_ptr_arg_deref,
+    clippy::trivially_copy_pass_by_ref,
+    clippy::many_single_char_names
 )]
 
 #[macro_use]

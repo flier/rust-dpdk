@@ -1,6 +1,6 @@
 use std::mem;
 use std::os::raw::{c_int, c_void};
-use std::ptr;
+use std::ptr::{self, NonNull};
 
 use errors::{AsResult, Result};
 use ffi::{
@@ -8,6 +8,7 @@ use ffi::{
     rte_keepalive_state::{self, *},
 };
 use lcore;
+use utils::AsRaw;
 
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, FromPrimitive, ToPrimitive)]
@@ -45,7 +46,15 @@ pub type RawKeepalivePtr = *mut ffi::rte_keepalive;
 
 #[repr(transparent)]
 #[derive(Debug)]
-pub struct Keepalive(RawKeepalivePtr);
+pub struct Keepalive(NonNull<RawKeepalive>);
+
+impl AsRaw for Keepalive {
+    type Raw = RawKeepalive;
+
+    fn as_raw(&self) -> *mut Self::Raw {
+        self.0.as_ptr()
+    }
+}
 
 pub fn create<T>(callback: FailureCallback<T>, arg: Option<T>) -> Result<Keepalive> {
     Keepalive::new(callback, arg)
@@ -62,19 +71,19 @@ impl Keepalive {
 
     /// Checks & handles keepalive state of monitored cores.
     pub fn dispatch_pings(&self) {
-        unsafe { ffi::rte_keepalive_dispatch_pings(ptr::null_mut(), self.0 as *mut _) }
+        unsafe { ffi::rte_keepalive_dispatch_pings(ptr::null_mut(), self.as_raw() as *mut _) }
     }
 
     /// Registers a core for keepalive checks.
     pub fn register_core(&self, core_id: lcore::Id) {
-        unsafe { ffi::rte_keepalive_register_core(self.0, *core_id as i32) }
+        unsafe { ffi::rte_keepalive_register_core(self.as_raw(), *core_id as i32) }
     }
 
     /// Per-core keepalive check.
     ///
     /// This function needs to be called from within the main process loop of the LCore to be checked.
     pub fn mark_alive(&self) {
-        unsafe { ffi::rte_keepalive_mark_alive(self.0) }
+        unsafe { ffi::rte_keepalive_mark_alive(self.as_raw()) }
     }
 
     /// Per-core sleep-time indication.
@@ -83,7 +92,7 @@ impl Keepalive {
     /// the main process loop of the LCore going to sleep,
     /// in order to avoid the LCore being mis-detected as dead.
     pub fn mark_sleep(&self) {
-        unsafe { ffi::rte_keepalive_mark_sleep(self.0) }
+        unsafe { ffi::rte_keepalive_mark_sleep(self.as_raw()) }
     }
 
     /// Registers a 'live core' callback.
@@ -94,13 +103,7 @@ impl Keepalive {
     pub fn register_relay_callback<T>(&self, callback: RelayCallback<T>, arg: Option<T>) {
         let ctxt = Box::into_raw(Box::new(RelayContext { callback, arg }));
 
-        unsafe {
-            ffi::rte_keepalive_register_relay_callback(
-                self.0,
-                Some(relay_stub::<T>),
-                ctxt as *mut _,
-            )
-        }
+        unsafe { ffi::rte_keepalive_register_relay_callback(self.as_raw(), Some(relay_stub::<T>), ctxt as *mut _) }
     }
 }
 
@@ -128,10 +131,5 @@ unsafe extern "C" fn relay_stub<T>(
 ) {
     let ctxt = Box::from_raw(data as *mut RelayContext<T>);
 
-    (ctxt.callback)(
-        ctxt.arg,
-        lcore::id(id_core as u32),
-        core_state.into(),
-        last_seen,
-    )
+    (ctxt.callback)(ctxt.arg, lcore::id(id_core as u32), core_state.into(), last_seen)
 }

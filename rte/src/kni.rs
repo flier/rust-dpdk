@@ -167,11 +167,7 @@ impl KniDevice {
 
     /// Get the name given to a KNI device
     pub fn name(&self) -> &str {
-        unsafe {
-            CStr::from_ptr(ffi::rte_kni_get_name(self.0))
-                .to_str()
-                .unwrap()
-        }
+        unsafe { CStr::from_ptr(ffi::rte_kni_get_name(self.0)).to_str().unwrap() }
     }
 
     /// It is used to handle the request mbufs sent from kernel space.
@@ -190,7 +186,7 @@ impl KniDevice {
     /// and the maximum number is indicated by num.
     /// It handles the freeing of the mbufs in the free queue of KNI interface.
     ///
-    pub fn rx_burst(&self, mbufs: &mut [mbuf::RawMbufPtr]) -> usize {
+    pub fn rx_burst(&self, mbufs: &mut [mbuf::RawMBufPtr]) -> usize {
         unsafe { ffi::rte_kni_rx_burst(self.0, mbufs.as_mut_ptr(), mbufs.len() as u32) as usize }
     }
 
@@ -201,7 +197,7 @@ impl KniDevice {
     /// and the maximum number is indicated by num.
     /// It handles allocating the mbufs for KNI interface alloc queue.
     ///
-    pub fn tx_burst(&self, mbufs: &mut [mbuf::RawMbufPtr]) -> usize {
+    pub fn tx_burst(&self, mbufs: &mut [mbuf::RawMBufPtr]) -> usize {
         unsafe { ffi::rte_kni_rx_burst(self.0, mbufs.as_mut_ptr(), mbufs.len() as u32) as usize }
     }
 

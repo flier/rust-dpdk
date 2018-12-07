@@ -1,11 +1,16 @@
+use std::ffi::CStr;
+use std::ops::{Deref, DerefMut};
 use std::os::unix::io::AsRawFd;
+use std::ptr::NonNull;
+use std::slice;
 
 use cfile;
 
 use ffi;
 
-use errors::Result;
+use errors::{AsResult, Result};
 use mempool;
+use utils::{AsRaw, FromRaw};
 
 // Packet Offload Features Flags. It also carry packet type information.
 // Critical resources. Both rx/tx shared these bits. Be cautious on any change
@@ -288,22 +293,326 @@ bitflags! {
  * So, for mbufs that planned to be involved into RX/TX, the recommended
  * minimal buffer length is 2KB + RTE_PKTMBUF_HEADROOM.
  */
-pub const RTE_MBUF_DEFAULT_BUF_SIZE: u16 =
-    (ffi::RTE_MBUF_DEFAULT_DATAROOM + ffi::RTE_PKTMBUF_HEADROOM) as u16;
+pub const RTE_MBUF_DEFAULT_BUF_SIZE: u16 = (ffi::RTE_MBUF_DEFAULT_DATAROOM + ffi::RTE_PKTMBUF_HEADROOM) as u16;
 
-pub type RawMbuf = ffi::rte_mbuf;
-pub type RawMbufPtr = *mut ffi::rte_mbuf;
+pub type RawMBuf = ffi::rte_mbuf;
+pub type RawMBufPtr = *mut ffi::rte_mbuf;
 
-/// A macro that points to an offset into the data in the mbuf.
-#[macro_export]
-macro_rules! pktmbuf_mtod_offset {
-    ($m:expr, $t:ty, $off:expr) => {
-        unsafe {
-            (((*$m).buf_addr as *const ::std::os::raw::c_char).offset((*$m).data_off as isize)
-                as $t)
-        }
-    };
+#[repr(transparent)]
+#[derive(Debug)]
+pub struct MBuf(NonNull<RawMBuf>);
+
+impl Deref for MBuf {
+    type Target = RawMBuf;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { self.0.as_ref() }
+    }
 }
+
+impl DerefMut for MBuf {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { self.0.as_mut() }
+    }
+}
+
+impl AsRaw for MBuf {
+    type Raw = RawMBuf;
+
+    fn as_raw(&self) -> *mut Self::Raw {
+        self.0.as_ptr() as *mut _
+    }
+}
+
+impl FromRaw for MBuf {
+    fn from_raw(raw: *mut Self::Raw) -> Option<Self> {
+        NonNull::new(raw).map(MBuf)
+    }
+}
+
+impl From<RawMBufPtr> for MBuf {
+    fn from(p: RawMBufPtr) -> Self {
+        Self::from_raw(p).unwrap()
+    }
+}
+
+impl MBuf {
+    /// Prefetch the first part of the mbuf
+    #[inline]
+    pub fn prefetch_part1(&self) {
+        unsafe { ffi::rte_mbuf_prefetch_part1(self.as_raw()) }
+    }
+
+    /// Prefetch the second part of the mbuf
+    pub fn prefetch_part2(&self) {
+        unsafe { ffi::rte_mbuf_prefetch_part2(self.as_raw()) }
+    }
+
+    /// Return the mbuf owning the data buffer address of an indirect mbuf.
+    pub fn from_indirect(other: &MBuf) -> Self {
+        unsafe { ffi::rte_mbuf_from_indirect(other.as_raw()) }.into()
+    }
+
+    /// Return the buffer address embedded in the given mbuf.
+    pub fn buf_addr(&self) -> NonNull<u8> {
+        NonNull::new(unsafe { ffi::rte_mbuf_to_baddr(self.as_raw()) })
+            .unwrap()
+            .cast()
+    }
+
+    /// Return the starting address of the private data area embedded in the given mbuf.
+    pub fn priv_addr(&self) -> NonNull<u8> {
+        NonNull::new(unsafe { ffi::rte_mbuf_to_priv(self.as_raw()) })
+            .unwrap()
+            .cast()
+    }
+
+    /// Offload features.
+    #[inline]
+    pub fn offload(&self) -> OffloadFlags {
+        OffloadFlags::from_bits_truncate(self.ol_flags)
+    }
+
+    /// The mbuf is cloned by mbuf indirection.
+    #[inline]
+    pub fn has_cloned(&self) -> bool {
+        self.offload().contains(OffloadFlags::IND_ATTACHED_MBUF)
+    }
+
+    /// The mbuf has an external buffer.
+    #[inline]
+    pub fn has_ext_buf(&self) -> bool {
+        self.offload().contains(OffloadFlags::EXT_ATTACHED_MBUF)
+    }
+
+    /// The mbuf is indirect
+    #[inline]
+    pub fn is_indirect(&self) -> bool {
+        self.has_cloned()
+    }
+
+    /// The mbuf is direct
+    #[inline]
+    pub fn is_direct(&self) -> bool {
+        self.offload()
+            .intersects(OffloadFlags::IND_ATTACHED_MBUF | OffloadFlags::EXT_ATTACHED_MBUF)
+    }
+
+    /// Put mbuf back into its original mempool.
+    pub fn free(&mut self) {
+        unsafe { ffi::rte_mbuf_raw_free(self.as_raw()) }
+    }
+
+    /// Reads the value of an mbuf's refcnt.
+    pub fn refcnt_read(&self) -> u16 {
+        unsafe { ffi::rte_mbuf_refcnt_read(self.as_raw()) }
+    }
+
+    /// Sets an mbuf's refcnt to a defined value.
+    pub fn refcnt_set(&mut self, new: u16) {
+        unsafe { ffi::rte_mbuf_refcnt_set(self.as_raw(), new) }
+    }
+
+    /// Adds given value to an mbuf's refcnt and returns its new value.
+    pub fn refcnt_update(&mut self, new: i16) -> u16 {
+        unsafe { ffi::rte_mbuf_refcnt_update(self.as_raw(), new) }
+    }
+
+    /// Sanity checks on an mbuf.
+    ///
+    /// Check the consistency of the given mbuf.
+    /// The function will cause a panic if corruption is detected.
+    pub fn sanity_check(&self, is_header: bool) {
+        unsafe { ffi::rte_mbuf_sanity_check(self.as_raw(), if is_header { 1 } else { 0 }) }
+    }
+
+    /// Reset the data_off field of a packet mbuf to its default value.
+    pub fn reset_headroom(&mut self) {
+        unsafe { ffi::rte_pktmbuf_reset_headroom(self.as_raw()) }
+    }
+
+    /// Reset the fields of a packet mbuf to their default values.
+    pub fn reset(&mut self) {
+        unsafe { ffi::rte_pktmbuf_reset(self.as_raw()) }
+    }
+
+    /// Detach a packet mbuf from external buffer or direct buffer.
+    pub fn detach(&self) {
+        unsafe { ffi::rte_pktmbuf_detach(self.as_raw()) }
+    }
+
+    /// Get the headroom in a packet mbuf.
+    pub fn headroom(&self) -> u16 {
+        unsafe { ffi::rte_pktmbuf_headroom(self.as_raw()) }
+    }
+
+    /// Get the tailroom of a packet mbuf.
+    pub fn tailroom(&self) -> u16 {
+        unsafe { ffi::rte_pktmbuf_tailroom(self.as_raw()) }
+    }
+
+    /// Get the last segment of the packet.
+    pub fn lastseg(&self) -> Self {
+        unsafe { ffi::rte_pktmbuf_lastseg(self.as_raw()) }.into()
+    }
+
+    /// Get a pointer which points to an offset into the data in the mbuf.
+    #[inline]
+    pub fn mtod_offset<T>(&self, off: usize) -> NonNull<T> {
+        NonNull::new(unsafe { (self.buf_addr as *mut u8).add(self.data_off as usize + off) })
+            .unwrap()
+            .cast()
+    }
+
+    /// Get a pointer which points to the start of the data in the mbuf.
+    #[inline]
+    pub fn mtod<T>(&self) -> NonNull<T> {
+        self.mtod_offset(0)
+    }
+
+    /// Return the IO address of the beginning of the mbuf data
+    #[inline]
+    pub fn data_iova(&self) -> ffi::rte_iova_t {
+        unsafe { self.__bindgen_anon_1.buf_iova + self.data_off as u64 }
+    }
+
+    /// Return the default IO address of the beginning of the mbuf data
+    #[inline]
+    pub fn data_iova_default(&self) -> ffi::rte_iova_t {
+        unsafe { self.__bindgen_anon_1.buf_iova + ffi::RTE_PKTMBUF_HEADROOM as u64 }
+    }
+
+    /// Get the IO address that points to an offset of the start of the data in the mbuf
+    #[inline]
+    pub fn iova_offset(&self, off: usize) -> ffi::rte_iova_t {
+        self.data_iova() + off as u64
+    }
+
+    /// Get the IO address that points to the start of the data in the mbuf
+    #[inline]
+    pub fn iova(&self) -> ffi::rte_iova_t {
+        self.iova_offset(0)
+    }
+
+    /// Returns the length of the packet.
+    pub fn pkt_len(&self) -> usize {
+        self.pkt_len as usize
+    }
+
+    /// Returns the length of the segment.
+    pub fn data_len(&self) -> usize {
+        self.data_len as usize
+    }
+
+    /// Prepend len bytes to an mbuf data area.
+    pub fn prepend(&mut self, len: usize) -> Result<NonNull<u8>> {
+        unsafe { ffi::rte_pktmbuf_prepend(self.as_raw(), len as u16) }
+            .as_result()
+            .map(|p| p.cast())
+    }
+
+    /// Append len bytes to an mbuf.
+    pub fn append(&mut self, len: usize) -> Result<NonNull<u8>> {
+        unsafe { ffi::rte_pktmbuf_append(self.as_raw(), len as u16) }
+            .as_result()
+            .map(|p| p.cast())
+    }
+
+    /// Remove len bytes at the beginning of an mbuf.
+    pub fn adj(&mut self, len: usize) -> Result<NonNull<u8>> {
+        unsafe { ffi::rte_pktmbuf_adj(self.as_raw(), len as u16) }
+            .as_result()
+            .map(|p| p.cast())
+    }
+
+    /// Remove len bytes of data at the end of the mbuf.
+    pub fn trim(&mut self, len: usize) -> Result<()> {
+        unsafe { ffi::rte_pktmbuf_trim(self.as_raw(), len as u16) }.as_result()
+    }
+
+    /// Test if mbuf data is contiguous.
+    pub fn is_contiguous(&self) -> bool {
+        unsafe { ffi::rte_pktmbuf_is_contiguous(self.as_raw()) != 0 }
+    }
+
+    /// Read len data bytes in a mbuf at specified offset.
+    pub fn read(&self, off: usize, buf: &mut [u8]) -> Option<&[u8]> {
+        unsafe {
+            NonNull::new(
+                ffi::rte_pktmbuf_read(self.as_raw(), off as u32, buf.len() as u32, buf.as_mut_ptr() as *mut _)
+                    as *mut u8,
+            )
+            .map(|p| slice::from_raw_parts(p.as_ptr(), buf.len()))
+        }
+    }
+
+    /// Chain an mbuf to another, thereby creating a segmented packet.
+    pub fn chain(&self, tail: &Self) -> Result<()> {
+        unsafe { ffi::rte_pktmbuf_chain(self.as_raw(), tail.as_raw()) }.as_result()
+    }
+
+    /// Validate general requirements for Tx offload in mbuf.
+    ///
+    /// This function checks correctness and completeness of Tx offload settings.
+    pub fn validate_tx_offload(&self) -> Result<()> {
+        unsafe { ffi::rte_validate_tx_offload(self.as_raw()) }.as_result()
+    }
+
+    /// Linearize data in mbuf.
+    ///
+    /// This function moves the mbuf data in the first segment if there is enough tailroom.
+    /// The subsequent segments are unchained and freed.
+    pub fn linearize(&self) -> Result<()> {
+        unsafe { ffi::rte_pktmbuf_linearize(self.as_raw()) }.as_result()
+    }
+
+    /// Dump an mbuf structure to the console.
+    pub fn dump<S: AsRawFd>(&self, s: &S, dump_len: usize) {
+        if let Ok(f) = cfile::open_stream(s, "w") {
+            unsafe {
+                ffi::rte_pktmbuf_dump(f.stream() as *mut ffi::FILE, self.as_raw(), dump_len as u32);
+            }
+        }
+    }
+}
+
+pub trait MBufPool {
+    /// Get the data room size of mbufs stored in a pktmbuf_pool
+    fn data_room_size(&self) -> usize;
+
+    /// Get the application private size of mbufs stored in a pktmbuf_pool
+    fn priv_size(&self) -> usize;
+
+    /// Allocate a new mbuf from a mempool.
+    fn alloc(&mut self) -> MBuf;
+
+    /// Allocate a bulk of mbufs, initialize refcnt and reset the fields to default values.
+    fn alloc_bulk(&mut self, mbufs: &mut [RawMBufPtr]) -> Result<()>;
+}
+
+// impl MBufPool for MemoryPool {
+//     /// Get the data room size of mbufs stored in a pktmbuf_pool
+//     fn data_room_size(&self) -> usize {
+//         unsafe { ffi::rte_pktmbuf_data_room_size(self.as_raw()) as usize }
+//     }
+
+//     /// Get the application private size of mbufs stored in a pktmbuf_pool
+//     fn priv_size(&self) -> usize {
+//         unsafe { ffi::rte_pktmbuf_priv_size(self.as_raw()) as usize }
+//     }
+
+//     /// Allocate a new mbuf from a mempool.
+//     fn alloc(&mut self) -> MBuf {
+//         unsafe { ffi::rte_pktmbuf_alloc(self) }
+//     }
+
+//     /// Allocate a bulk of mbufs, initialize refcnt and reset the fields to default values.
+//     fn alloc_bulk(&mut self, mbufs: &mut [RawMBufPtr]) -> Result<()> {
+//         unsafe { ffi::rte_pktmbuf_alloc_bulk(self, mbufs.as_mut_ptr(), mbufs.len() as u32) }.as_result()
+//     }
+// }
+
+// TODO rte_mbuf_raw_alloc, rte_pktmbuf_clone
 
 /// A macro that points to the start of the data in the mbuf.
 #[macro_export]
@@ -311,125 +620,6 @@ macro_rules! pktmbuf_mtod {
     ($m:expr, $t:ty) => {
         pktmbuf_mtod_offset!($m, $t, 0)
     };
-}
-
-pub trait RefCnt {
-    /// Adds given value to an mbuf's refcnt and returns its new value.
-    unsafe fn refcnt_update(&mut self, value: i16) -> u16;
-
-    /// Reads the value of an mbuf's refcnt.
-    unsafe fn refcnt_read(&mut self) -> u16;
-
-    /// Sets an mbuf's refcnt to the defined value.
-    unsafe fn refcnt_set(&mut self, new_value: u16);
-}
-
-impl RefCnt for RawMbuf {
-    #[inline]
-    unsafe fn refcnt_update(&mut self, value: i16) -> u16 {
-        self.__bindgen_anon_2.refcnt += value as u16;
-        self.__bindgen_anon_2.refcnt
-    }
-
-    #[inline]
-    unsafe fn refcnt_read(&mut self) -> u16 {
-        self.__bindgen_anon_2.refcnt
-    }
-
-    #[inline]
-    unsafe fn refcnt_set(&mut self, new_value: u16) {
-        self.__bindgen_anon_2.refcnt = new_value;
-    }
-}
-
-pub trait PktMbuf {
-    /// Free a packet mbuf back into its original mempool.
-    fn free(&mut self);
-
-    /// Creates a "clone" of the given packet mbuf.
-    fn clone(&mut self) -> *mut Self;
-
-    /// Prepend len bytes to an mbuf data area.
-    fn prepend(&mut self, len: usize) -> Result<*mut u8>;
-
-    /// Append len bytes to an mbuf.
-    fn append(&mut self, len: usize) -> Result<*mut u8>;
-
-    /// Remove len bytes at the beginning of an mbuf.
-    fn consume(&mut self, len: usize) -> Result<*mut u8>;
-
-    /// Remove len bytes of data at the end of the mbuf.
-    fn trim(&mut self, len: usize) -> Result<()>;
-
-    /// Test if mbuf data is contiguous.
-    fn is_contiguous(&self) -> bool;
-
-    /// Dump an mbuf structure to the console.
-    fn dump<S: AsRawFd>(&self, s: &S, len: usize);
-}
-
-impl PktMbuf for RawMbuf {
-    fn free(&mut self) {
-        unsafe { ffi::rte_pktmbuf_free(self) }
-    }
-
-    fn clone(&mut self) -> *mut Self {
-        unsafe { ffi::rte_pktmbuf_clone(self, self.pool) }
-    }
-
-    fn prepend(&mut self, len: usize) -> Result<*mut u8> {
-        let p = unsafe { ffi::rte_pktmbuf_prepend(self, len as u16) };
-
-        rte_check!(p, NonNull)
-    }
-
-    fn append(&mut self, len: usize) -> Result<*mut u8> {
-        let p = unsafe { ffi::rte_pktmbuf_append(self, len as u16) };
-
-        rte_check!(p, NonNull)
-    }
-
-    fn consume(&mut self, len: usize) -> Result<*mut u8> {
-        let p = unsafe { ffi::rte_pktmbuf_adj(self, len as u16) };
-
-        rte_check!(p, NonNull)
-    }
-
-    fn trim(&mut self, len: usize) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_pktmbuf_trim(self, len as u16) })
-    }
-
-    fn is_contiguous(&self) -> bool {
-        self.nb_segs == 1
-    }
-
-    fn dump<S: AsRawFd>(&self, s: &S, len: usize) {
-        if let Ok(f) = cfile::open_stream(s, "w") {
-            unsafe {
-                ffi::rte_pktmbuf_dump(f.stream() as *mut ffi::FILE, self, len as u32);
-            }
-        }
-    }
-}
-
-pub trait PktMbufPool {
-    /// Allocate a new mbuf from a mempool.
-    fn alloc(&mut self) -> RawMbufPtr;
-
-    /// Allocate a bulk of mbufs, initialize refcnt and reset the fields to default values.
-    fn alloc_bulk(&mut self, mbufs: &mut [RawMbufPtr]) -> Result<()>;
-}
-
-impl PktMbufPool for mempool::RawMemoryPool {
-    fn alloc(&mut self) -> RawMbufPtr {
-        unsafe { ffi::rte_pktmbuf_alloc(self) }
-    }
-
-    fn alloc_bulk(&mut self, mbufs: &mut [RawMbufPtr]) -> Result<()> {
-        rte_check!(unsafe {
-            ffi::rte_pktmbuf_alloc_bulk(self, mbufs.as_mut_ptr(), mbufs.len() as u32)
-        })
-    }
 }
 
 /// Create a mbuf pool.
@@ -445,7 +635,7 @@ pub fn pktmbuf_pool_create(
     data_room_size: u16,
     socket_id: i32,
 ) -> Result<mempool::RawMemoryPoolPtr> {
-    let p = unsafe {
+    unsafe {
         ffi::rte_pktmbuf_pool_create(
             try!(to_cptr!(name)),
             n,
@@ -454,7 +644,7 @@ pub fn pktmbuf_pool_create(
             data_room_size,
             socket_id,
         )
-    };
-
-    rte_check!(p, NonNull)
+    }
+    .as_result()
+    .map(|p| p.as_ptr())
 }

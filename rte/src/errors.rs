@@ -1,6 +1,7 @@
 use std::ffi::CStr;
 use std::fmt;
 use std::os::raw::c_int;
+use std::ptr::NonNull;
 use std::result;
 
 use errno::errno;
@@ -20,68 +21,28 @@ pub trait AsResult {
     fn ok_or_else<E: Fail, F: FnOnce() -> E>(self, err: F) -> Result<Self::Result>;
 }
 
-impl<T> AsResult for *const T {
-    type Result = Self;
-
-    fn as_result(self) -> Result<Self::Result> {
-        if !self.is_null() {
-            Ok(self)
-        } else {
-            Err(rte_error())
-        }
-    }
-
-    fn ok_or<E: Fail>(self, err: E) -> Result<Self::Result> {
-        if !self.is_null() {
-            Ok(self)
-        } else {
-            Err(err.into())
-        }
-    }
-
-    fn ok_or_else<E: Fail, F: FnOnce() -> E>(self, err: F) -> Result<Self::Result> {
-        if !self.is_null() {
-            Ok(self)
-        } else {
-            Err(err().into())
-        }
-    }
-}
-
 impl<T> AsResult for *mut T {
-    type Result = Self;
+    type Result = NonNull<T>;
 
     fn as_result(self) -> Result<Self::Result> {
-        if !self.is_null() {
-            Ok(self)
-        } else {
-            Err(rte_error())
-        }
+        NonNull::new(self).ok_or_else(rte_error)
     }
 
     fn ok_or<E: Fail>(self, err: E) -> Result<Self::Result> {
-        if !self.is_null() {
-            Ok(self)
-        } else {
-            Err(err.into())
-        }
+        NonNull::new(self).ok_or_else(|| err.into())
     }
 
     fn ok_or_else<E: Fail, F: FnOnce() -> E>(self, err: F) -> Result<Self::Result> {
-        if !self.is_null() {
-            Ok(self)
-        } else {
-            Err(err().into())
-        }
+        NonNull::new(self).ok_or_else(|| err().into())
     }
 }
 
 impl AsResult for c_int {
-    type Result = c_int;
+    type Result = ();
 
     fn as_result(self) -> Result<Self::Result> {
         if self == 0 {
-            Ok(self)
+            Ok(())
         } else {
             Err(RteError(self).into())
         }
@@ -89,7 +50,7 @@ impl AsResult for c_int {
 
     fn ok_or<E: Fail>(self, err: E) -> Result<Self::Result> {
         if self == 0 {
-            Ok(self)
+            Ok(())
         } else {
             Err(err.into())
         }
@@ -97,7 +58,7 @@ impl AsResult for c_int {
 
     fn ok_or_else<E: Fail, F: FnOnce() -> E>(self, err: F) -> Result<Self::Result> {
         if self == 0 {
-            Ok(self)
+            Ok(())
         } else {
             Err(err().into())
         }

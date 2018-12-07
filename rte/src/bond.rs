@@ -109,8 +109,7 @@ impl From<u8> for TransmitPolicy {
 
 /// Create a bonded rte_eth_dev device
 pub fn create(name: &str, mode: BondMode, socket_id: SocketId) -> Result<ethdev::PortId> {
-    let port_id =
-        unsafe { ffi::rte_eth_bond_create(try!(to_cptr!(name)), mode as u8, socket_id as u8) };
+    let port_id = unsafe { ffi::rte_eth_bond_create(try!(to_cptr!(name)), mode as u8, socket_id as u8) };
 
     rte_check!(port_id; ok => { port_id as ethdev::PortId })
 }
@@ -199,9 +198,7 @@ impl BondedDevice for ethdev::PortId {
     fn slaves(&self) -> Result<Vec<ethdev::PortId>> {
         let mut slaves = [0u16; ffi::RTE_MAX_ETHPORTS as usize];
 
-        let num = unsafe {
-            ffi::rte_eth_bond_slaves_get(*self, slaves.as_mut_ptr(), slaves.len() as u16)
-        };
+        let num = unsafe { ffi::rte_eth_bond_slaves_get(*self, slaves.as_mut_ptr(), slaves.len() as u16) };
 
         rte_check!(num; ok => {
             Vec::from(&slaves[..num as usize])
@@ -211,9 +208,7 @@ impl BondedDevice for ethdev::PortId {
     fn active_slaves(&self) -> Result<Vec<ethdev::PortId>> {
         let mut slaves = [0u16; ffi::RTE_MAX_ETHPORTS as usize];
 
-        let num = unsafe {
-            ffi::rte_eth_bond_slaves_get(*self, slaves.as_mut_ptr(), slaves.len() as u16)
-        };
+        let num = unsafe { ffi::rte_eth_bond_slaves_get(*self, slaves.as_mut_ptr(), slaves.len() as u16) };
 
         rte_check!(num; ok => {
             Vec::from(&slaves[..num as usize])

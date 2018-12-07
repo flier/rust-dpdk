@@ -46,9 +46,7 @@ impl Device {
     /// In multi-process, it will request other processes to remove the same device.
     /// A failure, in any process, will rollback the action
     pub fn remove(&self) -> Result<()> {
-        unsafe { ffi::rte_dev_remove(self.0) }
-            .as_result()
-            .map(|_| ())
+        unsafe { ffi::rte_dev_remove(self.0) }.as_result()
     }
 }
 
@@ -61,9 +59,7 @@ pub fn hotplug_add(busname: &str, devname: &str, drvargs: &str) -> Result<()> {
     let devname = devname.as_cstring();
     let drvargs = drvargs.as_cstring();
 
-    unsafe { ffi::rte_eal_hotplug_add(busname.as_ptr(), devname.as_ptr(), drvargs.as_ptr()) }
-        .as_result()
-        .map(|_| ())
+    unsafe { ffi::rte_eal_hotplug_add(busname.as_ptr(), devname.as_ptr(), drvargs.as_ptr()) }.as_result()
 }
 
 ///  Hotplug remove a given device from a specific bus.
@@ -74,9 +70,7 @@ pub fn hotplug_remove(busname: &str, devname: &str) -> Result<()> {
     let busname = busname.as_cstring();
     let devname = devname.as_cstring();
 
-    unsafe { ffi::rte_eal_hotplug_remove(busname.as_ptr(), devname.as_ptr()) }
-        .as_result()
-        .map(|_| ())
+    unsafe { ffi::rte_eal_hotplug_remove(busname.as_ptr(), devname.as_ptr()) }.as_result()
 }
 
 pub type EventCallback<T> = fn(devname: &str, Event, Option<T>);
@@ -86,11 +80,7 @@ struct EventContext<T> {
     arg: Option<T>,
 }
 
-unsafe extern "C" fn event_stub<T>(
-    devname: *const c_char,
-    event: ffi::rte_dev_event_type::Type,
-    arg: *mut c_void,
-) {
+unsafe extern "C" fn event_stub<T>(devname: *const c_char, event: ffi::rte_dev_event_type::Type, arg: *mut c_void) {
     let devname = CStr::from_ptr(devname);
     let ctxt = Box::from_raw(arg as *mut EventContext<T>);
 
@@ -99,20 +89,9 @@ unsafe extern "C" fn event_stub<T>(
 
 ///  It registers the callback for the specific device.
 ///  Multiple callbacks cal be registered at the same time.
-pub fn event_callback_register<T>(
-    devname: &str,
-    callback: EventCallback<T>,
-    arg: Option<T>,
-) -> Result<()> {
+pub fn event_callback_register<T>(devname: &str, callback: EventCallback<T>, arg: Option<T>) -> Result<()> {
     let devname = devname.as_cstring();
     let ctxt = Box::into_raw(Box::new(EventContext::<T> { callback, arg }));
 
-    unsafe {
-        ffi::rte_dev_event_callback_register(
-            devname.as_ptr(),
-            Some(event_stub::<T>),
-            ctxt as *mut _,
-        )
-    }.as_result()
-    .map(|_| ())
+    unsafe { ffi::rte_dev_event_callback_register(devname.as_ptr(), Some(event_stub::<T>), ctxt as *mut _) }.as_result()
 }

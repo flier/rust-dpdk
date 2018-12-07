@@ -13,9 +13,6 @@ fn main() {
     info!("using DPDK @ {:?}", rte_sdk_dir);
 
     gcc_rte_config(&rte_sdk_dir)
-        .file("src/rte_helpers.c")
-        .compile("librte_helpers.a");
-    gcc_rte_config(&rte_sdk_dir)
         .file("examples/l2fwd/l2fwd_core.c")
         .compile("libl2fwd_core.a");
     gcc_rte_config(&rte_sdk_dir)

@@ -25,6 +25,7 @@ fn gen_rte_binding(rte_sdk_dir: &Path, dest_path: &Path) {
         .header(rte_header)
         .generate_comments(true)
         .generate_inline_functions(true)
+        .generate_tls_vars(true)
         .blacklist_function(r#"_.*"#)
         .derive_copy(true)
         .derive_debug(true)

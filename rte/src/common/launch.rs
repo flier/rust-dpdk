@@ -43,17 +43,11 @@ unsafe extern "C" fn lcore_stub<T>(arg: *mut c_void) -> c_int {
 pub fn remote_launch<T>(callback: LcoreFunc<T>, arg: Option<T>, slave_id: lcore::Id) -> Result<()> {
     let ctxt = Box::into_raw(Box::new(LcoreContext::<T> { callback, arg })) as *mut c_void;
 
-    unsafe { ffi::rte_eal_remote_launch(Some(lcore_stub::<T>), ctxt, *slave_id) }
-        .as_result()
-        .map(|_| ())
+    unsafe { ffi::rte_eal_remote_launch(Some(lcore_stub::<T>), ctxt, *slave_id) }.as_result()
 }
 
 /// Launch a function on all lcores.
-pub fn mp_remote_launch<T>(
-    callback: LcoreFunc<T>,
-    arg: Option<T>,
-    skip_master: bool,
-) -> Result<()> {
+pub fn mp_remote_launch<T>(callback: LcoreFunc<T>, arg: Option<T>, skip_master: bool) -> Result<()> {
     let ctxt = Box::into_raw(Box::new(LcoreContext::<T> { callback, arg })) as *mut c_void;
     let call_master = if skip_master {
         ffi::rte_rmt_call_master_t::SKIP_MASTER
@@ -61,9 +55,7 @@ pub fn mp_remote_launch<T>(
         ffi::rte_rmt_call_master_t::CALL_MASTER
     };
 
-    unsafe { ffi::rte_eal_mp_remote_launch(Some(lcore_stub::<T>), ctxt, call_master) }
-        .as_result()
-        .map(|_| ())
+    unsafe { ffi::rte_eal_mp_remote_launch(Some(lcore_stub::<T>), ctxt, call_master) }.as_result()
 }
 
 impl lcore::Id {

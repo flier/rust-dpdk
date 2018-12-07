@@ -1,4 +1,22 @@
 use std::ffi::CString;
+use std::ops::Deref;
+
+pub trait AsRaw {
+    type Raw;
+
+    fn as_raw(&self) -> *mut Self::Raw;
+}
+
+pub trait IntoRaw: AsRaw {
+    fn into_raw(self) -> *mut Self::Raw;
+}
+
+pub trait FromRaw: AsRaw
+where
+    Self: Sized,
+{
+    fn from_raw(raw: *mut Self::Raw) -> Option<Self>;
+}
 
 pub trait AsCString {
     fn as_cstring(&self) -> CString;
