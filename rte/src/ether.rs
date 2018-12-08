@@ -70,7 +70,7 @@ impl EtherAddr {
 
     /// Fast copy an Ethernet address.
     #[inline]
-    pub fn copy(from: [u8; ETHER_ADDR_LEN], to: &mut [u8; ETHER_ADDR_LEN]) {
+    pub fn copy(from: &[u8; ETHER_ADDR_LEN], to: &mut [u8; ETHER_ADDR_LEN]) {
         unsafe { ptr::copy_nonoverlapping(from.as_ptr(), to.as_mut_ptr(), ETHER_ADDR_LEN) }
     }
 

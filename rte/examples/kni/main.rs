@@ -23,7 +23,6 @@ use nix::sys::signal;
 use rte::ethdev::EthDevice;
 use rte::ffi::{ETHER_MAX_LEN, RTE_MAX_ETHPORTS, RTE_PKTMBUF_HEADROOM};
 use rte::lcore::RTE_MAX_LCORE;
-use rte::memory::AsMutRef;
 use rte::*;
 
 const EXIT_FAILURE: i32 = -1;
@@ -114,11 +113,7 @@ impl Conf {
             .split(',')
             .map(|s| u32::from_str(s).expect("Invalid config parameters"));
 
-        let port_id = try!(
-            fields
-                .next()
-                .ok_or("Invalid config parameter, missed port_id field")
-        );
+        let port_id = try!(fields.next().ok_or("Invalid config parameter, missed port_id field"));
 
         if port_id > RTE_MAX_ETHPORTS {
             return Err(format!(
@@ -134,16 +129,8 @@ impl Conf {
         let mut param: kni_port_params = unsafe { mem::zeroed() };
 
         param.port_id = port_id as u8;
-        param.lcore_rx = try!(
-            fields
-                .next()
-                .ok_or("Invalid config parameter, missed lcore_rx field")
-        );
-        param.lcore_tx = try!(
-            fields
-                .next()
-                .ok_or("Invalid config parameter, missed lcore_tx field")
-        );
+        param.lcore_rx = try!(fields.next().ok_or("Invalid config parameter, missed lcore_rx field"));
+        param.lcore_tx = try!(fields.next().ok_or("Invalid config parameter, missed lcore_tx field"));
 
         if param.lcore_rx >= RTE_MAX_LCORE || param.lcore_tx >= RTE_MAX_LCORE {
             return Err(format!(
@@ -238,12 +225,7 @@ fn parse_args(args: &Vec<String>) -> result::Result<Conf, String> {
     let program = args[0].clone();
 
     opts.optflag("h", "help", "print this help menu");
-    opts.optopt(
-        "p",
-        "",
-        "hexadecimal bitmask of ports to configure",
-        "PORTMASK",
-    );
+    opts.optopt("p", "", "hexadecimal bitmask of ports to configure", "PORTMASK");
     opts.optflag("P", "", "enable promiscuous mode");
     opts.optmulti(
         "c",
@@ -302,12 +284,7 @@ fn init_kni(conf: &Conf) -> Result<()> {
 }
 
 // Initialise a single port on an Ethernet device
-fn init_port(
-    conf: &Conf,
-    dev: ethdev::PortId,
-    port_conf: &ethdev::EthConf,
-    pktmbuf_pool: &mut mempool::RawMemoryPool,
-) {
+fn init_port(conf: &Conf, dev: ethdev::PortId, port_conf: &ethdev::EthConf, pktmbuf_pool: &mut mempool::MemoryPool) {
     let portid = dev.portid();
 
     // Initialise device and RX/TX queues
@@ -325,8 +302,7 @@ fn init_port(
         .expect(&format!("fail to setup device tx queue: port={}", portid));
 
     // Start device
-    dev.start()
-        .expect(&format!("fail to start device: port={}", portid));
+    dev.start().expect(&format!("fail to start device: port={}", portid));
 
     info!("Done: ");
 
@@ -432,7 +408,7 @@ extern "C" fn kni_config_promiscusity(port_id: u16, on: u8) -> libc::c_int {
     0
 }
 
-fn kni_alloc(conf: &mut Conf, dev: ethdev::PortId, pktmbuf_pool: &mut mempool::RawMemoryPool) {
+fn kni_alloc(conf: &mut Conf, dev: ethdev::PortId, pktmbuf_pool: &mut mempool::MemoryPool) {
     let portid = dev.portid();
 
     if let Some(ref mut param) = conf.port_params[portid as usize] {
@@ -528,11 +504,7 @@ fn check_all_ports_link_status(enabled_devices: &Vec<ethdev::PortId>) {
                 "  Port {} Link Up - speed {} Mbps - {}",
                 dev.portid(),
                 link.speed,
-                if link.duplex {
-                    "full-duplex"
-                } else {
-                    "half-duplex"
-                }
+                if link.duplex { "full-duplex" } else { "half-duplex" }
             )
         } else {
             println!("  Port {} Link Down", dev.portid());
@@ -595,18 +567,12 @@ fn main_loop(conf: Option<&Conf>) -> i32 {
 
     match lcore_type {
         Some(LcoreType::Rx(param)) => {
-            info!(
-                "Lcore {} is reading from port {}",
-                param.lcore_rx, param.port_id
-            );
+            info!("Lcore {} is reading from port {}", param.lcore_rx, param.port_id);
 
             unsafe { kni_ingress(param) }
         }
         Some(LcoreType::Tx(param)) => {
-            info!(
-                "Lcore {} is writing from port {}",
-                param.lcore_tx, param.port_id
-            );
+            info!("Lcore {} is writing from port {}", param.lcore_tx, param.port_id);
 
             unsafe { kni_egress(param) }
         }
@@ -640,25 +606,21 @@ fn main() {
     }
 
     // create the mbuf pool
-    let pktmbuf_pool = mbuf::pktmbuf_pool_create(
+    let mut pktmbuf_pool = mbuf::pool_create(
         "mbuf_pool",
         NB_MBUF,
         MEMPOOL_CACHE_SZ,
         0,
         MBUF_DATA_SZ as u16,
         rte::socket_id() as i32,
-    ).as_mut_ref()
-    .expect("fail to initial mbuf pool");
+    ).expect("fail to initial mbuf pool");
 
     let enabled_devices: Vec<ethdev::PortId> = ethdev::devices()
         .filter(|dev| ((1 << dev.portid()) & conf.enabled_port_mask) != 0)
         .collect();
 
     if enabled_devices.is_empty() {
-        eal::exit(
-            EXIT_FAILURE,
-            "All available ports are disabled. Please set portmask.\n",
-        );
+        eal::exit(EXIT_FAILURE, "All available ports are disabled. Please set portmask.\n");
     }
 
     // Initialize KNI subsystem
@@ -668,9 +630,9 @@ fn main() {
     let port_conf = ethdev::EthConf::default();
 
     for dev in &enabled_devices {
-        init_port(&conf, dev.portid(), &port_conf, pktmbuf_pool);
+        init_port(&conf, dev.portid(), &port_conf, &mut pktmbuf_pool);
 
-        kni_alloc(&mut conf, dev.portid(), pktmbuf_pool);
+        kni_alloc(&mut conf, dev.portid(), &mut pktmbuf_pool);
     }
 
     check_all_ports_link_status(&enabled_devices);

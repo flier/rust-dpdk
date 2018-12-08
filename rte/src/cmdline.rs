@@ -346,14 +346,11 @@ macro_rules! TOKEN_PORTLIST_INITIALIZER {
     };
 }
 
-pub type InstHandler<T, D> = fn(inst: &mut T, cmdline: &CmdLine, data: Option<&D>);
+pub type InstHandler<T, D> = fn(inst: &mut T, cmdline: &CmdLine, data: Option<D>);
 
-struct InstHandlerContext<'a, T, D>
-where
-    D: 'a,
-{
+struct InstHandlerContext<T, D> {
     handler: InstHandler<T, D>,
-    data: Option<&'a D>,
+    data: Option<D>,
 }
 
 unsafe extern "C" fn _inst_handler_stub<T, D>(inst: *mut c_void, cl: *mut RawCmdLine, ctxt: *mut c_void) {
@@ -381,7 +378,7 @@ impl Inst {
     }
 }
 
-pub fn inst<T, D>(handler: InstHandler<T, D>, data: Option<&D>, help: &'static str, tokens: &[&Token<T>]) -> Inst {
+pub fn inst<T, D>(handler: InstHandler<T, D>, data: Option<D>, help: &'static str, tokens: &[&Token<T>]) -> Inst {
     unsafe {
         let help_str = libc::calloc(1, help.len() + 1) as *mut c_char;
 

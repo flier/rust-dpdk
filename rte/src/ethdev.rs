@@ -15,6 +15,7 @@ use malloc;
 use mbuf;
 use memory::SocketId;
 use mempool;
+use utils::AsRaw;
 
 pub type PortId = u16;
 pub type QueueId = u16;
@@ -50,7 +51,7 @@ pub trait EthDevice {
     fn mac_addr(&self) -> ether::EtherAddr;
 
     /// Set the default MAC address.
-    fn set_mac_addr(&self, addr: [u8; ether::ETHER_ADDR_LEN]) -> Result<&Self>;
+    fn set_mac_addr(&self, addr: &[u8; ether::ETHER_ADDR_LEN]) -> Result<&Self>;
 
     /// Return the NUMA socket to which an Ethernet device is connected
     fn socket_id(&self) -> SocketId;
@@ -69,7 +70,7 @@ pub trait EthDevice {
         rx_queue_id: QueueId,
         nb_rx_desc: u16,
         rx_conf: Option<ffi::rte_eth_rxconf>,
-        mb_pool: &mut mempool::RawMemoryPool,
+        mb_pool: &mut mempool::MemoryPool,
     ) -> Result<&Self>;
 
     /// Allocate and set up a transmit queue for an Ethernet device.
@@ -150,10 +151,10 @@ pub trait EthDevice {
     fn close(&self) -> &Self;
 
     /// Retrieve a burst of input packets from a receive queue of an Ethernet device.
-    fn rx_burst(&self, queue_id: QueueId, rx_pkts: &mut [mbuf::RawMBufPtr]) -> usize;
+    fn rx_burst(&self, queue_id: QueueId, rx_pkts: &mut [Option<mbuf::MBuf>]) -> usize;
 
     /// Send a burst of output packets on a transmit queue of an Ethernet device.
-    fn tx_burst(&self, queue_id: QueueId, rx_pkts: &mut [mbuf::RawMBufPtr]) -> usize;
+    fn tx_burst<T: AsRaw<Raw = mbuf::RawMBuf>>(&self, queue_id: QueueId, rx_pkts: &mut [T]) -> usize;
 
     /// Read VLAN Offload configuration from an Ethernet device
     fn vlan_offload(&self) -> Result<EthVlanOffloadMode>;
@@ -224,7 +225,7 @@ impl EthDevice for PortId {
         }
     }
 
-    fn set_mac_addr(&self, addr: [u8; ether::ETHER_ADDR_LEN]) -> Result<&Self> {
+    fn set_mac_addr(&self, addr: &[u8; ether::ETHER_ADDR_LEN]) -> Result<&Self> {
         rte_check!(unsafe {
             ffi::rte_eth_dev_default_mac_addr_set(*self, addr.as_ptr() as * mut _)
         }; ok => { self })
@@ -243,7 +244,7 @@ impl EthDevice for PortId {
         rx_queue_id: QueueId,
         nb_rx_desc: u16,
         rx_conf: Option<ffi::rte_eth_rxconf>,
-        mb_pool: &mut mempool::RawMemoryPool,
+        mb_pool: &mut mempool::MemoryPool,
     ) -> Result<&Self> {
         rte_check!(unsafe {
             ffi::rte_eth_rx_queue_setup(*self,
@@ -251,7 +252,7 @@ impl EthDevice for PortId {
                                         nb_rx_desc,
                                         self.socket_id() as u32,
                                         rx_conf.as_ref().map(|conf| conf as *const _).unwrap_or(ptr::null()),
-                                        mb_pool)
+                                        mb_pool.as_raw())
         }; ok => { self })
     }
 
@@ -370,16 +371,16 @@ impl EthDevice for PortId {
         self
     }
 
-    fn rx_burst(&self, queue_id: QueueId, rx_pkts: &mut [mbuf::RawMBufPtr]) -> usize {
-        unsafe { ffi::rte_eth_rx_burst(*self, queue_id, rx_pkts.as_mut_ptr(), rx_pkts.len() as u16) as usize }
+    fn rx_burst(&self, queue_id: QueueId, rx_pkts: &mut [Option<mbuf::MBuf>]) -> usize {
+        unsafe { ffi::rte_eth_rx_burst(*self, queue_id, rx_pkts.as_mut_ptr() as *mut _, rx_pkts.len() as u16) as usize }
     }
 
-    fn tx_burst(&self, queue_id: QueueId, rx_pkts: &mut [mbuf::RawMBufPtr]) -> usize {
+    fn tx_burst<T: AsRaw<Raw = mbuf::RawMBuf>>(&self, queue_id: QueueId, rx_pkts: &mut [T]) -> usize {
         unsafe {
             if rx_pkts.is_empty() {
                 ffi::rte_eth_tx_burst(*self, queue_id, ptr::null_mut(), 0) as usize
             } else {
-                ffi::rte_eth_tx_burst(*self, queue_id, rx_pkts.as_mut_ptr(), rx_pkts.len() as u16) as usize
+                ffi::rte_eth_tx_burst(*self, queue_id, rx_pkts.as_mut_ptr() as *mut _, rx_pkts.len() as u16) as usize
             }
         }
     }

@@ -10,7 +10,6 @@ mod ethtool;
 use std::env;
 
 use rte::ethdev::EthDevice;
-use rte::memory::AsMutRef;
 use rte::*;
 
 use ethtool::*;
@@ -33,10 +32,9 @@ fn setup_ports(app_cfg: &mut AppConfig) {
             let dev = portid as ethdev::PortId;
             let dev_info = dev.info();
 
-            let size_pktpool =
-                dev_info.rx_desc_lim.nb_max + dev_info.tx_desc_lim.nb_max + PKTPOOL_EXTRA_SIZE;
+            let size_pktpool = dev_info.rx_desc_lim.nb_max + dev_info.tx_desc_lim.nb_max + PKTPOOL_EXTRA_SIZE;
 
-            app_port.pkt_pool = mbuf::pktmbuf_pool_create(
+            app_port.pkt_pool = mbuf::pool_create(
                 &format!("pkt_pool_{}", portid),
                 size_pktpool as u32,
                 PKTPOOL_CACHE,
@@ -55,37 +53,29 @@ fn setup_ports(app_cfg: &mut AppConfig) {
                 .expect(&format!("fail to configure device: port={}", portid));
 
             // init one RX queue
-            dev.rx_queue_setup(
-                0,
-                PORT_RX_QUEUE_SIZE,
-                None,
-                app_port.pkt_pool.as_mut_ref().unwrap(),
-            ).expect(&format!("fail to setup device rx queue: port={}", portid));
+            dev.rx_queue_setup(0, PORT_RX_QUEUE_SIZE, None, &mut app_port.pkt_pool)
+                .expect(&format!("fail to setup device rx queue: port={}", portid));
 
             // init one TX queue on each port
             dev.tx_queue_setup(0, PORT_TX_QUEUE_SIZE, None)
                 .expect(&format!("fail to setup device tx queue: port={}", portid));
 
             // Start device
-            dev.start()
-                .expect(&format!("fail to start device: port={}", portid));
+            dev.start().expect(&format!("fail to start device: port={}", portid));
 
             dev.promiscuous_enable();
         }
     }
 }
 
-fn process_frame(mac_addr: &ether::EtherAddr, frame: mbuf::RawMbufPtr) {
-    if let Some(ether_hdr) = pktmbuf_mtod!(frame, *mut ether::EtherHdr).as_mut_ref() {
-        ether::EtherAddr::copy(
-            &ether_hdr.s_addr.addr_bytes,
-            &mut ether_hdr.d_addr.addr_bytes,
-        );
-        ether::EtherAddr::copy(&mac_addr, &mut ether_hdr.s_addr.addr_bytes);
-    }
+fn process_frame(mac_addr: &ether::EtherAddr, frame: &mbuf::MBuf) {
+    let mut ether_hdr = frame.mtod::<ether::EtherHdr>();
+    let ether_hdr = unsafe { ether_hdr.as_mut() };
+    ether::EtherAddr::copy(&ether_hdr.s_addr.addr_bytes, &mut ether_hdr.d_addr.addr_bytes);
+    ether::EtherAddr::copy(mac_addr, &mut ether_hdr.s_addr.addr_bytes);
 }
 
-fn slave_main(app_cfg: Option<&AppConfig>) -> i32 {
+fn slave_main(app_cfg: Option<&mut AppConfig>) -> i32 {
     let app_cfg = app_cfg.unwrap();
 
     while !app_cfg.exit_now {
@@ -114,7 +104,7 @@ fn slave_main(app_cfg: Option<&AppConfig>) -> i32 {
                 if cnt_recv_frames > 0 {
                     let frames = &txq.buf_frames[txq.cnt_unsent..txq.cnt_unsent + cnt_recv_frames];
                     for frame in frames {
-                        process_frame(&app_port.mac_addr, *frame);
+                        process_frame(&app_port.mac_addr, frame.as_ref().unwrap());
                     }
 
                     txq.cnt_unsent += cnt_recv_frames
@@ -125,7 +115,7 @@ fn slave_main(app_cfg: Option<&AppConfig>) -> i32 {
                     let cnt_sent = dev.tx_burst(0, &mut txq.buf_frames[..txq.cnt_unsent]);
 
                     for i in cnt_sent..txq.cnt_unsent {
-                        txq.buf_frames[i - cnt_sent] = txq.buf_frames[i];
+                        txq.buf_frames[i - cnt_sent] = txq.buf_frames[i].take();
                     }
                 }
             }
@@ -170,7 +160,7 @@ fn main() {
     // Assume there is an available slave..
     let lcore_id = lcore::current().unwrap().next().unwrap();
 
-    launch::remote_launch(slave_main, Some(&app_cfg), lcore_id).unwrap();
+    launch::remote_launch(slave_main, Some(&mut app_cfg), lcore_id).unwrap();
 
     ethapp::main(&mut app_cfg);
 

@@ -12,7 +12,7 @@ pub const MAX_BURST_LENGTH: usize = 32;
 
 pub struct TxQueuePort {
     pub cnt_unsent: usize,
-    pub buf_frames: [mbuf::RawMBufPtr; MAX_BURST_LENGTH],
+    pub buf_frames: [Option<mbuf::MBuf>; MAX_BURST_LENGTH],
 }
 
 pub struct AppPort {
@@ -21,7 +21,7 @@ pub struct AppPort {
     pub port_id: u8,
     pub port_active: bool,
     pub port_dirty: bool,
-    pub pkt_pool: mempool::RawMemoryPoolPtr,
+    pub pkt_pool: mempool::MemoryPool,
 }
 
 impl Default for AppPort {

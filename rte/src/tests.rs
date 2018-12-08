@@ -14,7 +14,8 @@ use launch;
 use lcore;
 use mbuf;
 use memory::AsMutRef;
-use mempool::{self, MemoryPool, MemoryPoolDebug, MemoryPoolFlags};
+use mempool::{self, MemoryPool, MemoryPoolFlags};
+use utils::AsRaw;
 
 #[test]
 fn test_eal() {
@@ -27,8 +28,7 @@ fn test_eal() {
             format!("{:x}", (1 << num_cpus::get()) - 1),
             String::from("--log-level"),
             String::from("8")
-        ])
-        .unwrap(),
+        ]).unwrap(),
         4
     );
 
@@ -152,21 +152,14 @@ fn test_launch() {
 }
 
 fn test_mempool() {
-    let p = mempool::create::<c_void, c_void>(
+    let mut p = mempool::create_empty::<_, ()>(
         "test",
         16,
         128,
         0,
-        32,
-        None,
-        None,
-        None,
-        None,
         ffi::SOCKET_ID_ANY,
         MemoryPoolFlags::MEMPOOL_F_SP_PUT | MemoryPoolFlags::MEMPOOL_F_SC_GET,
-    )
-    .as_mut_ref()
-    .unwrap();
+    ).unwrap();
 
     assert_eq!(p.name(), "test");
     assert_eq!(p.size, 16);
@@ -189,29 +182,29 @@ fn test_mempool() {
         p.dump(&stdout);
     }
 
-    let mut elements: Vec<(u32, *mut c_void)> = Vec::new();
+    let mut elements: Vec<(usize, *mut ())> = Vec::new();
 
     fn walk_element(
-        _pool: mempool::RawMemoryPoolPtr,
-        elements: Option<&mut Vec<(u32, *mut c_void)>>,
-        obj: *mut c_void,
-        obj_index: u32,
+        _pool: &mempool::MemoryPool,
+        elements: Option<&mut Vec<(usize, *mut ())>>,
+        obj: &mut (),
+        idx: usize,
     ) {
-        elements.unwrap().push((obj_index, obj));
+        elements.unwrap().push((idx, obj as *mut _));
     }
 
     assert_eq!(p.walk(walk_element, Some(&mut elements)), 4);
 
     assert_eq!(elements.len(), 4);
 
-    let raw_ptr = p as mempool::RawMemoryPoolPtr;
+    let raw_ptr = p.as_raw();
 
     assert_eq!(raw_ptr, mempool::lookup("test").unwrap());
 
     let mut pools: Vec<mempool::RawMemoryPoolPtr> = Vec::new();
 
-    fn walk_mempool(pool: mempool::RawMemoryPoolPtr, pools: Option<&mut Vec<mempool::RawMemoryPoolPtr>>) {
-        pools.unwrap().push(pool);
+    fn walk_mempool(pool: &mempool::MemoryPool, pools: Option<&mut Vec<mempool::RawMemoryPoolPtr>>) {
+        pools.unwrap().push(pool.as_raw());
     }
 
     mempool::walk(walk_mempool, Some(&mut pools));
@@ -231,16 +224,14 @@ fn test_mbuf() {
     const PRIV_SIZE: u16 = 0;
     const MBUF_SIZE: u16 = 128;
 
-    let p = mbuf::pktmbuf_pool_create(
+    let p = mbuf::pool_create(
         "mbuf_pool",
         NB_MBUF,
         CACHE_SIZE,
         PRIV_SIZE,
         mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
         lcore::socket_id() as i32,
-    )
-    .as_mut_ref()
-    .unwrap();
+    ).unwrap();
 
     assert_eq!(p.name(), "mbuf_pool");
     assert_eq!(p.size, NB_MBUF);

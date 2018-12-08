@@ -1,5 +1,4 @@
 use std::ffi::CStr;
-use std::ops::{Deref, DerefMut};
 use std::os::unix::io::AsRawFd;
 use std::ptr::NonNull;
 use std::slice;
@@ -10,7 +9,7 @@ use ffi;
 
 use errors::{AsResult, Result};
 use mempool;
-use utils::{AsRaw, FromRaw};
+use utils::{AsCString, AsRaw};
 
 // Packet Offload Features Flags. It also carry packet type information.
 // Critical resources. Both rx/tx shared these bits. Be cautious on any change
@@ -298,43 +297,7 @@ pub const RTE_MBUF_DEFAULT_BUF_SIZE: u16 = (ffi::RTE_MBUF_DEFAULT_DATAROOM + ffi
 pub type RawMBuf = ffi::rte_mbuf;
 pub type RawMBufPtr = *mut ffi::rte_mbuf;
 
-#[repr(transparent)]
-#[derive(Debug)]
-pub struct MBuf(NonNull<RawMBuf>);
-
-impl Deref for MBuf {
-    type Target = RawMBuf;
-
-    fn deref(&self) -> &Self::Target {
-        unsafe { self.0.as_ref() }
-    }
-}
-
-impl DerefMut for MBuf {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { self.0.as_mut() }
-    }
-}
-
-impl AsRaw for MBuf {
-    type Raw = RawMBuf;
-
-    fn as_raw(&self) -> *mut Self::Raw {
-        self.0.as_ptr() as *mut _
-    }
-}
-
-impl FromRaw for MBuf {
-    fn from_raw(raw: *mut Self::Raw) -> Option<Self> {
-        NonNull::new(raw).map(MBuf)
-    }
-}
-
-impl From<RawMBufPtr> for MBuf {
-    fn from(p: RawMBufPtr) -> Self {
-        Self::from_raw(p).unwrap()
-    }
-}
+raw!(pub MBuf(RawMBuf));
 
 impl MBuf {
     /// Prefetch the first part of the mbuf
@@ -541,8 +504,7 @@ impl MBuf {
             NonNull::new(
                 ffi::rte_pktmbuf_read(self.as_raw(), off as u32, buf.len() as u32, buf.as_mut_ptr() as *mut _)
                     as *mut u8,
-            )
-            .map(|p| slice::from_raw_parts(p.as_ptr(), buf.len()))
+            ).map(|p| slice::from_raw_parts(p.as_ptr(), buf.len()))
         }
     }
 
@@ -584,33 +546,39 @@ pub trait MBufPool {
     fn priv_size(&self) -> usize;
 
     /// Allocate a new mbuf from a mempool.
-    fn alloc(&mut self) -> MBuf;
+    fn alloc(&mut self) -> Result<MBuf>;
 
     /// Allocate a bulk of mbufs, initialize refcnt and reset the fields to default values.
-    fn alloc_bulk(&mut self, mbufs: &mut [RawMBufPtr]) -> Result<()>;
+    fn alloc_bulk(&mut self, mbufs: &mut [Option<MBuf>]) -> Result<()>;
+
+    /// Creates a "clone" of the given packet mbuf.
+    fn clone(&mut self, mbuf: &MBuf) -> Result<MBuf>;
 }
 
-// impl MBufPool for MemoryPool {
-//     /// Get the data room size of mbufs stored in a pktmbuf_pool
-//     fn data_room_size(&self) -> usize {
-//         unsafe { ffi::rte_pktmbuf_data_room_size(self.as_raw()) as usize }
-//     }
+impl MBufPool for mempool::MemoryPool {
+    fn data_room_size(&self) -> usize {
+        unsafe { ffi::rte_pktmbuf_data_room_size(self.as_raw()) as usize }
+    }
 
-//     /// Get the application private size of mbufs stored in a pktmbuf_pool
-//     fn priv_size(&self) -> usize {
-//         unsafe { ffi::rte_pktmbuf_priv_size(self.as_raw()) as usize }
-//     }
+    fn priv_size(&self) -> usize {
+        unsafe { ffi::rte_pktmbuf_priv_size(self.as_raw()) as usize }
+    }
 
-//     /// Allocate a new mbuf from a mempool.
-//     fn alloc(&mut self) -> MBuf {
-//         unsafe { ffi::rte_pktmbuf_alloc(self) }
-//     }
+    fn alloc(&mut self) -> Result<MBuf> {
+        unsafe { ffi::rte_pktmbuf_alloc(self.as_raw()) }.as_result().map(MBuf)
+    }
 
-//     /// Allocate a bulk of mbufs, initialize refcnt and reset the fields to default values.
-//     fn alloc_bulk(&mut self, mbufs: &mut [RawMBufPtr]) -> Result<()> {
-//         unsafe { ffi::rte_pktmbuf_alloc_bulk(self, mbufs.as_mut_ptr(), mbufs.len() as u32) }.as_result()
-//     }
-// }
+    fn alloc_bulk(&mut self, mbufs: &mut [Option<MBuf>]) -> Result<()> {
+        unsafe { ffi::rte_pktmbuf_alloc_bulk(self.as_raw(), mbufs.as_mut_ptr() as *mut _, mbufs.len() as u32) }
+            .as_result()
+    }
+
+    fn clone(&mut self, mbuf: &MBuf) -> Result<MBuf> {
+        unsafe { ffi::rte_pktmbuf_clone(mbuf.as_raw(), self.as_raw()) }
+            .as_result()
+            .map(MBuf)
+    }
+}
 
 // TODO rte_mbuf_raw_alloc, rte_pktmbuf_clone
 
@@ -627,24 +595,49 @@ macro_rules! pktmbuf_mtod {
 /// This function creates and initializes a packet mbuf pool.
 /// It is a wrapper to rte_mempool_create() with the proper packet constructor
 /// and mempool constructor.
-pub fn pktmbuf_pool_create(
-    name: &str,
+pub fn pool_create<S: AsRef<str>>(
+    name: S,
     n: u32,
     cache_size: u32,
     priv_size: u16,
     data_room_size: u16,
     socket_id: i32,
-) -> Result<mempool::RawMemoryPoolPtr> {
+) -> Result<mempool::MemoryPool> {
+    let name = name.as_cstring();
+
+    unsafe { ffi::rte_pktmbuf_pool_create(name.as_ptr(), n, cache_size, priv_size, data_room_size, socket_id) }
+        .as_result()
+        .map(|p| p.as_ptr())
+        .map(mempool::MemoryPool::from)
+}
+
+/// Create a mbuf pool with a given mempool ops name
+///
+/// This function creates and initializes a packet mbuf pool.
+/// It is a wrapper to rte_mempool functions.
+pub fn pool_create_by_ops<S: AsRef<str>>(
+    name: S,
+    n: u32,
+    cache_size: u32,
+    priv_size: u16,
+    data_room_size: u16,
+    socket_id: i32,
+    ops_name: S,
+) -> Result<mempool::MemoryPool> {
+    let name = name.as_cstring();
+    let ops_name = ops_name.as_cstring();
+
     unsafe {
-        ffi::rte_pktmbuf_pool_create(
-            try!(to_cptr!(name)),
+        ffi::rte_pktmbuf_pool_create_by_ops(
+            name.as_ptr(),
             n,
             cache_size,
             priv_size,
             data_room_size,
             socket_id,
+            ops_name.as_ptr(),
         )
-    }
-    .as_result()
+    }.as_result()
     .map(|p| p.as_ptr())
+    .map(mempool::MemoryPool::from)
 }

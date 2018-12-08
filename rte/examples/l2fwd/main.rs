@@ -77,18 +77,8 @@ fn parse_args(args: &Vec<String>) -> (u32, u32, u32) {
     let mut opts = getopts::Options::new();
     let program = args[0].clone();
 
-    opts.optopt(
-        "p",
-        "",
-        "hexadecimal bitmask of ports to configure",
-        "PORTMASK",
-    );
-    opts.optopt(
-        "q",
-        "",
-        "number of queue (=ports) per lcore (default is 1)",
-        "NQ",
-    );
+    opts.optopt("p", "", "hexadecimal bitmask of ports to configure", "PORTMASK");
+    opts.optopt("q", "", "number of queue (=ports) per lcore (default is 1)", "NQ");
     opts.optopt(
         "T",
         "",
@@ -184,11 +174,7 @@ fn check_all_ports_link_status(enabled_devices: &Vec<ethdev::PortId>) {
                 "  Port {} Link Up - speed {} Mbps - {}",
                 dev.portid(),
                 link.speed,
-                if link.duplex {
-                    "full-duplex"
-                } else {
-                    "half-duplex"
-                }
+                if link.duplex { "full-duplex" } else { "half-duplex" }
             )
         } else {
             println!("  Port {} Link Down", dev.portid());
@@ -210,8 +196,7 @@ extern "C" {
 
     static mut l2fwd_timer_period: libc::int64_t;
 
-    fn l2fwd_main_loop(rx_port_list: *const libc::uint32_t, n_rx_port: libc::c_uint)
-        -> libc::c_int;
+    fn l2fwd_main_loop(rx_port_list: *const libc::uint32_t, n_rx_port: libc::c_uint) -> libc::c_int;
 }
 
 fn l2fwd_launch_one_lcore(conf: Option<&Conf>) -> i32 {
@@ -294,26 +279,21 @@ fn main() {
     eal::init(&eal_args).expect("fail to initial EAL");
 
     // create the mbuf pool
-    let l2fwd_pktmbuf_pool = mbuf::pktmbuf_pool_create(
+    let mut l2fwd_pktmbuf_pool = mbuf::pool_create(
         "mbuf_pool",
         NB_MBUF,
         32,
         0,
         mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
         rte::socket_id() as i32,
-    ).expect("fail to initial mbuf pool")
-    .as_mut_ref()
-    .unwrap();
+    ).unwrap();
 
     let enabled_devices: Vec<ethdev::PortId> = ethdev::devices()
         .filter(|dev| ((1 << dev.portid()) & enabled_port_mask) != 0)
         .collect();
 
     if enabled_devices.is_empty() {
-        eal::exit(
-            EXIT_FAILURE,
-            "All available ports are disabled. Please set portmask.\n",
-        );
+        eal::exit(EXIT_FAILURE, "All available ports are disabled. Please set portmask.\n");
     }
 
     let mut last_port = 0;
@@ -393,7 +373,7 @@ fn main() {
         }
 
         // init one RX queue
-        dev.rx_queue_setup(0, conf.nb_rxd, None, l2fwd_pktmbuf_pool)
+        dev.rx_queue_setup(0, conf.nb_rxd, None, &mut l2fwd_pktmbuf_pool)
             .expect(&format!("fail to setup device rx queue: port={}", portid));
 
         // init one TX queue on each port
@@ -405,18 +385,15 @@ fn main() {
             .as_mut_ref()
             .expect(&format!("fail to allocate buffer for tx: port={}", portid));
 
-        buf.count_err_packets().expect(&format!(
-            "failt to set error callback for tx buffer: port={}",
-            portid
-        ));
+        buf.count_err_packets()
+            .expect(&format!("failt to set error callback for tx buffer: port={}", portid));
 
         unsafe {
             l2fwd_tx_buffers[portid] = buf;
         }
 
         // Start device
-        dev.start()
-            .expect(&format!("fail to start device: port={}", portid));
+        dev.start().expect(&format!("fail to start device: port={}", portid));
 
         println!("Done: ");
 
@@ -428,10 +405,7 @@ fn main() {
             mac_addr,
             dev.is_promiscuous_enabled()
                 .map(|enabled| if enabled { "enabled" } else { "disabled" })
-                .expect(&format!(
-                    "fail to enable promiscuous mode for device: port={}",
-                    portid
-                ))
+                .expect(&format!("fail to enable promiscuous mode for device: port={}", portid))
         );
     }
 

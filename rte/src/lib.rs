@@ -35,7 +35,8 @@ pub mod errors;
 pub mod macros;
 #[macro_use]
 mod common;
-mod utils;
+#[macro_use]
+pub mod utils;
 
 pub mod mempool;
 #[macro_use]
