@@ -299,7 +299,7 @@ pub type RawMBufPtr = *mut ffi::rte_mbuf;
 
 raw!(pub MBuf(RawMBuf));
 
-impl mempool::Pooled for MBuf {}
+impl mempool::Pooled<RawMBuf> for MBuf {}
 
 impl Clone for MBuf {
     fn clone(&self) -> Self {

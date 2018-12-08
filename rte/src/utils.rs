@@ -1,7 +1,9 @@
 use std::borrow::Borrow;
 use std::ffi::CString;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use std::ptr;
+
+pub trait Raw<T>: Deref<Target = T> + DerefMut + AsRaw<Raw = T> + IntoRaw + FromRaw + From<*mut T> {}
 
 pub trait AsRaw {
     type Raw;
@@ -41,6 +43,8 @@ macro_rules! raw {
         #[repr(transparent)]
         #[derive(Debug)]
         pub struct $wrapper(::std::ptr::NonNull<$raw_ty>);
+
+        impl $crate::utils::Raw<$raw_ty> for $wrapper {}
 
         impl ::std::ops::Deref for $wrapper {
             type Target = $raw_ty;
