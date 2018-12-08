@@ -38,9 +38,9 @@ mod common;
 #[macro_use]
 pub mod utils;
 
-pub mod mempool;
-#[macro_use]
 pub mod mbuf;
+pub mod mempool;
+pub mod ring;
 
 pub mod bond;
 pub mod ethdev;

@@ -1,6 +1,30 @@
+//!
+//! RTE Mbuf
+//!
+//! The mbuf library provides the ability to create and destroy buffers
+//! that may be used by the RTE application to store message
+//! buffers. The message buffers are stored in a mempool, using the
+//! RTE mempool library.
+//!
+//! The preferred way to create a mbuf pool is to use
+//! rte_pktmbuf_pool_create(). However, in some situations, an
+//! application may want to have more control (ex: populate the pool with
+//! specific memory), in this case it is possible to use functions from
+//! rte_mempool. See how rte_pktmbuf_pool_create() is implemented for
+//! details.
+//!
+//! This library provides an API to allocate/free packet mbufs, which are
+//! used to carry network packets.
+//!
+//! To understand the concepts of packet buffers or mbufs, you
+//! should read "TCP/IP Illustrated, Volume 2: The Implementation,
+//! Addison-Wesley, 1995, ISBN 0-201-63354-X from Richard Stevens"
+//! http://www.kohala.com/start/tcpipiv2.html
+//!
 use std::ffi::CStr;
+use std::os::raw::c_void;
 use std::os::unix::io::AsRawFd;
-use std::ptr::NonNull;
+use std::ptr::{self, NonNull};
 use std::slice;
 
 use cfile;
@@ -9,7 +33,9 @@ use ffi;
 
 use errors::{AsResult, Result};
 use mempool;
-use utils::{AsCString, AsRaw};
+use utils::{AsCString, AsRaw, CallbackContext, IntoRaw};
+
+pub use ffi::{RTE_MBUF_DEFAULT_BUF_SIZE, RTE_MBUF_DEFAULT_DATAROOM, RTE_MBUF_MAX_NB_SEGS, RTE_MBUF_PRIV_ALIGN};
 
 // Packet Offload Features Flags. It also carry packet type information.
 // Critical resources. Both rx/tx shared these bits. Be cautious on any change
@@ -108,22 +134,19 @@ bitflags! {
         /// Indicate that the metadata field in the mbuf is in use.
         const PKT_TX_METADATA = ffi::PKT_TX_METADATA as u64;
 
-        /**
-         * Outer UDP checksum offload flag. This flag is used for enabling
-         * outer UDP checksum in PMD. To use outer UDP checksum, the user needs to
-         * 1) Enable the following in mbuff,
-         * a) Fill outer_l2_len and outer_l3_len in mbuf.
-         * b) Set the PKT_TX_OUTER_UDP_CKSUM flag.
-         * c) Set the PKT_TX_OUTER_IPV4 or PKT_TX_OUTER_IPV6 flag.
-         * 2) Configure DEV_TX_OFFLOAD_OUTER_UDP_CKSUM offload flag.
-         */
+
+         /// Outer UDP checksum offload flag. This flag is used for enabling
+         /// outer UDP checksum in PMD. To use outer UDP checksum, the user needs to
+         /// 1) Enable the following in mbuff,
+         /// a) Fill outer_l2_len and outer_l3_len in mbuf.
+         /// b) Set the PKT_TX_OUTER_UDP_CKSUM flag.
+         /// c) Set the PKT_TX_OUTER_IPV4 or PKT_TX_OUTER_IPV6 flag.
+         /// 2) Configure DEV_TX_OFFLOAD_OUTER_UDP_CKSUM offload flag.
         const PKT_TX_OUTER_UDP_CKSUM = ffi::PKT_TX_OUTER_UDP_CKSUM as u64;
 
-        /**
-         * UDP Fragmentation Offload flag. This flag is used for enabling UDP
-         * fragmentation in SW or in HW. When use UFO, mbuf->tso_segsz is used
-         * to store the MSS of UDP fragments.
-         */
+         /// UDP Fragmentation Offload flag. This flag is used for enabling UDP
+         /// fragmentation in SW or in HW. When use UFO, mbuf->tso_segsz is used
+         /// to store the MSS of UDP fragments.
         const PKT_TX_UDP_SEG = ffi::PKT_TX_UDP_SEG as u64;
 
         /// Request security offload processing on the TX packet.
@@ -133,45 +156,41 @@ bitflags! {
         /// this offload feature for a packet to be transmitted.
         const PKT_TX_MACSEC = ffi::PKT_TX_MACSEC as u64;
 
-        /**
-         * Bits 45:48 used for the tunnel type.
-         * The tunnel type must be specified for TSO or checksum on the inner part
-         * of tunnel packets.
-         * These flags can be used with PKT_TX_TCP_SEG for TSO, or PKT_TX_xxx_CKSUM.
-         * The mbuf fields for inner and outer header lengths are required:
-         * outer_l2_len, outer_l3_len, l2_len, l3_len, l4_len and tso_segsz for TSO.
-         */
+         /// Bits 45:48 used for the tunnel type.
+         /// The tunnel type must be specified for TSO or checksum on the inner part
+         /// of tunnel packets.
+         /// These flags can be used with PKT_TX_TCP_SEG for TSO, or PKT_TX_xxx_CKSUM.
+         /// The mbuf fields for inner and outer header lengths are required:
+         /// outer_l2_len, outer_l3_len, l2_len, l3_len, l4_len and tso_segsz for TSO.
         const PKT_TX_TUNNEL_VXLAN  = ffi::PKT_TX_TUNNEL_VXLAN as u64;
         const PKT_TX_TUNNEL_GRE    = ffi::PKT_TX_TUNNEL_GRE as u64;
         const PKT_TX_TUNNEL_IPIP   = ffi::PKT_TX_TUNNEL_IPIP as u64;
         const PKT_TX_TUNNEL_GENEVE = ffi::PKT_TX_TUNNEL_GENEVE as u64;
-        /** TX packet with MPLS-in-UDP RFC 7510 header. */
+        /// TX packet with MPLS-in-UDP RFC 7510 header.
         const PKT_TX_TUNNEL_MPLSINUDP = ffi::PKT_TX_TUNNEL_MPLSINUDP as u64;
         const PKT_TX_TUNNEL_VXLAN_GPE = ffi::PKT_TX_TUNNEL_VXLAN_GPE as u64;
-        /**
-         * Generic IP encapsulated tunnel type, used for TSO and checksum offload.
-         * It can be used for tunnels which are not standards or listed above.
-         * It is preferred to use specific tunnel flags like PKT_TX_TUNNEL_GRE
-         * or PKT_TX_TUNNEL_IPIP if possible.
-         * The ethdev must be configured with DEV_TX_OFFLOAD_IP_TNL_TSO.
-         * Outer and inner checksums are done according to the existing flags like
-         * PKT_TX_xxx_CKSUM.
-         * Specific tunnel headers that contain payload length, sequence id
-         * or checksum are not expected to be updated.
-         */
+
+         /// Generic IP encapsulated tunnel type, used for TSO and checksum offload.
+         /// It can be used for tunnels which are not standards or listed above.
+         /// It is preferred to use specific tunnel flags like PKT_TX_TUNNEL_GRE
+         /// or PKT_TX_TUNNEL_IPIP if possible.
+         /// The ethdev must be configured with DEV_TX_OFFLOAD_IP_TNL_TSO.
+         /// Outer and inner checksums are done according to the existing flags like
+         /// PKT_TX_xxx_CKSUM.
+         /// Specific tunnel headers that contain payload length, sequence id
+         /// or checksum are not expected to be updated.
         const PKT_TX_TUNNEL_IP = ffi::PKT_TX_TUNNEL_IP as u64;
-        /**
-         * Generic UDP encapsulated tunnel type, used for TSO and checksum offload.
-         * UDP tunnel type implies outer IP layer.
-         * It can be used for tunnels which are not standards or listed above.
-         * It is preferred to use specific tunnel flags like PKT_TX_TUNNEL_VXLAN
-         * if possible.
-         * The ethdev must be configured with DEV_TX_OFFLOAD_UDP_TNL_TSO.
-         * Outer and inner checksums are done according to the existing flags like
-         * PKT_TX_xxx_CKSUM.
-         * Specific tunnel headers that contain payload length, sequence id
-         * or checksum are not expected to be updated.
-         */
+
+         /// Generic UDP encapsulated tunnel type, used for TSO and checksum offload.
+         /// UDP tunnel type implies outer IP layer.
+         /// It can be used for tunnels which are not standards or listed above.
+         /// It is preferred to use specific tunnel flags like PKT_TX_TUNNEL_VXLAN
+         /// if possible.
+         /// The ethdev must be configured with DEV_TX_OFFLOAD_UDP_TNL_TSO.
+         /// Outer and inner checksums are done according to the existing flags like
+         /// PKT_TX_xxx_CKSUM.
+         /// Specific tunnel headers that contain payload length, sequence id
+         /// or checksum are not expected to be updated.
         const PKT_TX_TUNNEL_UDP = ffi::PKT_TX_TUNNEL_UDP as u64;
 
         const PKT_TX_TUNNEL_MASK = ffi::PKT_TX_TUNNEL_MASK as u64;
@@ -182,35 +201,31 @@ bitflags! {
         /// TX packet with double VLAN inserted.
         const PKT_TX_QINQ_PKT = ffi::PKT_TX_QINQ_PKT as u64;
 
-        /**
-         * TCP segmentation offload. To enable this offload feature for a
-         * packet to be transmitted on hardware supporting TSO:
-         *  - set the PKT_TX_TCP_SEG flag in mbuf->ol_flags (this flag implies
-         *    PKT_TX_TCP_CKSUM)
-         *  - set the flag PKT_TX_IPV4 or PKT_TX_IPV6
-         *  - if it's IPv4, set the PKT_TX_IP_CKSUM flag and write the IP checksum
-         *    to 0 in the packet
-         *  - fill the mbuf offload information: l2_len, l3_len, l4_len, tso_segsz
-         *  - calculate the pseudo header checksum without taking ip_len in account,
-         *    and set it in the TCP header. Refer to rte_ipv4_phdr_cksum() and
-         *    rte_ipv6_phdr_cksum() that can be used as helpers.
-         */
+         /// TCP segmentation offload. To enable this offload feature for a
+         /// packet to be transmitted on hardware supporting TSO:
+         ///  - set the PKT_TX_TCP_SEG flag in mbuf->ol_flags (this flag implies
+         ///    PKT_TX_TCP_CKSUM)
+         ///  - set the flag PKT_TX_IPV4 or PKT_TX_IPV6
+         ///  - if it's IPv4, set the PKT_TX_IP_CKSUM flag and write the IP checksum
+         ///    to 0 in the packet
+         ///  - fill the mbuf offload information: l2_len, l3_len, l4_len, tso_segsz
+         ///  - calculate the pseudo header checksum without taking ip_len in account,
+         ///    and set it in the TCP header. Refer to rte_ipv4_phdr_cksum() and
+         ///    rte_ipv6_phdr_cksum() that can be used as helpers.
         const PKT_TX_TCP_SEG = ffi::PKT_TX_TCP_SEG as u64;
 
         /// TX IEEE1588 packet to timestamp.
         const PKT_TX_IEEE1588_TMST = ffi::PKT_TX_IEEE1588_TMST as u64;
 
-        /**
-         * Bits 52+53 used for L4 packet type with checksum enabled: 00: Reserved,
-         * 01: TCP checksum, 10: SCTP checksum, 11: UDP checksum. To use hardware
-         * L4 checksum offload, the user needs to:
-         *  - fill l2_len and l3_len in mbuf
-         *  - set the flags PKT_TX_TCP_CKSUM, PKT_TX_SCTP_CKSUM or PKT_TX_UDP_CKSUM
-         *  - set the flag PKT_TX_IPV4 or PKT_TX_IPV6
-         *  - calculate the pseudo header checksum and set it in the L4 header (only
-         *    for TCP or UDP). See rte_ipv4_phdr_cksum() and rte_ipv6_phdr_cksum().
-         *    For SCTP, set the crc field to 0.
-         */
+         /// Bits 52+53 used for L4 packet type with checksum enabled: 00: Reserved,
+         /// 01: TCP checksum, 10: SCTP checksum, 11: UDP checksum. To use hardware
+         /// L4 checksum offload, the user needs to:
+         ///  - fill l2_len and l3_len in mbuf
+         ///  - set the flags PKT_TX_TCP_CKSUM, PKT_TX_SCTP_CKSUM or PKT_TX_UDP_CKSUM
+         ///  - set the flag PKT_TX_IPV4 or PKT_TX_IPV6
+         ///  - calculate the pseudo header checksum and set it in the L4 header (only
+         ///    for TCP or UDP). See rte_ipv4_phdr_cksum() and rte_ipv6_phdr_cksum().
+         ///    For SCTP, set the crc field to 0.
 
         /// Disable L4 cksum of TX pkt.
         const PKT_TX_L4_NO_CKSUM   = ffi::PKT_TX_L4_NO_CKSUM as u64;
@@ -223,57 +238,50 @@ bitflags! {
         /// Mask for L4 cksum offload request.
         const PKT_TX_L4_MASK       = ffi::PKT_TX_L4_MASK;
 
-        /**
-         * Offload the IP checksum in the hardware. The flag PKT_TX_IPV4 should
-         * also be set by the application, although a PMD will only check
-         * PKT_TX_IP_CKSUM.
-         *  - set the IP checksum field in the packet to 0
-         *  - fill the mbuf offload information: l2_len, l3_len
-         */
+         /// Offload the IP checksum in the hardware. The flag PKT_TX_IPV4 should
+         /// also be set by the application, although a PMD will only check
+         /// PKT_TX_IP_CKSUM.
+         ///  - set the IP checksum field in the packet to 0
+         ///  - fill the mbuf offload information: l2_len, l3_len
         const PKT_TX_IP_CKSUM = ffi::PKT_TX_IP_CKSUM;
 
-        /**
-         * Packet is IPv4. This flag must be set when using any offload feature
-         * (TSO, L3 or L4 checksum) to tell the NIC that the packet is an IPv4
-         * packet. If the packet is a tunneled packet, this flag is related to
-         * the inner headers.
-         */
+         /// Packet is IPv4. This flag must be set when using any offload feature
+         /// (TSO, L3 or L4 checksum) to tell the NIC that the packet is an IPv4
+         /// packet. If the packet is a tunneled packet, this flag is related to
+         /// the inner headers.
         const PKT_TX_IPV4 = ffi::PKT_TX_IPV4;
 
-        /**
-         * Packet is IPv6. This flag must be set when using an offload feature
-         * (TSO or L4 checksum) to tell the NIC that the packet is an IPv6
-         * packet. If the packet is a tunneled packet, this flag is related to
-         * the inner headers.
-         */
+         /// Packet is IPv6. This flag must be set when using an offload feature
+         /// (TSO or L4 checksum) to tell the NIC that the packet is an IPv6
+         /// packet. If the packet is a tunneled packet, this flag is related to
+         /// the inner headers.
         const PKT_TX_IPV6          = ffi::PKT_TX_IPV6;
 
         /// TX packet is a 802.1q VLAN packet.
         const PKT_TX_VLAN_PKT      = ffi::PKT_TX_VLAN_PKT;
 
-        /**
-         * Offload the IP checksum of an external header in the hardware. The
-         * flag PKT_TX_OUTER_IPV4 should also be set by the application, alto ugh
-         * a PMD will only check PKT_TX_IP_CKSUM.  The IP checksum field in the
-         * packet must be set to 0.
-         *  - set the outer IP checksum field in the packet to 0
-         *  - fill the mbuf offload information: outer_l2_len, outer_l3_len
-         */
+         /// Offload the IP checksum of an external header in the hardware. The
+         /// flag PKT_TX_OUTER_IPV4 should also be set by the application, alto ugh
+         /// a PMD will only check PKT_TX_IP_CKSUM.  The IP checksum field in the
+         /// packet must be set to 0.
+         ///  - set the outer IP checksum field in the packet to 0
+         ///  - fill the mbuf offload information: outer_l2_len, outer_l3_len
         const PKT_TX_OUTER_IP_CKSUM   = ffi::PKT_TX_OUTER_IP_CKSUM;
 
-        /**
-         * Packet outer header is IPv4. This flag must be set when using any
-         * outer offload feature (L3 or L4 checksum) to tell the NIC that the
-         * outer header of the tunneled packet is an IPv4 packet.
-         */
+         /// Packet outer header is IPv4. This flag must be set when using any
+         /// outer offload feature (L3 or L4 checksum) to tell the NIC that the
+         /// outer header of the tunneled packet is an IPv4 packet.
         const PKT_TX_OUTER_IPV4   = ffi::PKT_TX_OUTER_IPV4;
 
-        /**
-         * Packet outer header is IPv6. This flag must be set when using any
-         * outer offload feature (L4 checksum) to tell the NIC that the outer
-         * header of the tunneled packet is an IPv6 packet.
-         */
+         /// Packet outer header is IPv6. This flag must be set when using any
+         /// outer offload feature (L4 checksum) to tell the NIC that the outer
+         /// header of the tunneled packet is an IPv6 packet.
         const PKT_TX_OUTER_IPV6    = ffi::PKT_TX_OUTER_IPV6;
+
+        /// Bitmask of all supported packet Tx offload features flags,
+        /// which can be set for packet.
+        const PKT_TX_OFFLOAD_MASK  = ffi::PKT_TX_OFFLOAD_MASK;
+
         /// reserved for future mbuf use
         const EXT_ATTACHED_MBUF    = ffi::EXT_ATTACHED_MBUF;
         /// Indirect attached mbuf
@@ -286,18 +294,28 @@ bitflags! {
     }
 }
 
-/**
- * Some NICs need at least 2KB buffer to RX standard Ethernet frame without
- * splitting it into multiple segments.
- * So, for mbufs that planned to be involved into RX/TX, the recommended
- * minimal buffer length is 2KB + RTE_PKTMBUF_HEADROOM.
- */
-pub const RTE_MBUF_DEFAULT_BUF_SIZE: u16 = (ffi::RTE_MBUF_DEFAULT_DATAROOM + ffi::RTE_PKTMBUF_HEADROOM) as u16;
-
 pub type RawMBuf = ffi::rte_mbuf;
 pub type RawMBufPtr = *mut ffi::rte_mbuf;
 
 raw!(pub MBuf(RawMBuf));
+
+impl mempool::Pooled for MBuf {}
+
+impl Clone for MBuf {
+    fn clone(&self) -> Self {
+        let mut m = MBuf(self.0);
+        m.refcnt_update(1);
+        m
+    }
+}
+
+impl Drop for MBuf {
+    fn drop(&mut self) {
+        if self.refcnt_update(-1) == 0 {
+            self.free()
+        }
+    }
+}
 
 impl MBuf {
     /// Prefetch the first part of the mbuf
@@ -361,8 +379,36 @@ impl MBuf {
             .intersects(OffloadFlags::IND_ATTACHED_MBUF | OffloadFlags::EXT_ATTACHED_MBUF)
     }
 
-    /// Put mbuf back into its original mempool.
+    /// Decrease reference counter and unlink a mbuf segment
+    ///
+    /// This function does the same than a free, except that it does not
+    /// return the segment to its pool.
+    /// It decreases the reference counter, and if it reaches 0, it is
+    /// detached from its parent for an indirect mbuf.
+    pub fn prefree_seg(self) -> Option<Self> {
+        NonNull::new(unsafe { ffi::rte_pktmbuf_prefree_seg(self.into_raw()) }).map(MBuf)
+    }
+
+    /// Free a segment of a packet mbuf into its original mempool.
+    pub fn free_seg(&mut self) {
+        unsafe { ffi::rte_pktmbuf_free_seg(self.as_raw()) }
+    }
+
+    /// Free a packet mbuf back into its original mempool.
+    ///
+    /// Free an mbuf, and all its segments in case of chained buffers.
+    /// Each segment is added back into its original mempool.
     pub fn free(&mut self) {
+        unsafe { ffi::rte_pktmbuf_free(self.as_raw()) }
+    }
+
+    /// Put mbuf back into its original mempool.
+    pub fn raw_free(&mut self) {
+        debug_assert!(self.is_direct());
+        debug_assert_eq!(self.refcnt_read(), 1);
+        debug_assert!(self.next.is_null());
+        debug_assert_eq!(self.nb_segs, 1);
+
         unsafe { ffi::rte_mbuf_raw_free(self.as_raw()) }
     }
 
@@ -397,11 +443,6 @@ impl MBuf {
     /// Reset the fields of a packet mbuf to their default values.
     pub fn reset(&mut self) {
         unsafe { ffi::rte_pktmbuf_reset(self.as_raw()) }
-    }
-
-    /// Detach a packet mbuf from external buffer or direct buffer.
-    pub fn detach(&self) {
-        unsafe { ffi::rte_pktmbuf_detach(self.as_raw()) }
     }
 
     /// Get the headroom in a packet mbuf.
@@ -458,11 +499,13 @@ impl MBuf {
     }
 
     /// Returns the length of the packet.
+    #[inline]
     pub fn pkt_len(&self) -> usize {
         self.pkt_len as usize
     }
 
     /// Returns the length of the segment.
+    #[inline]
     pub fn data_len(&self) -> usize {
         self.data_len as usize
     }
@@ -538,6 +581,103 @@ impl MBuf {
     }
 }
 
+pub type RawExtSharedInfo = ffi::rte_mbuf_ext_shared_info;
+pub type RawExtSharedInfoPtr = *mut ffi::rte_mbuf_ext_shared_info;
+
+/// Function typedef of callback to free externally attached buffer.
+pub type ExtBufFreeCallback<T> = fn(buf: *mut u8, arg: Option<T>);
+
+raw!(pub ExtSharedInfo(RawExtSharedInfo));
+
+impl ExtSharedInfo {
+    /// Initialize shared data at the end of an external buffer before attaching
+    /// to a mbuf by ``rte_pktmbuf_attach_extbuf()``. This is not a mandatory
+    /// initialization but a helper function to simply spare a few bytes at the
+    /// end of the buffer for shared data. If shared data is allocated
+    /// separately, this should not be called but application has to properly
+    /// initialize the shared data according to its need.
+    ///
+    /// Free callback and its argument is saved and the refcnt is set to 1.
+    pub fn new<'a, T>(
+        buf: &'a mut [u8],
+        callback: Option<ExtBufFreeCallback<T>>,
+        arg: Option<T>,
+    ) -> Result<(Self, &'a mut [u8])> {
+        let mut buf_len = buf.len() as u16;
+
+        unsafe {
+            ffi::rte_pktmbuf_ext_shinfo_init_helper(
+                buf.as_mut_ptr() as *mut _,
+                &mut buf_len,
+                if callback.is_none() {
+                    None
+                } else {
+                    Some(ext_buf_free_callback_stub::<T>)
+                },
+                if let Some(callback) = callback {
+                    ExtBufFreeContext::new(callback, arg).into_raw()
+                } else {
+                    ptr::null_mut()
+                },
+            )
+        }.as_result()
+        .map(move |p| (ExtSharedInfo(p), &mut buf[..buf_len as usize]))
+    }
+
+    /// Reads the refcnt of an external buffer.
+    pub fn refcnt_read(&self) -> u16 {
+        unsafe { ffi::rte_mbuf_ext_refcnt_read(self.as_raw()) }
+    }
+
+    /// Set refcnt of an external buffer.
+    pub fn refcnt_set(&mut self, new: u16) {
+        unsafe { ffi::rte_mbuf_ext_refcnt_set(self.as_raw(), new) }
+    }
+
+    /// Add given value to refcnt of an external buffer and return its new value.
+    pub fn refcnt_update(&mut self, new: i16) -> u16 {
+        unsafe { ffi::rte_mbuf_ext_refcnt_update(self.as_raw(), new) }
+    }
+}
+
+type ExtBufFreeContext<T> = CallbackContext<ExtBufFreeCallback<T>, Option<T>>;
+
+unsafe extern "C" fn ext_buf_free_callback_stub<T>(addr: *mut c_void, arg: *mut c_void) {
+    let ctxt = ExtBufFreeContext::<T>::from_raw(arg);
+
+    (ctxt.callback)(addr as *mut u8, ctxt.arg)
+}
+
+impl MBuf {
+    /// Attach an external buffer to a mbuf.
+    pub fn attach_extbuf(&mut self, buf: &mut [u8], buf_iova: ffi::rte_iova_t, shinfo: &ExtSharedInfo) {
+        unsafe {
+            ffi::rte_pktmbuf_attach_extbuf(
+                self.as_raw(),
+                buf.as_mut_ptr() as *mut _,
+                buf_iova,
+                buf.len() as u16,
+                shinfo.as_raw(),
+            )
+        }
+    }
+
+    /// Detach the external buffer attached to a mbuf
+    pub fn detach_extbuf(&mut self) {
+        self.detach()
+    }
+
+    /// Attach packet mbuf to another packet mbuf.
+    pub fn attach(&mut self, m: &MBuf) {
+        unsafe { ffi::rte_pktmbuf_attach(self.as_raw(), m.as_raw()) }
+    }
+
+    /// Detach a packet mbuf from external buffer or direct buffer.
+    pub fn detach(&mut self) {
+        unsafe { ffi::rte_pktmbuf_detach(self.as_raw()) }
+    }
+}
+
 pub trait MBufPool {
     /// Get the data room size of mbufs stored in a pktmbuf_pool
     fn data_room_size(&self) -> usize;
@@ -578,16 +718,6 @@ impl MBufPool for mempool::MemoryPool {
             .as_result()
             .map(MBuf)
     }
-}
-
-// TODO rte_mbuf_raw_alloc, rte_pktmbuf_clone
-
-/// A macro that points to the start of the data in the mbuf.
-#[macro_export]
-macro_rules! pktmbuf_mtod {
-    ($m:expr, $t:ty) => {
-        pktmbuf_mtod_offset!($m, $t, 0)
-    };
 }
 
 /// Create a mbuf pool.

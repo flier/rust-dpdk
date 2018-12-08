@@ -221,25 +221,22 @@ fn test_mempool() {
 fn test_mbuf() {
     const NB_MBUF: u32 = 1024;
     const CACHE_SIZE: u32 = 32;
-    const PRIV_SIZE: u16 = 0;
-    const MBUF_SIZE: u16 = 128;
+    const PRIV_SIZE: u32 = 0;
+    const MBUF_SIZE: u32 = 128;
 
     let p = mbuf::pool_create(
         "mbuf_pool",
         NB_MBUF,
         CACHE_SIZE,
-        PRIV_SIZE,
-        mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
+        PRIV_SIZE as u16,
+        mbuf::RTE_MBUF_DEFAULT_BUF_SIZE as u16,
         lcore::socket_id() as i32,
     ).unwrap();
 
     assert_eq!(p.name(), "mbuf_pool");
     assert_eq!(p.size, NB_MBUF);
     assert_eq!(p.cache_size, CACHE_SIZE);
-    assert_eq!(
-        p.elt_size,
-        (mbuf::RTE_MBUF_DEFAULT_BUF_SIZE + PRIV_SIZE + MBUF_SIZE) as u32
-    );
+    assert_eq!(p.elt_size, mbuf::RTE_MBUF_DEFAULT_BUF_SIZE + PRIV_SIZE + MBUF_SIZE);
     assert_eq!(p.header_size, 64);
     assert_eq!(p.trailer_size, 0);
     assert_eq!(p.private_data_size, 64);

@@ -1,3 +1,28 @@
+//!
+//! RTE Mempool.
+//!
+//! A memory pool is an allocator of fixed-size object. It is
+//! identified by its name, and uses a ring to store free objects. It
+//! provides some other optional services, like a per-core object
+//! cache, and an alignment helper to ensure that objects are padded
+//! to spread them equally on all RAM channels, ranks, and so on.
+//!
+//! Objects owned by a mempool should never be added in another
+//! mempool. When an object is freed using rte_mempool_put() or
+//! equivalent, the object data is not modified; the user can save some
+//! meta-data in the object data and retrieve them when allocating a
+//! new object.
+//!
+//! Note: the mempool implementation is not preemptible. An lcore must not be
+//! interrupted by another task that uses the same mempool (because it uses a
+//! ring which is not preemptible). Also, usual mempool functions like
+//! rte_mempool_get() or rte_mempool_put() are designed to be called from an EAL
+//! thread due to the internal per-lcore cache. Due to the lack of caching,
+//! rte_mempool_get() or rte_mempool_put() performance will suffer when called
+//! by non-EAL threads. Instead, non-EAL threads should call
+//! rte_mempool_generic_get() or rte_mempool_generic_put() with a user cache
+//! created with rte_mempool_cache_create().
+//!
 use std::ffi::CStr;
 use std::mem;
 use std::os::raw::{c_uint, c_void};
@@ -10,9 +35,17 @@ use libc;
 
 use errors::{AsResult, Result};
 use memory::SocketId;
-use utils::{AsCString, AsRaw, FromRaw};
+use ring;
+use utils::{AsCString, AsRaw, CallbackContext, FromRaw};
 
-pub use ffi::{RTE_MEMPOOL_HEADER_COOKIE1, RTE_MEMPOOL_HEADER_COOKIE2, RTE_MEMPOOL_TRAILER_COOKIE};
+pub use ffi::{
+    MEMPOOL_PG_NUM_DEFAULT, RTE_MEMPOOL_ALIGN, RTE_MEMPOOL_ALIGN_MASK, RTE_MEMPOOL_HEADER_COOKIE1,
+    RTE_MEMPOOL_HEADER_COOKIE2, RTE_MEMPOOL_MZ_FORMAT, RTE_MEMPOOL_MZ_PREFIX, RTE_MEMPOOL_TRAILER_COOKIE,
+};
+
+lazy_static! {
+    pub static ref RTE_MEMPOOL_NAMESIZE: usize = *ring::RTE_RING_NAMESIZE - RTE_MEMPOOL_MZ_PREFIX.len() + 1;
+}
 
 bitflags! {
     pub struct MemoryPoolFlags: u32 {
@@ -31,25 +64,28 @@ bitflags! {
     }
 }
 
+pub trait Pooled: AsRaw {
+    /// Return a pointer to the mempool owning this object.
+    fn pool(&self) -> MemoryPool {
+        unsafe { ffi::rte_mempool_from_obj(self.as_raw() as *mut _) }.into()
+    }
+}
+
 /// A mempool constructor callback function.
-pub type MemoryPoolConstructor<T> = fn(pool: &MemoryPool, arg: Option<T>);
+pub type Constructor<T> = fn(pool: &MemoryPool, arg: Option<T>);
 
 /// A mempool walk callback function.
-pub type MemoryPoolWalkCallback<T> = fn(pool: &MemoryPool, arg: Option<T>);
+pub type PoolWalkCallback<T> = fn(pool: &MemoryPool, arg: Option<T>);
 
 /// A mempool object iterator callback function.
-pub type MemoryPoolObjectCallback<T, O> = fn(pool: &MemoryPool, arg: Option<T>, obj: &mut O, idx: usize);
+pub type ObjectCallback<T, O> = fn(pool: &MemoryPool, arg: Option<T>, obj: &mut O, idx: usize);
+
+pub type MemoryChunkCallback<T> = fn(pool: &MemoryPool, arg: Option<T>, mem: &ffi::rte_mempool_memhdr, idx: usize);
 
 pub type RawMemoryPool = ffi::rte_mempool;
 pub type RawMemoryPoolPtr = *mut ffi::rte_mempool;
 
-/// RTE Mempool.
-///
-/// A memory pool is an allocator of fixed-size object. It is identified by its name,
-/// and uses a ring to store free objects. It provides some other optional services,
-/// like a per-core object cache, and an alignment helper to ensure
-/// that objects are padded to spread them equally on all RAM channels, ranks, and so on.
-///
+/// The RTE mempool structure.
 raw!(pub MemoryPool(RawMemoryPool));
 
 impl Drop for MemoryPool {
@@ -119,12 +155,12 @@ impl MemoryPool {
     /// This function is used to populate a mempool, or walk through all the elements of a mempool,
     /// or estimate how many elements of the given size could be created in the given memory buffer.
     ///
-    pub fn walk<T, O>(&mut self, callback: MemoryPoolObjectCallback<T, O>, arg: Option<T>) -> usize {
+    pub fn walk<T, O>(&mut self, callback: ObjectCallback<T, O>, arg: Option<T>) -> usize {
         unsafe {
             ffi::rte_mempool_obj_iter(
                 self.as_raw(),
                 Some(obj_cb_stub::<T, O>),
-                Box::into_raw(Box::new(MemoryPoolObjectCallbackContext { callback, arg })) as *mut _,
+                ObjectContext::new(callback, arg).into_raw(),
             ) as usize
         }
     }
@@ -142,9 +178,9 @@ pub fn create<S, M, T, O>(
     n: u32,
     cache_size: u32,
     private_data_size: u32,
-    mp_init: Option<MemoryPoolConstructor<M>>,
+    mp_init: Option<Constructor<M>>,
     mp_init_arg: Option<M>,
-    obj_init: Option<MemoryPoolObjectCallback<T, O>>,
+    obj_init: Option<ObjectCallback<T, O>>,
     obj_init_arg: Option<T>,
     socket_id: SocketId,
     flags: MemoryPoolFlags,
@@ -155,18 +191,12 @@ where
     let name = name.as_cstring();
 
     let mp_init_ctx = if let Some(callback) = mp_init {
-        Box::into_raw(Box::new(MemoryPoolConstructorContext::<M> {
-            callback,
-            arg: mp_init_arg,
-        })) as *mut c_void
+        ConstructorContext::new(callback, mp_init_arg).into_raw()
     } else {
         ptr::null_mut()
     };
     let obj_init_ctx = if let Some(callback) = obj_init {
-        Box::into_raw(Box::new(MemoryPoolObjectCallbackContext::<T, O> {
-            callback,
-            arg: obj_init_arg,
-        })) as *mut c_void
+        ObjectContext::new(callback, obj_init_arg).into_raw()
     } else {
         ptr::null_mut()
     };
@@ -230,30 +260,40 @@ where
     .map(MemoryPool)
 }
 
-struct MemoryPoolConstructorContext<T> {
-    callback: MemoryPoolConstructor<T>,
-    arg: Option<T>,
-}
+type ConstructorContext<T> = CallbackContext<Constructor<T>, Option<T>>;
 
 unsafe extern "C" fn mp_init_stub<T>(mp: *mut ffi::rte_mempool, arg: *mut c_void) {
     let mp = MemoryPool::from(mp);
-    let ctx = Box::from_raw(arg as *mut MemoryPoolConstructorContext<T>);
+    let ctx = ConstructorContext::<T>::from_raw(arg);
 
     (ctx.callback)(&mp, ctx.arg);
 
     mem::forget(mp);
 }
 
-struct MemoryPoolObjectCallbackContext<T, O> {
-    callback: MemoryPoolObjectCallback<T, O>,
-    arg: Option<T>,
-}
+type ObjectContext<T, O> = CallbackContext<ObjectCallback<T, O>, Option<T>>;
 
 unsafe extern "C" fn obj_cb_stub<T, O>(mp: *mut ffi::rte_mempool, arg: *mut c_void, obj: *mut c_void, obj_idx: c_uint) {
     let mp = MemoryPool::from(mp);
-    let ctx = Box::from_raw(arg as *mut MemoryPoolObjectCallbackContext<T, O>);
+    let ctx = ObjectContext::<T, O>::from_raw(arg);
 
     (ctx.callback)(&mp, ctx.arg, (obj as *mut O).as_mut().unwrap(), obj_idx as usize);
+
+    mem::forget(mp);
+}
+
+type MemoryChunkContext<T> = CallbackContext<MemoryChunkCallback<T>, Option<T>>;
+
+unsafe extern "C" fn mem_cb_stub<T>(
+    mp: *mut ffi::rte_mempool,
+    arg: *mut c_void,
+    memhdr: *mut ffi::rte_mempool_memhdr,
+    mem_idx: c_uint,
+) {
+    let mp = MemoryPool::from(mp);
+    let ctx = MemoryChunkContext::<T>::from_raw(arg);
+
+    (ctx.callback)(&mp, ctx.arg, &*memhdr, mem_idx as usize);
 
     mem::forget(mp);
 }
@@ -274,24 +314,50 @@ pub fn list_dump<S: AsRawFd>(s: &S) {
 }
 
 /// Walk list of all memory pools
-pub fn walk<T>(callback: MemoryPoolWalkCallback<T>, arg: Option<T>) {
-    let ctx = Box::into_raw(Box::new(PoolWalkContext { callback, arg })) as *mut _;
-
+pub fn walk<T>(callback: PoolWalkCallback<T>, arg: Option<T>) {
     unsafe {
-        ffi::rte_mempool_walk(Some(pool_walk_stub::<T>), ctx);
+        ffi::rte_mempool_walk(
+            Some(pool_walk_stub::<T>),
+            PoolWalkContext::new(callback, arg).into_raw(),
+        );
     }
 }
 
-struct PoolWalkContext<T> {
-    callback: MemoryPoolWalkCallback<T>,
-    arg: Option<T>,
-}
+type PoolWalkContext<T> = CallbackContext<PoolWalkCallback<T>, Option<T>>;
 
-unsafe extern "C" fn pool_walk_stub<T>(mp: *mut ffi::rte_mempool, ctxt: *mut libc::c_void) {
+unsafe extern "C" fn pool_walk_stub<T>(mp: *mut ffi::rte_mempool, arg: *mut libc::c_void) {
     let mp = MemoryPool::from(mp);
-    let ctxt = Box::from_raw(ctxt as *mut PoolWalkContext<T>);
+    let ctxt = PoolWalkContext::<T>::from_raw(arg);
 
     (ctxt.callback)(&mp, ctxt.arg);
 
     mem::forget(mp)
+}
+
+pub type RawCache = ffi::rte_mempool_cache;
+pub type RawCachePtr = *mut ffi::rte_mempool_cache;
+
+raw!(pub Cache(RawCache));
+
+impl Drop for Cache {
+    fn drop(&mut self) {
+        unsafe { ffi::rte_mempool_cache_free(self.as_raw()) }
+    }
+}
+
+impl Cache {
+    /// Create a user-owned mempool cache.
+    ///
+    /// This can be used by non-EAL threads to enable caching
+    /// when they interact with a mempool.
+    pub fn create(size: usize, socket_id: SocketId) -> Self {
+        unsafe { ffi::rte_mempool_cache_create(size as u32, socket_id) }.into()
+    }
+}
+
+impl MemoryPool {
+    /// Flush a user-owned mempool cache to the specified mempool.
+    pub fn flush(&self, cache: &Cache) {
+        unsafe { ffi::rte_mempool_cache_flush(cache.as_raw(), self.as_raw()) }
+    }
 }

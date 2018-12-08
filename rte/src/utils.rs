@@ -64,6 +64,12 @@ macro_rules! raw {
             }
         }
 
+        impl $crate::utils::IntoRaw for $wrapper {
+            fn into_raw(self) -> *mut Self::Raw {
+                self.0.as_ptr()
+            }
+        }
+
         impl $crate::utils::FromRaw for $wrapper {
             fn from_raw(raw: *mut Self::Raw) -> Option<Self> {
                 ::std::ptr::NonNull::new(raw).map($wrapper)
@@ -92,5 +98,24 @@ where
         let mut v = self.as_ref().as_bytes().to_owned();
         v.push(0);
         unsafe { CString::from_vec_unchecked(v) }
+    }
+}
+
+pub struct CallbackContext<F, T> {
+    pub callback: F,
+    pub arg: T,
+}
+
+impl<F, T> CallbackContext<F, T> {
+    pub fn new(callback: F, arg: T) -> Self {
+        CallbackContext { callback, arg }
+    }
+
+    pub fn into_raw<R>(self) -> *mut R {
+        Box::into_raw(Box::new(self)) as *mut _
+    }
+
+    pub fn from_raw<V>(raw: *mut V) -> Box<Self> {
+        unsafe { Box::from_raw(raw as *mut _) }
     }
 }

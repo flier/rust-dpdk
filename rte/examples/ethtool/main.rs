@@ -39,7 +39,7 @@ fn setup_ports(app_cfg: &mut AppConfig) {
                 size_pktpool as u32,
                 PKTPOOL_CACHE,
                 0,
-                mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
+                mbuf::RTE_MBUF_DEFAULT_BUF_SIZE as u16,
                 rte::socket_id() as i32,
             ).expect("create mbuf pool failed");
 

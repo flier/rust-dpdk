@@ -475,7 +475,7 @@ fn main() {
         NB_MBUF,
         MEMPOOL_CACHE_SZ,
         0,
-        mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
+        mbuf::RTE_MBUF_DEFAULT_BUF_SIZE as u16,
         rte::socket_id() as i32,
     ).expect("fail to initial mbuf pool");
 

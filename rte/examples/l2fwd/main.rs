@@ -284,7 +284,7 @@ fn main() {
         NB_MBUF,
         32,
         0,
-        mbuf::RTE_MBUF_DEFAULT_BUF_SIZE,
+        mbuf::RTE_MBUF_DEFAULT_BUF_SIZE as u16,
         rte::socket_id() as i32,
     ).unwrap();
 
