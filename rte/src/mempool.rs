@@ -448,6 +448,7 @@ impl MemoryPool {
             )
         }
         .as_result()
+        .map(|_| ())
     }
 
     /// Get several objects from the mempool.
@@ -461,7 +462,9 @@ impl MemoryPool {
     /// the local cache and common pool are empty, even if cache from other
     /// lcores are full.
     pub fn get_bulk<T: Pooled<R>, R>(&mut self, objs: &mut [T]) -> Result<()> {
-        unsafe { ffi::_rte_mempool_get_bulk(self.as_raw(), objs.as_mut_ptr() as *mut _, objs.len() as u32) }.as_result()
+        unsafe { ffi::_rte_mempool_get_bulk(self.as_raw(), objs.as_mut_ptr() as *mut _, objs.len() as u32) }
+            .as_result()
+            .map(|_| ())
     }
 
     /// Get several objects from the mempool.
@@ -493,5 +496,6 @@ impl MemoryPool {
     pub fn get_contig_blocks<T: Pooled<R>, R>(&mut self, objs: &mut [T]) -> Result<()> {
         unsafe { ffi::_rte_mempool_get_contig_blocks(self.as_raw(), objs.as_mut_ptr() as *mut _, objs.len() as u32) }
             .as_result()
+            .map(|_| ())
     }
 }

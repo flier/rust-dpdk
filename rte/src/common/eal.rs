@@ -84,7 +84,7 @@ unsafe fn init_pmd_drivers() {
 
 /// Request iopl privilege for all RPL.
 pub fn iopl_init() -> Result<()> {
-    unsafe { ffi::rte_eal_iopl_init() }.as_result()
+    unsafe { ffi::rte_eal_iopl_init() }.as_result().map(|_| ())
 }
 
 /// Initialize the Environment Abstraction Layer (EAL).
@@ -119,7 +119,7 @@ pub fn init<S: fmt::Debug + AsRef<str>>(args: &[S]) -> Result<i32> {
 
 /// Clean up the Environment Abstraction Layer (EAL)
 pub fn cleanup() -> Result<()> {
-    unsafe { ffi::rte_eal_cleanup() }.as_result()
+    unsafe { ffi::rte_eal_cleanup() }.as_result().map(|_| ())
 }
 
 /// Function to terminate the application immediately,

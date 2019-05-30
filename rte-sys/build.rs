@@ -75,6 +75,7 @@ fn main() {
 
     if !rte_sdk_dir.exists() || !rte_sdk_dir.join("lib/libdpdk.a").exists() {
         apply_patches(RTE_SDK.as_path());
+
         build_dpdk(RTE_SDK.as_path(), RTE_TARGET.as_str());
     }
 

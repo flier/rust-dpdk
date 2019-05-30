@@ -38,29 +38,29 @@ impl<T> AsResult for *mut T {
 }
 
 impl AsResult for c_int {
-    type Result = ();
+    type Result = c_int;
 
     fn as_result(self) -> Result<Self::Result> {
-        if self == 0 {
-            Ok(())
-        } else {
+        if self == -1 {
             Err(RteError(self).into())
+        } else {
+            Ok(self)
         }
     }
 
     fn ok_or<E: Fail>(self, err: E) -> Result<Self::Result> {
-        if self == 0 {
-            Ok(())
-        } else {
+        if self == -1 {
             Err(err.into())
+        } else {
+            Ok(self)
         }
     }
 
     fn ok_or_else<E: Fail, F: FnOnce() -> E>(self, err: F) -> Result<Self::Result> {
-        if self == 0 {
-            Ok(())
-        } else {
+        if self == -1 {
             Err(err().into())
+        } else {
+            Ok(self)
         }
     }
 }

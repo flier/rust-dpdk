@@ -46,7 +46,7 @@ impl Device {
     /// In multi-process, it will request other processes to remove the same device.
     /// A failure, in any process, will rollback the action
     pub fn remove(&self) -> Result<()> {
-        unsafe { ffi::rte_dev_remove(self.0) }.as_result()
+        unsafe { ffi::rte_dev_remove(self.0) }.as_result().map(|_| ())
     }
 }
 
@@ -59,7 +59,9 @@ pub fn hotplug_add(busname: &str, devname: &str, drvargs: &str) -> Result<()> {
     let devname = devname.as_cstring();
     let drvargs = drvargs.as_cstring();
 
-    unsafe { ffi::rte_eal_hotplug_add(busname.as_ptr(), devname.as_ptr(), drvargs.as_ptr()) }.as_result()
+    unsafe { ffi::rte_eal_hotplug_add(busname.as_ptr(), devname.as_ptr(), drvargs.as_ptr()) }
+        .as_result()
+        .map(|_| ())
 }
 
 ///  Hotplug remove a given device from a specific bus.
@@ -70,7 +72,9 @@ pub fn hotplug_remove(busname: &str, devname: &str) -> Result<()> {
     let busname = busname.as_cstring();
     let devname = devname.as_cstring();
 
-    unsafe { ffi::rte_eal_hotplug_remove(busname.as_ptr(), devname.as_ptr()) }.as_result()
+    unsafe { ffi::rte_eal_hotplug_remove(busname.as_ptr(), devname.as_ptr()) }
+        .as_result()
+        .map(|_| ())
 }
 
 pub type EventCallback<T> = fn(devname: &str, Event, Option<T>);
@@ -93,5 +97,7 @@ pub fn event_callback_register<T>(devname: &str, callback: EventCallback<T>, arg
     let devname = devname.as_cstring();
     let ctxt = Box::into_raw(Box::new(EventContext::<T> { callback, arg }));
 
-    unsafe { ffi::rte_dev_event_callback_register(devname.as_ptr(), Some(event_stub::<T>), ctxt as *mut _) }.as_result()
+    unsafe { ffi::rte_dev_event_callback_register(devname.as_ptr(), Some(event_stub::<T>), ctxt as *mut _) }
+        .as_result()
+        .map(|_| ())
 }

@@ -533,7 +533,9 @@ impl MBuf {
 
     /// Remove len bytes of data at the end of the mbuf.
     pub fn trim(&mut self, len: usize) -> Result<()> {
-        unsafe { ffi::_rte_pktmbuf_trim(self.as_raw(), len as u16) }.as_result()
+        unsafe { ffi::_rte_pktmbuf_trim(self.as_raw(), len as u16) }
+            .as_result()
+            .map(|_| ())
     }
 
     /// Test if mbuf data is contiguous.
@@ -554,14 +556,18 @@ impl MBuf {
 
     /// Chain an mbuf to another, thereby creating a segmented packet.
     pub fn chain(&self, tail: &Self) -> Result<()> {
-        unsafe { ffi::_rte_pktmbuf_chain(self.as_raw(), tail.as_raw()) }.as_result()
+        unsafe { ffi::_rte_pktmbuf_chain(self.as_raw(), tail.as_raw()) }
+            .as_result()
+            .map(|_| ())
     }
 
     /// Validate general requirements for Tx offload in mbuf.
     ///
     /// This function checks correctness and completeness of Tx offload settings.
     pub fn validate_tx_offload(&self) -> Result<()> {
-        unsafe { ffi::_rte_validate_tx_offload(self.as_raw()) }.as_result()
+        unsafe { ffi::_rte_validate_tx_offload(self.as_raw()) }
+            .as_result()
+            .map(|_| ())
     }
 
     /// Linearize data in mbuf.
@@ -569,7 +575,9 @@ impl MBuf {
     /// This function moves the mbuf data in the first segment if there is enough tailroom.
     /// The subsequent segments are unchained and freed.
     pub fn linearize(&self) -> Result<()> {
-        unsafe { ffi::_rte_pktmbuf_linearize(self.as_raw()) }.as_result()
+        unsafe { ffi::_rte_pktmbuf_linearize(self.as_raw()) }
+            .as_result()
+            .map(|_| ())
     }
 
     /// Dump an mbuf structure to the console.
@@ -713,6 +721,7 @@ impl MBufPool for mempool::MemoryPool {
     fn alloc_bulk(&mut self, mbufs: &mut [Option<MBuf>]) -> Result<()> {
         unsafe { ffi::_rte_pktmbuf_alloc_bulk(self.as_raw(), mbufs.as_mut_ptr() as *mut _, mbufs.len() as u32) }
             .as_result()
+            .map(|_| ())
     }
 
     fn clone(&mut self, mbuf: &MBuf) -> Result<MBuf> {
