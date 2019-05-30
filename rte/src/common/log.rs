@@ -101,7 +101,7 @@ pub enum Level {
 /// to be used to send the logs. If f is NULL, the default output is
 /// used (stderr).
 pub fn openlog_stream<S: AsRawFd>(s: &S) -> Result<cfile::CFile> {
-    let f = cfile::open_stream(s, "w")?;
+    let f = cfile::fdopen(s, "w")?;
 
     unsafe { ffi::rte_openlog_stream(f.stream() as *mut ffi::FILE) }
         .as_result()
@@ -169,7 +169,7 @@ pub fn register<S: AsRef<str>>(name: S) -> Result<()> {
 ///
 /// Dump the global level and the registered log types.
 pub fn dump<S: AsRawFd>(s: &S) -> Result<()> {
-    let f = cfile::open_stream(s, "w")?;
+    let f = cfile::fdopen(s, "w")?;
 
     unsafe { ffi::rte_log_dump(f.stream() as *mut ffi::FILE) };
 

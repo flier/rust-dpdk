@@ -1,12 +1,16 @@
 # rust-dpdk
 
-Rust-Dpdk is a prototype to wrap [DPDK](http://dpdk.org/) API with Rust language.
+Rust-Dpdk is an experimental prototype to wrap [DPDK](http://dpdk.org/) API with Rust language.
 
 ## Build
 
 First, please follow [the official document](http://dpdk.org/doc/guides/linux_gsg/build_dpdk.html) to setup a DPDK development envrionment.
 
-And build rust-dpdk with `RTE_SDK` envrionment variable:
+```
+$ CONFIG_RTE_BUILD_COMBINE_LIBS=y EXTRA_CFLAGS="-fPIC -O0 -g -ggdb" make install T=x86_64-native-linuxapp-gcc -j 4
+```
+
+And build `rust-dpdk` with `RTE_SDK` envrionment variable:
 
 ```
 $ RTE_SDK=<rte_path> cargo build

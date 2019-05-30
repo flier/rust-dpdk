@@ -28,7 +28,8 @@ pub fn build_dpdk(rte_sdk: &Path, rte_target: &str) {
             } else {
                 "-fPIC -fkeep-inline-functions -O"
             },
-        ).current_dir(rte_sdk)
+        )
+        .current_dir(rte_sdk)
         .status()
         .unwrap_or_else(|e| panic!("failed to build DPDK: {}", e));
 }

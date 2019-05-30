@@ -28,7 +28,8 @@ impl CmdGetParams {
                 dev.portid(),
                 info.driver_name(),
                 rte::version()
-            )).unwrap();
+            ))
+            .unwrap();
         }
     }
 
@@ -43,15 +44,11 @@ impl CmdGetParams {
                     "Port {} Link Up (speed {} Mbps, {})",
                     dev.portid(),
                     link.speed,
-                    if link.duplex {
-                        "full-duplex"
-                    } else {
-                        "half-duplex"
-                    }
-                )).unwrap();
+                    if link.duplex { "full-duplex" } else { "half-duplex" }
+                ))
+                .unwrap();
             } else {
-                cl.println(format!("Port {} Link Down", dev.portid()))
-                    .unwrap();
+                cl.println(format!("Port {} Link Down", dev.portid())).unwrap();
             }
         }
     }
@@ -74,10 +71,7 @@ impl CmdIntParams {
             dev.stop();
 
             if let Err(err) = dev.start() {
-                Err(format!(
-                    "Error: failed to start port {}, {}",
-                    self.port, err
-                ))
+                Err(format!("Error: failed to start port {}, {}", self.port, err))
             } else {
                 app_port.port_active = true;
 
@@ -85,8 +79,7 @@ impl CmdIntParams {
             }
         });
 
-        cl.println(res.unwrap_or_else(|err| format!("Error: {}", err)))
-            .unwrap();
+        cl.println(res.unwrap_or_else(|err| format!("Error: {}", err))).unwrap();
     }
 
     fn stop(&mut self, cl: &CmdLine, app_cfg: Option<&AppConfig>) {
@@ -104,8 +97,7 @@ impl CmdIntParams {
             }
         });
 
-        cl.println(res.unwrap_or_else(|err| format!("Error: {}", err)))
-            .unwrap();
+        cl.println(res.unwrap_or_else(|err| format!("Error: {}", err))).unwrap();
     }
 
     fn rxmode(&mut self, cl: &CmdLine, _: Option<&c_void>) {
@@ -114,8 +106,7 @@ impl CmdIntParams {
         let dev = self.dev();
 
         if !dev.is_valid() {
-            cl.println(format!("Error: port {} is invalid", self.port))
-                .unwrap();
+            cl.println(format!("Error: port {} is invalid", self.port)).unwrap();
         } else {
             // // Set VF vf_rx_mode, VF unsupport status is discard
             // for vf in 0..dev.info().max_vfs {
@@ -128,12 +119,12 @@ impl CmdIntParams {
             // }
 
             // Enable Rx vlan filter, VF unspport status is discard
-            if let Err(err) = dev.set_vlan_offload(ethdev::EthVlanOffloadMode::ETH_VLAN_FILTER_MASK)
-            {
+            if let Err(err) = dev.set_vlan_offload(ethdev::EthVlanOffloadMode::ETH_VLAN_FILTER_MASK) {
                 cl.println(format!(
                     "Error: failed to set VLAN offload mode for port {}, {}",
                     self.port, err
-                )).unwrap();
+                ))
+                .unwrap();
             }
         }
     }
@@ -157,12 +148,10 @@ impl CmdIntParams {
                     stats.obytes,
                     stats.ierrors + stats.oerrors
                 ),
-                Err(err) => format!(
-                    "Error: port {} fail to fetch statistics, {}",
-                    self.port, err
-                ),
+                Err(err) => format!("Error: port {} fail to fetch statistics, {}", self.port, err),
             }
-        }).unwrap();
+        })
+        .unwrap();
     }
 }
 
@@ -197,7 +186,8 @@ impl CmdIntMtuParams {
             format!("Error: port {} is invalid", self.port)
         } else {
             format!("Port {} MTU: {}", self.port, dev.mtu().unwrap())
-        }).unwrap();
+        })
+        .unwrap();
     }
 
     fn mtu_set(&mut self, cl: &CmdLine, _: Option<&c_void>) {
@@ -206,13 +196,11 @@ impl CmdIntMtuParams {
         let dev = self.dev();
 
         cl.println(if let Err(err) = dev.set_mtu(self.mtu) {
-            format!(
-                "Error: Fail to change mac address of port {}, {}",
-                self.port, err
-            )
+            format!("Error: Fail to change mac address of port {}, {}", self.port, err)
         } else {
             format!("Port {} MTU was changed to {}", self.port, self.mtu)
-        }).unwrap();
+        })
+        .unwrap();
     }
 }
 
@@ -247,7 +235,8 @@ impl CmdIntMacParams {
             format!("Error: port {} is invalid", self.port)
         } else {
             format!("Port {} MAC Address: {}", self.port, dev.mac_addr())
-        }).unwrap();
+        })
+        .unwrap();
     }
 
     fn set(&mut self, cl: &CmdLine, app_cfg: Option<&AppConfig>) {
@@ -255,22 +244,15 @@ impl CmdIntMacParams {
 
         let res = app_cfg.unwrap().lock_port(self.dev(), |app_port, dev| {
             if let Err(err) = dev.set_mac_addr(&self.mac) {
-                Err(format!(
-                    "Fail to change mac address of port {}, {}",
-                    self.port, err
-                ))
+                Err(format!("Fail to change mac address of port {}, {}", self.port, err))
             } else {
                 app_port.port_dirty = true;
 
-                Ok(format!(
-                    "Port {} mac address was changed to {}",
-                    self.port, self.mac
-                ))
+                Ok(format!("Port {} mac address was changed to {}", self.port, self.mac))
             }
         });
 
-        cl.println(res.unwrap_or_else(|err| format!("Error: {}", err)))
-            .unwrap();
+        cl.println(res.unwrap_or_else(|err| format!("Error: {}", err))).unwrap();
     }
 
     fn validate(&mut self, cl: &CmdLine, _: Option<&c_void>) {
@@ -279,12 +261,9 @@ impl CmdIntMacParams {
         cl.println(format!(
             "MAC address {} is {}",
             self.mac,
-            if self.mac.is_valid() {
-                "unicast"
-            } else {
-                "not unicast"
-            }
-        )).unwrap();
+            if self.mac.is_valid() { "unicast" } else { "not unicast" }
+        ))
+        .unwrap();
     }
 }
 
@@ -325,7 +304,8 @@ impl CmdVlanParams {
                 },
                 mode @ _ => format!("Error: Bad mode {}", mode),
             }
-        }).unwrap();
+        })
+        .unwrap();
     }
 }
 
@@ -429,11 +409,7 @@ pub fn main(app_cfg: &mut AppConfig) {
         CmdIntMtuParams::mtu_set,
         None,
         "mtu <port_id> <mtu_value>\n     Change MTU",
-        &[
-            &pcmd_mtu_token_cmd,
-            &pcmd_intmtu_token_port,
-            &pcmd_intmtu_token_opt,
-        ],
+        &[&pcmd_mtu_token_cmd, &pcmd_intmtu_token_port, &pcmd_intmtu_token_opt],
     );
 
     let pcmd_macaddr_list = inst(
@@ -454,11 +430,7 @@ pub fn main(app_cfg: &mut AppConfig) {
         CmdIntMacParams::set,
         Some(app_cfg),
         "macaddr <port_id> <mac_addr>\n     Set MAC address",
-        &[
-            &pcmd_macaddr_token_cmd,
-            &pcmd_intmac_token_port,
-            &pcmd_intmac_token_mac,
-        ],
+        &[&pcmd_macaddr_token_cmd, &pcmd_intmac_token_port, &pcmd_intmac_token_mac],
     );
 
     let pcmd_macaddr_validate = inst(
@@ -499,8 +471,5 @@ pub fn main(app_cfg: &mut AppConfig) {
         &pcmd_vlan,
     ];
 
-    new(cmds)
-        .open_stdin("EthApp> ")
-        .expect("fail to open stdin")
-        .interact();
+    new(cmds).open_stdin("EthApp> ").expect("fail to open stdin").interact();
 }

@@ -286,7 +286,8 @@ fn main() {
         0,
         mbuf::RTE_MBUF_DEFAULT_BUF_SIZE as u16,
         rte::socket_id() as i32,
-    ).unwrap();
+    )
+    .unwrap();
 
     let enabled_devices: Vec<ethdev::PortId> = ethdev::devices()
         .filter(|dev| ((1 << dev.portid()) & enabled_port_mask) != 0)

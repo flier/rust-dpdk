@@ -27,7 +27,7 @@ pub fn type_count(devtype: DevType) -> usize {
 
 /// This function dumps the list of user device and their arguments.
 pub fn dump<S: AsRawFd>(s: &S) {
-    if let Ok(f) = cfile::open_stream(s, "w") {
+    if let Ok(f) = cfile::fdopen(s, "w") {
         unsafe {
             ffi::rte_devargs_dump(f.stream() as *mut ffi::FILE);
         }

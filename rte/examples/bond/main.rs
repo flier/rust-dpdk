@@ -319,7 +319,8 @@ impl CmdActionResult {
             cl.println(&format!(
                 "lcore_main already running on core: {}",
                 app_conf.lcore_main_core_id
-            )).unwrap();
+            ))
+            .unwrap();
         } else {
             app_conf.start();
         }
@@ -333,7 +334,8 @@ impl CmdActionResult {
             cl.println(&format!(
                 "lcore_main not running on core: {}",
                 app_conf.lcore_main_core_id
-            )).unwrap();
+            ))
+            .unwrap();
         } else {
             app_conf.stop();
 
@@ -370,7 +372,8 @@ impl CmdActionResult {
             app_conf.port_packets[0].load(Ordering::Relaxed),
             app_conf.port_packets[1].load(Ordering::Relaxed),
             app_conf.port_packets[2].load(Ordering::Relaxed)
-        )).unwrap();
+        ))
+        .unwrap();
     }
 
     fn help(&mut self, cl: &cmdline::CmdLine, _: Option<Rc<RefCell<AppConfig>>>) {
@@ -382,7 +385,8 @@ impl CmdActionResult {
     show       - shows some bond info: ex. active slaves etc.
     help       - prints help.
     quit       - terminate all threads and quit."#,
-        ).unwrap();
+        )
+        .unwrap();
     }
 
     fn quit(&mut self, cl: &cmdline::CmdLine, data: Option<Rc<RefCell<AppConfig>>>) {
@@ -457,7 +461,9 @@ fn main() {
     // init EAL
     eal::init(&args).expect("Cannot init EAL");
 
-    devargs::dump(&cfile::stdout().unwrap());
+    let stdout = cfile::stdout().unwrap();
+
+    devargs::dump(&*stdout);
 
     let nb_ports = ethdev::count();
 
@@ -477,7 +483,8 @@ fn main() {
         0,
         mbuf::RTE_MBUF_DEFAULT_BUF_SIZE as u16,
         rte::socket_id() as i32,
-    ).expect("fail to initial mbuf pool");
+    )
+    .expect("fail to initial mbuf pool");
 
     let port_conf = ethdev::EthConf {
         rx_adv_conf: Some(ethdev::RxAdvConf {

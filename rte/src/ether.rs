@@ -257,13 +257,13 @@ pub trait VlanExt {
 
 impl VlanExt for mbuf::MBuf {
     fn vlan_strip(&mut self) -> Result<()> {
-        rte_check!(unsafe { ffi::rte_vlan_strip(self.as_raw()) })
+        rte_check!(unsafe { ffi::_rte_vlan_strip(self.as_raw()) })
     }
 }
 
 /// Insert VLAN tag into mbuf.
 pub fn vlan_insert(m: &mut mbuf::RawMBufPtr) -> Result<()> {
-    rte_check!(unsafe { ffi::rte_vlan_insert(m) })
+    rte_check!(unsafe { ffi::_rte_vlan_insert(m) })
 }
 
 #[cfg(test)]

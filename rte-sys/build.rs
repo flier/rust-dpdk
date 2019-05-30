@@ -4,7 +4,6 @@ extern crate pretty_env_logger;
 
 #[cfg(feature = "gen")]
 extern crate bindgen;
-extern crate bindgen_build;
 
 extern crate rte_build;
 
@@ -15,6 +14,7 @@ use rte_build::*;
 #[cfg(feature = "gen")]
 fn gen_rte_binding(rte_sdk_dir: &Path, dest_path: &Path) {
     let rte_header = "src/rte.h";
+    let stub_header = "src/stub.h";
 
     info!("generating RTE binding file base on \"{}\"", rte_header);
 
@@ -23,15 +23,20 @@ fn gen_rte_binding(rte_sdk_dir: &Path, dest_path: &Path) {
 
     bindgen::Builder::default()
         .header(rte_header)
+        .header(stub_header)
         .generate_comments(true)
         .generate_inline_functions(true)
-        .generate_tls_vars(true)
-        .blacklist_function(r#"_.*"#)
+        .whitelist_type(r"(rte|cmdline|ether|eth|arp|vlan|vxlan)_.*")
+        .whitelist_function(r"(_rte|rte|cmdline|lcore|ether|eth|arp|is)_.*")
+        .whitelist_var(
+            r"(RTE|CMDLINE|ETHER|ARP|VXLAN|BONDING|LCORE|MEMPOOL|ARP|PKT|EXT_ATTACHED|IND_ATTACHED|lcore|rte|cmdline|per_lcore)_.*",
+        )
         .derive_copy(true)
         .derive_debug(true)
         .derive_default(true)
         .derive_partialeq(true)
         .default_enum_style(bindgen::EnumVariation::ModuleConsts)
+        .clang_arg("-fkeep-inline-functions")
         .clang_args(
             cflags
                 .into_iter()
@@ -43,7 +48,8 @@ fn gen_rte_binding(rte_sdk_dir: &Path, dest_path: &Path) {
                         format!("-D{}", name)
                     }
                 })),
-        ).rustfmt_bindings(true)
+        )
+        .rustfmt_bindings(true)
         .time_phases(true)
         .generate()
         .expect("Unable to generate bindings")
@@ -68,27 +74,22 @@ fn main() {
     info!("using DPDK @ {:?}", rte_sdk_dir);
 
     if !rte_sdk_dir.exists() || !rte_sdk_dir.join("lib/libdpdk.a").exists() {
+        apply_patches(RTE_SDK.as_path());
         build_dpdk(RTE_SDK.as_path(), RTE_TARGET.as_str());
     }
 
-    gen_rte_config(&rte_sdk_dir, &OUT_DIR.join("config.rs"));
+    if cfg!(feature = "gen") {
+        gen_rte_config(&rte_sdk_dir, &OUT_DIR.join("config.rs"));
 
-    let binding_file = OUT_DIR.join("raw.rs");
+        let binding_file = OUT_DIR.join("raw.rs");
 
-    gen_rte_binding(&rte_sdk_dir, &binding_file);
+        gen_rte_binding(&rte_sdk_dir, &binding_file);
+    }
 
-    let cpu_features = gen_cpu_features().collect::<Vec<_>>();
-
-    bindgen_build::build(binding_file, "rte", |build| {
-        build
-            .flag("-march=native")
-            .include("src")
-            .include(rte_sdk_dir.join("include"));
-
-        for (name, value) in &cpu_features {
-            build.define(name, value.as_ref().map(|s| s.as_str()));
-        }
-    }).unwrap();
+    gcc_rte_config(&rte_sdk_dir)
+        .file("src/stub.c")
+        .include("src")
+        .compile("rte_stub");
 
     gen_cargo_config(
         &rte_sdk_dir,

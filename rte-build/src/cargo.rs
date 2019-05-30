@@ -14,8 +14,5 @@ pub fn gen_cargo_config<S: AsRef<str>>(rte_sdk_dir: &PathBuf, libs: impl Iterato
         "cargo:rustc-link-search=native={}",
         rte_sdk_dir.join("lib").to_str().unwrap()
     );
-    println!(
-        "cargo:include={}",
-        rte_sdk_dir.join("include").to_str().unwrap()
-    );
+    println!("cargo:include={}", rte_sdk_dir.join("include").to_str().unwrap());
 }

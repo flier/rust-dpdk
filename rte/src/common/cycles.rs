@@ -27,10 +27,10 @@ pub fn delay(d: Duration) {
 
 #[inline]
 pub fn rdtsc() -> u64 {
-    unsafe { ffi::rte_rdtsc() }
+    unsafe { ffi::_rte_rdtsc() }
 }
 
 #[inline]
 pub fn rdtsc_precise() -> u64 {
-    unsafe { ffi::rte_rdtsc_precise() }
+    unsafe { ffi::_rte_rdtsc_precise() }
 }

@@ -449,7 +449,8 @@ fn kni_alloc(conf: &mut Conf, dev: ethdev::PortId, pktmbuf_pool: &mut mempool::M
                 kni::alloc(pktmbuf_pool, &conf, Some(&ops))
             } else {
                 kni::alloc(pktmbuf_pool, &conf, None)
-            }).expect(&format!("Fail to create kni for port: {}", portid));
+            })
+            .expect(&format!("Fail to create kni for port: {}", portid));
 
             param.kni[i as usize] = kni.into_raw();
 
@@ -613,7 +614,8 @@ fn main() {
         0,
         MBUF_DATA_SZ as u16,
         rte::socket_id() as i32,
-    ).expect("fail to initial mbuf pool");
+    )
+    .expect("fail to initial mbuf pool");
 
     let enabled_devices: Vec<ethdev::PortId> = ethdev::devices()
         .filter(|dev| ((1 << dev.portid()) & conf.enabled_port_mask) != 0)

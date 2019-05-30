@@ -125,10 +125,10 @@ pub fn get_socket_stats(socket_id: i32) -> Option<ffi::rte_malloc_socket_stats> 
 
 /// Dump statistics.
 pub fn dump_stats<S: AsRawFd>(s: &S, tag: Option<&str>) {
-    if let Ok(f) = cfile::open_stream(s, "w") {
+    if let Ok(mut f) = cfile::fdopen(s, "w") {
         unsafe {
             ffi::rte_malloc_dump_stats(
-                f.stream() as *mut ffi::FILE,
+                &mut **f as *mut _ as *mut _,
                 tag.map_or_else(ptr::null, |s| s.as_ptr() as *const i8),
             );
         }

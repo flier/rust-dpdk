@@ -372,15 +372,17 @@ impl EthDevice for PortId {
     }
 
     fn rx_burst(&self, queue_id: QueueId, rx_pkts: &mut [Option<mbuf::MBuf>]) -> usize {
-        unsafe { ffi::rte_eth_rx_burst(*self, queue_id, rx_pkts.as_mut_ptr() as *mut _, rx_pkts.len() as u16) as usize }
+        unsafe {
+            ffi::_rte_eth_rx_burst(*self, queue_id, rx_pkts.as_mut_ptr() as *mut _, rx_pkts.len() as u16) as usize
+        }
     }
 
     fn tx_burst<T: AsRaw<Raw = mbuf::RawMBuf>>(&self, queue_id: QueueId, rx_pkts: &mut [T]) -> usize {
         unsafe {
             if rx_pkts.is_empty() {
-                ffi::rte_eth_tx_burst(*self, queue_id, ptr::null_mut(), 0) as usize
+                ffi::_rte_eth_tx_burst(*self, queue_id, ptr::null_mut(), 0) as usize
             } else {
-                ffi::rte_eth_tx_burst(*self, queue_id, rx_pkts.as_mut_ptr() as *mut _, rx_pkts.len() as u16) as usize
+                ffi::_rte_eth_tx_burst(*self, queue_id, rx_pkts.as_mut_ptr() as *mut _, rx_pkts.len() as u16) as usize
             }
         }
     }

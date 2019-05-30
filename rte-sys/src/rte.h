@@ -1,3 +1,5 @@
+#pragma once
+
 // Build Configuration
 #include <rte_config.h>
 
@@ -55,3 +57,4 @@
 #include <cmdline_parse_string.h>
 #include <cmdline_socket.h>
 #include <cmdline.h>
+

@@ -41,7 +41,8 @@ fn setup_ports(app_cfg: &mut AppConfig) {
                 0,
                 mbuf::RTE_MBUF_DEFAULT_BUF_SIZE as u16,
                 rte::socket_id() as i32,
-            ).expect("create mbuf pool failed");
+            )
+            .expect("create mbuf pool failed");
 
             println!("Init port {}..\n", portid);
 

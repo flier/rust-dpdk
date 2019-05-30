@@ -38,7 +38,7 @@ pub struct Bitmap(NonNull<RawBitmap>);
 impl Drop for Bitmap {
     fn drop(&mut self) {
         unsafe {
-            ffi::rte_bitmap_free(self.as_raw());
+            ffi::_rte_bitmap_free(self.as_raw());
         }
     }
 }
@@ -54,44 +54,44 @@ impl AsRaw for Bitmap {
 impl Bitmap {
     /// Bitmap memory footprint calculation
     pub fn memory_footprint(bits: u32) -> u32 {
-        unsafe { ffi::rte_bitmap_get_memory_footprint(bits) }
+        unsafe { ffi::_rte_bitmap_get_memory_footprint(bits) }
     }
 
     /// Bitmap initialization
     pub fn init(bits: u32, mem: *mut u8, mem_size: u32) -> Result<Self> {
-        unsafe { ffi::rte_bitmap_init(bits, mem, mem_size) }
+        unsafe { ffi::_rte_bitmap_init(bits, mem, mem_size) }
             .as_result()
             .map(Bitmap)
     }
 
     /// Bitmap reset
     pub fn reset(&mut self) {
-        unsafe { ffi::rte_bitmap_reset(self.as_raw()) }
+        unsafe { ffi::_rte_bitmap_reset(self.as_raw()) }
     }
 
     /// Bitmap location prefetch into CPU L1 cache
     pub fn prefetch0(&self, pos: Position) {
-        unsafe { ffi::rte_bitmap_prefetch0(self.as_raw(), pos) }
+        unsafe { ffi::_rte_bitmap_prefetch0(self.as_raw(), pos) }
     }
 
     /// Bitmap bit get
     pub fn get(&self, pos: Position) -> bool {
-        unsafe { ffi::rte_bitmap_get(self.as_raw(), pos) != 0 }
+        unsafe { ffi::_rte_bitmap_get(self.as_raw(), pos) != 0 }
     }
 
     /// Bitmap bit set
     pub fn set(&mut self, pos: Position) {
-        unsafe { ffi::rte_bitmap_set(self.as_raw(), pos) }
+        unsafe { ffi::_rte_bitmap_set(self.as_raw(), pos) }
     }
 
     /// Bitmap slab set
     pub fn set_slab(&mut self, pos: Position, slab: Slab) {
-        unsafe { ffi::rte_bitmap_set_slab(self.as_raw(), pos, slab) }
+        unsafe { ffi::_rte_bitmap_set_slab(self.as_raw(), pos, slab) }
     }
 
     /// Bitmap bit clear
     pub fn clear(&mut self, pos: Position) {
-        unsafe { ffi::rte_bitmap_clear(self.as_raw(), pos) }
+        unsafe { ffi::_rte_bitmap_clear(self.as_raw(), pos) }
     }
 
     /// Bitmap scan (with automatic wrap-around)
@@ -99,7 +99,7 @@ impl Bitmap {
         let mut pos = 0;
         let mut slab = 0;
 
-        if unsafe { ffi::rte_bitmap_scan(self.as_raw(), &mut pos, &mut slab) } == 0 {
+        if unsafe { ffi::_rte_bitmap_scan(self.as_raw(), &mut pos, &mut slab) } == 0 {
             None
         } else {
             Some((pos, slab))

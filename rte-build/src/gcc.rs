@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use cc;
+
 use crate::gen_cpu_features;
 
 pub fn gcc_rte_config(rte_sdk_dir: &Path) -> cc::Build {

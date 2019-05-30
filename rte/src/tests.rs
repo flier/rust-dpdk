@@ -9,6 +9,7 @@ use log::Level::Debug;
 
 use ffi;
 
+use common::memory::SOCKET_ID_ANY;
 use eal::{self, ProcType};
 use launch;
 use lcore;
@@ -28,7 +29,8 @@ fn test_eal() {
             format!("{:x}", (1 << num_cpus::get()) - 1),
             String::from("--log-level"),
             String::from("8")
-        ]).unwrap(),
+        ])
+        .unwrap(),
         4
     );
 
@@ -157,9 +159,10 @@ fn test_mempool() {
         16,
         128,
         0,
-        ffi::SOCKET_ID_ANY,
+        SOCKET_ID_ANY,
         MemoryPoolFlags::MEMPOOL_F_SP_PUT | MemoryPoolFlags::MEMPOOL_F_SC_GET,
-    ).unwrap();
+    )
+    .unwrap();
 
     assert_eq!(p.name(), "test");
     assert_eq!(p.size, 16);
@@ -179,7 +182,7 @@ fn test_mempool() {
     if log_enabled!(Debug) {
         let stdout = cfile::tmpfile().unwrap();
 
-        p.dump(&stdout);
+        p.dump(&*stdout);
     }
 
     let mut elements: Vec<(usize, *mut ())> = Vec::new();
@@ -214,7 +217,7 @@ fn test_mempool() {
     if log_enabled!(Debug) {
         let stdout = cfile::tmpfile().unwrap();
 
-        mempool::list_dump(&stdout);
+        mempool::list_dump(&*stdout);
     }
 }
 
@@ -231,7 +234,8 @@ fn test_mbuf() {
         PRIV_SIZE as u16,
         mbuf::RTE_MBUF_DEFAULT_BUF_SIZE as u16,
         lcore::socket_id() as i32,
-    ).unwrap();
+    )
+    .unwrap();
 
     assert_eq!(p.name(), "mbuf_pool");
     assert_eq!(p.size, NB_MBUF);

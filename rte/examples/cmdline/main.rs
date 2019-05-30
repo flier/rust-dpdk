@@ -113,11 +113,7 @@ unsafe extern "C" fn complete_get_elt_obj_list(
     -1
 }
 
-unsafe extern "C" fn get_help_obj_list(
-    _: *mut cmdline::RawTokenHeader,
-    dstbuf: *mut i8,
-    size: u32,
-) -> i32 {
+unsafe extern "C" fn get_help_obj_list(_: *mut cmdline::RawTokenHeader, dstbuf: *mut i8, size: u32) -> i32 {
     let dbuf = slice::from_raw_parts_mut(dstbuf as *mut u8, size as usize);
     let s = CString::new("Obj-List").unwrap();
     let sbuf = s.as_bytes_with_nul();
@@ -169,8 +165,7 @@ impl CmdObjAddResult {
         let name = self.name.to_str();
 
         if objs.unwrap().borrow().contains_key(name) {
-            cl.print(format!("Object {} already exist\n", name))
-                .unwrap();
+            cl.print(format!("Object {} already exist\n", name)).unwrap();
 
             return;
         }
@@ -180,8 +175,7 @@ impl CmdObjAddResult {
             ip: self.ip.to_ipaddr(),
         };
 
-        cl.print(format!("Object {} added, ip={}\n", name, obj.ip))
-            .unwrap();
+        cl.print(format!("Object {} added, ip={}\n", name, obj.ip)).unwrap();
 
         let _ = objs.unwrap().borrow_mut().insert(String::from(name), obj);
     }
@@ -209,7 +203,8 @@ extended to handle a list of objects. There are
 - del obj_name
 - show obj_name
 "#,
-        ).unwrap();
+        )
+        .unwrap();
     }
 }
 
@@ -246,9 +241,7 @@ fn main() {
             ops: &mut token_obj_list_ops,
             offset: offset_of!(CmdDelShowResult, obj) as u32,
         },
-        obj_list_data: TokenObjectListData {
-            objs: objects.clone(),
-        },
+        obj_list_data: TokenObjectListData { objs: objects.clone() },
     };
 
     let cmd_obj_obj = cmdline::Token::Raw(&token_obj_list.hdr, PhantomData);
