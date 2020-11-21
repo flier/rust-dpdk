@@ -132,7 +132,7 @@ bitflags! {
         const PKT_RX_OUTER_L4_CKSUM_INVALID	= ffi::PKT_RX_OUTER_L4_CKSUM_INVALID as u64;
 
         /// Indicate that the metadata field in the mbuf is in use.
-        const PKT_TX_METADATA = ffi::PKT_TX_METADATA as u64;
+        // const PKT_TX_METADATA = ffi::PKT_TX_METADATA as u64;
 
 
          /// Outer UDP checksum offload flag. This flag is used for enabling

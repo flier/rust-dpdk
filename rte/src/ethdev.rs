@@ -172,7 +172,7 @@ pub trait EthDevice {
 /// The enabled port numbers may be noncontiguous.
 /// In the case, the applications need to manage enabled port by themselves.
 pub fn count() -> u16 {
-    unsafe { ffi::rte_eth_dev_count() }
+    unsafe { ffi::rte_eth_dev_count_avail() }
 }
 
 pub fn devices() -> Range<PortId> {
@@ -196,7 +196,7 @@ impl EthDevice for PortId {
     fn info(&self) -> RawEthDeviceInfo {
         let mut info: RawEthDeviceInfo = Default::default();
 
-        unsafe { ffi::rte_eth_dev_info_get(*self, &mut info) }
+        unsafe { ffi::rte_eth_dev_info_get(*self, &mut info); }
 
         info
     }
@@ -217,7 +217,7 @@ impl EthDevice for PortId {
 
     fn mac_addr(&self) -> ether::EtherAddr {
         unsafe {
-            let mut addr: ffi::ether_addr = mem::zeroed();
+            let mut addr: ffi::rte_ether_addr = mem::zeroed();
 
             ffi::rte_eth_macaddr_get(*self, &mut addr);
 
@@ -308,7 +308,7 @@ impl EthDevice for PortId {
     fn link(&self) -> EthLink {
         let mut link = rte_sys::rte_eth_link::default();
 
-        unsafe { ffi::rte_eth_link_get(*self, &mut link as *mut _) }
+        unsafe { ffi::rte_eth_link_get(*self, &mut link as *mut _); }
 
         EthLink {
             speed: link.link_speed,
@@ -321,7 +321,7 @@ impl EthDevice for PortId {
     fn link_nowait(&self) -> EthLink {
         let mut link = rte_sys::rte_eth_link::default();
 
-        unsafe { ffi::rte_eth_link_get_nowait(*self, &mut link as *mut _) }
+        unsafe { ffi::rte_eth_link_get_nowait(*self, &mut link as *mut _); }
 
         EthLink {
             speed: link.link_speed,

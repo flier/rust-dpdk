@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <net/ethernet.h>
+
 #include <rte_config.h>
 #include <rte_common.h>
 #include <rte_cycles.h>
@@ -89,7 +91,7 @@ print_stats(void)
 static void
 l2fwd_simple_forward(struct rte_mbuf *m, unsigned portid)
 {
-    struct ether_hdr *eth;
+    struct rte_ether_hdr *eth;
     void *tmp;
     unsigned dst_port;
     int sent;
@@ -103,7 +105,7 @@ l2fwd_simple_forward(struct rte_mbuf *m, unsigned portid)
     *((uint64_t *)tmp) = 0x000000000002 + ((uint64_t)dst_port << 40);
 
     /* src addr */
-    ether_addr_copy(&l2fwd_ports_eth_addr[dst_port], &eth->s_addr);
+    rte_ether_addr_copy(&l2fwd_ports_eth_addr[dst_port], &eth->s_addr);
 
     buffer = l2fwd_tx_buffers[dst_port];
     sent = rte_eth_tx_buffer(dst_port, 0, buffer, m);

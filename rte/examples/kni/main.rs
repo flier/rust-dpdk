@@ -7,6 +7,7 @@ extern crate pretty_env_logger;
 extern crate rte;
 
 use std::cmp;
+use std::convert::TryFrom;
 use std::env;
 use std::fmt;
 use std::io;
@@ -154,7 +155,7 @@ impl Conf {
 }
 
 extern "C" fn handle_sigint(sig: libc::c_int) {
-    match signal::Signal::from_c_int(sig).unwrap() {
+    match signal::Signal::try_from(sig).unwrap() {
         // When we receive a USR1 signal, print stats
         signal::SIGUSR1 => unsafe {
             kni_print_stats();

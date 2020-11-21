@@ -10,185 +10,112 @@ pub const MACHINE: &str = "native";
 pub const TOOLCHAIN: &str = "gcc";
 
 lazy_static! {
-    pub static ref RTE_SDK: PathBuf = env::var("RTE_SDK")
-        .expect("RTE_SDK - Points to the DPDK installation directory.")
-        .into();
+    pub static ref RTE_LIB_DIR: std::vec::Vec<std::string::String> = {
+        let libdpdk = pkg_config::Config::new()
+            .cargo_metadata(true)
+            .env_metadata(true)
+            .probe("libdpdk")
+            .expect("RTE_LIBDIR - Failed to get information from libdpdk.pc");
+        libdpdk.link_paths.iter().map(|p| p.to_string_lossy().to_string()).rev().collect()
+    };
+    pub static ref RTE_INCLUDE_DIR: std::vec::Vec<std::string::String> = {
+        let libdpdk = pkg_config::Config::new()
+            .cargo_metadata(true)
+            .env_metadata(true)
+            .probe("libdpdk")
+            .expect("RTE_LIBDIR - Failed to get information from libdpdk.pc");
+        libdpdk.include_paths.iter().map(|p| p.to_string_lossy().to_string()).rev().collect()
+    };
+    pub static ref RTE_CORE_LIBS: std::vec::Vec<std::string::String> = {
+        let libdpdk = pkg_config::Config::new()
+            .cargo_metadata(true)
+            .env_metadata(true)
+            .probe("libdpdk")
+            .expect("RTE_LIBDIR - Failed to get information from libdpdk.pc");
+        let mut libs = Vec::new();
+        for lib in &libdpdk.libs {
+            if lib.contains("pmd") {
+                continue;
+            }
+            libs.push(lib.to_string());
+        }
+        return libs;
+    };
+    pub static ref RTE_PMD_LIBS: std::vec::Vec<std::string::String> = {
+        let libdpdk = pkg_config::Config::new()
+            .cargo_metadata(true)
+            .env_metadata(true)
+            .probe("libdpdk")
+            .expect("RTE_LIBDIR - Failed to get information of libdpdk.pc");
+        let mut libs = Vec::new();
+        for lib in &libdpdk.libs {
+            if lib.contains("pmd") {
+                libs.push(lib.to_string());
+            }
+        }
+        return libs;
+    };
+    // pub static ref RTE_SDK: PathBuf = env::var("RTE_SDK")
+    //     .expect("RTE_SDK - Points to the DPDK installation directory.")
+    //     .into();
     pub static ref RTE_ARCH: String = env::var("RTE_ARCH").unwrap_or_else(|_| ARCH.to_owned());
     pub static ref RTE_MACHINE: String = env::var("RTE_MACHINE").unwrap_or_else(|_| MACHINE.to_owned());
     pub static ref RTE_OS: String = env::var("RTE_OS").unwrap_or_else(|_| OS.to_owned());
     pub static ref RTE_TOOLCHAIN: String = env::var("RTE_TOOLCHAIN").unwrap_or_else(|_| TOOLCHAIN.to_owned());
     pub static ref RTE_TARGET: String = env::var("RTE_TARGET")
         .unwrap_or_else(|_| format!("{}-{}-{}app-{}", *RTE_ARCH, *RTE_MACHINE, *RTE_OS, *RTE_TOOLCHAIN,));
-    pub static ref RTE_CORE_LIBS: Vec<&'static str> = vec![
-        "rte_acl",
-        "rte_bbdev",
-        "rte_bitratestats",
-        "rte_bpf",
-        "rte_bus_dpaa",
-        "rte_bus_fslmc",
-        "rte_bus_ifpga",
-        "rte_bus_pci",
-        "rte_bus_vdev",
-        "rte_bus_vmbus",
-        "rte_cfgfile",
-        "rte_cmdline",
-        "rte_common_cpt",
-        "rte_common_dpaax",
-        "rte_common_octeontx",
-        "rte_compressdev",
-        "rte_cryptodev",
-        "rte_distributor",
-        "rte_eal",
-        "rte_efd",
-        "rte_ethdev",
-        "rte_eventdev",
-        "rte_flow_classify",
-        "rte_gro",
-        "rte_gso",
-        "rte_hash",
-        "rte_ip_frag",
-        "rte_jobstats",
-        "rte_kni",
-        "rte_kvargs",
-        "rte_latencystats",
-        "rte_lpm",
-        "rte_mbuf",
-        "rte_member",
-        "rte_mempool",
-        "rte_mempool_bucket",
-        "rte_mempool_dpaa",
-        "rte_mempool_dpaa2",
-        "rte_mempool_octeontx",
-        "rte_mempool_ring",
-        "rte_mempool_stack",
-        "rte_meter",
-        "rte_metrics",
-        "rte_net",
-        "rte_pci",
-        "rte_pdump",
-        "rte_pipeline",
-        "rte_port",
-        "rte_power",
-        "rte_rawdev",
-        "rte_reorder",
-        "rte_ring",
-        "rte_sched",
-        "rte_security",
-        "rte_table",
-        "rte_timer",
-        "rte_vhost",
-    ];
-    pub static ref RTE_PMD_LIBS: Vec<&'static str> = vec![
-        "rte_pmd_af_packet",
-        "rte_pmd_ark",
-        "rte_pmd_atlantic",
-        "rte_pmd_avf",
-        "rte_pmd_avp",
-        "rte_pmd_axgbe",
-        "rte_pmd_bbdev_null",
-        "rte_pmd_bnxt",
-        "rte_pmd_bond",
-        "rte_pmd_caam_jr",
-        "rte_pmd_crypto_scheduler",
-        "rte_pmd_cxgbe",
-        "rte_pmd_dpaa",
-        "rte_pmd_dpaa2",
-        "rte_pmd_dpaa2_cmdif",
-        "rte_pmd_dpaa2_event",
-        "rte_pmd_dpaa2_qdma",
-        "rte_pmd_dpaa2_sec",
-        "rte_pmd_dpaa_event",
-        "rte_pmd_dpaa_sec",
-        "rte_pmd_dsw_event",
-        "rte_pmd_e1000",
-        "rte_pmd_ena",
-        "rte_pmd_enetc",
-        "rte_pmd_enic",
-        "rte_pmd_failsafe",
-        "rte_pmd_fm10k",
-        "rte_pmd_i40e",
-        "rte_pmd_ifc",
-        "rte_pmd_ifpga_rawdev",
-        "rte_pmd_ixgbe",
-        "rte_pmd_kni",
-        "rte_pmd_lio",
-        "rte_pmd_netvsc",
-        "rte_pmd_nfp",
-        "rte_pmd_null",
-        "rte_pmd_null_crypto",
-        "rte_pmd_octeontx",
-        "rte_pmd_octeontx_crypto",
-        "rte_pmd_octeontx_ssovf",
-        "rte_pmd_octeontx_zip",
-        "rte_pmd_opdl_event",
-        "rte_pmd_qat",
-        "rte_pmd_qede",
-        "rte_pmd_ring",
-        "rte_pmd_sfc_efx",
-        "rte_pmd_skeleton_event",
-        "rte_pmd_skeleton_rawdev",
-        "rte_pmd_softnic",
-        "rte_pmd_sw_event",
-        "rte_pmd_tap",
-        "rte_pmd_thunderx_nicvf",
-        "rte_pmd_vdev_netvsc",
-        "rte_pmd_vhost",
-        "rte_pmd_virtio",
-        "rte_pmd_virtio_crypto",
-        "rte_pmd_vmxnet3_uio",
-    ];
-    pub static ref RTE_DEPS_LIBS: Vec<&'static str> = vec!["numa"];
+    pub static ref RTE_DEPS_LIBS: Vec<String> = vec![String::from("numa")];
 }
 
-pub fn gen_rte_config(rte_sdk_dir: &Path, dest_path: &Path) {
-    let config_file = rte_sdk_dir.join(".config");
+// pub fn gen_rte_config(rte_sdk_dir: &Path, dest_path: &Path) {
+//     let config_file = rte_sdk_dir.join(".config");
 
-    info!("generating DPDK config base on {:?}", config_file);
+//     info!("generating DPDK config base on {:?}", config_file);
 
-    let mut f = File::create(&dest_path).unwrap();
+//     let mut f = File::create(&dest_path).unwrap();
 
-    writeln!(
-        &mut f,
-        "/* automatically generated by {} v{}, DON'T EDIT IT */\n",
-        env::var("CARGO_PKG_NAME").unwrap(),
-        env::var("CARGO_PKG_VERSION").unwrap(),
-    )
-    .unwrap();
+//     writeln!(
+//         &mut f,
+//         "/* automatically generated by {} v{}, DON'T EDIT IT */\n",
+//         env::var("CARGO_PKG_NAME").unwrap(),
+//         env::var("CARGO_PKG_VERSION").unwrap(),
+//     )
+//     .unwrap();
 
-    let r = BufReader::new(File::open(&config_file).expect("RTE config file"));
+//     let r = BufReader::new(File::open(&config_file).expect("RTE config file"));
 
-    for line in r.lines().flat_map(|line| line) {
-        if line.starts_with('#') {
-            writeln!(&mut f, "///{}", &line[1..]).unwrap();
-        } else {
-            let mut i = line.splitn(2, '=');
-            let key = i.next().expect("key");
-            let value = i.next().expect("value");
+//     for line in r.lines().flat_map(|line| line) {
+//         if line.starts_with('#') {
+//             writeln!(&mut f, "///{}", &line[1..]).unwrap();
+//         } else {
+//             let mut i = line.splitn(2, '=');
+//             let key = i.next().expect("key");
+//             let value = i.next().expect("value");
 
-            match value {
-                "" => {
-                    writeln!(&mut f, "pub const {}: () = ();", key).unwrap();
-                }
-                "y" => {
-                    writeln!(&mut f, "pub const {}: bool = true;", key).unwrap();
-                }
-                "n" => {
-                    writeln!(&mut f, "pub const {}: bool = false;", key).unwrap();
-                }
-                s if s.starts_with('"') && s.ends_with('"') => {
-                    writeln!(&mut f, "pub const {}: &str = {};", key, value).unwrap();
-                }
-                _ => {
-                    if let Ok(n) = u32::from_str(value) {
-                        writeln!(&mut f, "pub const {}: u32 = {};", key, n).unwrap();
-                    } else {
-                        writeln!(&mut f, "// pub const {}: _ = {};", key, value).unwrap();
-                    }
-                }
-            }
-        }
-    }
-}
+//             match value {
+//                 "" => {
+//                     writeln!(&mut f, "pub const {}: () = ();", key).unwrap();
+//                 }
+//                 "y" => {
+//                     writeln!(&mut f, "pub const {}: bool = true;", key).unwrap();
+//                 }
+//                 "n" => {
+//                     writeln!(&mut f, "pub const {}: bool = false;", key).unwrap();
+//                 }
+//                 s if s.starts_with('"') && s.ends_with('"') => {
+//                     writeln!(&mut f, "pub const {}: &str = {};", key, value).unwrap();
+//                 }
+//                 _ => {
+//                     if let Ok(n) = u32::from_str(value) {
+//                         writeln!(&mut f, "pub const {}: u32 = {};", key, n).unwrap();
+//                     } else {
+//                         writeln!(&mut f, "// pub const {}: _ = {};", key, value).unwrap();
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
 
 pub fn apply_patches(rte_sdk_dir: &Path) {
     let mut patch = Command::new("patch")

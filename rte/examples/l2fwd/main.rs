@@ -7,6 +7,7 @@ extern crate pretty_env_logger;
 extern crate rte;
 
 use std::clone::Clone;
+use std::convert::TryFrom;
 use std::env;
 use std::io;
 use std::io::prelude::*;
@@ -219,7 +220,7 @@ fn l2fwd_launch_one_lcore(conf: Option<&Conf>) -> i32 {
 }
 
 extern "C" fn handle_sigint(sig: libc::c_int) {
-    match signal::Signal::from_c_int(sig).unwrap() {
+    match signal::Signal::try_from(sig).unwrap() {
         signal::SIGINT | signal::SIGTERM => unsafe {
             println!("Signal {} received, preparing to exit...", sig);
 

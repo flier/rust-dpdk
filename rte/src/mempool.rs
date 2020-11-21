@@ -253,7 +253,7 @@ where
                 Some(obj_cb_stub::<T, O>)
             },
             obj_init_ctx,
-            socket_id,
+            socket_id as i32,
             flags.bits,
         )
     }
@@ -287,7 +287,7 @@ where
             mem::size_of::<O>() as u32,
             cache_size,
             private_data_size,
-            socket_id,
+            socket_id as i32,
             flags.bits,
         )
     }
@@ -380,7 +380,7 @@ impl Cache {
     /// This can be used by non-EAL threads to enable caching
     /// when they interact with a mempool.
     pub fn create(size: usize, socket_id: SocketId) -> Self {
-        unsafe { ffi::rte_mempool_cache_create(size as u32, socket_id) }.into()
+        unsafe { ffi::rte_mempool_cache_create(size as u32, socket_id as i32) }.into()
     }
 
     /// Free a user-owned mempool cache.

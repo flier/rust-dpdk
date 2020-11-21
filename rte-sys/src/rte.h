@@ -47,6 +47,7 @@
 #include <rte_tcp.h>
 #include <rte_udp.h>
 #include <rte_sctp.h>
+#include <rte_vxlan.h>
 
 #include <cmdline_rdline.h>
 #include <cmdline_parse.h>

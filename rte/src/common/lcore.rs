@@ -7,7 +7,7 @@ use std::ops::Deref;
 
 use ffi;
 
-use common::config;
+// use common::config;
 use errors::{rte_error, Result};
 use memory::SocketId;
 
@@ -76,16 +76,16 @@ impl Id {
 
     /// Get the ID of the physical socket of the specified lcore
     pub fn socket_id(self) -> SocketId {
-        unsafe { ffi::lcore_config[self.0 as usize].socket_id as SocketId }
+        unsafe { ffi::rte_lcore_to_socket_id(self.0) as SocketId }
     }
 
     /// Test if an lcore is enabled.
     pub fn is_enabled(self) -> bool {
-        config().lcore_role(self) == Role::Rte
+        unsafe { ffi::rte_lcore_is_enabled(self.0) == 1 }
     }
 
     pub fn is_master(self) -> bool {
-        self.0 == config().master_lcore().0
+        unsafe { self.0 == ffi::rte_get_master_lcore() }
     }
 
     /// Get the next enabled lcore ID.
@@ -95,7 +95,7 @@ impl Id {
 
     /// Return the index of the lcore starting from zero.
     pub fn index(self) -> usize {
-        unsafe { ffi::lcore_config[self.0 as usize].core_index as usize }
+        unsafe { ffi::rte_lcore_index(self.0 as i32) as usize}
     }
 
     /// Test if the core supplied has a specific role
@@ -105,7 +105,7 @@ impl Id {
 
     /// Get a lcore's role.
     pub fn role(self) -> Role {
-        config().lcore_role(self)
+        unsafe { Role::from(ffi::rte_eal_lcore_role(self.0)) }
     }
 }
 
@@ -138,25 +138,17 @@ pub fn enabled() -> Vec<Id> {
 
 /// Get the id of the master lcore
 pub fn master() -> Id {
-    config().master_lcore()
+    unsafe { Id(ffi::rte_get_master_lcore()) }
 }
 
 /// Return the number of execution units (lcores) on the system.
 pub fn count() -> usize {
-    config().lcore_count()
+    unsafe { ffi::rte_lcore_count() as usize }
 }
 
 /// Return the index of the lcore starting from zero.
-pub fn index(lcore_id: u32) -> Option<usize> {
-    let id = if lcore_id == ffi::LCORE_ID_ANY {
-        current().map(|id| id.0)
-    } else if lcore_id < ffi::RTE_MAX_LCORE {
-        Some(lcore_id)
-    } else {
-        None
-    };
-
-    id.map(|id| unsafe { ffi::lcore_config[id as usize].core_index as usize })
+pub fn index(lcore_id: u32) -> i32 {
+    unsafe{ ffi::rte_lcore_index(lcore_id as i32) }
 }
 
 /// Get the next enabled lcore ID.

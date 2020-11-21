@@ -1,8 +1,8 @@
 [package]
 name = "rte"
-version = "18.11.0"
+version = "19.11.0"
 authors = ["Flier Lu <flier.lu@gmail.com>"]
-description = "Rust bindings to DPDK"
+description = "Rust bindings to DPDK 19.11"
 build = "build.rs"
 
 [features]
@@ -11,31 +11,31 @@ gen = ["rte-sys/gen"]
 
 [dependencies]
 log = "0.4"
-bitflags = "1.0"
+bitflags = "1.2"
 failure = "0.1"
-lazy_static = "1.2"
+lazy_static = "1.4"
 libc = "0.2"
-time = "0.1"
+time = "0.2"
 cfile = "0.4"
-rand = "0.6"
+rand = "0.7"
 errno = "0.2"
 num-traits = "0.2"
-num-derive = "0.2"
-itertools = "0.8"
+num-derive = "0.3"
+itertools = "0.9"
 
-rte-sys = { version = "18.11", path = "../rte-sys" }
+rte-sys = { version = "19.11", path = "../rte-sys" }
 
 [build-dependencies]
 log = "0.4"
-pretty_env_logger = "0.3"
+pretty_env_logger = "0.4"
 
-rte-build = { version = "18.11", path = "../rte-build" }
+rte-build = { version = "19.11", path = "../rte-build" }
 
 [dev-dependencies]
-pretty_env_logger = "0.3"
-num_cpus = "1.0"
+pretty_env_logger = "0.4"
+num_cpus = "1.13"
 getopts = "0.2"
-nix = "0.14"
+nix = "0.19"
 
 [lib]
 name = "rte"

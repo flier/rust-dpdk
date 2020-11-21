@@ -1,5 +1,5 @@
 pub mod bitmap;
-mod config;
+// mod config;
 pub mod eal;
 pub mod keepalive;
 pub mod launch;
@@ -20,7 +20,7 @@ mod cycles;
 pub mod memory;
 pub mod memzone;
 
-pub use self::config::{config, Config, MemoryConfig};
+// pub use self::config::{config};
 pub use self::cycles::*;
 pub use self::lcore::{socket_count, socket_id};
 pub use self::rand::{rand, srand};

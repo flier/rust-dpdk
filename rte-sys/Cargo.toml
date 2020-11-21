@@ -1,8 +1,8 @@
 [package]
 name = "rte-sys"
-version = "18.11.0"
+version = "19.11.0"
 authors = ["Flier Lu <flier.lu@gmail.com>"]
-description = "FFI bindings to DPDK"
+description = "FFI bindings to DPDK 19.11"
 links = "dpdk"
 build = "build.rs"
 
@@ -15,12 +15,12 @@ name = "rte_sys"
 
 [dependencies]
 log = "0.4"
-cfg-if = "0.1"
+cfg-if = "1.0"
 
 [build-dependencies]
 log = "0.4"
-pretty_env_logger = "0.3"
+pretty_env_logger = "0.4"
 
-rte-build = { version = "18.11", path = "../rte-build" }
+rte-build = { version = "19.11", path = "../rte-build" }
 
-bindgen = { version = "0.49", optional = true }
+bindgen = { version = "0.55", optional = true }

@@ -50,6 +50,8 @@ pub fn alloc(
             _bitfield_1: ffi::rte_kni_conf::new_bitfield_1(conf.flags.bits),
             mac_addr: mem::transmute(conf.mac_addr.into_bytes()),
             mtu: conf.mtu,
+            max_mtu: conf.mtu,
+            min_mtu: conf.mtu,
         };
 
         ptr::copy(

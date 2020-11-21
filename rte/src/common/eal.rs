@@ -10,7 +10,7 @@ use ffi::{self, rte_proc_type_t::*};
 use errors::{AsResult, Result};
 use utils::AsCString;
 
-pub use common::config;
+// pub use common::config;
 pub use launch::{mp_remote_launch, mp_wait_lcore, remote_launch};
 
 #[repr(i32)]

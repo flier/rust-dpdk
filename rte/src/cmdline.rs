@@ -50,7 +50,7 @@ impl<T> Token<T> {
 impl<T> Drop for Token<T> {
     fn drop(&mut self) {
         if let Token::Str(ref token, _) = *self {
-            unsafe { libc::free(token.string_data.str as *mut libc::c_void) }
+            unsafe { libc::free(token.string_data.str_ as *mut libc::c_void) }
         }
     }
 }
@@ -59,7 +59,7 @@ pub type NumType = ffi::cmdline_numtype::Type;
 
 pub type RawFixedStr = ffi::cmdline_fixed_string_t;
 pub type RawIpNetAddr = ffi::cmdline_ipaddr_t;
-pub type RawEtherAddr = ffi::ether_addr;
+pub type RawEtherAddr = ffi::rte_ether_addr;
 pub type RawPortList = ffi::cmdline_portlist_t;
 
 pub struct FixedStr(RawFixedStr);
@@ -143,7 +143,7 @@ impl EtherAddr {
 pub struct PortList(RawPortList);
 
 impl PortList {
-    pub fn to_portlist<'a>(&'a self) -> Box<Iterator<Item = u32> + 'a> {
+    pub fn to_portlist<'a>(&'a self) -> Box<dyn Iterator<Item = u32> + 'a> {
         Box::new((0..32).filter(move |portid| ((1 << portid) as u32 & self.0.map) != 0))
     }
 }
