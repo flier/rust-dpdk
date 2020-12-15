@@ -177,7 +177,7 @@ macro_rules! TOKEN_STRING_INITIALIZER {
                     offset: offset_of!($container, $field) as u32,
                 },
                 string_data: $crate::ffi::cmdline_token_string_data {
-                    str: ::std::ptr::null(),
+                    str_: ::std::ptr::null(),
                 },
             },
             ::std::marker::PhantomData,
@@ -197,7 +197,7 @@ macro_rules! TOKEN_STRING_INITIALIZER {
                     ops: unsafe { &mut $crate::ffi::cmdline_token_string_ops },
                     offset: offset_of!($container, $field) as u32,
                 },
-                string_data: $crate::ffi::cmdline_token_string_data { str: p as *const i8 },
+                string_data: $crate::ffi::cmdline_token_string_data { str_: p as *const i8 },
             },
             ::std::marker::PhantomData,
         )
@@ -207,28 +207,28 @@ macro_rules! TOKEN_STRING_INITIALIZER {
 #[macro_export]
 macro_rules! TOKEN_NUM_INITIALIZER {
     ($container:path, $field:ident, u8) => {
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::UINT8)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::RTE_UINT8)
     };
     ($container:path, $field:ident, u16) => {
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::UINT16)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::RTE_UINT16)
     };
     ($container:path, $field:ident, u32) => {
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::UINT32)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::RTE_UINT32)
     };
     ($container:path, $field:ident, u64) => {
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::UINT64)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::RTE_UINT64)
     };
     ($container:path, $field:ident, i8) => {
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::INT8)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::RTE_INT8)
     };
     ($container:path, $field:ident, i16) => {
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::INT16)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::RTE_INT16)
     };
     ($container:path, $field:ident, i32) => {
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::INT32)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::RTE_INT32)
     };
     ($container:path, $field:ident, i64) => {
-        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::INT64)
+        TOKEN_NUM_INITIALIZER!($container, $field, $crate::ffi::cmdline_numtype::RTE_INT64)
     };
 
     ($container:path, $field:ident, $numtype:expr) => {

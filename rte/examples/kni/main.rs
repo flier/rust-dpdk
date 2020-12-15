@@ -22,7 +22,7 @@ use std::str::FromStr;
 use nix::sys::signal;
 
 use rte::ethdev::EthDevice;
-use rte::ffi::{ETHER_MAX_LEN, RTE_MAX_ETHPORTS, RTE_PKTMBUF_HEADROOM};
+use rte::ffi::{RTE_ETHER_MAX_LEN, RTE_MAX_ETHPORTS, RTE_PKTMBUF_HEADROOM};
 use rte::lcore::RTE_MAX_LCORE;
 use rte::*;
 
@@ -61,15 +61,15 @@ const KNI_MAX_KTHREAD: usize = 32;
 #[derive(Clone, Debug)]
 struct kni_port_params {
     // Port ID
-    port_id: libc::uint8_t,
+    port_id: u8,
     // lcore ID for RX
     lcore_rx: libc::c_uint,
     // lcore ID for TX
     lcore_tx: libc::c_uint,
     // Number of lcores for KNI multi kernel threads
-    nb_lcore_k: libc::uint32_t,
+    nb_lcore_k: u32,
     // Number of KNI devices to be created
-    nb_kni: libc::uint32_t,
+    nb_kni: u32,
     // lcore ID list for kthreads
     lcore_k: [libc::c_uint; KNI_MAX_KTHREAD],
     // KNI context pointers
@@ -323,7 +323,7 @@ extern "C" fn kni_change_mtu(port_id: u16, new_mtu: libc::c_uint) -> libc::c_int
         return -libc::EINVAL;
     }
 
-    if new_mtu > ETHER_MAX_LEN {
+    if new_mtu > RTE_ETHER_MAX_LEN {
         let dev = port_id as ethdev::PortId;
 
         dev.stop();
@@ -409,6 +409,15 @@ extern "C" fn kni_config_promiscusity(port_id: u16, on: u8) -> libc::c_int {
     0
 }
 
+extern "C" fn kni_config_allmulticast(port_id: u16, on: u8) -> libc::c_int {
+    debug!(
+        "port {} change allmulticast to {}",
+        port_id,
+        if on == 0 { "off" } else { "on" }
+    );
+    0
+}
+
 fn kni_alloc(conf: &mut Conf, dev: ethdev::PortId, pktmbuf_pool: &mut mempool::MemoryPool) {
     let portid = dev.portid();
 
@@ -445,6 +454,7 @@ fn kni_alloc(conf: &mut Conf, dev: ethdev::PortId, pktmbuf_pool: &mut mempool::M
                     config_network_if: Some(kni_config_network_interface),
                     config_mac_address: Some(kni_config_mac_address),
                     config_promiscusity: Some(kni_config_promiscusity),
+                    config_allmulticast: Some(kni_config_allmulticast),
                 };
 
                 kni::alloc(pktmbuf_pool, &conf, Some(&ops))

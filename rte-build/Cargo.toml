@@ -1,6 +1,6 @@
 [package]
 name = "rte-build"
-version = "19.11.0"
+version = "20.11.0"
 authors = ["Flier Lu <flier.lu@gmail.com>"]
 description = "FFI bindings to DPDK 19.11"
 

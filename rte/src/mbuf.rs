@@ -104,9 +104,6 @@ bitflags! {
         /// valid and is set to the segment size of original packets.
         const PKT_RX_LRO = ffi::PKT_RX_LRO as u64;
 
-        /// Indicate that the timestamp field in the mbuf is valid.
-        const PKT_RX_TIMESTAMP = ffi::PKT_RX_TIMESTAMP as u64;
-
         /// Indicate that security offload processing was applied on the RX packet.
         const PKT_RX_SEC_OFFLOAD = ffi::PKT_RX_SEC_OFFLOAD as u64;
 
@@ -477,13 +474,13 @@ impl MBuf {
     /// Return the IO address of the beginning of the mbuf data
     #[inline]
     pub fn data_iova(&self) -> ffi::rte_iova_t {
-        unsafe { self.__bindgen_anon_1.buf_iova + self.data_off as u64 }
+        unsafe { self.buf_iova + self.data_off as u64 }
     }
 
     /// Return the default IO address of the beginning of the mbuf data
     #[inline]
     pub fn data_iova_default(&self) -> ffi::rte_iova_t {
-        unsafe { self.__bindgen_anon_1.buf_iova + ffi::RTE_PKTMBUF_HEADROOM as u64 }
+        unsafe { self.buf_iova + ffi::RTE_PKTMBUF_HEADROOM as u64 }
     }
 
     /// Get the IO address that points to an offset of the start of the data in the mbuf

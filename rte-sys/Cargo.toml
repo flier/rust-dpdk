@@ -1,6 +1,6 @@
 [package]
 name = "rte-sys"
-version = "19.11.0"
+version = "20.11.0"
 authors = ["Flier Lu <flier.lu@gmail.com>"]
 description = "FFI bindings to DPDK 19.11"
 links = "dpdk"
@@ -21,6 +21,6 @@ cfg-if = "1.0"
 log = "0.4"
 pretty_env_logger = "0.4"
 
-rte-build = { version = "19.11", path = "../rte-build" }
+rte-build = { version = "20.11", path = "../rte-build" }
 
-bindgen = { version = "0.55", optional = true }
+bindgen = { version = "0.56", optional = true }

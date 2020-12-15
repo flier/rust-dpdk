@@ -84,8 +84,8 @@ impl Id {
         unsafe { ffi::rte_lcore_is_enabled(self.0) == 1 }
     }
 
-    pub fn is_master(self) -> bool {
-        unsafe { self.0 == ffi::rte_get_master_lcore() }
+    pub fn is_main(self) -> bool {
+        unsafe { self.0 == ffi::rte_get_main_lcore() }
     }
 
     /// Get the next enabled lcore ID.
@@ -137,8 +137,8 @@ pub fn enabled() -> Vec<Id> {
 }
 
 /// Get the id of the master lcore
-pub fn master() -> Id {
-    unsafe { Id(ffi::rte_get_master_lcore()) }
+pub fn main() -> Id {
+    unsafe { Id(ffi::rte_get_main_lcore()) }
 }
 
 /// Return the number of execution units (lcores) on the system.
@@ -175,7 +175,7 @@ pub fn next_id(lcore_id: u32, skip_master: bool, wrap: bool) -> Option<u32> {
             continue;
         }
 
-        if skip_master && Id(next_id).is_master() {
+        if skip_master && Id(next_id).is_main() {
             continue;
         }
 
@@ -219,14 +219,14 @@ pub fn foreach<F: FnMut(Id)>(f: F) {
     foreach_lcores(false).for_each(f)
 }
 
-/// Browse all running lcores except the master lcore.
+/// Browse all running lcores except the main lcore.
 pub fn foreach_slave<F: FnMut(Id)>(f: F) {
     foreach_lcores(true).for_each(f)
 }
 
-fn foreach_lcores(skip_master: bool) -> impl Iterator<Item = Id> {
+fn foreach_lcores(skip_main: bool) -> impl Iterator<Item = Id> {
     (0..ffi::RTE_MAX_LCORE)
         .map(Id)
         .filter(|lcore_id| lcore_id.is_enabled())
-        .filter(move |lcore_id| !skip_master || !lcore_id.is_master())
+        .filter(move |lcore_id| !skip_main || !lcore_id.is_main())
 }

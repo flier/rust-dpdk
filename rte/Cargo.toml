@@ -1,6 +1,6 @@
 [package]
 name = "rte"
-version = "19.11.0"
+version = "20.11.0"
 authors = ["Flier Lu <flier.lu@gmail.com>"]
 description = "Rust bindings to DPDK 19.11"
 build = "build.rs"
@@ -23,13 +23,13 @@ num-traits = "0.2"
 num-derive = "0.3"
 itertools = "0.9"
 
-rte-sys = { version = "19.11", path = "../rte-sys" }
+rte-sys = { version = "20.11", path = "../rte-sys" }
 
 [build-dependencies]
 log = "0.4"
 pretty_env_logger = "0.4"
 
-rte-build = { version = "19.11", path = "../rte-build" }
+rte-build = { version = "20.11", path = "../rte-build" }
 
 [dev-dependencies]
 pretty_env_logger = "0.4"

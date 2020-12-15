@@ -10,8 +10,8 @@ use errors::Result;
 #[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, FromPrimitive, ToPrimitive)]
 pub enum DevType {
-    WhiteListed = ffi::rte_devtype::RTE_DEVTYPE_WHITELISTED_PCI,
-    BlackListed = ffi::rte_devtype::RTE_DEVTYPE_BLACKLISTED_PCI,
+    Allowed = ffi::rte_devtype::RTE_DEVTYPE_ALLOWED,
+    Blocked = ffi::rte_devtype::RTE_DEVTYPE_BLOCKED,
     Virtual = ffi::rte_devtype::RTE_DEVTYPE_VIRTUAL,
 }
 

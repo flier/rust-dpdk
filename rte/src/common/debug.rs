@@ -7,7 +7,7 @@ pub fn dump_stack() {
 
 /// Dump the registers of the calling core to the console.
 pub fn dump_registers() {
-    unsafe { ffi::rte_dump_registers() }
+    unimplemented!("rte_dump_registers is unimplemented")
 }
 
 /// Provide notification of a critical non-recoverable error and stop.

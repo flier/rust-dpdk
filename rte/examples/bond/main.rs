@@ -14,10 +14,10 @@ use std::ptr::NonNull;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
-use rte::arp::{ARP_HRD_ETHER, ARP_OP_REPLY, ARP_OP_REQUEST};
+use rte::arp::{RTE_ARP_HRD_ETHER, RTE_ARP_OP_REPLY, RTE_ARP_OP_REQUEST};
 use rte::bond::BondedDevice;
 use rte::ethdev::EthDevice;
-use rte::ether::{ETHER_TYPE_IPv4, ETHER_ADDR_LEN, ETHER_TYPE_ARP};
+use rte::ether::{RTE_ETHER_TYPE_IPV4, ETHER_ADDR_LEN, RTE_ETHER_TYPE_ARP};
 use rte::lcore::RTE_MAX_LCORE;
 use rte::mbuf::MBufPool;
 use rte::memory::AsMutRef;
@@ -200,12 +200,12 @@ fn lcore_main(app_conf: Option<&AppConfig>) -> i32 {
                             if arp_hdr.arp_data.arp_tip == bond_ip {
                                 debug!(
                                     "received ARP {:x} packet from {}",
-                                    arp_hdr.arp_op.to_le(),
+                                    arp_hdr.arp_opcode.to_le(),
                                     ether::EtherAddr::from(arp_hdr.arp_data.arp_sha)
                                 );
 
-                                if arp_hdr.arp_op == (ARP_OP_REQUEST as u16).to_be() {
-                                    arp_hdr.arp_op = (ARP_OP_REPLY as u16).to_be();
+                                if arp_hdr.arp_opcode == (RTE_ARP_OP_REQUEST as u16).to_be() {
+                                    arp_hdr.arp_opcode = (RTE_ARP_OP_REPLY as u16).to_be();
 
                                     ether::EtherAddr::copy(
                                         &ether_hdr.s_addr.addr_bytes,
@@ -280,7 +280,7 @@ impl CmdActionResult {
                 let mut p = m.mtod::<ether::EtherHdr>();
                 {
                     let ether_hdr = unsafe { p.as_mut() };
-                    ether_hdr.ether_type = (ETHER_TYPE_ARP as u16).to_be();
+                    ether_hdr.ether_type = (RTE_ETHER_TYPE_ARP as u16).to_be();
 
                     ether::EtherAddr::copy(&app_conf.bond_mac_addr, &mut ether_hdr.s_addr.addr_bytes);
                     ether::EtherAddr::copy(&ether::EtherAddr::broadcast(), &mut ether_hdr.d_addr.addr_bytes);
@@ -289,11 +289,11 @@ impl CmdActionResult {
                 let mut p = unsafe { NonNull::new_unchecked(p.as_ptr().add(1) as *mut arp::ArpHdr) };
                 let arp_hdr = unsafe { p.as_mut() };
 
-                arp_hdr.arp_hrd = (ARP_HRD_ETHER as u16).to_be();
-                arp_hdr.arp_pro = (ETHER_TYPE_IPv4 as u16).to_be();
-                arp_hdr.arp_hln = ETHER_ADDR_LEN as u8;
-                arp_hdr.arp_pln = mem::size_of::<u32>() as u8;
-                arp_hdr.arp_op = (ARP_OP_REQUEST as u16).to_be();
+                arp_hdr.arp_hardware = (RTE_ARP_HRD_ETHER as u16).to_be();
+                arp_hdr.arp_protocol = (RTE_ETHER_TYPE_IPV4 as u16).to_be();
+                arp_hdr.arp_hlen = ETHER_ADDR_LEN as u8;
+                arp_hdr.arp_plen = mem::size_of::<u32>() as u8;
+                arp_hdr.arp_opcode = (RTE_ARP_OP_REQUEST as u16).to_be();
 
                 ether::EtherAddr::copy(&app_conf.bond_mac_addr, &mut arp_hdr.arp_data.arp_sha.addr_bytes);
                 ether::EtherAddr::copy(&ether::EtherAddr::zeroed(), &mut arp_hdr.arp_data.arp_tha.addr_bytes);
