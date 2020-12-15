@@ -95,7 +95,7 @@ impl Id {
 
     /// Return the index of the lcore starting from zero.
     pub fn index(self) -> usize {
-        unsafe { ffi::rte_lcore_index(self.0 as i32) as usize}
+        unsafe { ffi::rte_lcore_index(self.0 as i32) as usize }
     }
 
     /// Test if the core supplied has a specific role
@@ -147,8 +147,15 @@ pub fn count() -> usize {
 }
 
 /// Return the index of the lcore starting from zero.
-pub fn index(lcore_id: u32) -> i32 {
-    unsafe{ ffi::rte_lcore_index(lcore_id as i32) }
+pub fn index(lcore_id: u32) -> Option<usize> {
+    let id = if lcore_id == ffi::LCORE_ID_ANY {
+        current().map(|id| id.0)
+    } else if lcore_id < ffi::RTE_MAX_LCORE {
+        Some(lcore_id)
+    } else {
+        None
+    };
+    id.map(|id| unsafe { ffi::rte_lcore_index(id as i32) as usize})
 }
 
 /// Get the next enabled lcore ID.
