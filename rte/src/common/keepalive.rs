@@ -2,7 +2,9 @@ use std::mem;
 use std::os::raw::{c_int, c_void};
 use std::ptr::{self, NonNull};
 
-use errors::{AsResult, Result};
+use anyhow::Result;
+
+use errors::AsResult;
 use ffi::{
     self,
     rte_keepalive_state::{self, *},

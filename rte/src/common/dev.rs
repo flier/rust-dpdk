@@ -6,7 +6,9 @@ use std::ffi::CStr;
 use std::mem;
 use std::os::raw::{c_char, c_void};
 
-use errors::{AsResult, Result};
+use anyhow::Result;
+
+use errors::AsResult;
 use ffi::{self, rte_dev_event_type::*};
 use utils::AsCString;
 

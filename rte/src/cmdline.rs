@@ -9,11 +9,12 @@ use std::path::Path;
 use std::ptr;
 use std::string;
 
+use anyhow::Result;
 use libc;
 
 use ffi;
 
-use errors::{AsResult, ErrorKind::CmdLineParseError, Result};
+use errors::{AsResult, ErrorKind::CmdLineParseError};
 use ether;
 
 pub type RawTokenHeader = ffi::cmdline_token_hdr;

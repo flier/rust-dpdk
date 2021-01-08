@@ -6,11 +6,11 @@ use std::ptr;
 use std::result;
 use std::str;
 
+use anyhow::Result;
 use rand::{thread_rng, Rng};
 
 use ffi;
 
-use errors::Result;
 use mbuf;
 use utils::AsRaw;
 

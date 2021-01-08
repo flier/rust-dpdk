@@ -1,9 +1,10 @@
 use std::mem;
 use std::os::unix::io::AsRawFd;
 
+use anyhow::Result;
 use cfile;
 
-use errors::{AsResult, ErrorKind::*, Result};
+use errors::{AsResult, ErrorKind::*};
 use ffi;
 use utils::AsCString;
 

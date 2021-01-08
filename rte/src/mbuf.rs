@@ -27,11 +27,12 @@ use std::os::unix::io::AsRawFd;
 use std::ptr::{self, NonNull};
 use std::slice;
 
+use anyhow::Result;
 use cfile;
 
 use ffi;
 
-use errors::{AsResult, Result};
+use errors::AsResult;
 use mempool;
 use utils::{AsCString, AsRaw, CallbackContext, IntoRaw};
 

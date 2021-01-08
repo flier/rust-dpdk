@@ -5,9 +5,11 @@ use std::os::raw::c_char;
 use std::path::PathBuf;
 use std::ptr;
 
+use anyhow::Result;
+
 use ffi::{self, rte_proc_type_t::*};
 
-use errors::{AsResult, Result};
+use errors::{AsResult};
 use utils::AsCString;
 
 // pub use common::config;

@@ -1,8 +1,9 @@
 use std::mem;
 
+use anyhow::Result;
+
 use ffi;
 
-use errors::Result;
 use ethdev;
 use ether;
 use memory::SocketId;

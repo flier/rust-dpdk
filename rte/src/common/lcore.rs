@@ -5,10 +5,12 @@ use std::fmt;
 use std::mem;
 use std::ops::Deref;
 
+use anyhow::{anyhow, Result};
+
 use ffi;
 
 // use common::config;
-use errors::{rte_error, Result};
+use errors::rte_error;
 use memory::SocketId;
 
 pub use ffi::LCORE_ID_ANY;
@@ -155,7 +157,7 @@ pub fn index(lcore_id: u32) -> Option<usize> {
     } else {
         None
     };
-    id.map(|id| unsafe { ffi::rte_lcore_index(id as i32) as usize})
+    id.map(|id| unsafe { ffi::rte_lcore_index(id as i32) as usize })
 }
 
 /// Get the next enabled lcore ID.
@@ -208,7 +210,7 @@ pub fn socket_id_by_idx(idx: u32) -> Result<SocketId> {
     let id = unsafe { ffi::rte_socket_id_by_idx(idx) };
 
     if id < 0 {
-        Err(rte_error())
+        Err(anyhow!(rte_error()))
     } else {
         Ok(id)
     }

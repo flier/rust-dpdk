@@ -4,12 +4,13 @@ use std::ops::Range;
 use std::os::raw::c_void;
 use std::ptr;
 
+use anyhow::Result;
 use libc;
 
 use ffi;
 
 use dev;
-use errors::{AsResult, ErrorKind::OsError, Result};
+use errors::{AsResult, ErrorKind::OsError};
 use ether;
 use malloc;
 use mbuf;
@@ -196,7 +197,9 @@ impl EthDevice for PortId {
     fn info(&self) -> RawEthDeviceInfo {
         let mut info: RawEthDeviceInfo = Default::default();
 
-        unsafe { ffi::rte_eth_dev_info_get(*self, &mut info); }
+        unsafe {
+            ffi::rte_eth_dev_info_get(*self, &mut info);
+        }
 
         info
     }
@@ -308,7 +311,9 @@ impl EthDevice for PortId {
     fn link(&self) -> EthLink {
         let mut link = rte_sys::rte_eth_link::default();
 
-        unsafe { ffi::rte_eth_link_get(*self, &mut link as *mut _); }
+        unsafe {
+            ffi::rte_eth_link_get(*self, &mut link as *mut _);
+        }
 
         EthLink {
             speed: link.link_speed,
@@ -321,7 +326,9 @@ impl EthDevice for PortId {
     fn link_nowait(&self) -> EthLink {
         let mut link = rte_sys::rte_eth_link::default();
 
-        unsafe { ffi::rte_eth_link_get_nowait(*self, &mut link as *mut _); }
+        unsafe {
+            ffi::rte_eth_link_get_nowait(*self, &mut link as *mut _);
+        }
 
         EthLink {
             speed: link.link_speed,

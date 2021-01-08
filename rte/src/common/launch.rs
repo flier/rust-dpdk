@@ -2,10 +2,11 @@
 //!
 use std::os::raw::{c_int, c_void};
 
+use anyhow::Result;
 use ffi;
 use num_traits::FromPrimitive;
 
-use errors::{AsResult, Result};
+use errors::AsResult;
 use lcore;
 
 /// State of an lcore.

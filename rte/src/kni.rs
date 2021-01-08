@@ -4,11 +4,12 @@ use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::ptr;
 
+use anyhow::{anyhow, Result};
 use libc;
 
 use ffi;
 
-use errors::{rte_error, Result};
+use errors::rte_error;
 use ether;
 use mbuf;
 use mempool;
@@ -19,7 +20,7 @@ pub fn init(max_kni_ifaces: usize) -> Result<()> {
     if unsafe { ffi::rte_kni_init(max_kni_ifaces as u32) } == 0 {
         Ok(())
     } else {
-        Err(rte_error())
+        Err(anyhow!(rte_error()))
     }
 }
 

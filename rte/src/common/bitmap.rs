@@ -1,6 +1,8 @@
 use std::ptr::NonNull;
 
-use errors::{AsResult, Result};
+use anyhow::Result;
+
+use errors::AsResult;
 use ffi;
 use utils::AsRaw;
 

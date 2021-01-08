@@ -2,7 +2,7 @@
 name = "rte"
 version = "20.11.0"
 authors = ["Flier Lu <flier.lu@gmail.com>"]
-description = "Rust bindings to DPDK 19.11"
+description = "Rust bindings to DPDK 20.11"
 build = "build.rs"
 
 [features]
@@ -10,6 +10,8 @@ default = []
 gen = ["rte-sys/gen"]
 
 [dependencies]
+anyhow = "1.0"
+thiserror = "1.0"
 log = "0.4"
 bitflags = "1.2"
 failure = "0.1"

@@ -29,11 +29,12 @@ use std::os::raw::{c_uint, c_void};
 use std::os::unix::io::AsRawFd;
 use std::ptr::{self, NonNull};
 
+use anyhow::Result;
 use cfile;
 use ffi;
 use libc;
 
-use errors::{AsResult, Result};
+use errors::AsResult;
 use lcore;
 use memory::SocketId;
 use ring;

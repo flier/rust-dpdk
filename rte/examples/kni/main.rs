@@ -1,3 +1,4 @@
+extern crate anyhow;
 #[macro_use]
 extern crate log;
 extern crate getopts;
@@ -19,6 +20,7 @@ use std::ptr;
 use std::result;
 use std::str::FromStr;
 
+use anyhow::Result;
 use nix::sys::signal;
 
 use rte::ethdev::EthDevice;

@@ -1,10 +1,9 @@
 use std::os::unix::io::AsRawFd;
 
+use anyhow::Result;
 use cfile;
 
 use ffi;
-
-use errors::Result;
 
 /// Type of generic device
 #[repr(u32)]
