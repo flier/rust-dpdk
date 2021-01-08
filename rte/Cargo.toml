@@ -17,11 +17,11 @@ lazy_static = "1.4"
 libc = "0.2"
 time = "0.2"
 cfile = "0.4"
-rand = "0.7"
+rand = "0.8"
 errno = "0.2"
 num-traits = "0.2"
 num-derive = "0.3"
-itertools = "0.9"
+itertools = "0.10"
 
 rte-sys = { version = "20.11", path = "../rte-sys" }
 
