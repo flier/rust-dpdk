@@ -6,7 +6,6 @@ use std::result;
 
 use anyhow::{anyhow, Result};
 use errno::errno;
-use failure::Fail;
 
 use ffi;
 
