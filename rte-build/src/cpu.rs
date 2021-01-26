@@ -62,7 +62,7 @@ pub fn gen_cpu_features() -> impl Iterator<Item = (&'static str, Option<String>)
             compile_time_cpuflags.push("RTE_CPUFLAG_AVX2");
         }
         if features.has_avx512f() {
-            cflags.push("-RTE_MACHINE_CPUFLAG_AVX512F");
+            cflags.push("RTE_MACHINE_CPUFLAG_AVX512F");
             compile_time_cpuflags.push("RTE_CPUFLAG_AVX512F");
         }
     }
